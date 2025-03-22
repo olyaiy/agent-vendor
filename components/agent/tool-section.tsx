@@ -66,7 +66,7 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
             <DocumentPreview 
               isReadonly={isReadonly} 
               result={result}
-              kind={toolName.replace('create', '').replace('Document', '').toLowerCase()}
+              kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet'}
             />
           </ToolWrapper>
         );
@@ -142,7 +142,7 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
           <DocumentPreview 
             isReadonly={isReadonly} 
             args={args}
-            kind={toolName.replace('create', '').replace('Document', '').toLowerCase()}
+            kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet'}
           />
         </ToolWrapper>
       );
