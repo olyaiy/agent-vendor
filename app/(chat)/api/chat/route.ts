@@ -29,7 +29,6 @@ import { generateTitleAsynchronously, generateTitleFromUserMessage } from '../..
 import { toolRegistry } from '@/lib/ai/tools/registry';
 import { hasCredits, INSUFFICIENT_CREDITS_MESSAGE } from '@/lib/credits';
 
-
 export async function POST(request: Request) {
   console.time('total-request');
   console.time('parse-request');
@@ -377,7 +376,7 @@ export async function DELETE(request: Request) {
   }
 
   const session = await auth();
-
+  
   if (!session || !session.user) {
     return new Response('Unauthorized', { status: 401 });
   }

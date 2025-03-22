@@ -1,6 +1,6 @@
 // lib/ai/tools/registry.ts
 import { getWeather } from './get-weather';
-import { createDocument } from './create-document';
+import { createDocument, createTextDocument, createCodeDocument, createImageDocument, createSheetDocument } from './create-document';
 import { updateDocument } from './update-document';
 import { requestSuggestions } from './request-suggestions';
 import { retrieveTool } from './retrieve';
@@ -19,6 +19,10 @@ interface ToolRegistryProps {
 
 export const toolRegistry = ({ session, dataStream }: ToolRegistryProps = {}) => ({
   getWeather,
+  createTextDocument: session && dataStream ? createTextDocument({ session, dataStream }) : undefined,
+  createCodeDocument: session && dataStream ? createCodeDocument({ session, dataStream }) : undefined,
+  createImageDocument: session && dataStream ? createImageDocument({ session, dataStream }) : undefined,
+  createSheetDocument: session && dataStream ? createSheetDocument({ session, dataStream }) : undefined,
   createDocument: session && dataStream ? createDocument({ session, dataStream }) : undefined,
   updateDocument: session && dataStream ? updateDocument({ session, dataStream }) : undefined,
   requestSuggestions: session && dataStream ? requestSuggestions({ session, dataStream }) : undefined,

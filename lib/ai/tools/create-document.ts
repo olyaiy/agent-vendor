@@ -14,8 +14,7 @@ interface CreateDocumentProps {
 
 export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
   tool({
-    description:
-      'Create a document for a writing or content creation activities. This tool will call other functions that will generate the contents of the document based on the title and kind.',
+    description: 'Create a document with a specific type',
     parameters: z.object({
       title: z.string(),
       kind: z.enum(artifactKinds),
@@ -69,5 +68,54 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
         kind,
         content: 'A document was created and is now visible to the user.',
       };
+    },
+  });
+
+// New specialized document creators
+export const createTextDocument = ({ session, dataStream }: CreateDocumentProps) =>
+  tool({
+    description: 'Create a new text document',
+    parameters: z.object({ title: z.string() }),
+    execute: async ({ title }, options) => {
+      return createDocument({ session, dataStream }).execute(
+        { title, kind: 'text' },
+        options
+      );
+    },
+  });
+
+export const createCodeDocument = ({ session, dataStream }: CreateDocumentProps) =>
+  tool({
+    description: 'Create a new code document',
+    parameters: z.object({ title: z.string() }),
+    execute: async ({ title }, options) => {
+      return createDocument({ session, dataStream }).execute(
+        { title, kind: 'code' },
+        options
+      );
+    },
+  });
+
+export const createImageDocument = ({ session, dataStream }: CreateDocumentProps) =>
+  tool({
+    description: 'Create a new image document',
+    parameters: z.object({ title: z.string() }),
+    execute: async ({ title }, options) => {
+      return createDocument({ session, dataStream }).execute(
+        { title, kind: 'image' },
+        options
+      );
+    },
+  });
+
+export const createSheetDocument = ({ session, dataStream }: CreateDocumentProps) =>
+  tool({
+    description: 'Create a new spreadsheet document',
+    parameters: z.object({ title: z.string() }),
+    execute: async ({ title }, options) => {
+      return createDocument({ session, dataStream }).execute(
+        { title, kind: 'sheet' },
+        options
+      );
     },
   });

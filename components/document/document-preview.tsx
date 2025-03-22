@@ -28,6 +28,7 @@ interface DocumentPreviewProps {
   isReadonly: boolean;
   result?: any;
   args?: any;
+  kind?: 'text' | 'code' | 'image' | 'sheet';
 }
 
 export function DocumentPreview({

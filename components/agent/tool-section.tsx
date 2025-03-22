@@ -57,7 +57,19 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
       case 'createLogo':
         return <ToolWrapper><LogoGenerationSection tool={tool} /></ToolWrapper>;
       case 'createDocument':
-        return <ToolWrapper><DocumentPreview isReadonly={isReadonly} result={result} /></ToolWrapper>;
+      case 'createTextDocument':
+      case 'createCodeDocument':
+      case 'createImageDocument':
+      case 'createSheetDocument':
+        return (
+          <ToolWrapper>
+            <DocumentPreview 
+              isReadonly={isReadonly} 
+              result={result}
+              kind={toolName.replace('create', '').replace('Document', '').toLowerCase()}
+            />
+          </ToolWrapper>
+        );
       case 'updateDocument':
         return <ToolWrapper><DocumentToolResult type="update" result={result} isReadonly={isReadonly} /></ToolWrapper>;
       case 'requestSuggestions':
@@ -121,7 +133,19 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
     case 'createLogo':
       return <ToolWrapper><LogoGenerationSection tool={tool} /></ToolWrapper>;
     case 'createDocument':
-      return <ToolWrapper><DocumentPreview isReadonly={isReadonly} args={args} /></ToolWrapper>;
+    case 'createTextDocument':
+    case 'createCodeDocument':
+    case 'createImageDocument':
+    case 'createSheetDocument':
+      return (
+        <ToolWrapper>
+          <DocumentPreview 
+            isReadonly={isReadonly} 
+            args={args}
+            kind={toolName.replace('create', '').replace('Document', '').toLowerCase()}
+          />
+        </ToolWrapper>
+      );
     case 'updateDocument':
       return <ToolWrapper><DocumentToolCall 
         type="update" 
