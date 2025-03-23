@@ -81,17 +81,22 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              type="button"
+            <Link
+              href={`/${agentId}`}
               className={cn(
                 "w-full flex items-center justify-start gap-2 h-10 px-2 text-sm",
-                isHistoryPage && "bg-muted border-primary/50 text-primary"
+                isHistoryPage && "bg-muted border-primary/50 text-primary",
+                "hover:bg-accent hover:text-accent-foreground",
+                "rounded-md text-sm font-medium transition-colors"
               )}
-              onClick={handleNewChatClick}
-            > New Chat
+              onClick={() => {
+                setOpenMobile(false);
+                router.refresh();
+              }}
+            >
+              New Chat
               <PlusIcon size={16} />
-            </Button>
+            </Link>
           </TooltipTrigger>
           <TooltipContent align="end">New Chat</TooltipContent>
         </Tooltip>
