@@ -6,13 +6,15 @@ import { LoaderIcon } from '@/components/util/icons';
 
 import { Button } from '@/components/ui/button';
 
+interface SubmitButtonProps extends React.ComponentProps<'button'> {
+  isSuccessful: boolean;
+}
+
 export function SubmitButton({
   children,
   isSuccessful,
-}: {
-  children: React.ReactNode;
-  isSuccessful: boolean;
-}) {
+  ...props
+}: SubmitButtonProps) {
   const { pending } = useFormStatus();
 
   return (
@@ -21,6 +23,7 @@ export function SubmitButton({
       aria-disabled={pending || isSuccessful}
       disabled={pending || isSuccessful}
       className="relative"
+      {...props}
     >
       {children}
 

@@ -163,7 +163,7 @@ function PureChatHeader({
                 router.refresh();
               }}
               variant="outline"
-              className="h-8 "
+              className="h-8"
               >
                 <div className="flex items-center">
                   <PlusIcon size={8} /> 
