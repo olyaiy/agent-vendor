@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateAgent, createAgent, deleteAgent, upsertSuggestedPrompts } from "@/app/(agents)/actions";
+import { updateAgent, createAgent, deleteAgent, upsertSuggestedPrompts, createKnowledgeItem, updateKnowledgeItem, deleteKnowledgeItem } from "@/app/(agents)/actions";
 import { useRouter } from "next/navigation";
 import { 
   AlertCircle, 
@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/popover";
 import { AgentImageUploader } from "./agent-image-uploader";
 import { PromptSuggestionEditor } from "./prompt-suggestion-editor";
+import { KnowledgeEditor } from "./knowledge-editor";
 
 // Tag interface for dropdown selection
 interface TagInfo {
@@ -262,6 +263,23 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
     }
     setTagPopoverOpen(false);
     setNewTagInput("");
+  };
+
+  // Add handlers for knowledge items
+  const handleAddKnowledgeItem = async (item: { title: string; content: any; description?: string }) => {
+    if (!initialData?.id) return Promise.reject("Agent ID is required");
+    return createKnowledgeItem({
+      ...item,
+      agentId: initialData.id
+    });
+  };
+
+  const handleUpdateKnowledgeItem = async (item: { id: string; title?: string; content?: any; description?: string }) => {
+    return updateKnowledgeItem(item);
+  };
+
+  const handleDeleteKnowledgeItem = async (id: string) => {
+    return deleteKnowledgeItem(id);
   };
 
   return (
@@ -698,6 +716,27 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
           />
         </CardContent>
       </Card>
+
+      {/* Knowledge Base Section - Only show in edit mode since we need an agent ID */}
+      {mode === "edit" && initialData?.id && (
+        <Card className="shadow-sm border-2">
+          <CardHeader className="pb-4 border-b">
+            <CardTitle className="text-lg font-semibold">Knowledge Base</CardTitle>
+            <CardDescription>
+              Add knowledge items that your agent can reference during conversations
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <KnowledgeEditor
+              knowledgeItems={knowledgeItems || []}
+              agentId={initialData.id}
+              onAddItem={handleAddKnowledgeItem}
+              onUpdateItem={handleUpdateKnowledgeItem}
+              onDeleteItem={handleDeleteKnowledgeItem}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Form Footer */}
       <div className="flex justify-between bg-slate-50 dark:bg-slate-900/40 p-5 rounded-lg border">

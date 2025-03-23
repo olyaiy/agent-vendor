@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { createAgent as createAgentQuery, deleteAgentQuery, getAgentById, updateAgentById, createTag, db } from '@/lib/db/queries';
-import { agentModels, agentToolGroups, agents, models, agentTags, tags, suggestedPrompts } from '@/lib/db/schema';
+import { agentModels, agentToolGroups, agents, models, agentTags, tags, suggestedPrompts, knowledge_items } from '@/lib/db/schema';
 import { and, eq } from 'drizzle-orm';
+import { auth } from '../(auth)/auth';
 
 export async function createAgent({
   agentDisplayName,
@@ -366,6 +367,146 @@ export async function upsertSuggestedPrompts(agentId: string, prompts: string[])
     }
   } catch (error) {
     console.error('Failed to upsert suggested prompts:', error);
+    throw error;
+  }
+}
+
+// Knowledge Item Actions
+export async function createKnowledgeItem(data: {
+  title: string;
+  content: any;
+  type?: string;
+  description?: string;
+  agentId: string;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Ensure the agent belongs to the current user
+    const [agent] = await db.select()
+      .from(agents)
+      .where(eq(agents.id, data.agentId));
+
+    if (!agent || agent.creatorId !== session.user.id) {
+      throw new Error("Unauthorized to add knowledge to this agent");
+    }
+
+    const [newItem] = await db.insert(knowledge_items).values({
+      title: data.title,
+      content: data.content,
+      type: data.type || 'text',
+      description: data.description,
+      agentId: data.agentId,
+      updatedAt: new Date()
+    }).returning();
+
+    return newItem;
+  } catch (error) {
+    console.error("[CREATE_KNOWLEDGE_ITEM]", error);
+    throw error;
+  }
+}
+
+export async function updateKnowledgeItem(data: {
+  id: string;
+  title?: string;
+  content?: any;
+  type?: string;
+  description?: string;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Not authenticated");
+    }
+
+    // First fetch the knowledge item to check ownership
+    const [item] = await db.select({
+      id: knowledge_items.id,
+      agentId: knowledge_items.agentId
+    })
+    .from(knowledge_items)
+    .where(eq(knowledge_items.id, data.id));
+
+    if (!item || !item.agentId) {
+      throw new Error("Knowledge item not found");
+    }
+
+    // Get the agent to verify ownership
+    const [agent] = await db.select({
+      creatorId: agents.creatorId
+    })
+    .from(agents)
+    .where(eq(agents.id, item.agentId));
+
+    // Verify ownership through the agent
+    if (!agent || agent.creatorId !== session.user.id) {
+      throw new Error("Unauthorized to update this knowledge item");
+    }
+
+    const updateValues: Partial<typeof knowledge_items.$inferInsert> = {
+      updatedAt: new Date()
+    };
+    
+    if (data.title !== undefined) updateValues.title = data.title;
+    if (data.content !== undefined) updateValues.content = data.content;
+    if (data.type !== undefined) updateValues.type = data.type;
+    if (data.description !== undefined) updateValues.description = data.description;
+    
+    const [updatedItem] = await db
+      .update(knowledge_items)
+      .set(updateValues)
+      .where(eq(knowledge_items.id, data.id))
+      .returning();
+      
+    return updatedItem;
+  } catch (error) {
+    console.error("[UPDATE_KNOWLEDGE_ITEM]", error);
+    throw error;
+  }
+}
+
+export async function deleteKnowledgeItem(id: string) {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      throw new Error("Not authenticated");
+    }
+
+    // First fetch the knowledge item to check ownership
+    const [item] = await db.select({
+      id: knowledge_items.id,
+      agentId: knowledge_items.agentId
+    })
+    .from(knowledge_items)
+    .where(eq(knowledge_items.id, id));
+
+    if (!item || !item.agentId) {
+      throw new Error("Knowledge item not found");
+    }
+
+    // Get the agent to verify ownership
+    const [agent] = await db.select({
+      creatorId: agents.creatorId
+    })
+    .from(agents)
+    .where(eq(agents.id, item.agentId));
+
+    // Verify ownership through the agent
+    if (!agent || agent.creatorId !== session.user.id) {
+      throw new Error("Unauthorized to delete this knowledge item");
+    }
+
+    await db
+      .delete(knowledge_items)
+      .where(eq(knowledge_items.id, id));
+      
+    return { success: true };
+  } catch (error) {
+    console.error("[DELETE_KNOWLEDGE_ITEM]", error);
     throw error;
   }
 }

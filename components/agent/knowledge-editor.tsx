@@ -2,17 +2,40 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, FileText, Link as LinkIcon, Code, File } from "lucide-react";
+import { 
+  Trash2, 
+  Edit, 
+  PlusCircle, 
+  Loader2, 
+  ChevronDown, 
+  ChevronUp 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,261 +45,366 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { createKnowledgeItem, deleteKnowledgeItem } from "@/lib/db/queries";
 
-export interface KnowledgeItem {
+interface KnowledgeItem {
   id: string;
   title: string;
   content: any;
   type: string;
-  description?: string;
-  createdAt: Date;
+  description: string | null;
+  agentId: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
 interface KnowledgeEditorProps {
+  knowledgeItems: KnowledgeItem[];
   agentId?: string;
-  initialItems?: KnowledgeItem[];
-  onChange?: (items: KnowledgeItem[]) => void;
+  onAddItem: (item: { title: string; content: any; description?: string }) => Promise<KnowledgeItem>;
+  onUpdateItem: (item: { id: string; title?: string; content?: any; description?: string }) => Promise<KnowledgeItem>;
+  onDeleteItem: (id: string) => Promise<{ success: boolean }>;
 }
 
-export function KnowledgeEditor({ agentId, initialItems = [], onChange }: KnowledgeEditorProps) {
-  const [items, setItems] = useState<KnowledgeItem[]>(initialItems);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  
-  // Form state
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [type, setType] = useState<string>("text");
-  const [description, setDescription] = useState("");
+export function KnowledgeEditor({ 
+  knowledgeItems = [], 
+  agentId, 
+  onAddItem, 
+  onUpdateItem, 
+  onDeleteItem 
+}: KnowledgeEditorProps) {
+  const [items, setItems] = useState<KnowledgeItem[]>(knowledgeItems);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<KnowledgeItem | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
-  const handleAddItem = async () => {
-    if (!title.trim() || !content.trim() || !agentId) return;
-    
-    setIsLoading(true);
+  // Form state for new or edited items
+  const [formValues, setFormValues] = useState({
+    title: "",
+    content: "",
+    description: ""
+  });
+
+  const resetForm = () => {
+    setFormValues({
+      title: "",
+      content: "",
+      description: ""
+    });
+  };
+
+  const handleEditClick = (item: KnowledgeItem) => {
+    setEditingItem(item);
+    setFormValues({
+      title: item.title,
+      content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content),
+      description: item.description || ""
+    });
+  };
+
+  const handleFormChange = (field: keyof typeof formValues, value: string) => {
+    setFormValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
     try {
-      const contentJson = type === 'text' ? { text: content } : 
-                           type === 'url' ? { url: content } : 
-                           type === 'markdown' ? { markdown: content } : 
-                           { content };
+      if (editingItem) {
+        // Update existing item
+        const updated = await onUpdateItem({
+          id: editingItem.id,
+          title: formValues.title,
+          content: formValues.content,
+          description: formValues.description
+        });
+        
+        setItems(items.map(item => 
+          item.id === updated.id ? updated : item
+        ));
+        
+        toast.success("Knowledge item updated successfully");
+        setEditingItem(null);
+      } else {
+        // Create new item
+        const newItem = await onAddItem({
+          title: formValues.title,
+          content: formValues.content,
+          description: formValues.description
+        });
+        
+        setItems([...items, newItem]);
+        setIsAddDialogOpen(false);
+        toast.success("Knowledge item added successfully");
+      }
       
-      const newItem = await createKnowledgeItem({
-        title: title.trim(),
-        content: contentJson,
-        type,
-        description: description.trim() || undefined,
-        agentId
-      });
-      
-      const updatedItems = [...items, newItem];
-      setItems(updatedItems as KnowledgeItem[]);
-      onChange?.(updatedItems as KnowledgeItem[]);
-      
-      // Reset form
-      setTitle("");
-      setContent("");
-      setDescription("");
-      setShowForm(false);
-      
-      toast.success("Knowledge item added successfully");
+      resetForm();
     } catch (error) {
-      toast.error("Failed to add knowledge item");
+      toast.error("Failed to save knowledge item");
       console.error(error);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteItem = async (id: string) => {
-    setIsLoading(true);
+  const handleDelete = async (id: string) => {
+    setIsSubmitting(true);
+    
     try {
-      await deleteKnowledgeItem(id);
-      
-      const updatedItems = items.filter(item => item.id !== id);
-      setItems(updatedItems as KnowledgeItem[]);
-      onChange?.(updatedItems as KnowledgeItem[]);
-      
+      await onDeleteItem(id);
+      setItems(items.filter(item => item.id !== id));
       toast.success("Knowledge item deleted successfully");
     } catch (error) {
       toast.error("Failed to delete knowledge item");
       console.error(error);
     } finally {
-      setIsLoading(false);
-      setItemToDelete(null);
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'text':
-        return <FileText className="size-4" />;
-      case 'url':
-        return <LinkIcon className="size-4" />;
-      case 'markdown':
-        return <Code className="size-4" />;
-      default:
-        return <File className="size-4" />;
+      setIsSubmitting(false);
+      setDeleteItemId(null);
     }
   };
 
   return (
     <div className="space-y-4">
-      {items.length > 0 ? (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <div 
-              key={item.id} 
-              className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/5"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="flex items-center gap-1.5 px-2">
-                    {getTypeIcon(item.type)}
-                    {item.type === 'text' ? 'Text' : 
-                     item.type === 'url' ? 'URL' : 
-                     item.type === 'markdown' ? 'Markdown' : 
-                     item.type}
-                  </Badge>
-                  <h4 className="font-medium truncate">{item.title}</h4>
-                </div>
-                {item.description && (
-                  <p className="text-sm text-muted-foreground mt-1 truncate">
-                    {item.description}
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setItemToDelete(item.id)}
-                disabled={isLoading}
-              >
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8 border border-dashed rounded-lg">
-          <p className="text-muted-foreground">No knowledge items added yet</p>
-        </div>
-      )}
-
-      {showForm ? (
-        <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-          <h3 className="font-medium">Add Knowledge Item</h3>
-          
-          <div className="grid gap-3">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Type</label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="text">Text</SelectItem>
-                  <SelectItem value="url">URL</SelectItem>
-                  <SelectItem value="markdown">Markdown</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Title</label>
-              <Input 
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter a title"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">
-                {type === 'text' ? 'Content' : type === 'url' ? 'URL' : 'Markdown Content'}
-              </label>
-              <Textarea 
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={type === 'text' ? 'Enter content' : type === 'url' ? 'Enter URL' : 'Enter markdown content'}
-                rows={4}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Description (optional)</label>
-              <Input 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description"
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowForm(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Knowledge Base</h3>
+        
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
             <Button 
-              onClick={handleAddItem}
-              disabled={isLoading || !title.trim() || !content.trim()}
+              variant="outline" 
+              size="sm" 
+              className="flex items-center gap-1"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>Add Item</>
-              )}
+              <PlusCircle className="size-4" />
+              Add Knowledge Item
             </Button>
-          </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[550px]">
+            <DialogHeader>
+              <DialogTitle>Add Knowledge Item</DialogTitle>
+              <DialogDescription>
+                Add information that your agent can reference during conversations.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input 
+                  id="title" 
+                  value={formValues.title} 
+                  onChange={(e) => handleFormChange("title", e.target.value)}
+                  placeholder="Enter a descriptive title" 
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input 
+                  id="description" 
+                  value={formValues.description} 
+                  onChange={(e) => handleFormChange("description", e.target.value)}
+                  placeholder="Brief description of this knowledge item" 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="content">Content</Label>
+                <Textarea 
+                  id="content" 
+                  value={formValues.content} 
+                  onChange={(e) => handleFormChange("content", e.target.value)}
+                  placeholder="Enter the knowledge content" 
+                  className="min-h-[150px]"
+                  required
+                />
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    resetForm();
+                    setIsAddDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : "Add Item"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+      
+      {items.length === 0 ? (
+        <div className="text-center py-8 bg-slate-50 dark:bg-slate-900/40 rounded-lg border">
+          <p className="text-muted-foreground text-sm">
+            No knowledge items have been added yet. 
+            Add items to enhance your agent&apos;s capabilities.
+          </p>
         </div>
       ) : (
-        <Button
-          variant="outline"
-          onClick={() => setShowForm(true)}
-          className="w-full"
-          disabled={isLoading || !agentId}
-        >
-          <Plus className="mr-2 size-4" />
-          Add Knowledge Item
-        </Button>
+        <div className="border rounded-lg overflow-hidden">
+          <Accordion type="multiple" className="w-full">
+            {items.map((item) => (
+              <AccordionItem key={item.id} value={item.id} className="border-b last:border-b-0">
+                <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 group">
+                  <div className="flex justify-between items-center w-full mr-4">
+                    <div>
+                      <h4 className="font-medium text-sm text-left group-hover:text-primary">{item.title}</h4>
+                      {item.description && (
+                        <p className="text-muted-foreground text-xs mt-1 text-left">{item.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="size-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteItemId(item.id);
+                            }}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete this knowledge item.
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDelete(item.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              {isSubmitting && deleteItemId === item.id ? (
+                                <Loader2 className="size-4 animate-spin mr-2" />
+                              ) : null}
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="size-8 text-slate-500 hover:text-primary hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditClick(item);
+                            }}
+                          >
+                            <Edit className="size-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[550px]">
+                          <DialogHeader>
+                            <DialogTitle>Edit Knowledge Item</DialogTitle>
+                            <DialogDescription>
+                              Update your agent&apos;s knowledge base.
+                            </DialogDescription>
+                          </DialogHeader>
+                          
+                          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-title">Title</Label>
+                              <Input 
+                                id="edit-title" 
+                                value={formValues.title} 
+                                onChange={(e) => handleFormChange("title", e.target.value)}
+                                placeholder="Enter a descriptive title" 
+                                required
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-description">Description (Optional)</Label>
+                              <Input 
+                                id="edit-description" 
+                                value={formValues.description} 
+                                onChange={(e) => handleFormChange("description", e.target.value)}
+                                placeholder="Brief description of this knowledge item" 
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor="edit-content">Content</Label>
+                              <Textarea 
+                                id="edit-content" 
+                                value={formValues.content} 
+                                onChange={(e) => handleFormChange("content", e.target.value)}
+                                placeholder="Enter the knowledge content" 
+                                className="min-h-[150px]"
+                                required
+                              />
+                            </div>
+                            
+                            <DialogFooter>
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => {
+                                  resetForm();
+                                  setEditingItem(null);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? (
+                                  <>
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                    Updating...
+                                  </>
+                                ) : "Update Item"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 bg-slate-50 dark:bg-slate-900/20">
+                  <div className="whitespace-pre-wrap text-sm">
+                    {typeof item.content === 'string' 
+                      ? item.content 
+                      : JSON.stringify(item.content, null, 2)
+                    }
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       )}
-
-      {/* Delete confirmation dialog */}
-      <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Knowledge Item</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this knowledge item? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => itemToDelete && handleDeleteItem(itemToDelete)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>Delete</>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 } 

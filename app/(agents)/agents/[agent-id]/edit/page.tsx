@@ -74,7 +74,7 @@ export default async function EditAgentPage({
         toolGroups={toolGroups}
         tags={tags}
         initialData={initialData}
-        knowledgeItems={knowledgeItems}
+        knowledgeItems={knowledgeItems }
       />
     </div>
   );
