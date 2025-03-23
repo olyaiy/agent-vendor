@@ -1,6 +1,5 @@
 import { getAgents, getMostCommonTags } from "@/lib/db/queries";
 import { AgentList } from "./agent-list";
-import { sortAgentsByRecentUsage } from "@/app/actions";
 import { auth } from "@/app/(auth)/auth";
 import { cookies } from "next/headers";
 import { RecentAgentsScroll } from "./recent-agents-carousel";
@@ -21,9 +20,8 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
     finalUserId = session?.user?.id;
   }
   
-  // Fetch agents and sort them
+  // Fetch agents
   const agents = await getAgents(finalUserId, true);
-  const sortedAgents = await sortAgentsByRecentUsage(agents as any);
   
   // Get recent agents from cookie
   const cookieStore = await cookies();
@@ -52,7 +50,7 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
       {recentAgents.length > 0 && (
         <RecentAgentsScroll agents={recentAgents} userId={finalUserId} />
       )}
-      <AgentList agents={sortedAgents} userId={finalUserId} tags={commonTags} />
+      <AgentList agents={agents as any} userId={finalUserId} tags={commonTags} />
     </div>
   );
 } 
