@@ -64,7 +64,7 @@ export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) 
       <ScrollBar orientation="horizontal" />
         <div className="flex space-x-4 pb-4">
           {agents.map((agent) => (
-            <div key={agent.id} className="">
+            <div key={agent.id} className="w-full">
               <AgentCard 
                 agent={agent}
                 userId={userId}
