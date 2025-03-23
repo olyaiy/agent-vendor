@@ -29,6 +29,8 @@ import {
   type DBMessage,
   suggestedPrompts,
   knowledge_items,
+  type KnowledgeItem,
+  type AgentCustomization
 } from './schema';  
 import { ArtifactKind } from '@/components/artifact/artifact';
 
@@ -816,9 +818,16 @@ export async function getAgentWithAvailableModels(id: string) {
         return 0;
       });
 
+    // Get knowledge items for this agent
+    const knowledgeItems = await db
+      .select()
+      .from(knowledge_items)
+      .where(eq(knowledge_items.agentId, id));
+
     return {
       agent: agentData,
-      availableModels
+      availableModels,
+      knowledgeItems
     };
   } catch (error) {
     console.error('Failed to get agent with available models from database');

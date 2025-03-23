@@ -72,11 +72,11 @@ export default async function Page({ params }: { params: Promise<{ agent: string
   // Generate a unique ID for this chat session
   const id = generateUUID();
 
+
+
+
   return (
     <>
-      {/* <Suspense fallback={<div className="h-6 w-full" />}>
-        <AuthStatus/>
-      </Suspense> */}
       <Chat
         isAuthenticated={false}
         key={id}
@@ -88,6 +88,7 @@ export default async function Page({ params }: { params: Promise<{ agent: string
         selectedVisibilityType="public"
         isReadonly={false}
         suggestedPrompts={suggestedPrompts}
+        knowledgeItems={agentData.knowledgeItems}
       />
       <DataStreamHandler id={id} />
     </>

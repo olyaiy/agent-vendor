@@ -112,6 +112,7 @@ export default async function Page(props: {
         selectedChatModel={selectedModelId}
         selectedVisibilityType={chat.visibility}
         isReadonly={session?.user?.id !== chat.userId}
+        knowledgeItems={agentWithAvailableModels?.knowledgeItems}
       />
       <DataStreamHandler id={chatId} />
     </>

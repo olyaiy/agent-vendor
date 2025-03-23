@@ -28,6 +28,7 @@ import {
 import { generateTitleAsynchronously, generateTitleFromUserMessage } from '../../actions';
 import { toolRegistry } from '@/lib/ai/tools/registry';
 import { hasCredits, INSUFFICIENT_CREDITS_MESSAGE } from '@/lib/credits';
+import { KnowledgeItem } from '@/lib/db/schema';
 
 export async function POST(request: Request) {
   console.time('total-request');
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     agentSystemPrompt,  
     creatorId,
     searchEnabled,
+    knowledgeItems
   }: { 
     id: string; 
     messages: Array<UIMessage>; 
@@ -50,6 +52,7 @@ export async function POST(request: Request) {
     agentSystemPrompt?: string;
     creatorId: string;
     searchEnabled?: boolean;
+    knowledgeItems?: KnowledgeItem[];
   } = await request.json();
   console.timeEnd('parse-request');
   
@@ -185,8 +188,6 @@ export async function POST(request: Request) {
       const activeToolNames = Object.keys(tools);
       console.timeEnd('tools-setup');
 
-
-     
     /* -------- STREAM TEXT -------- */
       console.time('stream-text-start');
       const result = streamText({
@@ -197,7 +198,8 @@ export async function POST(request: Request) {
           system: systemPrompt({ 
             selectedChatModel, 
             agentSystemPrompt,
-            hasSearchTool: activeToolNames.includes('searchTool')
+            hasSearchTool: activeToolNames.includes('searchTool'),
+            knowledgeItems
           }),
         // Messages
           messages,

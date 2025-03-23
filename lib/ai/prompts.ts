@@ -1,6 +1,6 @@
 import { ArtifactKind } from '@/components/artifact/artifact';
 import { isReasoningModel } from './models';
-
+import { KnowledgeItem } from '@/lib/db/schema';
 export const artifactsPrompt = `
 
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
@@ -100,10 +100,12 @@ export const systemPrompt = ({
   selectedChatModel,
   agentSystemPrompt,
   hasSearchTool = false,
+  knowledgeItems = []
 }: {
   selectedChatModel: string;
   agentSystemPrompt?: string;
   hasSearchTool?: boolean;
+  knowledgeItems?: KnowledgeItem[];
 }) => {
   const basePrompt = agentSystemPrompt || regularPrompt;
   let finalPrompt = basePrompt;
@@ -116,18 +118,21 @@ export const systemPrompt = ({
   // Get today's date
   const currentDate = getTodaysDate();
   
-  if (isReasoningModel(selectedChatModel)) {
-    // Get model-specific reasoning instructions
-    const reasoningInstructions = getReasoningInstructions(selectedChatModel);
+  // Base prompt with model-specific instructions
+  let prompt = isReasoningModel(selectedChatModel)
+    ? `${finalPrompt}\n\n${getReasoningInstructions(selectedChatModel)}\n\nCurrent date: ${currentDate}`
+    : `${finalPrompt}\n\n${artifactsPrompt}\n\nCurrent date: ${currentDate}`;
+  
+  // Add knowledge items if provided
+  if (knowledgeItems && knowledgeItems.length > 0) {
+    const formattedKnowledge = knowledgeItems.map(item => 
+      `Title: ${item.title}\nContent: ${item.content}`
+    ).join('\n\n');
     
-    return `${finalPrompt}
-    
-    ${reasoningInstructions}
-    
-    Current date: ${currentDate}`;
-  } else {
-    return `${finalPrompt}\n\n${artifactsPrompt}\n\nCurrent date: ${currentDate}`;
+    prompt += `\n\nTHE FOLLOWING IS ADDITIONAL KNOWLEDGE AND CONTEXT - CONSIDER THIS WHEN RESPONDING TO THE USER\n\n##############\n${formattedKnowledge}\n##############\n\nYou are now being connected with the user`;
   }
+  
+  return prompt;
 };
 
 export const codePrompt = `

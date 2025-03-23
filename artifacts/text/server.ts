@@ -206,17 +206,11 @@ function formatToolResult(toolContent: any): string {
 // Add logging function for message filtering stats
 function logFilteringStats(original: any[], filtered: any[]) {
   // More detailed logging for diagnostic purposes
-  console.log('Filtered messages by role:', 
-    filtered.reduce((counts: any, msg: any) => {
-      counts[msg.role] = (counts[msg.role] || 0) + 1;
-      return counts;
-    }, {})
-  );
+
   
   // Log size reduction percentage
   const originalSize = JSON.stringify(original).length;
   const filteredSize = JSON.stringify(filtered).length;
-  console.log('Size reduction:', Math.round((1 - filteredSize / originalSize) * 100) + '%');
 }
 
 let articlePrompt = `
@@ -254,16 +248,9 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
     
     // If still very large (>100KB), only keep the most recent messages
     if (messagesSizeBytes > 100 * 1024) {
-      console.log('Conversation still too large after filtering, keeping only recent messages');
       // Get last 20 messages which typically provides enough context
       processedMessages = filteredMessages.slice(-20);
-      console.log('Reduced from', filteredMessages.length, 'to', processedMessages.length, 'messages');
     }
-    
-    // Log original vs filtered for comparison
-    console.log('Original messages size:', JSON.stringify(messages).length);
-    console.log('Filtered messages size:', JSON.stringify(filteredMessages).length);
-    console.log('Final processed size:', JSON.stringify(processedMessages).length);
     
     // Log detailed stats
     logFilteringStats(messages, processedMessages);

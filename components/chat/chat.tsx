@@ -4,7 +4,7 @@ import type { Attachment, UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useState, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
-import type { Agent } from '@/lib/db/schema';
+import type { Agent, KnowledgeItem } from '@/lib/db/schema';
 import { useLocalStorage } from 'usehooks-ts';
 import { ChatHeader } from '@/components/chat/chat-header';
 import { generateUUID } from '@/lib/utils';
@@ -28,7 +28,8 @@ export function Chat({
   selectedVisibilityType,
   isReadonly,
   isAuthenticated,
-  suggestedPrompts = []
+  suggestedPrompts = [],
+  knowledgeItems = []
 }: {
   id: string;
   agent: Agent;
@@ -39,6 +40,7 @@ export function Chat({
   isReadonly: boolean;
   isAuthenticated: boolean;
   suggestedPrompts?: string[];
+  knowledgeItems?: KnowledgeItem[];
 }) {
   const { mutate } = useSWRConfig();
   const [currentModel, setCurrentModel] = useState<string>(selectedChatModel);
@@ -80,6 +82,7 @@ export function Chat({
       creatorId: agent.creatorId,
       agentSystemPrompt: agent?.system_prompt,
       searchEnabled, // Pass the search toggle state to the API
+      knowledgeItems // Pass the knowledge items to the API
     },
     initialMessages,
     // experimental_throttle: 100,
@@ -87,8 +90,6 @@ export function Chat({
     generateId: generateUUID,
     onFinish: () => {
       mutate('/api/history');
-      console.log("THE MESSAGES AFTER ARE")
-      console.log( messages);
     },
     onError: (error) => {
       // Check for unauthorized error

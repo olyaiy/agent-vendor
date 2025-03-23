@@ -75,7 +75,6 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
       case 'requestSuggestions':
         return <ToolWrapper><DocumentToolResult type="request-suggestions" result={result} isReadonly={isReadonly} /></ToolWrapper>;
       case 'retrieveTool':
-        console.log(result)
         return (
           <ToolWrapper>
             <RetrieveSection 
