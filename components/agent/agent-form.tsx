@@ -61,12 +61,25 @@ interface TagInfo {
   name: string;
 }
 
+// Knowledge item interface for typed props
+interface KnowledgeItem {
+  id: string;
+  title: string;
+  content: any;
+  type: string;
+  description: string | null;
+  agentId: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
 interface AgentFormProps {
   mode: "create" | "edit";
   userId?: string;
   models: ModelInfo[];
   toolGroups: ToolGroupInfo[];
   tags: TagInfo[];
+  knowledgeItems?: KnowledgeItem[];
   initialData?: {
     id: string;
     agentDisplayName: string;
@@ -92,7 +105,7 @@ interface AgentFormProps {
   };
 }
 
-export default function AgentForm({ mode, userId, models, toolGroups, tags, initialData }: AgentFormProps) {
+export default function AgentForm({ mode, userId, models, toolGroups, tags, knowledgeItems, initialData }: AgentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [imageUrl, setImageUrl] = useState<string | null>(initialData?.imageUrl || null);
   const [primaryModelId, setPrimaryModelId] = useState<string>(initialData?.modelId || "");

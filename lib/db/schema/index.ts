@@ -8,3 +8,4 @@ export * from './chats';
 export * from './documents';
 export * from './tags';
 export * from './transactions'; 
+export * from './knowledge';

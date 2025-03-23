@@ -1,6 +1,6 @@
 import AgentForm from "@/components/agent/agent-form";
 import { auth } from "@/app/(auth)/auth";
-import { db, getAgentWithAllModels, getAllToolGroups, getAllTags, getTagsByAgentId } from "@/lib/db/queries";
+import { db, getAgentWithAllModels, getAllToolGroups, getAllTags, getTagsByAgentId, getKnowledgeItems } from "@/lib/db/queries";
 import { models, agents } from "@/lib/db/schema";
 import { notFound, redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -28,7 +28,7 @@ export default async function EditAgentPage({
     redirect(`/agents/${agentId}/view`);
   }
 
-  const [agentWithModels, modelsList, toolGroups, tags, agentTags] = await Promise.all([
+  const [agentWithModels, modelsList, toolGroups, tags, agentTags, knowledgeItems] = await Promise.all([
     getAgentWithAllModels(agentId),
     db.select({
       id: models.id,
@@ -39,8 +39,12 @@ export default async function EditAgentPage({
     }).from(models),
     getAllToolGroups(),
     getAllTags(),
-    getTagsByAgentId(agentId)
+    getTagsByAgentId(agentId),
+    getKnowledgeItems({ agentId })
   ]);
+
+
+
 
   if (!agentWithModels) {
     return notFound();
@@ -70,6 +74,7 @@ export default async function EditAgentPage({
         toolGroups={toolGroups}
         tags={tags}
         initialData={initialData}
+        knowledgeItems={knowledgeItems}
       />
     </div>
   );

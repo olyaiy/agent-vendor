@@ -309,6 +309,13 @@
       "when": 1742366108408,
       "tag": "0043_slim_crystal",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1742772748006,
+      "tag": "0044_freezing_multiple_man",
+      "breakpoints": true
     }
   ]
 }

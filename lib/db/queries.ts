@@ -28,6 +28,7 @@ import {
   agentTags,
   type DBMessage,
   suggestedPrompts,
+  knowledge_items,
 } from './schema';  
 import { ArtifactKind } from '@/components/artifact/artifact';
 
@@ -146,9 +147,6 @@ export async function saveMessages({
       model_id: model_id || msg.model_id,
     }));
 
-
-
-
     await db.insert(message).values(messagesToSave);
     
     // Return the messages with their generated IDs
@@ -172,10 +170,6 @@ export async function getMessagesByChatId({ id }: { id: string }) {
     throw error;
   }
 }
-
-
-
-
 
 export async function saveDocument({
   id,
@@ -1636,6 +1630,100 @@ export async function upsertSuggestedPrompts(agentId: string, prompts: string[])
   }
 }
 
+export async function getKnowledgeItems({ agentId }: { agentId: string }) {
+  try {
+    return await db
+      .select()
+      .from(knowledge_items)
+      .where(eq(knowledge_items.agentId, agentId))
+      .orderBy(desc(knowledge_items.createdAt));
+  } catch (error) {
+    console.error('Failed to get knowledge items from database:', error);
+    throw error;
+  }
+}
+
+export async function createKnowledgeItem({
+  title,
+  content,
+  type,
+  description,
+  agentId
+}: {
+  title: string;
+  content: any;
+  type?: string;
+  description?: string;
+  agentId: string;
+}) {
+  try {
+    const [item] = await db
+      .insert(knowledge_items)
+      .values({
+        title,
+        content,
+        type: type || 'text',
+        description,
+        agentId,
+        updatedAt: new Date()
+      })
+      .returning();
+    
+    return item;
+  } catch (error) {
+    console.error('Failed to create knowledge item in database:', error);
+    throw error;
+  }
+}
+
+export async function updateKnowledgeItem({
+  id,
+  title,
+  content,
+  type,
+  description
+}: {
+  id: string;
+  title?: string;
+  content?: any;
+  type?: string;
+  description?: string;
+}) {
+  try {
+    const updateValues: Partial<typeof knowledge_items.$inferInsert> = {
+      updatedAt: new Date()
+    };
+    
+    if (title !== undefined) updateValues.title = title;
+    if (content !== undefined) updateValues.content = content;
+    if (type !== undefined) updateValues.type = type;
+    if (description !== undefined) updateValues.description = description;
+    
+    const [updatedItem] = await db
+      .update(knowledge_items)
+      .set(updateValues)
+      .where(eq(knowledge_items.id, id))
+      .returning();
+      
+    return updatedItem;
+  } catch (error) {
+    console.error('Failed to update knowledge item in database:', error);
+    throw error;
+  }
+}
+
+export async function deleteKnowledgeItem({ id }: { id: string }) {
+  try {
+    await db
+      .delete(knowledge_items)
+      .where(eq(knowledge_items.id, id));
+      
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to delete knowledge item from database:', error);
+    throw error;
+  }
+}
 
 export const getAgentToolsWithSingleQuery = async (agentId: string) => {
   // JOIN query that gets all tools for an agent in one database operation
