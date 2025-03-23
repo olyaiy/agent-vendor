@@ -22,15 +22,36 @@ import { SidebarToggle } from './layout/sidebar-toggle';
 import useSWR from 'swr';
 import { Logo } from './logo';
 import { UserNav } from './layout/sidebar-user-nav';
+import { useEffect, useState } from 'react';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+// Function to get the most recent agent ID from cookies
+function getMostRecentAgentId(defaultAgentId: string): string {
+  // Check if we're in a browser environment
+  if (typeof document === 'undefined') return defaultAgentId;
+  
+  // Get recent agents from cookie
+  const recentAgentsCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('recent-agents='));
+  
+  if (!recentAgentsCookie) return defaultAgentId;
+  
+  // Parse the cookie value to get the array of agent IDs
+  const recentAgentIds = recentAgentsCookie.split('=')[1].split(',');
+  
+  // Return the first/most recent agent ID, or fall back to default
+  return recentAgentIds.length > 0 ? recentAgentIds[0] : defaultAgentId;
+}
 
 export function AppSidebar({ user: initialUser }: { user: User | undefined | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const params = useParams();
   const pathname = usePathname();
-  const agentId = params.agentId ?? '5a2c146b-7017-4deb-8b76-ff1034c11ba7';
+  const defaultAgentId = typeof params.agentId === 'string' ? params.agentId : '5a2c146b-7017-4deb-8b76-ff1034c11ba7';
+  const [mostRecentAgentId, setMostRecentAgentId] = useState<string>(defaultAgentId);
   const chatId = params['chat-id'] as string | undefined;
   const isHistoryPage = pathname === '/chats';
 
@@ -43,6 +64,11 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
 
   // Use the SWR data or fall back to the initial user prop
   const user = userData || initialUser;
+  
+  // Update the most recent agent ID on component mount and when pathname changes
+  useEffect(() => {
+    setMostRecentAgentId(getMostRecentAgentId(defaultAgentId));
+  }, [defaultAgentId, pathname]);
 
   // Function to handle the new chat button click
   const handleNewChatClick = () => {
@@ -57,10 +83,10 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
     } else if (pathname.includes('/agents/') && pathname.includes('/edit')) {
       // Existing edit page handling
       const agentIdMatch = pathname.match(/\/agents\/([^\/]+)\/edit/);
-      router.push(`/${agentIdMatch?.[1] || agentId}`);
+      router.push(`/${agentIdMatch?.[1] || mostRecentAgentId}`);
     } else {
-      // Fallback to default agent
-      router.push(`/${agentId}`);
+      // Use the most recent agent instead of the default one
+      router.push(`/${mostRecentAgentId}`);
     }
     
     router.refresh();
@@ -82,7 +108,7 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href={`/${agentId}`}
+              href={`/${mostRecentAgentId}`}
               className={cn(
                 "w-full flex items-center justify-start gap-2 h-10 px-2 text-sm",
                 isHistoryPage && "bg-muted border-primary/50 text-primary",
