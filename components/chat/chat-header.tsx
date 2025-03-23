@@ -84,23 +84,9 @@ function PureChatHeader({
       {/* Desktop Layout */}
       {!isMobile && (
         <>
-          {(!open) && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="h-8 size-8 md:h-8 shrink-0 order-last md:order-1 ml-auto md:ml-0"
-                  onClick={() => {
-                    router.push(`/${agentId}`);
-                    router.refresh();
-                  }}
-                >
-                  <PlusIcon size={8} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">New Chat</TooltipContent>
-            </Tooltip>
-          )}
+
+          
+
 
           {!isReadonly && (
             <VisibilitySelector
@@ -149,11 +135,42 @@ function PureChatHeader({
               </Tooltip>
             </div>
           )}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-8  md:h-8 shrink-0 order-last  ml-auto md:ml-0"
+                  onClick={() => {
+                    router.push(`/${agentId}`);
+                    router.refresh();
+                  }}
+                >
+                  <PlusIcon size={8} /> New Chat
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">New Chat</TooltipContent>
+            </Tooltip>
         </>
       )}
 
       {/* Mobile Layout with Three Dots Menu */}
       {isMobile && (
+        <>
+        {!isReadonly && (
+              <Button onClick={() => {
+                router.push(`/${agentId}`);
+                router.refresh();
+              }}
+              variant="outline"
+              className="h-8 "
+              >
+                <div className="flex items-center">
+                  <PlusIcon size={8} /> 
+                  <span className="ml-2">New Chat</span>
+                </div>
+              </Button>
+            )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="ml-auto">
             <Button variant="ghost" size="icon" className="size-8">
@@ -168,7 +185,7 @@ function PureChatHeader({
                 router.refresh();
               }}>
                 <div className="flex items-center">
-                  <PlusIcon size={8} />
+                  <PlusIcon size={8} /> 
                   <span className="ml-2">New Chat</span>
                 </div>
               </DropdownMenuItem>
@@ -211,6 +228,7 @@ function PureChatHeader({
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+        </>
       )}
     </header>
   );
