@@ -11,14 +11,12 @@ import { auth } from '@/app/(auth)/auth';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
   deleteChatById,
-  getChatById,
   saveChat,
   saveMessages,
-  getToolGroupsByAgentId,
-  getToolsByToolGroupId,
   getModelById,
   recordTransaction,
   getAgentToolsWithSingleQuery,
+  getChatById,
 } from '@/lib/db/queries';
 import {
   generateUUID,
@@ -82,21 +80,19 @@ export async function POST(request: Request) {
 
   // If the user message is not found, return an error
   if (!userMessage) {
+    console.log('No user message found');
+    console.log(messages);
     return new Response('No user message found', { status: 400 });
   }
 
   // Get the chat
+  console.log('THE ID IS', id);
+  console.log('trying get chat by id');
   console.time('get-chat');
   const chat = await getChatById({ id });
   console.timeEnd('get-chat');
+  console.log('The chat is', chat);
 
-  if (!chat) {
-    return new Response('Not Found', { status: 404 });
-  }
-
-  if (chat.userId !== session.user.id) {
-    return new Response('Unauthorized', { status: 401 });
-  }
 
   // If the chat is not found, generate a title and save the chat FIRST
   if (!chat) {
@@ -116,6 +112,7 @@ export async function POST(request: Request) {
     }
     console.timeEnd('save-new-chat');
   }
+
 
   
   // THEN save messages 

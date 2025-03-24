@@ -7,7 +7,7 @@ import { AgentCard } from "./agent-card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface RecentAgentsScrollProps {
+interface FeaturedAgentsCarouselProps {
   agents: (Omit<InferSelectModel<typeof agents>, 'model'> & {
     models?: InferSelectModel<typeof models>[] | null;
     toolGroups?: { id: string; name: string; display_name: string; description: string | null }[] | null;
@@ -16,8 +16,8 @@ interface RecentAgentsScrollProps {
   userId?: string;
 }
 
-export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) {
-  // State for current page - moved before conditional return
+export function FeaturedAgentsCarousel({ agents, userId }: FeaturedAgentsCarouselProps) {
+  // State for current page
   const [currentPage, setCurrentPage] = useState(0);
   
   // If no agents, don't render this component
@@ -83,7 +83,7 @@ export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) 
   return (
     <div className="w-full">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">⚡ Recently Used</h2>
+        <h2 className="text-lg font-semibold">⭐ Featured Agents</h2>
         
         <div className="flex items-center space-x-2">
           <Button 

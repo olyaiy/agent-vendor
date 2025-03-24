@@ -1,8 +1,9 @@
-import { getAgents, getMostCommonTags } from "@/lib/db/queries";
+import { getAgents, getMostCommonTags, getFeaturedAgents } from "@/lib/db/queries";
 import { AgentList } from "./agent-list";
 import { auth } from "@/app/(auth)/auth";
 import { cookies } from "next/headers";
 import { RecentAgentsScroll } from "./recent-agents-carousel";
+import { FeaturedAgentsCarousel } from "./featured-agents-carousel";
 
 interface AgentContainerProps {
   // Make userId optional since we'll fetch it if not provided
@@ -22,6 +23,9 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
   
   // Fetch agents
   const agents = await getAgents(finalUserId, true);
+  
+  // Fetch featured agents (limited to 8)
+  const featuredAgents = await getFeaturedAgents(8);
   
   // Get recent agents from cookie
   const cookieStore = await cookies();
@@ -50,6 +54,12 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
       {recentAgents.length > 0 && (
         <RecentAgentsScroll agents={recentAgents} userId={finalUserId} />
       )}
+      {featuredAgents.length > 0 && (
+        <FeaturedAgentsCarousel agents={featuredAgents as any} userId={finalUserId} />
+      )}
+      
+    
+      
       <AgentList agents={agents as any} userId={finalUserId} tags={commonTags} />
     </div>
   );

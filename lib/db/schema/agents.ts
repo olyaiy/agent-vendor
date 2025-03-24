@@ -22,6 +22,7 @@ export const agents = pgTable("agents", {
   system_prompt: text("system_prompt").notNull(),
   description: text("description"),
   visibility: visibilityEnum("visibility").default("public"),
+  featured: boolean("featured").default(false),
   creatorId: uuid("creator_id").references(() => user.id),
   artifacts_enabled: boolean("artifacts_enabled").default(true),
   thumbnail_url: text("thumbnail_url"),

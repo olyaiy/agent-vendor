@@ -125,7 +125,7 @@ export function AgentList({ agents: initialAgents, userId, tags = [] }: AgentLis
   return (
     <div className="w-full space-y-4 md:space-y-6">
       <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Browse Agents</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">✨ All Agents</h1>
         <div className="relative w-full md:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input

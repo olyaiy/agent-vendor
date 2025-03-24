@@ -156,6 +156,95 @@ export const getAgents = async (userId?: string, includeAllModels?: boolean, inc
 }
 
 /**
+ * Get featured agents
+ */
+export const getFeaturedAgents = async (limit?: number) => {
+  try {
+    const query = db.select({
+      id: agents.id,
+      agent: agents.agent,
+      agent_display_name: agents.agent_display_name,
+      system_prompt: agents.system_prompt,
+      description: agents.description,
+      visibility: agents.visibility,
+      creatorId: agents.creatorId,
+      artifacts_enabled: agents.artifacts_enabled,
+      thumbnail_url: agents.thumbnail_url,
+    })
+    .from(agents)
+    .where(
+      and(
+        eq(agents.featured, true),
+        eq(agents.visibility, 'public')
+      )
+    )
+    .orderBy(desc(agents.id));
+
+    // Apply limit if provided
+    const result = limit ? await query.limit(limit) : await query;
+
+    // For each agent, fetch their models, tool groups, and tags
+    const featuredAgentsWithModels = await Promise.all(
+      result.map(async (agent) => {
+        // Fetch models
+        const agentModelResults = await db.select({
+          model: models,
+          isDefault: agentModels.isDefault
+        })
+        .from(agentModels)
+        .leftJoin(models, eq(agentModels.modelId, models.id))
+        .where(eq(agentModels.agentId, agent.id));
+
+        const defaultModel = agentModelResults.find(r => r.isDefault)?.model || null;
+
+        // Fetch tool groups
+        const toolGroupResults = await db.select({
+          id: toolGroups.id,
+          name: toolGroups.name,
+          display_name: toolGroups.display_name,
+          description: toolGroups.description,
+        })
+        .from(agentToolGroups)
+        .leftJoin(toolGroups, eq(agentToolGroups.toolGroupId, toolGroups.id))
+        .where(eq(agentToolGroups.agentId, agent.id));
+
+        const toolGroupsArray = toolGroupResults
+          .filter(tg => tg.id !== null && tg.name !== null && tg.display_name !== null)
+          .map(tg => ({
+            ...tg,
+            id: tg.id!,
+            name: tg.name!,
+            display_name: tg.display_name!
+          }));
+
+        // Fetch tags
+        const tagResults = await db.select({
+          id: tags.id,
+          name: tags.name,
+          createdAt: tags.createdAt,
+          updatedAt: tags.updatedAt
+        })
+        .from(agentTags)
+        .innerJoin(tags, eq(agentTags.tagId, tags.id))
+        .where(eq(agentTags.agentId, agent.id))
+        .orderBy(tags.name);
+
+        return {
+          ...agent,
+          model: defaultModel,
+          toolGroups: toolGroupsArray,
+          tags: tagResults
+        };
+      })
+    );
+
+    return featuredAgentsWithModels;
+  } catch (error) {
+    return handleDbError(error, 'Failed to get featured agents from database', []);
+  }
+}
+
+/**
  * Get an agent by ID
  */
 export async function getAgentById(id: string) {
