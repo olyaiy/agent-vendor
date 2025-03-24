@@ -13,6 +13,7 @@ import { FormFooter } from "./form-sections/form-footer";
 import { useAgentForm } from "./hooks/use-agent-form";
 import { ModelInfo } from "./model-selector-section";
 import { ToolGroupInfo } from "./tool-group-selector";
+import { Separator } from "@radix-ui/react-separator";
 
 // Interface definitions
 interface TagInfo {
@@ -89,6 +90,10 @@ export default function AgentForm(props: AgentFormProps) {
         onPrimaryModelChange={form.setPrimaryModelId}
         onAlternateModelsChange={form.setAlternateModelIds}
       />
+
+<div className="pt-4 border-t border-border/50">
+        <Separator />
+</div>
 
         {/* System Prompt Section */}
         <SystemPromptCardSection
