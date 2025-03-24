@@ -68,7 +68,7 @@ export function ModelsSection({
           </div>
           
           <p className="text-xs text-muted-foreground">
-            Choose the models that best fit your agent's purpose. Different models have different capabilities.
+            Choose the models that best fit your agent&apos;s purpose. Different models have different capabilities.
           </p>
         </div>
       </div>

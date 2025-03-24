@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,9 +14,11 @@ import {
 import { AlertCircle } from "lucide-react";
 import { AgentImageUploader } from "../agent-image-uploader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AppearanceSection } from "./appearance-section";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Globe, Lock, Share } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
 
 interface BasicInfoSectionProps {
   mode: "create" | "edit";
@@ -28,7 +30,7 @@ interface BasicInfoSectionProps {
   };
   thumbnailUrl: string | null;
   setThumbnailUrl: (url: string | null) => void;
-  handleFormValueChange: (field: "title" | "description" | "systemPrompt", value: string) => void;
+  handleFormValueChange: (field: "title" | "description" | "systemPrompt" | "visibility", value: string) => void;
 }
 
 export function BasicInfoSection({ 
@@ -40,6 +42,34 @@ export function BasicInfoSection({
 }: BasicInfoSectionProps) {
   const agentNameRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const [visibility, setVisibility] = useState<"public" | "private" | "link">(initialData?.visibility || "public");
+  
+  // Visibility options with icons and descriptions
+  const visibilityOptions = useMemo(() => [
+    {
+      id: "private",
+      label: "Private",
+      description: "Only you can access this agent",
+      icon: <Lock className="size-4" />
+    },
+    {
+      id: "public",
+      label: "Public",
+      description: "Anyone can see and use this agent",
+      icon: <Globe className="size-4" />
+    },
+    {
+      id: "link",
+      label: "Link sharing",
+      description: "Only people with the link can access",
+      icon: <Share className="size-4" />
+    }
+  ], []);
+
+  const handleVisibilityChange = (value: string) => {
+    setVisibility(value as "public" | "private" | "link");
+    handleFormValueChange("visibility", value);
+  };
   
   return (
     <section className="space-y-12 pb-10 pt-8">
@@ -49,7 +79,7 @@ export function BasicInfoSection({
           <div className="pb-2 border-b">
             <h2 className="text-lg font-medium tracking-tight">Agent Profile</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Define your agent's identity
+              Define your agent&apos;s identity
             </p>
           </div>
           
@@ -122,14 +152,67 @@ export function BasicInfoSection({
               ref={descriptionRef}
               onChange={(e) => handleFormValueChange('description', e.target.value)}
             />
-                  {/* Appearance Settings */}
-      <AppearanceSection initialVisibility={initialData?.visibility || "public"} />
+          </div>
 
+          {/* Visibility Settings */}
+          <div className="space-y-4">
+            <div className="flex items-start justify-between mb-1.5">
+              <div className="flex items-start gap-1.5">
+                <Label className="text-sm font-medium flex items-center gap-1.5">
+                  Visibility
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[250px]">
+                      <p>Control who can see and use your agent.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+            
+            <div className="bg-secondary/50 border rounded-lg p-2">
+              <RadioGroup 
+                value={visibility} 
+                onValueChange={handleVisibilityChange}
+                className="grid grid-cols-3 gap-2"
+              >
+                {visibilityOptions.map((option) => (
+                  <Label
+                    key={option.id}
+                    htmlFor={option.id}
+                    className={cn(
+                      "flex flex-col items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors h-full",
+                      visibility === option.id 
+                        ? "bg-background border-primary/30 ring-1 ring-primary/20" 
+                        : "hover:bg-background/80"
+                    )}
+                  >
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      <div className={cn(
+                        "flex items-center justify-center w-8 h-8 rounded-full",
+                        visibility === option.id
+                          ? "bg-primary/10 text-primary"
+                          : "bg-secondary text-muted-foreground"
+                      )}>
+                        {option.icon}
+                      </div>
+                      <div className="flex flex-col items-center gap-0.5 text-center">
+                        <span className="font-medium">{option.label}</span>
+                        <span className="text-xs text-muted-foreground">{option.description}</span>
+                      </div>
+                    </div>
+                    <RadioGroupItem value={option.id} id={option.id} className="mt-2" />
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
           </div>
         </div>
       </div>
-      
-      
     </section>
   );
 } 

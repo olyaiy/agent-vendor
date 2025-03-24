@@ -1,18 +1,11 @@
 "use client";
 
 import React from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { BasicInfoSection } from "./basic-info-section";
-
+import { Separator } from "@/components/ui/separator";
 
 interface BasicInfoCardSectionProps {
   mode: "create" | "edit";
@@ -25,7 +18,7 @@ interface BasicInfoCardSectionProps {
   thumbnailUrl: string | null;
   setThumbnailUrl: (url: string | null) => void;
   isPending: boolean;
-  handleFormValueChange: (field: "title" | "description" | "systemPrompt", value: string) => void;
+  handleFormValueChange: (field: "title" | "description" | "systemPrompt" | "visibility", value: string) => void;
   handleDeleteAgent: () => void;
   primaryModelId: string;
 }
@@ -41,15 +34,16 @@ export function BasicInfoCardSection({
   primaryModelId
 }: BasicInfoCardSectionProps) {
   return (
-    <Card className="shadow-sm border-2">
-      <CardHeader className="pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b gap-4 sm:gap-0">
+    <div className="space-y-6">
+      {/* Header section with title and actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 gap-4 sm:gap-0">
         <div>
-          <CardTitle className="text-2xl font-bold">
+          <h1 className="text-2xl font-bold">
             {mode === 'create' ? 'Create New Agent' : 'Edit Agent'}
-          </CardTitle>
-          <CardDescription>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {mode === 'create' ? 'Configure your new AI agent' : 'Update your AI agent settings'}
-          </CardDescription>
+          </p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {mode === 'edit' ? (
@@ -89,8 +83,12 @@ export function BasicInfoCardSection({
             )}
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-8 pt-6">
+      </div>
+      
+
+      
+      {/* Main content */}
+      <div className="pt-0">
         <BasicInfoSection 
           mode={mode}
           initialData={initialData}
@@ -98,7 +96,7 @@ export function BasicInfoCardSection({
           setThumbnailUrl={setThumbnailUrl}
           handleFormValueChange={handleFormValueChange}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 } 
