@@ -88,7 +88,7 @@ interface AgentFormProps {
     description?: string;
     modelId: string;
     visibility: "public" | "private" | "link";
-    imageUrl?: string | null;
+    thumbnailUrl?: string | null;
     alternateModelIds?: string[]; // Field for alternate models
     toolGroupIds?: string[]; // Field for tool groups
     tagIds?: string[]; // Field for tags
@@ -108,7 +108,7 @@ interface AgentFormProps {
 
 export default function AgentForm({ mode, userId, models, toolGroups, tags, knowledgeItems, initialData }: AgentFormProps) {
   const [isPending, startTransition] = useTransition();
-  const [imageUrl, setImageUrl] = useState<string | null>(initialData?.imageUrl || null);
+  const [thumbnailUrl, setthumbnailUrl] = useState<string | null>(initialData?.thumbnailUrl || null);
   const [primaryModelId, setPrimaryModelId] = useState<string>(initialData?.modelId || "");
   const [alternateModelIds, setAlternateModelIds] = useState<string[]>(initialData?.alternateModelIds || []);
   const [selectedToolGroupIds, setSelectedToolGroupIds] = useState<string[]>(
@@ -176,7 +176,7 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
           modelId: primaryModelId, // Use the primary model ID
           visibility: formData.get("visibility") as "public" | "private" | "link",
           creatorId: formData.get("userId") as string,
-          imageUrl: imageUrl,
+          thumbnailUrl: thumbnailUrl,
           alternateModelIds: alternateModelIds, // Include alternate models
           toolGroupIds: selectedToolGroupIds, // Include tool groups
           tagIds: selectedTags.map(tag => tag.id), // Include tag IDs
@@ -241,6 +241,14 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
     }
   }, [initialData?.systemPrompt]);
 
+  // Add this useEffect to log the avatar URL status
+  useEffect(() => {
+    if (thumbnailUrl) {
+      console.log('Avatar URL exists:', thumbnailUrl);
+    } else {
+      console.log('No avatar URL exists');
+    }
+  }, [thumbnailUrl]);
 
   // Tag input change handler
   const handleTagInputChange = (value: string) => {
@@ -439,8 +447,8 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
             {/* Image Upload Area with 4:3 aspect ratio - Now using child component */}
             <div className="col-span-1 md:col-span-2">
               <AgentImageUploader
-                imageUrl={imageUrl}
-                setImageUrl={setImageUrl}
+                imageUrl={thumbnailUrl}
+                setImageUrl={setthumbnailUrl}
                 agentId={initialData?.id}
               />
             </div>

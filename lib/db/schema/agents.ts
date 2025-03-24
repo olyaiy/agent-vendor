@@ -25,6 +25,7 @@ export const agents = pgTable("agents", {
   creatorId: uuid("creator_id").references(() => user.id),
   artifacts_enabled: boolean("artifacts_enabled").default(true),
   thumbnail_url: text("thumbnail_url"),
+  avatar_url: text("avatar_url"),
   customization: json("customization").default({
     overview: {
       title: "Welcome to your AI assistant!",

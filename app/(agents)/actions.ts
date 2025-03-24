@@ -14,7 +14,7 @@ export async function createAgent({
   visibility,
   creatorId,
   artifactsEnabled = true,
-  imageUrl,
+  thumbnailUrl,
   alternateModelIds = [],
   toolGroupIds = [],
   tagIds = [],
@@ -27,7 +27,7 @@ export async function createAgent({
   visibility: "public" | "private" | "link";
   creatorId: string;
   artifactsEnabled?: boolean;
-  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   alternateModelIds?: string[];
   toolGroupIds?: string[];
   tagIds?: string[];
@@ -56,7 +56,7 @@ export async function createAgent({
       visibility,
       creatorId,
       artifactsEnabled,
-      imageUrl,
+      thumbnailUrl,
       customization,
       tagIds: processedTagIds
     });
@@ -98,7 +98,7 @@ export async function updateAgent({
   modelId,
   visibility,
   artifactsEnabled,
-  imageUrl,
+  thumbnailUrl,
   alternateModelIds = [],
   toolGroupIds = [],
   tagIds = [],
@@ -111,7 +111,7 @@ export async function updateAgent({
   modelId: string;
   visibility: "public" | "private" | "link";
   artifactsEnabled?: boolean;
-  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   alternateModelIds?: string[];
   toolGroupIds?: string[];
   tagIds?: string[];
@@ -140,7 +140,7 @@ export async function updateAgent({
       modelId,
       visibility,
       artifactsEnabled,
-      imageUrl,
+      thumbnailUrl,
       customization,
       tagIds: processedTagIds
     });
@@ -273,7 +273,7 @@ export async function deleteAgentImage(id: string, imageUrl: string) {
       modelId: defaultModelId,
       visibility: agent.visibility || 'public',
       artifactsEnabled: agent.artifacts_enabled || true,
-      imageUrl: null,
+      thumbnailUrl: null,
     });
     
     revalidatePath('/');
