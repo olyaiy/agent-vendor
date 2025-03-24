@@ -12,6 +12,7 @@ import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { VisibilityType, VisibilitySelector } from '@/components/util/visibility-selector';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Logo } from '@/components/logo';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,68 +80,22 @@ function PureChatHeader({
 
   return (
     <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-4 gap-2 z-50">
-      {(!open || windowWidth < 768) && <SidebarToggle />}
+      {/* Left side: Sidebar toggle and Logo (when collapsed) */}
+      <div className="flex items-center">
+        {(!open || windowWidth < 768) && <SidebarToggle />}
+        {!open && <Logo className="ml-2" spanClassName={isMobile ? "text-sm" : "text-base"} />}
+      </div>
       
-      {/* Desktop Layout */}
-      {!isMobile && (
-        <>
-
-          
-
-
-          {!isReadonly && (
-            <VisibilitySelector
-              chatId={chatId}
-              selectedVisibilityType={selectedVisibilityType}
-              className="shrink-0 md:order-2"
-            />
-          )}
-
-          {!isReadonly && (
-            <div className="shrink-0 md:ml-0 md:order-3">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="h-10 md:h-9 min-w-10 md:px-3 flex items-center justify-center gap-2"
-                    asChild
-                  >
-                    <Link href={`/agents/${agentId}/edit`} className="flex items-center gap-2">
-                      <Avatar className="size-6 border border-border relative">
-                        {image_url ? (
-                          <>
-                            <Image 
-                              src={image_url} 
-                              alt={agent_display_name || "Agent"} 
-                              fill
-                              sizes="24px"
-                              className="object-cover rounded-full"
-                              priority
-                            />
-                            <AvatarImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" className="opacity-0" />
-                          </>
-                        ) : (
-                          <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
-                        )}
-                      </Avatar>
-                      <span className="font-medium text-sm hidden md:inline-block">
-                        {agent_display_name || "Agent"}
-                      </span>
-                      <SettingsIcon />
-                      <span className="sr-only">Agent Settings</span>
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Agent Settings</TooltipContent>
-              </Tooltip>
-            </div>
-          )}
-
+      {/* Right side: All other elements aligned to the right */}
+      <div className="flex items-center gap-2 ml-auto">
+        {/* Desktop Layout */}
+        {!isMobile && (
+          <>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-8  md:h-8 shrink-0 order-last  ml-auto md:ml-0"
+                  className="h-8 md:h-8 shrink-0"
                   onClick={() => {
                     router.push(`/${agentId}`);
                     router.refresh();
@@ -151,19 +106,68 @@ function PureChatHeader({
               </TooltipTrigger>
               <TooltipContent side="bottom">New Chat</TooltipContent>
             </Tooltip>
-        </>
-      )}
 
-      {/* Mobile Layout with Three Dots Menu */}
-      {isMobile && (
-        <>
-        {!isReadonly && (
-              <Button onClick={() => {
-                router.push(`/${agentId}`);
-                router.refresh();
-              }}
-              variant="outline"
-              className="h-8"
+            {!isReadonly && (
+              <VisibilitySelector
+                chatId={chatId}
+                selectedVisibilityType={selectedVisibilityType}
+                className="shrink-0"
+              />
+            )}
+
+            {!isReadonly && (
+              <div className="shrink-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-10 md:h-9 min-w-10 md:px-3 flex items-center justify-center gap-2"
+                      asChild
+                    >
+                      <Link href={`/agents/${agentId}/edit`} className="flex items-center gap-2">
+                        <Avatar className="size-6 border border-border relative">
+                          {image_url ? (
+                            <>
+                              <Image 
+                                src={image_url} 
+                                alt={agent_display_name || "Agent"} 
+                                fill
+                                sizes="24px"
+                                className="object-cover rounded-full"
+                                priority
+                              />
+                              <AvatarImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" className="opacity-0" />
+                            </>
+                          ) : (
+                            <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
+                          )}
+                        </Avatar>
+                        <span className="font-medium text-sm hidden md:inline-block">
+                          {agent_display_name || "Agent"}
+                        </span>
+                        <SettingsIcon />
+                        <span className="sr-only">Agent Settings</span>
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Agent Settings</TooltipContent>
+                </Tooltip>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Mobile Layout */}
+        {isMobile && (
+          <>
+            {!isReadonly && (
+              <Button 
+                onClick={() => {
+                  router.push(`/${agentId}`);
+                  router.refresh();
+                }}
+                variant="outline"
+                className="h-8"
               >
                 <div className="flex items-center">
                   <PlusIcon size={8} /> 
@@ -171,65 +175,57 @@ function PureChatHeader({
                 </div>
               </Button>
             )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild className="ml-auto">
-            <Button variant="ghost" size="icon" className="size-8">
-              <EllipsisIcon />
-              <span className="sr-only">Menu</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            {!isReadonly && (
-              <DropdownMenuItem onClick={() => {
-                router.push(`/${agentId}`);
-                router.refresh();
-              }}>
-                <div className="flex items-center">
-                  <PlusIcon size={8} /> 
-                  <span className="ml-2">New Chat</span>
-                </div>
-              </DropdownMenuItem>
-            )}
             
-            {!isReadonly && (
-              <DropdownMenuItem asChild>
-                <Link href={`/agents/${agentId}/edit`} className="flex items-center">
-                  <Avatar className="size-4 border border-border relative mr-2">
-                    {image_url ? (
-                      <>
-                        <Image 
-                          src={image_url} 
-                          alt={agent_display_name || "Agent"} 
-                          fill
-                          sizes="16px"
-                          className="object-cover rounded-full"
-                        />
-                        <AvatarImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" className="opacity-0" />
-                      </>
-                    ) : (
-                      <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
-                    )}
-                  </Avatar>
-                  <span>Agent Settings</span>
-                </Link>
-              </DropdownMenuItem>
-            )}
-            
-            {!isReadonly && (
-              <DropdownMenuItem className="p-0">
-                <div className="w-full">
-                  <VisibilitySelector
-                    chatId={chatId}
-                    selectedVisibilityType={selectedVisibilityType}
-                    className="w-full"
-                  />
-                </div>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        </>
-      )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8">
+                  <EllipsisIcon />
+                  <span className="sr-only">Menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                
+                
+                {!isReadonly && (
+                  <DropdownMenuItem asChild>
+                    <Link href={`/agents/${agentId}/edit`} className="flex items-center">
+                      <Avatar className="size-4 border border-border relative mr-2">
+                        {image_url ? (
+                          <>
+                            <Image 
+                              src={image_url} 
+                              alt={agent_display_name || "Agent"} 
+                              fill
+                              sizes="16px"
+                              className="object-cover rounded-full"
+                            />
+                            <AvatarImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" className="opacity-0" />
+                          </>
+                        ) : (
+                          <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
+                        )}
+                      </Avatar>
+                      <span>Agent Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                
+                {!isReadonly && (
+                  <DropdownMenuItem className="p-0">
+                    <div className="w-full">
+                      <VisibilitySelector
+                        chatId={chatId}
+                        selectedVisibilityType={selectedVisibilityType}
+                        className="w-full"
+                      />
+                    </div>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
+      </div>
     </header>
   );
 }
