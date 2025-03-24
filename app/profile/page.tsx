@@ -48,9 +48,15 @@ export default async function ProfilePage() {
     ...agent,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     featured: (agent as any).featured || false,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+
     createdAt: (agent as any).createdAt || new Date(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+
     updatedAt: (agent as any).updatedAt || new Date(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     avatar_url: (agent as any).avatar_url || null,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     customization: (agent as any).customization || {
       overview: {
         title: "Welcome to your AI assistant!",
