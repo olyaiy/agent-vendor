@@ -1,11 +1,13 @@
-
 import { searchSchema } from '@/lib/schema/search'
 import {
   SearchResultImage,
 } from '@/lib/ai/tools/retrieve'
 import { sanitizeUrl } from '@/lib/utils'
 import { tool } from 'ai'
-import { SearchResults } from '@/lib/types'
+import { SearchResultItem, SearchResults, SearXNGResponse, SearXNGResult } from '@/lib/types'
+import Exa from 'exa-js'
+
+
 
 export const searchTool = tool({
   description: 'Search the web for information',
@@ -17,27 +19,21 @@ export const searchTool = tool({
     include_domains,
     exclude_domains
   }) => {
-
-
-    // Tavily API requires a minimum of 5 characters in the query
-    const filledQuery =
-      query.length < 5 ? query + ' '.repeat(5 - query.length) : query
     let searchResult: SearchResults
 
-
     try {
-      searchResult = await tavilySearch(
-        filledQuery,
+      searchResult = await exaSearch(
+        query,
         max_results,
         search_depth === 'advanced' ? 'advanced' : 'basic',
         include_domains,
         exclude_domains
       )
     } catch (error) {
-      console.error('Tavily API error:', error)
+      console.error('Exa API error:', error)
       searchResult = {
         results: [],
-        query: filledQuery,
+        query: query,
         images: [],
         number_of_results: 0
       }
@@ -86,7 +82,7 @@ async function tavilySearch(
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      api_key: apiKey,
+      // api_key: apiKey,
       query,
       max_results: Math.max(maxResults, 5),
       search_depth: searchDepth,
@@ -126,3 +122,119 @@ async function tavilySearch(
     images: processedImages
   }
 }
+
+
+
+async function exaSearch(
+  query: string,
+  maxResults: number = 10,
+  _searchDepth: string,
+  includeDomains: string[] = [],
+  excludeDomains: string[] = []
+): Promise<SearchResults> {
+  const apiKey = process.env.EXA_API_KEY
+  if (!apiKey) {
+    throw new Error('EXA_API_KEY is not set in the environment variables')
+  }
+
+  const exa = new Exa(apiKey)
+  const exaResults = await exa.searchAndContents(query, {
+    highlights: true,
+    numResults: maxResults,
+    includeDomains,
+    excludeDomains
+  })
+
+  return {
+    results: exaResults.results.map((result: any) => ({
+      title: result.title,
+      url: result.url,
+      content: result.highlight || result.text
+    })),
+    query,
+    images: [],
+    number_of_results: exaResults.results.length
+  }
+}
+
+
+
+// async function searxngSearch(
+//   query: string,
+//   maxResults: number = 10,
+//   searchDepth: string,
+//   includeDomains: string[] = [],
+//   excludeDomains: string[] = []
+// ): Promise<SearchResults> {
+//   const apiUrl = process.env.SEARXNG_API_URL
+//   if (!apiUrl) {
+//     throw new Error('SEARXNG_API_URL is not set in the environment variables')
+//   }
+
+//   try {
+//     // Construct the URL with query parameters
+//     const url = new URL(`https://search.inetol.net/search`)
+//     url.searchParams.append('q', query)
+//     url.searchParams.append('format', 'json')
+//     url.searchParams.append('categories', 'general,images')
+
+//     // Apply search depth settings
+//     if (searchDepth === 'advanced') {
+//       url.searchParams.append('time_range', '')
+//       url.searchParams.append('safesearch', '0')
+//       url.searchParams.append('engines', 'google,bing,duckduckgo,wikipedia')
+//     } else {
+//       url.searchParams.append('time_range', 'year')
+//       url.searchParams.append('safesearch', '1')
+//       url.searchParams.append('engines', 'google,bing')
+//     }
+
+//     // Fetch results from SearXNG
+//     const response = await fetch(url.toString(), {
+//       method: 'GET',
+//       headers: {
+//         Accept: 'application/json'
+//       }
+//     })
+
+//     if (!response.ok) {
+//       const errorText = await response.text()
+//       console.error(`SearXNG API error (${response.status}):`, errorText)
+//       throw new Error(
+//         `SearXNG API error: ${response.status} ${response.statusText} - ${errorText}`
+//       )
+//     }
+
+//     const data: SearXNGResponse = await response.json()
+
+//     // Separate general results and image results, and limit to maxResults
+//     const generalResults = data.results
+//       .filter(result => !result.img_src)
+//       .slice(0, maxResults)
+//     const imageResults = data.results
+//       .filter(result => result.img_src)
+//       .slice(0, maxResults)
+
+//     // Format the results to match the expected SearchResults structure
+//     return {
+//       results: generalResults.map(
+//         (result: SearXNGResult): SearchResultItem => ({
+//           title: result.title,
+//           url: result.url,
+//           content: result.content
+//         })
+//       ),
+//       query: data.query,
+//       images: imageResults
+//         .map(result => {
+//           const imgSrc = result.img_src || ''
+//           return imgSrc.startsWith('http') ? imgSrc : `${apiUrl}${imgSrc}`
+//         })
+//         .filter(Boolean),
+//       number_of_results: data.number_of_results
+//     }
+//   } catch (error) {
+//     console.error('SearXNG API error:', error)
+//     throw error
+//   }
+// }
