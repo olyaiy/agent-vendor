@@ -46,6 +46,7 @@ export default async function ProfilePage() {
   // Limit to just a preview (3 agents)
   const agentPreview = userAgents.slice(0, 3).map(agent => ({
     ...agent,
+    featured: (agent as any).featured || false,
     createdAt: (agent as any).createdAt || new Date(),
     updatedAt: (agent as any).updatedAt || new Date(),
     avatar_url: (agent as any).avatar_url || null,
