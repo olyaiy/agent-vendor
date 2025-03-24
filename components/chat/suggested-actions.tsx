@@ -52,7 +52,7 @@ function PureSuggestedActions({ chatId, append, agentId, suggestedPrompts = [] }
     ];
 
   return (
-    <div className="grid sm:grid-cols-2 gap-2 w-full">
+    <div className="grid sm:grid-cols-2 gap-2 w-full overflow-hidden ">
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -60,7 +60,7 @@ function PureSuggestedActions({ chatId, append, agentId, suggestedPrompts = [] }
           exit={{ opacity: 0, y: 20 }}
           transition={{ delay: 0.05 * index }}
           key={`suggested-action-${suggestedAction.title}-${index}`}
-          className={index > 1 ? 'hidden sm:block' : 'block'}
+          className={index > 1 ? 'hidden sm:block' : 'block overflow-hidden'}
         >
           <Button
             variant="ghost"

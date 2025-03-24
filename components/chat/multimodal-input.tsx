@@ -297,7 +297,7 @@ function PureMultimodalInput({
     <div className="relative w-full flex flex-col gap-2 sm:gap-4">
       <input
         type="file"
-        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none "
         ref={fileInputRef}
         multiple
         onChange={handleFileChange}
@@ -384,7 +384,7 @@ function PureMultimodalInput({
           onChange={handleInput}
           onPaste={handlePaste}
           className={cx(
-            'min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700',
+            'sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700',
             className
           )}
           rows={2}
@@ -395,10 +395,9 @@ function PureMultimodalInput({
               !event.shiftKey &&
               !event.nativeEvent.isComposing
             ) {
-
-              if (status !== 'ready') {
-                toast.error('Please wait for the model to finish its response!');
-              } else {
+              // Only submit on Enter key for desktop devices (width > 768px)
+              if (width && width > 768) {
+                event.preventDefault();
                 submitForm();
               }
             }

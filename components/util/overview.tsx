@@ -17,24 +17,25 @@ export const Overview = ({ agent }: { agent: Agent }) => {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.5 }}
     >
-      <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center mx-auto   ">
+      <div className="rounded-xl p-6 flex flex-col gap-8 leading-relaxed text-center mx-auto">
         {(agent.image_url || agent.agent_display_name) && (
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {agent.image_url && (
-              <div className="relative size-20 overflow-hidden rounded-full border border-muted">
+              <div className="relative w-20 h-20 min-w-20 min-h-20 overflow-hidden rounded-full border border-muted shrink-0">
                 <Image
                   src={agent.image_url}
                   alt={agent.agent_display_name || "Agent"}
                   fill
-                  sizes="80px"
+                  sizes="(max-width: 640px) 80px, 80px"
                   className="object-cover"
                   priority
+                  quality={100}
                 />
               </div>
             )}
             
             {agent.agent_display_name && (
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h1 className="text-3xl font-bold tracking-tight mt-2 sm:mt-0">
                 {agent.agent_display_name}
               </h1>
             )}
