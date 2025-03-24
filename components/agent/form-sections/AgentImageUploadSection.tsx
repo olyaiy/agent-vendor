@@ -88,7 +88,7 @@ export default function AgentImageUploadSection({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium flex items-center gap-1.5">
-          Agent Image
+          Agent Thumbnail
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
@@ -134,25 +134,42 @@ export default function AgentImageUploadSection({
             />
             
             {/* Delete overlay that appears on hover */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 gap-2.5 p-3">
               <Button 
                 variant="destructive" 
                 size="sm"
-                className="flex items-center gap-1.5"
-                onClick={handleDeleteImage}
+                className="flex items-center justify-center gap-1.5 w-20 h-9 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteImage();
+                }}
                 disabled={isDeletingImage || isUploading}
               >
                 {isDeletingImage ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Deleting...
+                    <Loader2 className="size-3.5 animate-spin" />
+                    <span>Deleting</span>
                   </>
                 ) : (
                   <>
-                    <Trash2 className="size-4" />
-                    Delete Image
+                    <Trash2 className="size-3.5" />
+                    <span>Delete</span>
                   </>
                 )}
+              </Button>
+              
+              <Button 
+                variant="secondary" 
+                size="sm"
+                className="flex items-center justify-center gap-1.5 w-20 h-9 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (fileInputRef.current) fileInputRef.current.click();
+                }}
+                disabled={isUploading || isDeletingImage}
+              >
+                <Camera className="size-3.5" />
+                <span>Update</span>
               </Button>
             </div>
             

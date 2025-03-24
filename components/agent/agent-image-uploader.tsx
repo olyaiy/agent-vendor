@@ -95,7 +95,7 @@ export function AgentImageUploader({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium flex items-center gap-1.5">
-          Agent Image
+          Agent Thumbnail
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>

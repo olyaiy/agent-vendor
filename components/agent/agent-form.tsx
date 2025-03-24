@@ -380,7 +380,7 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
     <form onSubmit={handleSubmit} className="space-y-8 mx-auto overflow-hidden">
       {/* Main Card - Basic Info */}
       <Card className="shadow-sm border-2">
-        <CardHeader className="pb-6 flex flex-row justify-between items-center border-b">
+        <CardHeader className="pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b gap-4 sm:gap-0">
           <div>
             <CardTitle className="text-2xl font-bold">
               {mode === 'create' ? 'Create New Agent' : 'Edit Agent'}
@@ -389,7 +389,7 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
               {mode === 'create' ? 'Configure your new AI agent' : 'Update your AI agent settings'}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
             {mode === 'edit' && (
               <TooltipProvider>
                 <Tooltip>

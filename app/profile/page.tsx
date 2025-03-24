@@ -48,6 +48,7 @@ export default async function ProfilePage() {
     ...agent,
     createdAt: (agent as any).createdAt || new Date(),
     updatedAt: (agent as any).updatedAt || new Date(),
+    avatar_url: (agent as any).avatar_url || null,
     customization: (agent as any).customization || {
       overview: {
         title: "Welcome to your AI assistant!",
