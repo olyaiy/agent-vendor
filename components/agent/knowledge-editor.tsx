@@ -9,7 +9,8 @@ import {
   Loader2,
   File,
   Check,
-  Upload
+  Upload,
+  FileUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,7 @@ export function KnowledgeEditor({
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dropzoneRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state for new or edited items
   const [formValues, setFormValues] = useState({
@@ -206,12 +208,7 @@ export function KnowledgeEditor({
     setIsDragging(false);
   };
 
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files);
+  const processFiles = async (files: File[]) => {
     const supportedFiles = files.filter(file => 
       file.type === 'text/plain' || 
       file.name.endsWith('.txt') || 
@@ -220,7 +217,7 @@ export function KnowledgeEditor({
     );
     
     if (supportedFiles.length === 0) {
-      toast.error("Please drop text (.txt) or PDF (.pdf) files only");
+      toast.error("Please select text (.txt) or PDF (.pdf) files only");
       return;
     }
 
@@ -254,6 +251,30 @@ export function KnowledgeEditor({
       console.error(error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    await processFiles(files);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      await processFiles(files);
+      // Reset the input value to allow selecting the same file again
+      e.target.value = '';
+    }
+  };
+
+  const handleDropzoneClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -371,22 +392,42 @@ export function KnowledgeEditor({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={handleDropzoneClick}
         className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
           isDragging 
             ? "border-primary bg-primary/5" 
-            : "border-gray-200 dark:border-gray-800"
-        }`}
+            : "border-gray-200 dark:border-gray-800 hover:border-primary/50 hover:bg-primary/5"
+        } cursor-pointer`}
       >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          accept=".txt,.pdf"
+          multiple
+          className="hidden"
+        />
+        
         {items.length === 0 ? (
           <div className="text-center py-12 flex flex-col items-center justify-center gap-4">
             <div className="bg-primary/10 rounded-full p-3">
-              <Upload className="size-6 text-primary" />
+              <FileUp className="size-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium">Drop files here</p>
+              <p className="text-sm font-medium">Upload knowledge files</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Drag and drop .txt or .pdf files to add to your knowledge base
+                Drop .txt or .pdf files here, or click to select files
               </p>
+              <div className="flex items-center justify-center mt-3 gap-1.5">
+                <Badge variant="outline" className="text-xs py-1 px-2">
+                  <File className="size-3 mr-1" />
+                  .txt
+                </Badge>
+                <Badge variant="outline" className="text-xs py-1 px-2">
+                  <File className="size-3 mr-1" />
+                  .pdf
+                </Badge>
+              </div>
             </div>
           </div>
         ) : (
