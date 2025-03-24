@@ -46,6 +46,7 @@ export default async function ProfilePage() {
   // Limit to just a preview (3 agents)
   const agentPreview = userAgents.slice(0, 3).map(agent => ({
     ...agent,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     featured: (agent as any).featured || false,
     createdAt: (agent as any).createdAt || new Date(),
     updatedAt: (agent as any).updatedAt || new Date(),
