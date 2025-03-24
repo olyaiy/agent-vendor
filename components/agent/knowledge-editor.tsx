@@ -44,6 +44,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import pdfToText from "react-pdftotext";
 
 interface KnowledgeItem {
   id: string;
@@ -211,19 +212,33 @@ export function KnowledgeEditor({
     setIsDragging(false);
     
     const files = Array.from(e.dataTransfer.files);
-    const textFiles = files.filter(file => file.type === 'text/plain' || file.name.endsWith('.txt'));
+    const supportedFiles = files.filter(file => 
+      file.type === 'text/plain' || 
+      file.name.endsWith('.txt') || 
+      file.type === 'application/pdf' || 
+      file.name.endsWith('.pdf')
+    );
     
-    if (textFiles.length === 0) {
-      toast.error("Please drop text (.txt) files only");
+    if (supportedFiles.length === 0) {
+      toast.error("Please drop text (.txt) or PDF (.pdf) files only");
       return;
     }
 
     setIsSubmitting(true);
     
     try {
-      for (const file of textFiles) {
-        const content = await readFileContent(file);
-        const title = file.name.replace(/\.txt$/, '');
+      for (const file of supportedFiles) {
+        const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+        let content;
+        
+        if (isPdf) {
+          content = await readPdfContent(file);
+          toast.success(`Processed PDF: ${file.name}`);
+        } else {
+          content = await readFileContent(file);
+        }
+        
+        const title = file.name.replace(/\.(txt|pdf)$/, '');
         
         const newItem = await onAddItem({
           title,
@@ -255,6 +270,17 @@ export function KnowledgeEditor({
       reader.onerror = () => reject(reader.error);
       reader.readAsText(file);
     });
+  };
+
+  const readPdfContent = async (file: File): Promise<string> => {
+    try {
+      // Use the react-pdftotext library to extract text from PDF
+      const pdfText = await pdfToText(file);
+      return pdfText;
+    } catch (error) {
+      console.error("Error reading PDF:", error);
+      throw new Error("Failed to extract text from PDF");
+    }
   };
 
   return (
@@ -357,9 +383,9 @@ export function KnowledgeEditor({
               <Upload className="size-6 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-medium">Drop text files here</p>
+              <p className="text-sm font-medium">Drop files here</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Drag and drop .txt files to add to your knowledge base
+                Drag and drop .txt or .pdf files to add to your knowledge base
               </p>
             </div>
           </div>
@@ -370,6 +396,43 @@ export function KnowledgeEditor({
                 key={item.id} 
                 className="group relative border overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50"
               >
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="absolute top-2 right-2 size-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteItemId(item.id);
+                      }}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete this knowledge item.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => handleDelete(item.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        {isSubmitting && deleteItemId === item.id ? (
+                          <Loader2 className="size-4 animate-spin mr-2" />
+                        ) : null}
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
                 <Dialog>
                   <DialogTrigger asChild>
                     <button className="text-left w-full overflow-hidden" onClick={() => handleEditClick(item)}>
@@ -459,59 +522,21 @@ export function KnowledgeEditor({
                   </DialogContent>
                 </Dialog>
                 
-                <CardFooter className="flex justify-between pt-0 pb-3">
-                  <div className="flex gap-2">
-                    {(() => {
-                      const stats = getContentStats(item.content);
-                      return (
-                        <Badge variant="outline" className="text-xs font-normal">
-                          {stats.words} words
-                        </Badge>
-                      );
-                    })()}
-                    {item.updatedAt && (
+                <CardFooter className="flex flex-col items-start pt-0 pb-3 gap-2">
+                  {(() => {
+                    const stats = getContentStats(item.content);
+                    return (
                       <Badge variant="outline" className="text-xs font-normal">
-                        {formatDate(item.updatedAt)}
+                        {stats.words} words
                       </Badge>
-                    )}
-                  </div>
+                    );
+                  })()}
                   
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="size-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteItemId(item.id);
-                        }}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete this knowledge item.
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => handleDelete(item.id)}
-                          className="bg-red-500 hover:bg-red-600"
-                        >
-                          {isSubmitting && deleteItemId === item.id ? (
-                            <Loader2 className="size-4 animate-spin mr-2" />
-                          ) : null}
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  {item.updatedAt && (
+                    <Badge variant="outline" className="text-xs font-normal">
+                      {formatDate(item.updatedAt)}
+                    </Badge>
+                  )}
                 </CardFooter>
               </Card>
             ))}
