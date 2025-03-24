@@ -6,9 +6,9 @@ import {
   Trash2, 
   Edit, 
   PlusCircle, 
-  Loader2, 
-  ChevronDown, 
-  ChevronUp 
+  Loader2,
+  File,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +42,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface KnowledgeItem {
   id: string;
@@ -93,6 +89,14 @@ export function KnowledgeEditor({
       content: "",
       description: ""
     });
+  };
+
+  // Function to calculate content stats
+  const getContentStats = (content: any) => {
+    const text = typeof content === 'string' ? content : JSON.stringify(content);
+    const words = text.trim().split(/\s+/).length;
+    const chars = text.length;
+    return { words, chars };
   };
 
   const handleEditClick = (item: KnowledgeItem) => {
@@ -167,6 +171,23 @@ export function KnowledgeEditor({
       setIsSubmitting(false);
       setDeleteItemId(null);
     }
+  };
+
+  // Truncate content for preview
+  const truncateContent = (content: any, maxLength = 180) => {
+    const text = typeof content === 'string' ? content : JSON.stringify(content);
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  };
+
+  // Format date for display
+  const formatDate = (date: Date | null) => {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   return (
@@ -260,149 +281,157 @@ export function KnowledgeEditor({
           </p>
         </div>
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <Accordion type="multiple" className="w-full">
-            {items.map((item) => (
-              <AccordionItem key={item.id} value={item.id} className="border-b last:border-b-0">
-                <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900/40 group">
-                  <div className="flex justify-between items-center w-full mr-4">
-                    <div>
-                      <h4 className="font-medium text-sm text-left group-hover:text-primary">{item.title}</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => (
+            <Card 
+              key={item.id} 
+              className="group relative border overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50"
+            >
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="text-left w-full overflow-hidden" onClick={() => handleEditClick(item)}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-medium flex items-center gap-2 truncate">
+                        <File className="size-4 flex-shrink-0 text-primary/70" />
+                        {item.title}
+                      </CardTitle>
                       {item.description && (
-                        <p className="text-muted-foreground text-xs mt-1 text-left">{item.description}</p>
+                        <CardDescription className="text-xs truncate mt-1">
+                          {item.description}
+                        </CardDescription>
                       )}
+                    </CardHeader>
+                    <CardContent className="pb-3">
+                      <div className="text-xs text-muted-foreground h-[80px] overflow-hidden">
+                        <p className="whitespace-pre-wrap line-clamp-4">
+                          {truncateContent(item.content)}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[550px]">
+                  <DialogHeader>
+                    <DialogTitle>Edit Knowledge Item</DialogTitle>
+                    <DialogDescription>
+                      Update your agent&apos;s knowledge base.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-title">Title</Label>
+                      <Input 
+                        id="edit-title" 
+                        value={formValues.title} 
+                        onChange={(e) => handleFormChange("title", e.target.value)}
+                        placeholder="Enter a descriptive title" 
+                        required
+                      />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="size-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteItemId(item.id);
-                            }}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete this knowledge item.
-                              This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => handleDelete(item.id)}
-                              className="bg-red-500 hover:bg-red-600"
-                            >
-                              {isSubmitting && deleteItemId === item.id ? (
-                                <Loader2 className="size-4 animate-spin mr-2" />
-                              ) : null}
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="size-8 text-slate-500 hover:text-primary hover:bg-primary/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditClick(item);
-                            }}
-                          >
-                            <Edit className="size-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[550px]">
-                          <DialogHeader>
-                            <DialogTitle>Edit Knowledge Item</DialogTitle>
-                            <DialogDescription>
-                              Update your agent&apos;s knowledge base.
-                            </DialogDescription>
-                          </DialogHeader>
-                          
-                          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-                            <div className="space-y-2">
-                              <Label htmlFor="edit-title">Title</Label>
-                              <Input 
-                                id="edit-title" 
-                                value={formValues.title} 
-                                onChange={(e) => handleFormChange("title", e.target.value)}
-                                placeholder="Enter a descriptive title" 
-                                required
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="edit-description">Description (Optional)</Label>
-                              <Input 
-                                id="edit-description" 
-                                value={formValues.description} 
-                                onChange={(e) => handleFormChange("description", e.target.value)}
-                                placeholder="Brief description of this knowledge item" 
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <Label htmlFor="edit-content">Content</Label>
-                              <Textarea 
-                                id="edit-content" 
-                                value={formValues.content} 
-                                onChange={(e) => handleFormChange("content", e.target.value)}
-                                placeholder="Enter the knowledge content" 
-                                className="min-h-[150px]"
-                                required
-                              />
-                            </div>
-                            
-                            <DialogFooter>
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={() => {
-                                  resetForm();
-                                  setEditingItem(null);
-                                }}
-                              >
-                                Cancel
-                              </Button>
-                              <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? (
-                                  <>
-                                    <Loader2 className="mr-2 size-4 animate-spin" />
-                                    Updating...
-                                  </>
-                                ) : "Update Item"}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-description">Description (Optional)</Label>
+                      <Input 
+                        id="edit-description" 
+                        value={formValues.description} 
+                        onChange={(e) => handleFormChange("description", e.target.value)}
+                        placeholder="Brief description of this knowledge item" 
+                      />
                     </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="p-4 bg-slate-50 dark:bg-slate-900/20">
-                  <div className="whitespace-pre-wrap text-sm">
-                    {typeof item.content === 'string' 
-                      ? item.content 
-                      : JSON.stringify(item.content, null, 2)
-                    }
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-content">Content</Label>
+                      <Textarea 
+                        id="edit-content" 
+                        value={formValues.content} 
+                        onChange={(e) => handleFormChange("content", e.target.value)}
+                        placeholder="Enter the knowledge content" 
+                        className="min-h-[150px]"
+                        required
+                      />
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => {
+                          resetForm();
+                          setEditingItem(null);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Updating...
+                          </>
+                        ) : "Update Item"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              
+              <CardFooter className="flex justify-between pt-0 pb-3">
+                <div className="flex gap-2">
+                  {(() => {
+                    const stats = getContentStats(item.content);
+                    return (
+                      <Badge variant="outline" className="text-xs font-normal">
+                        {stats.words} words
+                      </Badge>
+                    );
+                  })()}
+                  {item.updatedAt && (
+                    <Badge variant="outline" className="text-xs font-normal">
+                      {formatDate(item.updatedAt)}
+                    </Badge>
+                  )}
+                </div>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="size-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteItemId(item.id);
+                      }}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete this knowledge item.
+                        This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => handleDelete(item.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        {isSubmitting && deleteItemId === item.id ? (
+                          <Loader2 className="size-4 animate-spin mr-2" />
+                        ) : null}
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       )}
     </div>
