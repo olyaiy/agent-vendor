@@ -54,7 +54,14 @@ export async function getDocumentsById({ id }: { id: string }) {
 /**
  * Get a single document by ID
  */
-export async function getDocumentById({ id }: { id: string }) {
+export async function getDocumentById({ id }: { id: string }): Promise<{
+  id: string;
+  title: string;
+  kind: "text" | "code" | "image" | "sheet";
+  content: string | null;
+  userId: string;
+  createdAt: Date;
+} | undefined> {
   try {
     const [selectedDocument] = await db
       .select()
