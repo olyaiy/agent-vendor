@@ -14,6 +14,75 @@ import { Attachment, UIMessage } from 'ai';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { DataStreamHandler } from '@/components/util/data-stream-handler';
 import { AccessDenied } from '@/components/ui/access-denied';
+import type { Metadata, ResolvingMetadata } from 'next';
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ agent: string; 'chat-id': string }> },
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  // Await params before accessing its properties
+  const { agent: agentSlug, 'chat-id': chatId } = await params;
+  
+  // Fetch chat and agent data
+  const chat = await getChatById({ id: chatId });
+  const agentWithModel = await getAgentWithModelById(agentSlug);
+  
+  // Fall back to default metadata if chat or agent not found
+  if (!chat || !agentWithModel?.agent) {
+    return {
+      title: 'Chat - Not Found',
+      description: 'The requested conversation could not be found.'
+    };
+  }
+  
+  // Only provide rich metadata for public chats
+  if (chat.visibility !== 'public') {
+    return {
+      title: 'Private Conversation',
+      robots: {
+        index: false,
+        follow: false,
+      }
+    };
+  }
+  
+  // For public chats, provide rich metadata
+  const { agent } = agentWithModel;
+  const messages = await getMessagesByChatId({ id: chatId });
+  
+  // Extract first few message contents for description
+  const chatPreview = messages.slice(0, 2)
+    .map(msg => {
+      const parts = msg.parts as any[];
+      return parts
+        .filter(part => part.type === 'text')
+        .map(part => part.text)
+        .join(' ')
+        .substring(0, 100);
+    })
+    .filter(Boolean)
+    .join(' ... ');
+  
+  return {
+    title: chat.title || `Chat with ${agent.agent_display_name}`,
+    description: chatPreview || `Conversation with ${agent.agent_display_name}`,
+    openGraph: {
+      title: chat.title || `Chat with ${agent.agent_display_name}`,
+      description: chatPreview || `Conversation with ${agent.agent_display_name}`,
+      ...(agent.image_url && { images: [{ url: agent.image_url, alt: agent.agent_display_name }] }),
+      type: 'article',
+    },
+    twitter: {
+      card: agent.image_url ? 'summary_large_image' : 'summary',
+      title: chat.title || `Chat with ${agent.agent_display_name}`,
+      description: chatPreview || `Conversation with ${agent.agent_display_name}`,
+      ...(agent.image_url && { images: [agent.image_url] }),
+    },
+    alternates: {
+      canonical: `/${agentSlug}/${chatId}`,
+    },
+  };
+}
 
 export default async function Page(props: { 
   params: Promise<{ 

@@ -429,12 +429,11 @@ export function KnowledgeEditor({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleDropzoneClick}
         className={`border-2 border-dashed rounded-lg p-4 transition-colors ${
           isDragging 
             ? "border-primary bg-primary/5" 
             : "border-gray-200 dark:border-gray-800 hover:border-primary/50 hover:bg-primary/5"
-        } cursor-pointer`}
+        }`}
       >
         <input
           type="file"
@@ -453,8 +452,17 @@ export function KnowledgeEditor({
             <div>
               <p className="text-sm font-medium">Upload knowledge files</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Drop .txt or .pdf files here, or click to select files
+                Drop .txt or .pdf files here
               </p>
+              <Button 
+                onClick={handleDropzoneClick}
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+              >
+                <Upload className="size-4 mr-2" />
+                Select files
+              </Button>
               <div className="flex items-center justify-center mt-3 gap-1.5">
                 <Badge variant="outline" className="text-xs py-1 px-2">
                   <File className="size-3 mr-1" />
@@ -618,6 +626,23 @@ export function KnowledgeEditor({
                 </CardFooter>
               </Card>
             ))}
+            <Card className="flex flex-col items-center justify-center p-6 cursor-default border-dashed">
+              <div className="text-center">
+                <div className="bg-primary/10 rounded-full p-3 mx-auto mb-2">
+                  <FileUp className="size-6 text-primary" />
+                </div>
+                <p className="text-sm font-medium">Add more files</p>
+                <Button 
+                  onClick={handleDropzoneClick}
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4"
+                >
+                  <Upload className="size-4 mr-2" />
+                  Select files
+                </Button>
+              </div>
+            </Card>
           </div>
         )}
         

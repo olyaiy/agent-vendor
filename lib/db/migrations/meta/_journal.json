@@ -316,6 +316,13 @@
       "when": 1742772748006,
       "tag": "0044_freezing_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1742777965412,
+      "tag": "0045_magical_captain_cross",
+      "breakpoints": true
     }
   ]
 }

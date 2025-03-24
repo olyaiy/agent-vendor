@@ -22,7 +22,7 @@ export const userTransactions = pgTable('user_transactions', {
   description: text('description'),
   messageId: uuid('message_id').references(() => message.id, { onDelete: 'set null' }),
   modelId: uuid('model_id').references(() => models.id, { onDelete: 'set null' }),
-  agentId: uuid('agent_id').references(() => agents.id),
+  agentId: uuid('agent_id').references(() => agents.id, { onDelete: 'set null' }),
   tokenAmount: integer('token_amount'),
   tokenType: tokenTypeEnum('token_type'),
   created_at: timestamp('created_at').notNull().defaultNow(),
