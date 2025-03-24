@@ -45,7 +45,7 @@ function PureMainHeader() {
     <header className={`flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-3 gap-2 z-50 justify-between ${hasScrolled ? 'border-b' : ''}`}>
       <div className="flex items-center gap-2">
         {(!open || (mounted && windowWidth < 768)) && <SidebarToggle />}
-        {!open && mounted && windowWidth >= 768 && <Logo />}
+        {!open && mounted && <Logo />}
       </div>
       <div className="flex items-center gap-3">
         <div className="hidden md:flex items-center gap-1">
