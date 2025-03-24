@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from "react";
 import { type InferSelectModel } from "drizzle-orm";
 import { type agents, type models } from "@/lib/db/schema";
 import { AgentCard } from "./agent-card";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface RecentAgentsScrollProps {
   agents: (Omit<InferSelectModel<typeof agents>, 'model'> & {
@@ -17,6 +19,15 @@ interface RecentAgentsScrollProps {
 export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) {
   // If no agents, don't render this component
   if (!agents.length) return null;
+  
+  // State for current page
+  const [currentPage, setCurrentPage] = useState(0);
+  
+  // Items per page
+  const ITEMS_PER_PAGE = 4;
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(agents.length / ITEMS_PER_PAGE);
   
   // Cookie name for storing recently used agents
   const RECENT_AGENTS_COOKIE = 'recent-agents';
@@ -40,7 +51,6 @@ export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) 
     // Add the clicked agent to the beginning of the list
     recentAgentIds.unshift(agentId);
     
-
     const MAX_RECENT_AGENTS = 20;
     if (recentAgentIds.length > MAX_RECENT_AGENTS) {
       recentAgentIds = recentAgentIds.slice(0, MAX_RECENT_AGENTS);
@@ -54,27 +64,67 @@ export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) 
     document.cookie = `${RECENT_AGENTS_COOKIE}=${recentAgentIds.join(',')}; path=/; expires=${expiryDate.toUTCString()}`;
   };
 
+  // Calculate visible agents for current page
+  const visibleAgents = agents.slice(
+    currentPage * ITEMS_PER_PAGE, 
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
+
+  // Navigate to previous page
+  const goToPrevPage = () => {
+    setCurrentPage((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  // Navigate to next page
+  const goToNextPage = () => {
+    setCurrentPage((prev) => (prev < totalPages - 1 ? prev + 1 : prev));
+  };
+
   return (
-    <div className="w-full ">
-      <div className="mb-2">
+    <div className="w-full">
+      <div className="mb-2 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Recently Used</h2>
+        
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToPrevPage} 
+            disabled={currentPage === 0}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous page</span>
+          </Button>
+          
+          <div className="text-sm text-muted-foreground">
+            {currentPage + 1} / {totalPages}
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={goToNextPage} 
+            disabled={currentPage === totalPages - 1}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next page</span>
+          </Button>
+        </div>
       </div>
       
-      <ScrollArea className="w-full">
-      <ScrollBar orientation="horizontal" />
-        <div className="flex space-x-4 pb-4">
-          {agents.map((agent) => (
-            <div key={agent.id} className="w-full">
-              <AgentCard 
-                agent={agent}
-                userId={userId}
-                onClick={handleAgentClick}
-              />
-            </div>
-          ))}
-        </div>
-        
-      </ScrollArea>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {visibleAgents.map((agent) => (
+          <div key={agent.id} className="">
+            <AgentCard 
+              agent={agent}
+              userId={userId}
+              onClick={handleAgentClick}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 } 
