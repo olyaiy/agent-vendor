@@ -126,7 +126,7 @@ export default function SimpleAgentForm({ userId, models }: SimpleAgentFormProps
             <div className="pb-2 border-b">
               <h2 className="text-lg font-medium tracking-tight">Agent Profile</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Define your agent's identity
+                Define your agent&apos;s identity
               </p>
             </div>
             
@@ -136,7 +136,7 @@ export default function SimpleAgentForm({ userId, models }: SimpleAgentFormProps
                 setImageUrl={setThumbnailUrl}
               />
               <p className="text-xs text-muted-foreground">
-                Upload an image that represents your agent's personality
+                Upload an image that represents your agent&apos;s personality
               </p>
             </div>
           </div>
@@ -310,7 +310,7 @@ export default function SimpleAgentForm({ userId, models }: SimpleAgentFormProps
                 </Select>
               </div>
               <p className="text-xs text-muted-foreground">
-                Choose the model that best fits your agent's purpose. Different models have different capabilities.
+                Choose the model that best fits your agent&apos;s purpose. Different models have different capabilities.
               </p>
             </div>
           </div>
@@ -324,7 +324,7 @@ export default function SimpleAgentForm({ userId, models }: SimpleAgentFormProps
             <div className="pb-2 border-b">
               <h2 className="text-lg font-medium tracking-tight">Behavior</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Set your agent's personality and instructions
+                Set your agent&apos;s personality and instructions
               </p>
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function SimpleAgentForm({ userId, models }: SimpleAgentFormProps
                   Tips for effective system prompts:
                 </h3>
                 <ul className="list-disc list-inside space-y-1.5 pl-1 text-muted-foreground">
-                  <li>Define the agent's role clearly (e.g., "You are a math tutor")</li>
+                  <li>Define the agent&apos;s role clearly (e.g., &quot;You are a math tutor&quot;)</li>
                   <li>Specify tone and style (formal, casual, technical)</li>
                   <li>Set response length preferences (concise, detailed)</li>
                   <li>Include any domain-specific knowledge</li>
