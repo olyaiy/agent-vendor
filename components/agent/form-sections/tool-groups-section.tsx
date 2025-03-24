@@ -23,13 +23,13 @@ export function ToolGroupsSection({
 }: ToolGroupsSectionProps) {
   return (
     <Card className="shadow-sm border-2">
-      <CardHeader className="pb-4 border-b">
-        <CardTitle className="text-lg font-semibold">Tool Groups</CardTitle>
-        <CardDescription>
+      <CardHeader className="pb-3 sm:pb-4 border-b">
+        <CardTitle className="text-base sm:text-lg font-semibold">Tool Groups</CardTitle>
+        <CardDescription className="text-sm">
           Enable specific tools and capabilities for your agent
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-6">
+      <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
         <ToolGroupSelector
           toolGroups={toolGroups}
           selectedToolGroupIds={selectedToolGroupIds}

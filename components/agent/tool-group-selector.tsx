@@ -68,19 +68,19 @@ export function ToolGroupSelector({
   );
 
   return (
-    <div className={cn("space-y-4 border-t pt-8", className)}>
-      <div className="flex items-center justify-between">
+    <div className={cn("space-y-4 border-t pt-6 sm:pt-8", className)}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <WrenchIcon className="size-5 text-muted-foreground" />
-          <Label className="text-lg font-semibold">Tool Groups</Label>
+          <WrenchIcon className="size-4 sm:size-5 text-muted-foreground" />
+          <Label className="text-base sm:text-lg font-semibold">Tool Groups</Label>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge 
                   variant={selectedToolGroupIds.length > 0 ? "default" : "outline"} 
-                  className="cursor-pointer transition-colors"
+                  className="cursor-pointer transition-colors h-7"
                   onClick={toggleAllTools}
                 >
                   {selectedToolGroupIds.length} of {toolGroups.length} selected
@@ -104,7 +104,7 @@ export function ToolGroupSelector({
         />
       </div>
 
-      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="mt-2 grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
         {filteredToolGroups.length > 0 ? (
           filteredToolGroups.map((group) => {
             const isSelected = selectedToolGroupIds.includes(group.id);
@@ -117,8 +117,8 @@ export function ToolGroupSelector({
                 onMouseEnter={() => setHoveredGroupId(group.id)}
                 onMouseLeave={() => setHoveredGroupId(null)}
                 className={cn(
-                  "relative border rounded-lg p-4 cursor-pointer transition-all duration-200",
-                  "flex flex-col justify-between h-28",
+                  "relative border rounded-lg p-3 sm:p-4 cursor-pointer transition-all duration-200",
+                  "flex flex-col justify-between min-h-[6.5rem] sm:h-28",
                   isSelected
                     ? "border-primary bg-primary/5 shadow-sm"
                     : "border-muted hover:border-primary/50 hover:bg-muted/5"
@@ -131,7 +131,7 @@ export function ToolGroupSelector({
                 )}
                 
                 <div>
-                  <div className="font-medium truncate pr-6">{group.displayName}</div>
+                  <div className="font-medium truncate pr-6 text-sm sm:text-base">{group.displayName}</div>
                   {group.description && (
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                       {group.description}
@@ -145,13 +145,13 @@ export function ToolGroupSelector({
                       <TooltipTrigger asChild>
                         <div className={cn(
                           "text-xs self-end transition-opacity",
-                          isHovered ? "opacity-100" : "opacity-0"
+                          (isHovered || window?.innerWidth < 640) ? "opacity-100" : "opacity-0"
                         )}>
                           <InfoIcon className="size-3 inline mr-1" />
                           <span className="text-muted-foreground">More info</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-[300px]">
+                      <TooltipContent side="top" align="center" className="max-w-[260px] sm:max-w-[300px]">
                         {group.description}
                       </TooltipContent>
                     </Tooltip>
@@ -161,13 +161,13 @@ export function ToolGroupSelector({
             );
           })
         ) : (
-          <div className="col-span-full text-center p-6 border border-dashed rounded-lg text-muted-foreground">
+          <div className="col-span-full text-center p-4 sm:p-6 border border-dashed rounded-lg text-muted-foreground">
             No tool groups match your search criteria
           </div>
         )}
       </div>
       
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground pt-1">
         {selectedToolGroupIds.length === 0
           ? "No tools selected. Your agent will have limited capabilities."
           : `${selectedToolGroupIds.length} Tool group${selectedToolGroupIds.length === 1 ? "" : "s"} selected for this agent.`}
