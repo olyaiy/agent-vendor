@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { 
@@ -42,6 +42,20 @@ export function ToolGroupSelector({
 }: ToolGroupSelectorProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [hoveredGroupId, setHoveredGroupId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setIsMobile(window.innerWidth < 640);
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleToolGroup = (id: string) => {
     const isSelected = selectedToolGroupIds.includes(id);
@@ -145,7 +159,7 @@ export function ToolGroupSelector({
                       <TooltipTrigger asChild>
                         <div className={cn(
                           "text-xs self-end transition-opacity",
-                          (isHovered || window?.innerWidth < 640) ? "opacity-100" : "opacity-0"
+                          (isHovered || (isMounted && isMobile)) ? "opacity-100" : "opacity-0"
                         )}>
                           <InfoIcon className="size-3 inline mr-1" />
                           <span className="text-muted-foreground">More info</span>

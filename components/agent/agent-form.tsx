@@ -90,11 +90,31 @@ export default function AgentForm(props: AgentFormProps) {
         onAlternateModelsChange={form.setAlternateModelIds}
       />
 
+        {/* System Prompt Section */}
+        <SystemPromptCardSection
+        mode={props.mode}
+        initialData={props.initialData}
+        systemPromptRef={form.systemPromptRef as any}
+        adjustSystemPromptHeight={form.adjustSystemPromptHeight}
+        handleFormValueChange={form.handleFormValueChange as any}
+      />
+
       {/* Tool Groups Section */}
       <ToolGroupsSection
         toolGroups={props.toolGroups}
         selectedToolGroupIds={form.selectedToolGroupIds}
         onChange={form.setSelectedToolGroupIds}
+      />
+
+     
+
+        {/* Knowledge Base Section */}
+        <KnowledgeSection
+        knowledgeItems={form.displayKnowledgeItems}
+        agentId={props.initialData?.id}
+        onAddItem={form.handleAddKnowledgeItem}
+        onUpdateItem={form.handleUpdateKnowledgeItem}
+        onDeleteItem={form.handleDeleteKnowledgeItem}
       />
 
       {/* Tags Section */}
@@ -104,14 +124,7 @@ export default function AgentForm(props: AgentFormProps) {
         setSelectedTags={form.setSelectedTags}
       />
 
-      {/* System Prompt Section */}
-      <SystemPromptCardSection
-        mode={props.mode}
-        initialData={props.initialData}
-        systemPromptRef={form.systemPromptRef as any}
-        adjustSystemPromptHeight={form.adjustSystemPromptHeight}
-        handleFormValueChange={form.handleFormValueChange as any}
-      />
+     
 
       {/* Welcome Screen Customization */}
       <WelcomeScreenCardSection
@@ -126,14 +139,7 @@ export default function AgentForm(props: AgentFormProps) {
         formValues={form.formValues}
       />
 
-      {/* Knowledge Base Section */}
-      <KnowledgeSection
-        knowledgeItems={form.displayKnowledgeItems}
-        agentId={props.initialData?.id}
-        onAddItem={form.handleAddKnowledgeItem}
-        onUpdateItem={form.handleUpdateKnowledgeItem}
-        onDeleteItem={form.handleDeleteKnowledgeItem}
-      />
+    
 
       {/* Form Footer */}
       <FormFooter
