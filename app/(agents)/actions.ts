@@ -59,7 +59,7 @@ export async function createAgent({
       thumbnailUrl,
       customization,
       tagIds: processedTagIds
-    });
+    }) as { id: string };
 
     // If alternate models were provided, add them to the agent
     if (alternateModelIds.length > 0 && result?.id) {
@@ -299,7 +299,7 @@ async function processNewTags(tagIds: string[] = []) {
       
       try {
         // Create the new tag
-        const newTag = await createTag(tagName);
+        const newTag = await createTag(tagName) as { id: string };
         if (newTag) {
           processedTagIds.push(newTag.id);
         }

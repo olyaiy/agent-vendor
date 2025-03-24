@@ -57,7 +57,7 @@ export async function getTagsByAgentId(agentId: string) {
 /**
  * Create a new tag
  */
-export async function createTag(name: string) {
+export async function createTag(name: string): Promise<{ id: string; name: string }> {
   try {
     const [newTag] = await db
       .insert(tags)

@@ -74,7 +74,14 @@ export async function getChatsByUserId({ id }: { id: string }) {
 /**
  * Get a single chat by ID
  */
-export async function getChatById({ id }: { id: string }) {
+export async function getChatById({ id }: { id: string }): Promise<{
+  id: string;
+  title: string;
+  visibility: 'public' | 'private' | 'link';
+  userId: string;
+  agentId: string | null;
+  createdAt: Date;
+} | undefined> {
   try {
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
     return selectedChat;

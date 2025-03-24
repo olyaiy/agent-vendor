@@ -24,7 +24,12 @@ export async function generateMetadata(
   const { agent: agentSlug, 'chat-id': chatId } = await params;
   
   // Fetch chat and agent data
-  const chat = await getChatById({ id: chatId });
+  const chat = await getChatById({ id: chatId }) as {
+    id: string;
+    title: string;
+    visibility: 'public' | 'private';
+    userId: string;
+  };
   const agentWithModel = await getAgentWithModelById(agentSlug);
   
   // Fall back to default metadata if chat or agent not found
@@ -98,7 +103,12 @@ export default async function Page(props: {
     return notFound();
   }
 
-  const chat = await getChatById({ id: chatId });
+  const chat = await getChatById({ id: chatId }) as {
+    id: string;
+    title: string;
+    visibility: 'public' | 'private';
+    userId: string;
+  };
   if (!chat) notFound();
 
   // Access control: Check if the user has permission to view this chat

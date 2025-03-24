@@ -90,6 +90,14 @@ export async function POST(request: Request) {
   const chat = await getChatById({ id });
   console.timeEnd('get-chat');
 
+  if (!chat) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  if (chat.userId !== session.user.id) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   // If the chat is not found, generate a title and save the chat FIRST
   if (!chat) {
     console.time('save-new-chat');
@@ -387,6 +395,10 @@ export async function DELETE(request: Request) {
 
   try {
     const chat = await getChatById({ id });
+
+    if (!chat) {
+      return new Response('Not Found', { status: 404 });
+    }
 
     if (chat.userId !== session.user.id) {
       return new Response('Unauthorized', { status: 401 });

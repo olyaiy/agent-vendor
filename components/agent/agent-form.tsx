@@ -199,7 +199,7 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
           
           toast.success("Agent updated successfully");
         } else {
-          const result = await createAgent(baseData);
+          const result = await createAgent(baseData) as { id: string };
           
           // If we have a new agent id, save the suggested prompts
           if (result?.id) {
