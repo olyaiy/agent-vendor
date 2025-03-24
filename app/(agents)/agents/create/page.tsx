@@ -31,6 +31,7 @@ export default async function CreateAgentPage() {
         models={modelsList}
         toolGroups={toolGroups}
         tags={tags}
+        knowledgeItems={[]}
       />
     </div>
   );

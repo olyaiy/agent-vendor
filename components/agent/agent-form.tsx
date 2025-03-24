@@ -122,6 +122,14 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
         })
       : []
   );
+  // Add state for temporary knowledge items in create mode
+  const [tempKnowledgeItems, setTempKnowledgeItems] = useState<Array<{
+    id?: string;
+    title: string;
+    content: any;
+    description?: string;
+    type?: string;
+  }>>([]);
   const [newTagInput, setNewTagInput] = useState("");
   const [tagPopoverOpen, setTagPopoverOpen] = useState(false);
   const [colorSchemeId, setColorSchemeId] = useState<string>(
@@ -196,6 +204,18 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
           // If we have a new agent id, save the suggested prompts
           if (result?.id) {
             await upsertSuggestedPrompts(result.id, suggestedPrompts.filter(p => p.trim() !== ""));
+            
+            // Create any temporary knowledge items
+            if (tempKnowledgeItems.length > 0) {
+              const knowledgePromises = tempKnowledgeItems.map(item => 
+                createKnowledgeItem({
+                  ...item,
+                  agentId: result.id
+                })
+              );
+              
+              await Promise.all(knowledgePromises);
+            }
           }
           
           toast.success("Agent created successfully");
@@ -265,21 +285,87 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
     setNewTagInput("");
   };
 
-  // Add handlers for knowledge items
-  const handleAddKnowledgeItem = async (item: { title: string; content: any; description?: string }) => {
-    if (!initialData?.id) return Promise.reject("Agent ID is required");
-    return createKnowledgeItem({
-      ...item,
-      agentId: initialData.id
-    });
+  // Update handlers for knowledge items
+  const handleAddKnowledgeItem = async (item: { title: string; content: any; description?: string; type?: string }) => {
+    if (mode === "edit" && initialData?.id) {
+      return createKnowledgeItem({
+        ...item,
+        agentId: initialData.id
+      });
+    } else if (mode === "create") {
+      // In create mode, store the item in state temporarily
+      const tempId = `temp-${Date.now()}`;
+      const newItem = {
+        ...item,
+        id: tempId, // Add id to the item
+        agentId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        type: item.type || 'text'
+      };
+      
+      setTempKnowledgeItems(prev => [...prev, {...item, id: tempId}]);
+      
+      // Return a promise that resolves with a temporary item for UI consistency
+      return Promise.resolve({
+        id: newItem.id,
+        title: newItem.title,
+        content: newItem.content,
+        type: newItem.type,
+        description: newItem.description || null,
+        agentId: null,
+        createdAt: newItem.createdAt,
+        updatedAt: newItem.updatedAt
+      });
+    }
+    
+    return Promise.reject("Cannot add knowledge item - missing agent ID");
   };
 
   const handleUpdateKnowledgeItem = async (item: { id: string; title?: string; content?: any; description?: string }) => {
-    return updateKnowledgeItem(item);
+    if (mode === "edit") {
+      return updateKnowledgeItem(item);
+    } else if (mode === "create") {
+      // For items not yet saved to database, update in local state
+      if (item.id.startsWith('temp-')) {
+        setTempKnowledgeItems(prev => prev.map(tempItem => {
+          if (tempItem.id === item.id) {
+            return { ...tempItem, ...item };
+          }
+          return tempItem;
+        }));
+        
+        // Return a promise that resolves with the updated item for UI consistency
+        const updatedItem: KnowledgeItem = {
+          id: item.id,
+          title: item.title || '', // Use empty string as fallback
+          content: item.content || '',
+          type: 'text', // Default type
+          description: item.description || null,
+          agentId: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        
+        return Promise.resolve(updatedItem);
+      }
+    }
+    
+    return Promise.reject("Cannot update knowledge item");
   };
 
   const handleDeleteKnowledgeItem = async (id: string) => {
-    return deleteKnowledgeItem(id);
+    if (mode === "edit") {
+      return deleteKnowledgeItem(id);
+    } else if (mode === "create") {
+      // For items not yet saved to database, remove from local state
+      if (id.startsWith('temp-')) {
+        setTempKnowledgeItems(prev => prev.filter(item => item.id !== id));
+        return Promise.resolve({ success: true });
+      }
+    }
+    
+    return Promise.reject("Cannot delete knowledge item");
   };
 
   return (
@@ -718,7 +804,7 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
       </Card>
 
       {/* Knowledge Base Section - Only show in edit mode since we need an agent ID */}
-      {mode === "edit" && initialData?.id && (
+
         <Card className="shadow-sm border-2">
           <CardHeader className="pb-4 border-b">
             <CardTitle className="text-lg font-semibold">Knowledge Base</CardTitle>
@@ -728,15 +814,23 @@ export default function AgentForm({ mode, userId, models, toolGroups, tags, know
           </CardHeader>
           <CardContent className="pt-6">
             <KnowledgeEditor
-              knowledgeItems={knowledgeItems || []}
-              agentId={initialData.id}
+              knowledgeItems={mode === "edit" ? (knowledgeItems || []) : tempKnowledgeItems.map((item, index) => ({
+                id: item.id || `temp-${index}`,
+                title: item.title,
+                content: item.content,
+                type: item.type || 'text',
+                description: item.description || null,
+                agentId: null,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              }))}
+              agentId={initialData?.id}
               onAddItem={handleAddKnowledgeItem}
               onUpdateItem={handleUpdateKnowledgeItem}
               onDeleteItem={handleDeleteKnowledgeItem}
             />
           </CardContent>
         </Card>
-      )}
 
       {/* Form Footer */}
       <div className="flex justify-between bg-slate-50 dark:bg-slate-900/40 p-5 rounded-lg border">

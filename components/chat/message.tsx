@@ -100,7 +100,7 @@ const PurePreviewMessage = ({
         >
           
           {message.role === 'assistant' && (
-            <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
+            <div className="size-12 sm:size-16 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
               {agentImageUrl ? (
                 <Image 
                   src={agentImageUrl} 
@@ -108,6 +108,8 @@ const PurePreviewMessage = ({
                   width={32} 
                   height={32} 
                   className="size-full object-cover"
+                  quality={100}
+                  unoptimized={true}
                 />
               ) : (
                 <div className="translate-y-px">
@@ -327,6 +329,8 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
               width={32} 
               height={32} 
               className="size-full object-cover"
+              quality={100}
+              unoptimized={true}
             />
           ) : (
             <div className="translate-y-px">

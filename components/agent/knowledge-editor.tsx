@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { 
   Trash2, 
@@ -81,6 +81,7 @@ export function KnowledgeEditor({
   const [isDragging, setIsDragging] = useState(false);
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isCreateMode = !agentId;
 
   // Form state for new or edited items
   const [formValues, setFormValues] = useState({
@@ -88,6 +89,11 @@ export function KnowledgeEditor({
     content: "",
     description: ""
   });
+
+  // Update items state when knowledgeItems props change
+  useEffect(() => {
+    setItems(knowledgeItems);
+  }, [knowledgeItems]);
 
   const resetForm = () => {
     setFormValues({
@@ -324,7 +330,9 @@ export function KnowledgeEditor({
             <DialogHeader>
               <DialogTitle>Add Knowledge Item</DialogTitle>
               <DialogDescription>
-                Add information that your agent can reference during conversations.
+                {isCreateMode 
+                  ? "Add information that will be saved with your agent once it's created."
+                  : "Add information that your agent can reference during conversations."}
               </DialogDescription>
             </DialogHeader>
             
@@ -386,6 +394,24 @@ export function KnowledgeEditor({
           </DialogContent>
         </Dialog>
       </div>
+      
+      {isCreateMode && items.length > 0 && (
+        <div className="bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50 rounded-md p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <div className="mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium">Knowledge items will be saved when your agent is created</p>
+              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400">
+                These items are temporarily stored and will be attached to your agent once you complete the form.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {items.length > 1 && (
         <div className="bg-muted/50 rounded-md p-3 text-sm">
