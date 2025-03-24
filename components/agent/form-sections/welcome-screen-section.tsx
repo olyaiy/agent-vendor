@@ -44,7 +44,7 @@ export function WelcomeScreenSection({ overview, onChange }: WelcomeScreenSectio
                     <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
                   </TooltipTrigger>
                   <TooltipContent side="right" className="max-w-[250px]">
-                    <p>Set the title, description, and key points for your agent's welcome screen.</p>
+                    <p>Set the title, description, and key points for your agent&apos;s welcome screen.</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
