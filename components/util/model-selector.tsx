@@ -31,20 +31,22 @@ export function ModelSelector({
   );
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen} >
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger
         asChild
         className={cn(
-          'w-fit data-[state=open]:bg-accent data-[state=open]:text-accent-foreground',
+          'w-full h-11 justify-between bg-background focus-visible:ring-1 focus-visible:ring-offset-0',
           className,
         )}
       >
-        <Button variant="outline" className="md:px-2 md:h-[34px]">
+        <Button variant="outline" className="h-11 justify-between">
           {selectedChatModel?.name}
-          <ChevronDownIcon />
+          <span className="ml-2 h-4 w-4 shrink-0 opacity-50">
+            <ChevronDownIcon />
+          </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-[300px] p-4 bg-red-500">
+      <DropdownMenuContent align="start" className="w-full min-w-[220px] p-2">
         {chatModels.map((chatModel) => {
           const { id } = chatModel;
 
@@ -59,18 +61,20 @@ export function ModelSelector({
                   saveChatModelAsCookie(id);
                 });
               }}
-              className="gap-4 group/item flex flex-row   bg-green-500 z-[9999] bg/100"
+              className="flex items-start justify-between px-3 py-2 gap-2 rounded-md focus:bg-secondary/80"
               data-active={id === optimisticModelId}
             >
               <div className="flex flex-col gap-1 items-start">
-                <div>{chatModel.name}</div>
+                <div className="font-medium">{chatModel.name}</div>
                 <div className="text-xs text-muted-foreground">
                   {chatModel.description}
                 </div>
               </div>
 
-              <div className="text-foreground dark:text-foreground opacity-0 group-data-[active=true]/item:opacity-100">
-                <CheckCircleFillIcon />
+              <div className="text-primary mt-1 opacity-0 group-data-[active=true]/item:opacity-100">
+                <span className="h-4 w-4 block">
+                  <CheckCircleFillIcon />
+                </span>
               </div>
             </DropdownMenuItem>
           );

@@ -64,35 +64,37 @@ export function ModelSelectorSection({
   };
 
   return (
-    <div className="space-y-4 relative">
-      <div className="relative">
-        <Label htmlFor="primaryModel" className="text-lg font-semibold">Primary Model</Label>
+    <div className="space-y-6">
+      {/* Primary Model Section */}
+      <div>
+        <Label htmlFor="primaryModel" className="text-sm font-medium mb-2 block">Primary Model</Label>
         <ModelSelector
           id="primaryModel"
           models={models}
           value={primaryModelId}
           onValueChange={handlePrimaryModelChange}
           placeholder="Select a primary model"
-          className="mt-2 text-start py-2 h-12 z-[9999] "
+          className="h-11 bg-background focus-visible:ring-1 focus-visible:ring-offset-0 w-full"
           required
         />
       </div>
 
       {/* Alternate Models Section */}
-      <div>
-        <Label className="text-lg font-semibold">Alternate Models</Label>
-        <div className="flex flex-wrap gap-2 mt-2 mb-4">
+      <div className="pt-4 border-t border-border/50">
+        <Label className="text-sm font-medium mb-2 block">Alternate Models</Label>
+        <div className="flex flex-wrap gap-2 mt-2 mb-3">
           {alternateModelIds.map(modelId => {
             const model = getModelById(modelId);
             return model ? (
-              <Badge key={modelId} variant="secondary" className="py-1 px-2 flex items-center gap-1">
+              <Badge key={modelId} variant="secondary" className="py-1.5 px-2.5 flex items-center gap-1.5 bg-secondary/80">
                 {model.displayName}
                 <button 
                   type="button" 
                   onClick={() => handleRemoveAlternateModel(modelId)}
-                  className="ml-1 text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={`Remove ${model.displayName}`}
                 >
-                  <X className="size-3" />
+                  <X className="size-3.5" />
                 </button>
               </Badge>
             ) : null;
@@ -102,21 +104,20 @@ export function ModelSelectorSection({
           )}
         </div>
         
-        <div className="flex gap-2">
-          <ModelSelector
-            id="alternateModel"
-            models={models.filter(model => 
-              model.id !== primaryModelId && 
-              !alternateModelIds.includes(model.id)
-            )}
-            value=""
-            onValueChange={handleAddAlternateModel}
-            placeholder="Add alternate model"
-            className="w-full"
-          />
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Add alternate models that this agent can use in addition to the primary model.
+        <ModelSelector
+          id="alternateModel"
+          models={models.filter(model => 
+            model.id !== primaryModelId && 
+            !alternateModelIds.includes(model.id)
+          )}
+          value=""
+          onValueChange={handleAddAlternateModel}
+          placeholder="Add alternate model"
+          className="h-11 bg-background focus-visible:ring-1 focus-visible:ring-offset-0 w-full"
+        />
+        
+        <p className="text-xs text-muted-foreground mt-2">
+          Add alternate models that can be used as fallbacks or for specific tasks.
         </p>
       </div>
     </div>

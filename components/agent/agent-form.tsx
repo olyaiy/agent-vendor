@@ -68,7 +68,7 @@ export default function AgentForm(props: AgentFormProps) {
   const form = useAgentForm(props);
 
   return (
-    <form onSubmit={form.handleSubmit} className="space-y-8 mx-auto overflow-hidden">
+    <form onSubmit={form.handleSubmit} className="space-y-8 mx-auto overflow-hidden px-16">
       {/* Basic Information Section */}
       <BasicInfoCardSection
         mode={props.mode}
