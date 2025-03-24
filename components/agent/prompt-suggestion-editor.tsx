@@ -4,12 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { X, Plus, MessageSquare, Loader2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { AlertCircle } from "lucide-react";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { getSuggestedPromptsByAgentId, upsertSuggestedPrompts } from "@/app/(agents)/actions";
 import { generatePromptSuggestion } from "@/app/(chat)/actions";
@@ -191,20 +189,7 @@ export function PromptSuggestionEditor({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-lg font-semibold">Suggested Prompts</h3>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <AlertCircle className="size-4 text-gray-400" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[300px]">
-                <p>Suggested prompts help users get started with your agent. They appear as clickable buttons at the start of a conversation.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+      <div className="flex justify-end">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
