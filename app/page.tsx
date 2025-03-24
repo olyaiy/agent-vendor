@@ -36,21 +36,21 @@ export default function Page() {
 
 const features = [
   { 
-    step: 'For Creators', 
-    title: 'For Creators',
-    content: 'Build specialized AI agents and monetize your expertise.', 
+    step: 'BUILD CUSTOM AGENTS', 
+    title: 'Build Custom Agents',
+    content: 'Build specialized AI agents and monetize your expertise. No Coding Required.', 
     image: '/marketing/step-1.gif'
   },
   { 
-    step: 'For Users',
-    title: 'For Users',
-    content: 'Discover and access tailored AI solutions for your specific needs',
+    step: 'DISCOVER NEW AGENTS',
+    title: 'Discover New Agents',
+    content: 'Discover and access tailored AI chatbots for your specific needs',
     image: '/marketing/step-2.png'
   },
   { 
-    step: 'For Everyone',
-    title: 'For Everyone',
-    content: 'Enjoy a world where everyone can prosper from AI.',
+    step: 'Deeply Customizable',
+    title: 'Deeply Customizable',
+    content: 'Choose custom tools, models, prompts, and more.',
     image: '/marketing/step-3.png'
   },
 ]

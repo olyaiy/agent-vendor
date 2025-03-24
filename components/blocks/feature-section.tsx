@@ -44,11 +44,14 @@ export function FeatureSteps({
   }, [progress, features.length, autoPlayInterval])
 
   return (
-    <div className={cn("pb-4 md:p-12", className)}>
-      <div className="max-w-7xl mx-auto w-full">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-10 text-center">
+    <div className={cn(
+      "pb-4 md:p-12 bg-[url('/bg.jpeg')] dark:bg-opacity-80 bg-cover bg-center bg-no-repeat relative before:absolute before:inset-0 before:bg-gradient-to-t before:from-background before:via-background/90 before:to-transparent before:pointer-events-none rounded-t-lg before:rounded-t-lg", 
+      className
+    )}>
+      <div className="max-w-7xl mx-auto w-full relative z-10">
+        <h1 className="text-3xl md:text-3xl lg:text-3xl font-bold mb-8 text-center">
           {title}
-        </h2>
+        </h1>
 
         <div className="flex flex-col md:grid md:grid-cols-2 gap-6 md:gap-10">
           <div className="order-2 md:order-1 space-y-8">
@@ -65,7 +68,7 @@ export function FeatureSteps({
                     "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2",
                     index === currentFeature
                       ? "bg-primary border-primary text-primary-foreground scale-110"
-                      : "bg-muted border-muted-foreground",
+                      : "bg-muted border-muted-foreground/40",
                   )}
                 >
                   {index <= currentFeature ? (
@@ -89,7 +92,7 @@ export function FeatureSteps({
 
           <div
             className={cn(
-              "order-1 md:order-2 relative h-[200px] md:h-[300px] lg:h-[400px] overflow-hidden rounded-lg"
+              "order-1 md:order-2 relative h-[200px] md:h-[300px] lg:h-[400px] overflow-hidden rounded-lg  items-start justify-start"
             )}
           >
             <AnimatePresence mode="wait">
@@ -98,7 +101,7 @@ export function FeatureSteps({
                   index === currentFeature && (
                     <motion.div
                       key={index}
-                      className="absolute inset-0 rounded-lg overflow-hidden"
+                      className="absolute inset-0 rounded-lg overflow-hidden isolate m-0"
                       initial={{ y: 100, opacity: 0, rotateX: -20 }}
                       animate={{ y: 0, opacity: 1, rotateX: 0 }}
                       exit={{ y: -100, opacity: 0, rotateX: 20 }}
@@ -107,11 +110,12 @@ export function FeatureSteps({
                       <Image
                         src={feature.image}
                         alt={feature.step}
-                        className="w-full h-full object-cover transition-transform transform"
+                        className="w-full h-full object-cover"
                         width={1000}
                         height={500}
+                        style={{ objectPosition: "top center" }}
                       />
-                      <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-background/90 via-background/50 to-transparent " />
                     </motion.div>
                   ),
               )}
