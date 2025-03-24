@@ -85,7 +85,7 @@ export function FeaturedAgentsCarousel({ agents, userId }: FeaturedAgentsCarouse
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-lg font-semibold">⭐ Featured Agents</h2>
         
-        <div className="flex items-center space-x-2">
+        <div className="hidden sm:flex items-center space-x-2">
           <Button 
             variant="outline" 
             size="icon" 
@@ -114,9 +114,25 @@ export function FeaturedAgentsCarousel({ agents, userId }: FeaturedAgentsCarouse
         </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Mobile: Horizontal scrollable row */}
+      <div className="sm:hidden overflow-x-auto pb-4 -mx-4 px-4">
+        <div className="flex gap-4 w-max">
+          {agents.map((agent) => (
+            <div key={agent.id} className="w-[250px] flex-shrink-0">
+              <AgentCard 
+                agent={agent}
+                userId={userId}
+                onClick={handleAgentClick}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: Grid with pagination */}
+      <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {visibleAgents.map((agent) => (
-          <div key={agent.id} className="">
+          <div key={agent.id}>
             <AgentCard 
               agent={agent}
               userId={userId}
