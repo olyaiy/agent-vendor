@@ -41,7 +41,6 @@ export default function AgentBasicInfoSection({
 }: AgentBasicInfoSectionProps) {
   const nameCharLimit = 50;
   const descCharLimit = 300;
-  const isNameValid = name.length > 0 && name.length <= nameCharLimit;
   const descCharsRemaining = descCharLimit - description.length;
   
   return (

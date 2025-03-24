@@ -14,6 +14,7 @@ import {
 import { AlertCircle } from "lucide-react";
 import { AgentImageUploader } from "../agent-image-uploader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AppearanceSection } from "./appearance-section";
 
 interface BasicInfoSectionProps {
   mode: "create" | "edit";
@@ -109,36 +110,7 @@ export function BasicInfoSection({
         </div>
 
         {/* Appearance Settings */}
-        <div className="bg-slate-50 dark:bg-slate-900/40 p-5 rounded-lg border">
-          <h3 className="text-lg font-medium mb-4">Appearance</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="visibility" className="text-sm font-medium flex items-center gap-1.5">
-                Visibility
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <AlertCircle className="size-3.5 text-gray-400" />
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[250px]">
-                      <p>Controls who can see and use your agent.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </Label>
-              <Select name="visibility" defaultValue={initialData?.visibility || "public"}>
-                <SelectTrigger id="visibility" className="mt-2">
-                  <SelectValue placeholder="Select visibility" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">Public (Everyone can see)</SelectItem>
-                  <SelectItem value="private">Private (Only you can see)</SelectItem>
-                  <SelectItem value="link">Link sharing (Anyone with the link)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
+        <AppearanceSection initialVisibility={initialData?.visibility || "public"} />
       </div>
     </div>
   );
