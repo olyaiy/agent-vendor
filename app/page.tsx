@@ -1,7 +1,7 @@
 import { MainFooter } from "@/components/layout/main-footer";
 import { Suspense } from "react";
 import { AgentListSkeleton } from "@/components/agent/agent-list-skeleton";
-import { HeroBanner } from "@/components/home/hero-banner";
+
 import { AgentContainer } from "@/components/agent/agent-container";
 import { FeatureSteps } from "@/components/blocks/feature-section";
 
@@ -10,7 +10,7 @@ export default function Page() {
     return (
         <>
             <div className="container mx-auto p-4">
-                {/* <HeroBanner /> */}
+
                 <FeatureSteps 
                     features={features}
                     title="What is Agent Vendor?"
