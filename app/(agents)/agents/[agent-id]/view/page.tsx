@@ -104,7 +104,7 @@ export default async function ViewAgentPage({
     modelId: defaultModelId,
     visibility: agentData[0].visibility || 'public',
     artifactsEnabled: agentData[0].artifacts_enabled,
-    imageUrl: agentData[0].image_url || undefined,
+    imageUrl: agentData[0].thumbnail_url || undefined,
     customization: agentData[0].customization as AgentCustomization | undefined,
     createdAt: agentData[0].createdAt || undefined,
     updatedAt: agentData[0].updatedAt || undefined,

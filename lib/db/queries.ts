@@ -364,7 +364,7 @@ export const getAgents = async (userId?: string, includeAllModels?: boolean, inc
       visibility: agents.visibility,
       creatorId: agents.creatorId,
       artifacts_enabled: agents.artifacts_enabled,
-      image_url: agents.image_url,
+      thumbnail_url: agents.thumbnail_url,
     })
     .from(agents)
     .where(
@@ -534,7 +534,7 @@ export async function createAgent({
   visibility,
   creatorId,
   artifactsEnabled,
-  imageUrl,
+  thumbnailUrl,
   customization,
   tagIds
 }: {
@@ -545,7 +545,7 @@ export async function createAgent({
   visibility: 'public' | 'private' | 'link';
   creatorId: string;
   artifactsEnabled?: boolean;
-  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   customization?: {
     overview: {
       title: string;
@@ -574,7 +574,7 @@ export async function createAgent({
         visibility,
         creatorId,
         artifacts_enabled: artifactsEnabled !== undefined ? artifactsEnabled : true,
-        image_url: imageUrl,
+        thumbnail_url: thumbnailUrl,
         customization: customization as any, // Type cast for Drizzle JSON field
         createdAt: new Date(),
         updatedAt: new Date()
@@ -656,7 +656,7 @@ export async function updateAgentById({
   modelId,
   visibility,
   artifactsEnabled,
-  imageUrl,
+  thumbnailUrl,
   customization,
   tagIds
 }: {
@@ -667,7 +667,7 @@ export async function updateAgentById({
   modelId: string;
   visibility: 'public' | 'private' | 'link';
   artifactsEnabled?: boolean;
-  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   customization?: {
     overview: {
       title: string;
@@ -695,7 +695,7 @@ export async function updateAgentById({
         description,
         visibility,
         artifacts_enabled: artifactsEnabled !== undefined ? artifactsEnabled : true,
-        image_url: imageUrl,
+        thumbnail_url: thumbnailUrl,
         customization: customization as any, // Type cast for Drizzle JSON field
         updatedAt: new Date()
       })

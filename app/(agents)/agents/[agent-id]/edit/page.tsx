@@ -61,7 +61,7 @@ export default async function EditAgentPage({
     tagIds: agentTags.map(tag => tag.id),
     visibility: agentWithModels.visibility || 'public',
     artifactsEnabled: agentWithModels.artifacts_enabled,
-    imageUrl: agentWithModels.image_url ?? undefined,
+    imageUrl: agentWithModels.thumbnail_url ?? undefined,
     customization: agentWithModels.customization as any
   };
 

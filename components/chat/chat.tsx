@@ -142,7 +142,7 @@ export function Chat({
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
           agent_display_name={agent.agent_display_name}
-          image_url={agent.image_url}
+          thumbnail_url={agent.thumbnail_url}
         />
 
         <div className="flex-1 min-h-0 relative">

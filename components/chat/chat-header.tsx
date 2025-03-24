@@ -27,7 +27,7 @@ function PureChatHeader({
   isReadonly,
   agentId,
   agent_display_name,
-  image_url,
+  thumbnail_url,
 }: {
   chatId: string;
   selectedModelId: string;
@@ -35,7 +35,7 @@ function PureChatHeader({
   isReadonly: boolean;
   agentId: string;
   agent_display_name?: string;
-  image_url?: string | null;
+  thumbnail_url?: string | null;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -126,18 +126,15 @@ function PureChatHeader({
                     >
                       <Link href={`/agents/${agentId}/edit`} className="flex items-center gap-2">
                         <Avatar className="size-6 border border-border relative">
-                          {image_url ? (
-                            <>
-                              <Image 
-                                src={image_url} 
-                                alt={agent_display_name || "Agent"} 
+                          {thumbnail_url ? (
+                            <div className="w-8 h-8 relative overflow-hidden rounded-full">
+                              <Image
+                                src={thumbnail_url}
+                                alt={agent_display_name || "Agent"}
                                 fill
-                                sizes="24px"
-                                className="object-cover rounded-full"
-                                priority
+                                className="object-cover"
                               />
-                              <AvatarImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" className="opacity-0" />
-                            </>
+                            </div>
                           ) : (
                             <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
                           )}
@@ -190,17 +187,15 @@ function PureChatHeader({
                   <DropdownMenuItem asChild>
                     <Link href={`/agents/${agentId}/edit`} className="flex items-center">
                       <Avatar className="size-4 border border-border relative mr-2">
-                        {image_url ? (
-                          <>
-                            <Image 
-                              src={image_url} 
-                              alt={agent_display_name || "Agent"} 
+                        {thumbnail_url ? (
+                          <div className="w-8 h-8 relative overflow-hidden rounded-full mr-2 flex-shrink-0">
+                            <Image
+                              src={thumbnail_url}
+                              alt={agent_display_name || "Agent"}
                               fill
-                              sizes="16px"
-                              className="object-cover rounded-full"
+                              className="object-cover"
                             />
-                            <AvatarImage src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="" className="opacity-0" />
-                          </>
+                          </div>
                         ) : (
                           <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
                         )}
@@ -233,5 +228,5 @@ function PureChatHeader({
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
   return prevProps.selectedModelId === nextProps.selectedModelId && 
          prevProps.agent_display_name === nextProps.agent_display_name &&
-         prevProps.image_url === nextProps.image_url;
+         prevProps.thumbnail_url === nextProps.thumbnail_url;
 });

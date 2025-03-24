@@ -87,7 +87,7 @@ export const agents = pgTable("agents", {
 	visibility: visibility().default('public'),
 	creatorId: uuid("creator_id"),
 	artifactsEnabled: boolean("artifacts_enabled").default(true),
-	imageUrl: text("image_url"),
+	thumbnailUrl: text("thumbnail_url"),
 },
 (table) => {
 	return {

@@ -52,10 +52,10 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
           )}
           
           <div className="aspect-[4/3] w-full mb-1 rounded-lg bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 dark:from-gray-800 dark:via-gray-700 dark:to-gray-900 relative">
-            {agent.image_url ? (
+            {agent.thumbnail_url ? (
               <div className="absolute inset-0 overflow-hidden rounded-lg">
                 <Image
-                  src={agent.image_url}
+                  src={agent.thumbnail_url}
                   alt={agent.agent_display_name}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"

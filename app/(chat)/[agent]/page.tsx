@@ -40,14 +40,14 @@ export async function generateMetadata(
     openGraph: {
       title: customTitle || agent.agent_display_name,
       description: agent.description || `Chat with ${agent.agent_display_name}`,
-      ...(agent.image_url && { images: [{ url: agent.image_url, alt: agent.agent_display_name }] }),
+      ...(agent.thumbnail_url && { images: [{ url: agent.thumbnail_url, alt: agent.agent_display_name }] }),
       type: 'website',
     },
     twitter: {
-      card: agent.image_url ? 'summary_large_image' : 'summary',
+      card: agent.thumbnail_url ? 'summary_large_image' : 'summary',
       title: customTitle || agent.agent_display_name,
       description: agent.description || `Chat with ${agent.agent_display_name}`,
-      ...(agent.image_url && { images: [agent.image_url] }),
+      ...(agent.thumbnail_url && { images: [agent.thumbnail_url] }),
     },
     alternates: {
       canonical: `/${agent.agent}`,

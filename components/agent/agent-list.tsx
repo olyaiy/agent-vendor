@@ -35,8 +35,8 @@ export function AgentList({ agents: initialAgents, userId, tags = [] }: AgentLis
       // Create a copy of initial agents to sort
       const sortedAgents = [...initialAgents].sort((a, b) => {
         // First priority: Agents with images come first
-        const aHasImage = Boolean(a.image_url);
-        const bHasImage = Boolean(b.image_url);
+        const aHasImage = Boolean(a.thumbnail_url);
+        const bHasImage = Boolean(b.thumbnail_url);
         
         if (aHasImage && !bHasImage) return -1;
         if (!aHasImage && bHasImage) return 1;
