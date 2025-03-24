@@ -2,14 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
 import { 
   CheckIcon, 
   InfoIcon,
   SearchIcon,
-  FilterIcon,
-  Settings2Icon,
-  WrenchIcon,
   AlertCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -85,40 +81,22 @@ export function ToolGroupSelector({
   return (
     <div className={cn("space-y-6", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-1.5">
-          <Label className="text-sm font-medium flex items-center gap-1.5">
-            Available Tool Groups
-          </Label>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-[250px]">
-                <p>Select tool groups to enable capabilities for your agent.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        
-        <div className="flex items-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge 
-                  variant={selectedToolGroupIds.length > 0 ? "default" : "outline"} 
-                  className="cursor-pointer transition-colors h-7"
-                  onClick={toggleAllTools}
-                >
-                  {selectedToolGroupIds.length} of {toolGroups.length} selected
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Click to {selectedToolGroupIds.length === toolGroups.length ? "deselect" : "select"} all tools</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge 
+                variant={selectedToolGroupIds.length > 0 ? "default" : "outline"} 
+                className="cursor-pointer transition-colors h-7"
+                onClick={toggleAllTools}
+              >
+                {selectedToolGroupIds.length} of {toolGroups.length} selected
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Click to {selectedToolGroupIds.length === toolGroups.length ? "deselect" : "select"} all tools</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div className="relative w-full max-w-md">

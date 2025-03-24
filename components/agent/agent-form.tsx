@@ -91,9 +91,9 @@ export default function AgentForm(props: AgentFormProps) {
         onAlternateModelsChange={form.setAlternateModelIds}
       />
 
-<div className="pt-4 border-t border-border/50">
+      <div className="pt-4 border-t border-border/50">
         <Separator />
-</div>
+      </div>
 
         {/* System Prompt Section */}
         <SystemPromptCardSection
@@ -104,6 +104,10 @@ export default function AgentForm(props: AgentFormProps) {
         handleFormValueChange={form.handleFormValueChange as any}
       />
 
+<div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
+
       {/* Tool Groups Section */}
       <ToolGroupsSection
         toolGroups={props.toolGroups}
@@ -111,6 +115,10 @@ export default function AgentForm(props: AgentFormProps) {
         onChange={form.setSelectedToolGroupIds}
       />
 
+
+<div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
      
 
         {/* Knowledge Base Section */}
