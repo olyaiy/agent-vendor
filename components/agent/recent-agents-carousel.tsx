@@ -17,11 +17,11 @@ interface RecentAgentsScrollProps {
 }
 
 export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) {
+  // State for current page - moved before conditional return
+  const [currentPage, setCurrentPage] = useState(0);
+  
   // If no agents, don't render this component
   if (!agents.length) return null;
-  
-  // State for current page
-  const [currentPage, setCurrentPage] = useState(0);
   
   // Items per page
   const ITEMS_PER_PAGE = 4;
