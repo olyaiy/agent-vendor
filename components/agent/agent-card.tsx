@@ -8,6 +8,7 @@ import { InferSelectModel } from "drizzle-orm";
 import { agents, models } from "@/lib/db/schema";
 import { AgentCardSettings } from "./agent-card-settings";
 import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
 
 interface AgentCardProps {
   agent: Omit<InferSelectModel<typeof agents>, 'model'> & {
@@ -24,6 +25,8 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
   const handleClick = () => {
     if (onClick) onClick(agent.id);
   };
+
+  const isCreator = userId === agent.creatorId;
 
   return (
     <div className="w-full">
@@ -125,11 +128,21 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
             )}
             
             <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-              <AgentCardSettings 
-                agentId={agent.id}
-                userId={userId}
-                creatorId={agent.creatorId}
-              />
+              {isCreator ? (
+                <AgentCardSettings 
+                  agentId={agent.id}
+                  userId={userId}
+                  creatorId={agent.creatorId}
+                />
+              ) : (
+                <Link 
+                  href={`/agents/${agent.id}/view`} 
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1.5 rounded-md hover:bg-muted inline-block"
+                >
+                  <ExternalLink size={16} className="text-muted-foreground" />
+                </Link>
+              )}
             </div>
           </div>
         </Card>
