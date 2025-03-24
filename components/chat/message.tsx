@@ -93,14 +93,17 @@ const PurePreviewMessage = ({
             'flex flex-col sm:flex-row gap-4 w-full group-data-[role=user]/message:ml-auto ',
             {
               'w-full': mode === 'edit',
-              'group-data-[role=user]/message:w-fit': mode !== 'edit',
+              'group-data-[role=user]/message:w-fit  ': mode !== 'edit',
               'group-data-[role=user]/message:max-w-2xl': !isCompact,
             },
           )}
         >
           
           {message.role === 'assistant' && (
-            <div className="size-12 sm:size-16 flex items-center rounded-full justify-center ring-1 shrink-0 border-2 ring-border bg-background overflow-hidden relative">
+            <div className={cn(
+              "size-12 sm:size-16 flex items-center rounded-full justify-center ring-1 ring-border shrink-0 bg-background overflow-hidden relative ",
+              isCompact && "size-8 sm:size-8 ml-1 mt-1"
+            )}>
               {agentImageUrl ? (
                 <Image 
                   src={agentImageUrl} 

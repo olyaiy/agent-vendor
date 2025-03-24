@@ -135,13 +135,18 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
                   creatorId={agent.creatorId}
                 />
               ) : (
-                <Link 
-                  href={`/agents/${agent.id}/view`} 
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    window.open(`/agents/${agent.id}/view`, '_blank');
+                  }}
                   className="p-1.5 rounded-md hover:bg-muted inline-block"
+                  aria-label="Open agent in new tab"
                 >
                   <ExternalLink size={16} className="text-muted-foreground" />
-                </Link>
+                </button>
               )}
             </div>
           </div>

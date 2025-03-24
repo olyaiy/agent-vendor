@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         hostname: 'agentvendor.ca',
       },
       {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
         // Added the domain from the deprecated config
         hostname: 'pub-8ddd283c539f458b8f9ee190cb5cbbdd.r2.dev',
       },

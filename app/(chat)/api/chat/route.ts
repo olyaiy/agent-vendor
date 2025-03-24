@@ -80,18 +80,13 @@ export async function POST(request: Request) {
 
   // If the user message is not found, return an error
   if (!userMessage) {
-    console.log('No user message found');
-    console.log(messages);
     return new Response('No user message found', { status: 400 });
   }
 
-  // Get the chat
-  console.log('THE ID IS', id);
-  console.log('trying get chat by id');
   console.time('get-chat');
   const chat = await getChatById({ id });
   console.timeEnd('get-chat');
-  console.log('The chat is', chat);
+
 
 
   // If the chat is not found, generate a title and save the chat FIRST
@@ -302,6 +297,7 @@ export async function POST(request: Request) {
       result.consumeStream();      
       result.mergeIntoDataStream(dataStream, {
         sendReasoning: true,
+        sendSources: true,
       });
       console.timeEnd('dataStream-execute');
     },
