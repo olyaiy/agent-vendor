@@ -11,19 +11,23 @@ const components: Partial<Components> = {
   pre: ({ children }) => <>{children}</>,
   // Check if paragraph contains a pre element and unwrap it if needed
   p: ({ node, children }) => {
-    // Check if this paragraph contains a pre element or code element that will render a pre
     const childrenArray = Children.toArray(children);
-    const hasPre = childrenArray.some(child => 
+    const hasBlockElement = childrenArray.some(child => 
       isValidElement(child) && 
-      (child.type === 'pre' || (child.props && 
-        (typeof child.props === 'object' && 
-        'node' in (child.props as object) && 
-        ((child.props as any).node?.tagName === 'code' && 
-        'inline' in (child.props as object) && 
-        !(child.props as any).inline))))
+      (
+        // Check for pre/code blocks
+        child.type === 'pre' || 
+        (child.props && 
+          (typeof child.props === 'object' && 
+          'node' in (child.props as object) && 
+          (child.props as any).node?.tagName === 'code' && 
+          !(child.props as any).inline)) ||
+        // Check for any block-level elements (div, img wrapper, etc)
+        (typeof child.type === 'string' && ['div', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'].includes(child.type))
+      )
     );
     
-    return hasPre ? <>{children}</> : <p>{children}</p>;
+    return hasBlockElement ? <>{children}</> : <p>{children}</p>;
   },
   img: ({ node, children, ...props }) => {
     return (

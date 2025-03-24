@@ -84,6 +84,7 @@ export async function getChatById({ id }: { id: string }): Promise<{
 } | undefined> {
   try {
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
+    
     return selectedChat;
   } catch (error) {
     return handleDbError(error, 'Failed to get chat by id from database');

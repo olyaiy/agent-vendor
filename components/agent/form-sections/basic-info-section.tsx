@@ -84,7 +84,7 @@ export function BasicInfoSection({
             
             <div>
               <Label htmlFor="description" className="text-sm font-medium flex items-center gap-1.5">
-                Description
+                Description <span className="text-gray-600 text-xs">(Not Visible to AI)</span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>

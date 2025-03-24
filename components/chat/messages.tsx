@@ -109,9 +109,7 @@ function PureMessages({
         !lastToolData && <ThinkingMessage />
       }
 
-      {status === 'streaming' && <ThinkingMessage />}
 
-  
 
 
       {/* Empty div at the end for scroll targeting */}
