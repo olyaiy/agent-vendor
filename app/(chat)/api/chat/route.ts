@@ -228,6 +228,8 @@ export async function POST(request: Request) {
         
         /* ---- ON FINISH ---- */
         onFinish: async ({ response , usage }) => {
+        
+
           // Save the messages
           if (session.user?.id) {
             try {

@@ -387,6 +387,17 @@ export function KnowledgeEditor({
         </Dialog>
       </div>
       
+      {items.length > 1 && (
+        <div className="bg-muted/50 rounded-md p-3 text-sm">
+          <div className="font-medium">
+            {items.reduce((total, item) => total + getContentStats(item.content).words, 0).toLocaleString()} total words in knowledge base
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            10,000 words is roughly 13,000 to 15,000 tokens
+          </div>
+        </div>
+      )}
+      
       <div
         ref={dropzoneRef}
         onDragOver={handleDragOver}
