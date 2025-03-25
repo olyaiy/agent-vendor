@@ -41,8 +41,10 @@ import {
   Activity,
   LayoutGrid,
   Repeat,
-  Sparkles
+  Sparkles,
+  Camera
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // Export the props interface so that it can be imported in chat.tsx
 export interface ChatHeaderProps {
@@ -65,6 +67,7 @@ function PureChatHeader({
   agentId,
   agent_display_name,
   thumbnail_url,
+
   modelSettings,
   setModelSettings,
 }: ChatHeaderProps) {
@@ -546,18 +549,26 @@ function PureChatHeader({
                       asChild
                     >
                       <Link href={`/agents/${agentId}/edit`} className="flex items-center gap-2">
-                        <Avatar className="size-6 border border-border relative">
+                        <Avatar className={cn(
+                          "size-8 border border-border relative",
+                          !thumbnail_url && "bg-secondary/50"
+                        )}>
                           {thumbnail_url ? (
-                            <div className="w-8 h-8 relative overflow-hidden rounded-full">
+                            <div className="w-full h-full relative overflow-hidden rounded-full flex items-center justify-center">
                               <Image
                                 src={thumbnail_url}
                                 alt={agent_display_name || "Agent"}
                                 fill
                                 className="object-cover"
+                                sizes="100px"
+                                priority
+                                quality={90}
                               />
                             </div>
                           ) : (
-                            <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
+                            <AvatarFallback className="text-xs bg-gray-100 dark:bg-gray-800">
+                              {agent_display_name?.charAt(0) || "A"}
+                            </AvatarFallback>
                           )}
                         </Avatar>
                         <span className="font-medium text-sm hidden md:inline-block">
@@ -607,18 +618,26 @@ function PureChatHeader({
                 {!isReadonly && (
                   <DropdownMenuItem asChild>
                     <Link href={`/agents/${agentId}/edit`} className="flex items-center">
-                      <Avatar className="size-4 border border-border relative mr-2">
+                      <Avatar className={cn(
+                        "size-8 border border-border relative",
+                        !thumbnail_url && "bg-secondary/50"
+                      )}>
                         {thumbnail_url ? (
-                          <div className="w-8 h-8 relative overflow-hidden rounded-full mr-2 flex-shrink-0">
+                          <div className="w-full h-full relative overflow-hidden rounded-full flex items-center justify-center">
                             <Image
                               src={thumbnail_url}
                               alt={agent_display_name || "Agent"}
                               fill
                               className="object-cover"
+                              sizes="100px"
+                              priority
+                              quality={90}
                             />
                           </div>
                         ) : (
-                          <AvatarFallback className="text-xs">{agent_display_name?.charAt(0) || "A"}</AvatarFallback>
+                          <AvatarFallback className="text-xs bg-gray-100 dark:bg-gray-800">
+                            {agent_display_name?.charAt(0) || "A"}
+                          </AvatarFallback>
                         )}
                       </Avatar>
                       <span>Agent Settings</span>

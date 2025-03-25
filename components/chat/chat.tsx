@@ -198,7 +198,7 @@ export function Chat({
           selectedVisibilityType={selectedVisibilityType}
           isReadonly={isReadonly}
           agent_display_name={agent.agent_display_name}
-          thumbnail_url={agent.thumbnail_url}
+          thumbnail_url={agent.avatar_url || agent.thumbnail_url}
           modelSettings={modelSettings}
           setModelSettings={setModelSettings}
         />
