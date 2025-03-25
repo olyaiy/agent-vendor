@@ -14,6 +14,7 @@ interface BasicInfoCardSectionProps {
     agentDisplayName: string;
     description?: string;
     visibility: "public" | "private" | "link";
+    agentSlug?: string;
   };
   thumbnailUrl: string | null;
   setThumbnailUrl: (url: string | null) => void;
@@ -67,6 +68,18 @@ export function BasicInfoCardSection({
               </Tooltip>
             </TooltipProvider>
           ) : null}
+          {mode === 'edit' && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              asChild
+            >
+              <a href={`/${initialData?.id}`}>
+                Chat with Agent
+              </a>
+            </Button>
+          )}
           <Button 
             type="submit" 
             size="sm"

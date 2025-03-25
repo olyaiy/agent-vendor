@@ -102,11 +102,11 @@ function filterMessages(messages: any[]) {
                 
                 // Create a more comprehensive result entry
                 return `Result ${index + 1}: ${title}
-URL: ${url}
-${extraInfo ? extraInfo + '\n' : ''}
-Summary: ${truncatedSnippet}`;
-              }).join('\n\n');
-            }
+                URL: ${url}
+                ${extraInfo ? extraInfo + '\n' : ''}
+                Summary: ${truncatedSnippet}`;
+                              }).join('\n\n');
+                            }
             
             // Add a note about filtering to indicate there might be more results
             const noteAboutFiltering = result?.results && result.results.length > 5 
@@ -233,6 +233,8 @@ In your work, you will rely solely on the facts provided. If information appears
 To enhance readability and structure, use Markdown formatting in your articles. Begin with a level 1 heading for the title, followed by level 2 headings for major sections such as the introduction, body, and conclusion. Use level 3 headings for sub-sections if necessary. Employ bold text for emphasis and italics for quotes or key terms. Lists should be avoided in favor of well-structured paragraphs that guide the reader through the narrative.
 
 IT IS CRUICAL YOU DO NOT USE BULLET POINTS OR LISTS.
+
+
 `
 
 

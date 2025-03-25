@@ -116,10 +116,10 @@ export default function AgentForm(props: AgentFormProps) {
       />
 
 
-<div className="pt-4 border-t border-border/50">
+      <div className="pt-4 border-t border-border/50">
         <Separator />
       </div>
-     
+
 
         {/* Knowledge Base Section */}
         <KnowledgeSection
@@ -130,6 +130,10 @@ export default function AgentForm(props: AgentFormProps) {
         onDeleteItem={form.handleDeleteKnowledgeItem}
       />
 
+      <div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
+
       {/* Tags Section */}
       <TagsCardSection
         tags={props.tags}
@@ -137,13 +141,22 @@ export default function AgentForm(props: AgentFormProps) {
         setSelectedTags={form.setSelectedTags}
       />
 
-     
+
+      <div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
 
       {/* Welcome Screen Customization */}
       <WelcomeScreenCardSection
         overview={form.overviewCustomization}
         onChange={form.setOverviewCustomization}
       />
+
+
+      <div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
+
 
       {/* Prompt Suggestions */}
       <PromptSuggestionsSection
