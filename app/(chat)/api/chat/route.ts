@@ -227,12 +227,19 @@ export async function POST(request: Request) {
 
         
         /* ---- ON FINISH ---- */
-        onFinish: async ({ response , usage }) => {
+        onFinish: async ({ response , usage, sources }) => {
+
+          console.log("THE SOURCES WE ARE SAVING LOOKS LIKE THIS:")
+          console.dir(sources, { depth: 3 })
         
+
 
           // Save the messages
           if (session.user?.id) {
             try {
+
+              console.log("THE RESPONSE WE ARE SAVING LOOKS LIKE THIS:")
+              console.dir(response.messages, { depth: 3 })
 
               const assistantId = getTrailingMessageId({
                 messages: response.messages.filter(
@@ -249,6 +256,24 @@ export async function POST(request: Request) {
                 responseMessages: response.messages,
               });
 
+              // Create a new parts array that includes sources first, then the text content
+              const augmentedParts = [
+                // Add each source as a separate part
+                ...(sources || []).map(source => ({
+                  type: 'source',
+                  source: {
+                    sourceType: source.sourceType,
+                    id: source.id,
+                    url: source.url
+                  }
+                })),
+                // Then add the existing text parts
+                ...(assistantMessage.parts || [])
+              ];
+
+              console.log("THE ASSISTANT MESSAGE WE ARE SAVING LOOKS LIKE THIS:")
+              console.dir(augmentedParts, { depth: 3 })
+
               
               await saveMessages({
                 messages: [
@@ -256,7 +281,7 @@ export async function POST(request: Request) {
                     id: assistantId,
                     chatId: id,
                     role: assistantMessage.role,
-                    parts: assistantMessage.parts,
+                    parts: augmentedParts,
                     attachments:
                         assistantMessage.experimental_attachments ?? [],
                     createdAt: new Date(),
