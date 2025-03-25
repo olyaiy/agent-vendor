@@ -3,6 +3,7 @@
 import React from "react";
 import { BasicInfoCardSection } from "./form-sections/basic-info-card-section";
 import { ModelsSection } from "./form-sections/models-section";
+import { SettingsSection } from "./form-sections/settings-section";
 import { ToolGroupsSection } from "./form-sections/tool-groups-section";
 import { TagsCardSection } from "./form-sections/tags-card-section";
 import { SystemPromptCardSection } from "./form-sections/system-prompt-card-section";
@@ -68,6 +69,24 @@ export default function AgentForm(props: AgentFormProps) {
   // Use the custom hook to get all state and handlers
   const form = useAgentForm(props);
 
+  // Default model settings
+  const [modelSettings, setModelSettings] = React.useState({
+    maxTokens: 2048,
+    temperature: 0.7,
+    topP: 0.9,
+    topK: 40,
+    presencePenalty: 0,
+    frequencyPenalty: 0
+  });
+
+  // Handler for model settings changes
+  const handleSettingsChange = (key: string, value: number) => {
+    setModelSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
   return (
     <form onSubmit={form.handleSubmit} className="space-y-8 mx-auto overflow-hidden px-16">
       {/* Basic Information Section */}
@@ -89,6 +108,16 @@ export default function AgentForm(props: AgentFormProps) {
         alternateModelIds={form.alternateModelIds}
         onPrimaryModelChange={form.setPrimaryModelId}
         onAlternateModelsChange={form.setAlternateModelIds}
+      />
+
+      <div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
+
+      {/* Model Settings Section */}
+      <SettingsSection
+        settings={modelSettings}
+        onSettingsChange={handleSettingsChange}
       />
 
       <div className="pt-4 border-t border-border/50">

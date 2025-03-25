@@ -40,6 +40,17 @@ export const agents = pgTable("agents", {
       // customColors: false
     }
   }),
+  settings: jsonb("settings").default({
+    maxTokens: null,
+    temperature: null,
+    topP: null,
+    topK: null,
+    presencePenalty: null,
+    frequencyPenalty: null,
+    maxRetries: null,
+    stopSequences: null,
+    seed: null
+  }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at"),
 }, (table) => {
@@ -114,4 +125,16 @@ export const agentToolGroups = pgTable("agent_tool_groups", {
   };
 });
 
-export type AgentToolGroup = typeof agentToolGroups.$inferSelect; 
+export type AgentToolGroup = typeof agentToolGroups.$inferSelect;
+
+export interface AgentSettings {
+  maxTokens?: number | null;
+  temperature?: number | null;
+  topP?: number | null;
+  topK?: number | null;
+  presencePenalty?: number | null;
+  frequencyPenalty?: number | null;
+  maxRetries?: number | null;
+  stopSequences?: string[] | null;
+  seed?: number | null;
+} 
