@@ -7,6 +7,8 @@ import {
   PenIcon,
   RedoIcon,
   UndoIcon,
+  ImageIcon,
+  FileIcon,
 } from '@/components/util/icons';
 import { Suggestion } from '@/lib/db/schema';
 import { toast } from 'sonner';
@@ -160,6 +162,28 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
           role: 'user',
           content:
             'Please add final polish and check for grammar, add section titles for better structure, and ensure everything reads smoothly.',
+        });
+      },
+    },
+    {
+      icon: <ImageIcon size={18} />,
+      description: 'Add images',
+      onClick: ({ appendMessage }) => {
+        appendMessage({
+          role: 'user',
+          content:
+            'Please add images to the article while keeping content exactly the same. Ensure the images are relevant and appropriate',
+        });
+      },
+    },
+    {
+      icon: <FileIcon size={18} />,
+      description: 'Add citations',
+      onClick: ({ appendMessage }) => {
+        appendMessage({
+          role: 'user',
+          content:
+            'Please add Canadian Press (CP) style citations: Maintain all content while inserting numbered superscript in-text references for quotes and factual claims. Include a matching numbered references section at the end with full source details (publication, author, date, URL). Ensure sources are credible and formatting matches CP style guidelines exactly.',
         });
       },
     },

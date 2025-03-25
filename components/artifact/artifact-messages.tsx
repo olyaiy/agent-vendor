@@ -73,6 +73,7 @@ function areEqual(
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (prevProps.isCompact !== nextProps.isCompact) return false;
   if (prevProps.messages !== nextProps.messages) return false;
+  if (prevProps.messages[prevProps.messages.length - 1].parts !== nextProps.messages[nextProps.messages.length - 1].parts) return false;
    // Check tool invocations
 
   return true;
