@@ -76,7 +76,7 @@ const PurePreviewMessage = ({
   isCompact?: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  console.log(message)
+
 
  
 

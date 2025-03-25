@@ -5,6 +5,7 @@ import { UIArtifact } from './artifact';
 import { PreviewMessage } from '../chat/message';
 import { useScrollToBottom } from '../hooks/use-scroll-to-bottom';
 import { UseChatHelpers } from '@ai-sdk/react';
+import { equal } from 'assert';
 
 interface ArtifactMessagesProps {
   chatId: string;
@@ -71,6 +72,8 @@ function areEqual(
   if (prevProps.status !== nextProps.status) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (prevProps.isCompact !== nextProps.isCompact) return false;
+  if (prevProps.messages !== nextProps.messages) return false;
+   // Check tool invocations
 
   return true;
 }

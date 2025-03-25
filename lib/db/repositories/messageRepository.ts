@@ -22,8 +22,7 @@ export async function saveMessages({
       model_id: model_id || msg.model_id,
     }));
 
-    console.log("THE MESSAGE WE ARE SAVING LOOKS LIKE THIS:")
-    console.dir(messagesToSave, { depth: 3 })
+
 
     await db.insert(message).values(messagesToSave);
     

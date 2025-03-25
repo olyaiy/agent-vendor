@@ -38,31 +38,27 @@ async function fetchJinaReaderData(
     const response = await fetch(`https://r.jina.ai/${url}`, {
       method: 'GET',
       headers: {
-        Accept: 'application/json',
         'X-Return-Format': 'text',
+        Authorization: `Bearer ${process.env.JINA_API_KEY}`,
       }
-    })
-    const json = await response.json()
-    if (!json.data || json.data.length === 0) {
-      return null
-    }
+    });
 
-    const content = json.data.content.slice(0, CONTENT_CHARACTER_LIMIT)
+    const textContent = await response.text();
+    console.log('Jina Reader API response textContent ----------------------------------------------------')
+    console.log(textContent)
 
     return {
-      results: [
-        {
-          title: json.data.title,
-          content,
-          url: json.data.url
-        }
-      ],
+      results: [{
+        title: '',
+        content: textContent.slice(0, CONTENT_CHARACTER_LIMIT),
+        url: url
+      }],
       query: '',
       images: []
-    }
+    };
   } catch (error) {
-    console.error('Jina Reader API error:', error)
-    return null
+    console.error('Jina Reader API error:', error);
+    return null;
   }
 }
 
@@ -74,12 +70,20 @@ export const retrieveTool = tool({
     let results: SearchResultsType | null = null;
 
     // Use Jina if the API key is set, otherwise use Tavily
-    const useJina = process.env.JINA_API_KEY
+    // const useJina = process.env.JINA_API_KEY
+
+
+    console.log(process.env.JINA_API_KEY)
+
+    const useJina = true
     if (useJina) {
+
       results = await fetchJinaReaderData(url)
     } 
 
     if (!results) {
+
+
       return {
         results: [],
         images: [],

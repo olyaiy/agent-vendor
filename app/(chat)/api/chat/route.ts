@@ -229,17 +229,12 @@ export async function POST(request: Request) {
         /* ---- ON FINISH ---- */
         onFinish: async ({ response , usage, sources }) => {
 
-          console.log("THE SOURCES WE ARE SAVING LOOKS LIKE THIS:")
-          console.dir(sources, { depth: 3 })
-        
 
 
           // Save the messages
           if (session.user?.id) {
             try {
 
-              console.log("THE RESPONSE WE ARE SAVING LOOKS LIKE THIS:")
-              console.dir(response.messages, { depth: 3 })
 
               const assistantId = getTrailingMessageId({
                 messages: response.messages.filter(
@@ -271,8 +266,7 @@ export async function POST(request: Request) {
                 ...(assistantMessage.parts || [])
               ];
 
-              console.log("THE ASSISTANT MESSAGE WE ARE SAVING LOOKS LIKE THIS:")
-              console.dir(augmentedParts, { depth: 3 })
+
 
               
               await saveMessages({
