@@ -44,8 +44,7 @@ async function fetchJinaReaderData(
     });
 
     const textContent = await response.text();
-    console.log('Jina Reader API response textContent ----------------------------------------------------')
-    console.log(textContent)
+
 
     return {
       results: [{
@@ -69,11 +68,7 @@ export const retrieveTool = tool({
   execute: async ({ url }) => {
     let results: SearchResultsType | null = null;
 
-    // Use Jina if the API key is set, otherwise use Tavily
-    // const useJina = process.env.JINA_API_KEY
 
-
-    console.log(process.env.JINA_API_KEY)
 
     const useJina = true
     if (useJina) {
