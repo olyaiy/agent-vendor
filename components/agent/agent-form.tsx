@@ -122,14 +122,14 @@ export default function AgentForm(props: AgentFormProps) {
       </div>
 
       {/* Model Settings Section */}
-      <SettingsSection
+      {/* <SettingsSection
         settings={modelSettings}
         onSettingsChange={handleSettingsChange}
       />
 
       <div className="pt-4 border-t border-border/50">
         <Separator />
-      </div>
+      </div> */}
 
         {/* System Prompt Section */}
         <SystemPromptCardSection
