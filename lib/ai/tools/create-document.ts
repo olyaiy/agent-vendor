@@ -6,7 +6,10 @@ import {
   artifactKinds,
   documentHandlersByArtifactKind,
 } from '@/lib/artifacts/server';
+import { generateText } from 'ai';
+
 import { UIMessage } from 'ai';
+import { openai } from '@ai-sdk/openai';
 interface CreateDocumentProps {
   session: Session;
   dataStream: DataStreamWriter;
@@ -77,8 +80,18 @@ export const createTextDocument = ({ session, dataStream }: CreateDocumentProps)
     description: 'Create a new text document',
     parameters: z.object({ title: z.string() }),
     execute: async ({ title }, options) => {
+      // const { text } = await generateText({
+      //   model: openai('gpt-4o-mini'),
+      //   system:
+      //     'Re-write the following title in a way to only capitlize names and places, and the first letter of the sentances. NOTHING ELSE.',
+      //   prompt: `This is the title, AGAIN, ONLY CAPITALIZE NAMES AND PLACES, AND THE FIRST LETTER OF THE SENTANCES. NOTHING ELSE: ${title}`,
+      // });
+
+      // console.log('text ----------------------------------------------------')
+      // console.log(text)
+
       return createDocument({ session, dataStream }).execute(
-        { title, kind: 'text' },
+        { title: title, kind: 'text' },
         options
       );
     },

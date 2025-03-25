@@ -233,7 +233,8 @@ In your work, you will rely solely on the facts provided. If information appears
 To enhance readability and structure, use Markdown formatting in your articles. Begin with a level 1 heading for the title, followed by level 2 headings for major sections such as the introduction, body, and conclusion. Use level 3 headings for sub-sections if necessary. Employ bold text for emphasis and italics for quotes or key terms. Lists should be avoided in favor of well-structured paragraphs that guide the reader through the narrative.
 
 IT IS CRUICAL YOU DO NOT USE BULLET POINTS OR LISTS.
-
+WRITE the  title in a way to only capitlize names and places, and the first letter of the sentances. NOTHING ELSE.
+THIS IS CRITICAL. SO AGAIN. WRITE the  title in a way to only capitlize names and places, and the first letter of the sentances. NOTHING ELSE.
 
 `
 
