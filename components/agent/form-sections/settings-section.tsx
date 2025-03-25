@@ -61,16 +61,16 @@ export function SettingsSection({
             <Slider
               id="maxTokens"
               min={0}
-              max={8000}
+              max={8192}
               step={1}
               value={[settings.maxTokens]}
-              onValueChange={(value) => onSettingsChange("maxTokens", value[0])}
+              onValueChange={(value: number[]) => onSettingsChange("maxTokens", value[0])}
               className="flex-1"
             />
             <Input
               type="number"
               min={0}
-              max={8000}
+              max={8192}
               value={settings.maxTokens}
               onChange={(e) => onSettingsChange("maxTokens", parseInt(e.target.value) || 0)}
               className="w-20"
@@ -109,7 +109,7 @@ export function SettingsSection({
               max={2}
               step={0.01}
               value={[settings.temperature]}
-              onValueChange={(value) => onSettingsChange("temperature", value[0])}
+              onValueChange={(value: number[]) => onSettingsChange("temperature", value[0])}
               className="flex-1"
             />
             <Input
@@ -155,7 +155,7 @@ export function SettingsSection({
               max={1}
               step={0.01}
               value={[settings.topP]}
-              onValueChange={(value) => onSettingsChange("topP", value[0])}
+              onValueChange={(value: number[]) => onSettingsChange("topP", value[0])}
               className="flex-1"
             />
             <Input
@@ -201,7 +201,7 @@ export function SettingsSection({
               max={100}
               step={1}
               value={[settings.topK]}
-              onValueChange={(value) => onSettingsChange("topK", value[0])}
+              onValueChange={(value: number[]) => onSettingsChange("topK", value[0])}
               className="flex-1"
             />
             <Input
@@ -247,7 +247,7 @@ export function SettingsSection({
               max={2}
               step={0.01}
               value={[settings.presencePenalty]}
-              onValueChange={(value) => onSettingsChange("presencePenalty", value[0])}
+              onValueChange={(value: number[]) => onSettingsChange("presencePenalty", value[0])}
               className="flex-1"
             />
             <Input
@@ -293,7 +293,7 @@ export function SettingsSection({
               max={2}
               step={0.01}
               value={[settings.frequencyPenalty]}
-              onValueChange={(value) => onSettingsChange("frequencyPenalty", value[0])}
+              onValueChange={(value: number[]) => onSettingsChange("frequencyPenalty", value[0])}
               className="flex-1"
             />
             <Input

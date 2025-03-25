@@ -19,26 +19,40 @@ export const myProvider = customProvider({
   languageModels: {
     'title-model': groq('llama-3.1-8b-instant'),
     'artifact-model': anthropic('claude-3-7-sonnet-20250219'),
+
+    // OpenAI Models
     'gpt-4o-mini': openai('gpt-4o-mini'),
     'gpt-4o': openai('gpt-4o'),
+    'o1-mini': openai('o1-mini'), 
+    'o1': openai('o1'),
+    'o3-mini': openai('o3-mini'),
+
+    // Perplexity Models
     'sonar-pro': perplexity('sonar-pro'),
     'sonar': perplexity('sonar'),
     'sonar-reasoning-pro': perplexity('sonar-reasoning-pro'),
     'sonar-reasoning': perplexity('sonar-reasoning'),
     'r1-1776': perplexity('r1-1776'),
+
+    // Mistral Models
     'pixtral-large-latest': mistral('pixtral-large-latest'),
     'mistral-small-latest': mistral('mistral-small-latest'),
     'mistral-large-latest': mistral('mistral-large-latest'),
+
+    // Groq Models
     'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'),
     'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'),
+
+    // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
     'deepseek-reasoner': deepseek('deepseek-reasoner'),
+
+    // Anthropic Models
     'claude-3-5-sonnet-20241022': anthropic('claude-3-5-sonnet-20241022'),
     'claude-3-5-haiku-20241022': anthropic('claude-3-5-haiku-20241022'),
     'claude-3-7-sonnet-20250219': anthropic('claude-3-7-sonnet-20250219'),
-    'o1-mini': openai('o1-mini'), 
-    'o1': openai('o1'),
-    'o3-mini': openai('o3-mini'),
+
+    
     // Google Models
     'gemini-2.0-flash-exp': google('gemini-2.0-flash-exp'),
     'gemini-1.5-pro': google('gemini-1.5-pro'),

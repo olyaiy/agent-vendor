@@ -18,6 +18,24 @@ import { Artifact } from '../artifact/artifact';
 import { Overview } from '../util/overview';
 import { AuthPopup } from '@/components/auth/auth-popup';
 
+// Define the ModelSettings interface
+export interface ModelSettings {
+  maxTokens?: number;
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
+  // Track which settings have been explicitly changed by the user
+  _changed?: {
+    maxTokens?: boolean;
+    temperature?: boolean;
+    topP?: boolean;
+    topK?: boolean;
+    presencePenalty?: boolean;
+    frequencyPenalty?: boolean;
+  };
+}
 
 export function Chat({
   id,
@@ -49,6 +67,9 @@ export function Chat({
   const [searchEnabledStorage, setSearchEnabledStorage] = useLocalStorage<boolean>('search-enabled', false);
   const [searchEnabled, setSearchEnabled] = useState<boolean>(searchEnabledStorage);
   
+  // Add state for model settings with tracking of changed settings
+  const [modelSettings, setModelSettings] = useState<ModelSettings>({ _changed: {} });
+  
   // Add state for auth popup
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
 
@@ -78,6 +99,23 @@ export function Chat({
   const selectedModelDetails = availableModels.find(model => model.id === currentModel);
   const modelIdentifier = selectedModelDetails?.model || selectedChatModel;
 
+  // Process model settings to only include changed values
+  const getProcessedModelSettings = () => {
+    const processedSettings: any = {};
+    const { _changed, ...settings } = modelSettings;
+    
+    if (!_changed) return {};
+    
+    Object.keys(settings).forEach((key) => {
+      const settingKey = key as keyof typeof settings;
+      if (_changed[settingKey]) {
+        processedSettings[settingKey] = settings[settingKey];
+      }
+    });
+    
+    return processedSettings;
+  };
+
   const {
     messages,
     setMessages,
@@ -99,7 +137,8 @@ export function Chat({
       creatorId: agent.creatorId,
       agentSystemPrompt: agent?.system_prompt,
       searchEnabled, // Pass the search toggle state to the API
-      knowledgeItems // Pass the knowledge items to the API
+      knowledgeItems, // Pass the knowledge items to the API
+      modelSettings: getProcessedModelSettings() // Pass only changed model settings to the API
     },
     initialMessages,
     // experimental_throttle: 100,
@@ -160,6 +199,8 @@ export function Chat({
           isReadonly={isReadonly}
           agent_display_name={agent.agent_display_name}
           thumbnail_url={agent.thumbnail_url}
+          modelSettings={modelSettings}
+          setModelSettings={setModelSettings}
         />
 
         <div className="flex-1 min-h-0 relative">

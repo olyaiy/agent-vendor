@@ -8,7 +8,7 @@ import { SidebarToggle } from '@/components/layout/sidebar-toggle';
 import { Button } from '@/components/ui/button';
 import { PlusIcon } from '@/components/util/icons';
 import { useSidebar } from '@/components/ui/sidebar';
-import { memo } from 'react';
+import { memo, useState, type Dispatch, type SetStateAction, useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { VisibilityType, VisibilitySelector } from '@/components/util/visibility-selector';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -18,7 +18,44 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ModelSettings } from './chat';
+import { Badge } from '@/components/ui/badge';
+import { 
+  CheckCircle2, 
+  XCircle, 
+  Sliders, 
+  RotateCcw, 
+  Info,
+  MessageSquare,
+  Thermometer,
+  Activity,
+  LayoutGrid,
+  Repeat,
+  Sparkles
+} from 'lucide-react';
+
+// Export the props interface so that it can be imported in chat.tsx
+export interface ChatHeaderProps {
+  chatId: string;
+  selectedModelId: string;
+  selectedVisibilityType: VisibilityType;
+  isReadonly: boolean;
+  agentId: string;
+  agent_display_name?: string;
+  thumbnail_url?: string | null;
+  modelSettings: ModelSettings;
+  setModelSettings: Dispatch<SetStateAction<ModelSettings>>;
+}
 
 function PureChatHeader({
   chatId,
@@ -28,20 +65,54 @@ function PureChatHeader({
   agentId,
   agent_display_name,
   thumbnail_url,
-}: {
-  chatId: string;
-  selectedModelId: string;
-  selectedVisibilityType: VisibilityType;
-  isReadonly: boolean;
-  agentId: string;
-  agent_display_name?: string;
-  thumbnail_url?: string | null;
-}) {
+  modelSettings,
+  setModelSettings,
+}: ChatHeaderProps) {
   const router = useRouter();
   const { open } = useSidebar();
 
   const { width: windowWidth } = useWindowSize();
   const isMobile = windowWidth < 768;
+
+  // State for input values to handle changes before final submission
+  const [tempMaxTokens, setTempMaxTokens] = useState<string>(modelSettings.maxTokens?.toString() || '');
+  const [tempTopK, setTempTopK] = useState<string>(modelSettings.topK?.toString() || '');
+  
+  // Track active settings count for badge
+  const [activeSettingsCount, setActiveSettingsCount] = useState<number>(0);
+  
+  // Update active settings count when modelSettings changes
+  useEffect(() => {
+    if (modelSettings._changed) {
+      const count = Object.values(modelSettings._changed).filter(Boolean).length;
+      setActiveSettingsCount(count);
+    } else {
+      setActiveSettingsCount(0);
+    }
+  }, [modelSettings]);
+  
+  // Function to update model settings
+  const updateModelSetting = <K extends keyof Omit<ModelSettings, '_changed'>>(key: K, value: ModelSettings[K]) => {
+    setModelSettings(prev => {
+      // Create a copy of the _changed object, initializing it if it doesn't exist
+      const changedSettings = { ...(prev._changed || {}) };
+      // Mark this setting as changed
+      changedSettings[key as keyof typeof changedSettings] = true;
+      
+      return {
+        ...prev,
+        [key]: value,
+        _changed: changedSettings
+      };
+    });
+  };
+
+  // Function to reset model settings
+  const resetModelSettings = () => {
+    setModelSettings({ _changed: {} });
+    setTempMaxTokens('');
+    setTempTopK('');
+  };
 
   const SettingsIcon = () => (
     <svg
@@ -76,6 +147,322 @@ function PureChatHeader({
       <circle cx="12" cy="5" r="1" />
       <circle cx="12" cy="19" r="1" />
     </svg>
+  );
+
+  const getSettingInfo = (settingKey: keyof Omit<ModelSettings, '_changed'>) => {
+    const info = {
+      maxTokens: {
+        icon: <MessageSquare className="size-4" />,
+        description: "Maximum number of tokens (words) to generate in the response",
+        defaultValue: "Model default",
+      },
+      temperature: {
+        icon: <Thermometer className="size-4" />,
+        description: "Controls randomness: lower values are more focused, higher values more creative",
+        defaultValue: "Model default (usually ~0.7)",
+      },
+      topP: {
+        icon: <Sparkles className="size-4" />,
+        description: "Controls diversity via nucleus sampling: 1.0 considers all tokens, lower values restrict to more probable tokens",
+        defaultValue: "Model default (usually ~0.9)",
+      },
+      topK: {
+        icon: <LayoutGrid className="size-4" />,
+        description: "Only sample from the top K options for each token",
+        defaultValue: "Model default",
+      },
+      presencePenalty: {
+        icon: <Activity className="size-4" />,
+        description: "Reduces repetition by penalizing tokens that already appear in the text",
+        defaultValue: "Model default (usually 0)",
+      },
+      frequencyPenalty: {
+        icon: <Repeat className="size-4" />,
+        description: "Reduces repetition by penalizing tokens based on their frequency in the text",
+        defaultValue: "Model default (usually 0)",
+      },
+    };
+    
+    return info[settingKey];
+  };
+
+  const SliderSetting = ({ 
+    label, 
+    settingKey, 
+    value, 
+    min, 
+    max, 
+    step 
+  }: { 
+    label: string, 
+    settingKey: keyof Omit<ModelSettings, '_changed'>, 
+    value: number | undefined, 
+    min: number, 
+    max: number, 
+    step: number 
+  }) => {
+    const settingInfo = getSettingInfo(settingKey);
+    const isChanged = modelSettings._changed?.[settingKey];
+    
+    return (
+      <div className="px-2 py-3 border-b border-muted">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            {settingInfo.icon}
+            <Label htmlFor={settingKey} className="font-medium">
+              {label}
+            </Label>
+          </div>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-6 rounded-full p-0 text-muted-foreground">
+                <Info className="size-3.5" />
+                <span className="sr-only">Info</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-[220px]">
+              <p className="text-xs">{settingInfo.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">Default: {settingInfo.defaultValue}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Slider 
+            id={settingKey}
+            min={min}
+            max={max}
+            step={step}
+            value={[value !== undefined ? value : min]}
+            onValueChange={([val]) => updateModelSetting(settingKey, val)}
+            className={isChanged ? "data-[active]:bg-primary" : ""}
+          />
+          
+          <div className="flex items-center gap-1 w-20">
+            <div className={`px-2 py-1 text-xs font-medium rounded-md ${isChanged 
+              ? "bg-primary/10 text-primary" 
+              : "bg-muted text-muted-foreground"}`}
+            >
+              {value !== undefined ? value : 'Default'}
+            </div>
+            
+            {isChanged && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="size-6 rounded-full p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      setModelSettings(prev => {
+                        const { [settingKey]: _, ...rest } = prev;
+                        const newChanged = { ...(prev._changed || {}) };
+                        delete newChanged[settingKey as keyof typeof newChanged];
+                        
+                        return {
+                          ...rest,
+                          _changed: newChanged
+                        };
+                      });
+                    }}
+                  >
+                    <XCircle className="size-3.5" />
+                    <span className="sr-only">Reset</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Reset to default</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const NumberSetting = ({ 
+    label, 
+    settingKey, 
+    value, 
+    placeholder = "Default",
+    onChange,
+    onBlur,
+  }: { 
+    label: string, 
+    settingKey: keyof Omit<ModelSettings, '_changed'>, 
+    value: string, 
+    placeholder?: string,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+    onBlur: () => void,
+  }) => {
+    const settingInfo = getSettingInfo(settingKey);
+    const isChanged = modelSettings._changed?.[settingKey];
+    
+    return (
+      <div className="px-2 py-3 border-b border-muted">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            {settingInfo.icon}
+            <Label htmlFor={settingKey} className="font-medium">
+              {label}
+            </Label>
+          </div>
+          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-6 rounded-full p-0 text-muted-foreground">
+                <Info className="size-3.5" />
+                <span className="sr-only">Info</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-[220px]">
+              <p className="text-xs">{settingInfo.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">Default: {settingInfo.defaultValue}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Input
+              id={`${settingKey}`}
+              type="number"
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              placeholder={placeholder}
+              className={`pr-7 ${isChanged ? "border-primary" : ""}`}
+            />
+            {isChanged && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-1 top-1/2 -translate-y-1/2 size-6 rounded-full p-0 text-muted-foreground hover:text-destructive"
+                onClick={() => {
+                  setModelSettings(prev => {
+                    const { [settingKey]: _, ...rest } = prev;
+                    const newChanged = { ...(prev._changed || {}) };
+                    delete newChanged[settingKey as keyof typeof newChanged];
+                    
+                    if (settingKey === 'maxTokens') {
+                      setTempMaxTokens('');
+                    } else if (settingKey === 'topK') {
+                      setTempTopK('');
+                    }
+                    
+                    return {
+                      ...rest,
+                      _changed: newChanged
+                    };
+                  });
+                }}
+              >
+                <XCircle className="size-3.5" />
+                <span className="sr-only">Reset</span>
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ModelSettingsContent = () => (
+    <>
+      <DropdownMenuLabel className="flex items-center justify-between">
+        <span>Model Settings</span>
+        {activeSettingsCount > 0 && (
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {activeSettingsCount} active
+          </Badge>
+        )}
+      </DropdownMenuLabel>
+      <DropdownMenuSeparator />
+      
+      <div className="max-h-[70vh] overflow-y-auto">
+        <NumberSetting 
+          label="Max Tokens" 
+          settingKey="maxTokens"
+          value={tempMaxTokens}
+          onChange={(e) => setTempMaxTokens(e.target.value)}
+          onBlur={() => {
+            const value = parseInt(tempMaxTokens);
+            if (!isNaN(value) && value > 0) {
+              updateModelSetting('maxTokens', value);
+            } else if (tempMaxTokens === '') {
+              updateModelSetting('maxTokens', undefined);
+              setTempMaxTokens('');
+            }
+          }}
+        />
+        
+        <SliderSetting 
+          label="Temperature" 
+          settingKey="temperature" 
+          value={modelSettings.temperature} 
+          min={0} 
+          max={1.99} 
+          step={0.01} 
+        />
+
+        <SliderSetting 
+          label="Top P" 
+          settingKey="topP" 
+          value={modelSettings.topP} 
+          min={0} 
+          max={1} 
+          step={0.05} 
+        />
+
+        <NumberSetting 
+          label="Top K" 
+          settingKey="topK"
+          value={tempTopK}
+          onChange={(e) => setTempTopK(e.target.value)}
+          onBlur={() => {
+            const value = parseInt(tempTopK);
+            if (!isNaN(value) && value >= 0) {
+              updateModelSetting('topK', value);
+            } else if (tempTopK === '') {
+              updateModelSetting('topK', undefined);
+              setTempTopK('');
+            }
+          }}
+        />
+        
+        <SliderSetting 
+          label="Presence Penalty" 
+          settingKey="presencePenalty" 
+          value={modelSettings.presencePenalty} 
+          min={0} 
+          max={2} 
+          step={0.1} 
+        />
+
+        <SliderSetting 
+          label="Frequency Penalty" 
+          settingKey="frequencyPenalty" 
+          value={modelSettings.frequencyPenalty} 
+          min={0} 
+          max={2} 
+          step={0.1} 
+        />
+      </div>
+      
+      {activeSettingsCount > 0 && (
+        <div className="mt-2 px-2 pb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full flex items-center gap-1.5"
+            onClick={resetModelSettings}
+          >
+            <RotateCcw className="size-3.5" />
+            Reset all to defaults
+          </Button>
+        </div>
+      )}
+    </>
   );
 
   return (
@@ -113,6 +500,40 @@ function PureChatHeader({
                 selectedVisibilityType={selectedVisibilityType}
                 className="shrink-0"
               />
+            )}
+
+            {/* Model Settings Dropdown */}
+            {!isReadonly && (
+              <div className="shrink-0">
+                <DropdownMenu>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 relative"
+                        >
+                          <Sliders className="size-4" />
+                          {activeSettingsCount > 0 && (
+                            <Badge 
+                              variant="secondary" 
+                              className="absolute -top-1.5 -right-1.5 size-4 p-0 flex items-center justify-center text-[10px] font-semibold"
+                            >
+                              {activeSettingsCount}
+                            </Badge>
+                          )}
+                          <span className="sr-only">Model Settings</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Model Settings</TooltipContent>
+                  </Tooltip>
+                  <DropdownMenuContent align="end" className="w-80">
+                    <ModelSettingsContent />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
 
             {!isReadonly && (
@@ -216,6 +637,31 @@ function PureChatHeader({
                     </div>
                   </DropdownMenuItem>
                 )}
+
+                {/* Model Settings for Mobile */}
+                {!isReadonly && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Sliders className="size-4" />
+                          <span>Model Settings</span>
+                        </div>
+                        {activeSettingsCount > 0 && (
+                          <Badge variant="secondary" className="ml-2 text-xs">
+                            {activeSettingsCount} active
+                          </Badge>
+                        )}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="w-72">
+                          <ModelSettingsContent />
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </>
@@ -226,7 +672,9 @@ function PureChatHeader({
 }
 
 export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
+  // Only re-render if these props change
   return prevProps.selectedModelId === nextProps.selectedModelId && 
          prevProps.agent_display_name === nextProps.agent_display_name &&
-         prevProps.thumbnail_url === nextProps.thumbnail_url;
+         prevProps.thumbnail_url === nextProps.thumbnail_url &&
+         JSON.stringify(prevProps.modelSettings) === JSON.stringify(nextProps.modelSettings);
 });

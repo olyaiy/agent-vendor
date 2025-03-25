@@ -27,6 +27,7 @@ import { generateTitleAsynchronously, generateTitleFromUserMessage } from '../..
 import { toolRegistry } from '@/lib/ai/tools/registry';
 import { hasCredits, INSUFFICIENT_CREDITS_MESSAGE } from '@/lib/credits';
 import { KnowledgeItem } from '@/lib/db/schema';
+import type { ModelSettings } from '@/components/chat/chat';
 
 export async function POST(request: Request) {
   console.time('total-request');
@@ -40,7 +41,8 @@ export async function POST(request: Request) {
     agentSystemPrompt,  
     creatorId,
     searchEnabled,
-    knowledgeItems
+    knowledgeItems,
+    modelSettings = {} // Add model settings with default empty object
   }: { 
     id: string; 
     messages: Array<UIMessage>; 
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
     creatorId: string;
     searchEnabled?: boolean;
     knowledgeItems?: KnowledgeItem[];
+    modelSettings?: ModelSettings;
   } = await request.json();
   console.timeEnd('parse-request');
   
@@ -190,6 +193,25 @@ export async function POST(request: Request) {
 
     /* -------- STREAM TEXT -------- */
       console.time('stream-text-start');
+      
+      // Extract model settings without the _changed tracking property
+      const { 
+        _changed,
+        ...settings
+      } = modelSettings;
+      
+      // Only include settings that have been explicitly changed
+      const processedSettings: Partial<ModelSettings> = {};
+      
+      if (_changed) {
+        Object.keys(_changed).forEach((key) => {
+          const settingKey = key as keyof typeof settings;
+          if (_changed[settingKey]) {
+            processedSettings[settingKey] = settings[settingKey];
+          }
+        });
+      }
+      
       const result = streamText({
         
         // Model
@@ -214,8 +236,8 @@ export async function POST(request: Request) {
           tools,
         // config
         experimental_transform: smoothStream({
-          delayInMs: 10, // optional: defaults to 10ms
-          chunking: 'word', // optional: defaults to 'word'
+          delayInMs: 20, // optional: defaults to 10ms
+          chunking: 'line', // optional: defaults to 'word'
         }),
         providerOptions: providerOptions as any,
         experimental_generateMessageId: generateUUID,
@@ -224,12 +246,12 @@ export async function POST(request: Request) {
           functionId: 'stream-text',
         },
         toolCallStreaming: true,
-
+        
+        // Add model settings that have been explicitly changed
+        ...processedSettings,
         
         /* ---- ON FINISH ---- */
         onFinish: async ({ response , usage, sources }) => {
-
-
 
           // Save the messages
           if (session.user?.id) {
