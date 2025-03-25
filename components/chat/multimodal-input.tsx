@@ -484,7 +484,7 @@ function PureStopButton({
 }) {
   return (
     <Button
-      className="rounded-full p-1 sm:p-1.5 h-fit border dark:border-zinc-600"
+      className="rounded-full p-1 sm:p-1.5 h-fit border dark:border-zinc-600 relative animate-pulse before:content-[''] before:absolute before:inset-0 before:rounded-full before:border before:border-zinc-400 dark:before:border-zinc-500 before:animate-[spin_3s_linear_infinite]"
       onClick={(event) => {
         event.preventDefault();
         stop();

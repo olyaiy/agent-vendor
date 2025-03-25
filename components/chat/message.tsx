@@ -242,8 +242,49 @@ const PurePreviewMessage = ({
                 );
               }
 
+              if (type === 'source' && 'source' in part) {
+                return null; // We'll render sources separately below
+              }
               
             })}
+
+            {/* Sources section */}
+            {message.parts?.some(part => part.type === 'source') && (
+              <div className="mt-2 text-sm border-t border-border pt-2">
+                <div className="font-medium text-muted-foreground mb-1">Sources:</div>
+                <div className="flex flex-wrap gap-2">
+                  {message.parts
+                    .filter(part => part.type === 'source' && 'source' in part)
+                    .map((part: any) => (
+                      <a
+                        key={`source-${part.source.id}`}
+                        href={part.source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-muted hover:bg-muted/80 transition-colors"
+                      >
+                        {part.source.title || new URL(part.source.url).hostname}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="ml-0.5"
+                        >
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </a>
+                    ))}
+                </div>
+              </div>
+            )}
 
             {!isReadonly && message.role === 'assistant' && (
 

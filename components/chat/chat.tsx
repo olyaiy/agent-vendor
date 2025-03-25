@@ -57,6 +57,23 @@ export function Chat({
     setSearchEnabledStorage(searchEnabled);
   }, [searchEnabled, setSearchEnabledStorage]);
 
+  // Add recent agent tracking
+  useEffect(() => {
+    // Get current recent agents from localStorage
+    const recentAgents = JSON.parse(
+      localStorage.getItem('recent-agents') || '[]'
+    );
+    
+    // Update with current agent (remove duplicates and limit to 5)
+    const updatedAgents = [
+      agent.id,
+      ...recentAgents.filter((id: string) => id !== agent.id)
+    ].slice(0, 5);
+
+    // Save back to localStorage
+    localStorage.setItem('recent-agents', JSON.stringify(updatedAgents));
+  }, [agent.id]); // Only run when agent.id changes
+
   // Find the selected model details
   const selectedModelDetails = availableModels.find(model => model.id === currentModel);
   const modelIdentifier = selectedModelDetails?.model || selectedChatModel;

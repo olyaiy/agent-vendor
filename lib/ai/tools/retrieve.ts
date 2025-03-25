@@ -39,7 +39,7 @@ async function fetchJinaReaderData(
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        'X-With-Generated-Alt': 'true'
+        'X-Return-Format': 'text',
       }
     })
     const json = await response.json()

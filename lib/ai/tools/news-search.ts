@@ -58,6 +58,10 @@ export const newsSearchTool = tool({
         type: 'news' // New type to distinguish from regular search results
       })) as SearchResults['results']
 
+      console.log('--------------------------------')
+      console.log('THE RESULTS ARE:')
+      console.log(results)
+
       return {
         results,
         query: data.query.original,
