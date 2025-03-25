@@ -27,12 +27,14 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
   };
 
   const isCreator = userId === agent.creatorId;
+  console.log('agent ----------------------------------------------------')
+  console.log(agent.visibility)
 
   return (
     <div className="w-full">
       <Link href={`/${agent.id}`} onClick={handleClick}>
         <Card className="hover:shadow-lg transition-shadow cursor-pointer relative group min-w-[180px] max-w-[400px] w-full mx-auto flex flex-col">
-          {agent.visibility !== 'public' && (
+          {(agent.visibility === 'private' || agent.visibility === 'link') && (
             <div className="absolute top-2 right-2 z-10">
               <Badge variant="secondary" className="text-[10px] px-2 py-0 h-5 bg-muted">
                 {agent.visibility}
