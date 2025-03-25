@@ -27,8 +27,7 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
   };
 
   const isCreator = userId === agent.creatorId;
-  console.log('agent ----------------------------------------------------')
-  console.log(agent.visibility)
+
 
   return (
     <div className="w-full">
