@@ -15,6 +15,7 @@ export async function createAgent({
   creatorId,
   artifactsEnabled = true,
   thumbnailUrl,
+  avatarUrl,
   alternateModelIds = [],
   toolGroupIds = [],
   tagIds = [],
@@ -28,6 +29,7 @@ export async function createAgent({
   creatorId: string;
   artifactsEnabled?: boolean;
   thumbnailUrl?: string | null;
+  avatarUrl?: string | null;
   alternateModelIds?: string[];
   toolGroupIds?: string[];
   tagIds?: string[];
@@ -57,6 +59,7 @@ export async function createAgent({
       creatorId,
       artifactsEnabled,
       thumbnailUrl,
+      avatarUrl,
       customization,
       tagIds: processedTagIds
     }) as { id: string };
@@ -99,6 +102,7 @@ export async function updateAgent({
   visibility,
   artifactsEnabled,
   thumbnailUrl,
+  avatarUrl,
   alternateModelIds = [],
   toolGroupIds = [],
   tagIds = [],
@@ -112,6 +116,7 @@ export async function updateAgent({
   visibility: "public" | "private" | "link";
   artifactsEnabled?: boolean;
   thumbnailUrl?: string | null;
+  avatarUrl?: string | null;
   alternateModelIds?: string[];
   toolGroupIds?: string[];
   tagIds?: string[];
@@ -141,6 +146,7 @@ export async function updateAgent({
       visibility,
       artifactsEnabled,
       thumbnailUrl,
+      avatarUrl,
       customization,
       tagIds: processedTagIds
     });
@@ -196,7 +202,7 @@ export async function deleteAgent(id: string) {
   }
 }
 
-export async function deleteAgentImage(id: string, imageUrl: string) {
+export async function deleteAgentImage(id: string, imageUrl: string, imageType: 'thumbnail' | 'avatar' = 'thumbnail') {
   try {
     
     // Extract the key (filename) from the imageUrl
@@ -265,16 +271,21 @@ export async function deleteAgentImage(id: string, imageUrl: string) {
     const defaultModelId = models.find((m: { modelId: string, isDefault: boolean | null }) => m.isDefault === true)?.modelId || '';
     
     // Update the agent record to remove the image reference
-    await updateAgentById({
-      id,
-      agentDisplayName: agent.agent_display_name || '',
-      systemPrompt: agent.system_prompt || '',
-      description: agent.description || undefined,
-      modelId: defaultModelId,
-      visibility: agent.visibility || 'public',
-      artifactsEnabled: agent.artifacts_enabled || true,
-      thumbnailUrl: null,
-    });
+    const updateFields: {
+      thumbnail_url?: null;
+      avatar_url?: null;
+    } = {};
+    
+    // Set the appropriate field to null based on imageType
+    if (imageType === 'thumbnail') {
+      updateFields.thumbnail_url = null;
+    } else if (imageType === 'avatar') {
+      updateFields.avatar_url = null;
+    }
+    
+    await db.update(agents)
+      .set(updateFields)
+      .where(eq(agents.id, id));
     
     revalidatePath('/');
     return { success: true };

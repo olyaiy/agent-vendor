@@ -62,6 +62,7 @@ export default async function EditAgentPage({
     visibility: agentWithModels.visibility || 'public',
     artifactsEnabled: agentWithModels.artifacts_enabled,
     thumbnailUrl: agentWithModels.thumbnail_url ?? undefined,
+    avatarUrl: agentWithModels.avatar_url ?? undefined,
     customization: agentWithModels.customization as any
   };
 

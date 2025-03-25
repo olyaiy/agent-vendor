@@ -48,6 +48,7 @@ interface AgentFormData {
     modelId: string;
     visibility: "public" | "private" | "link";
     thumbnailUrl?: string | null;
+    avatarUrl?: string | null;
     alternateModelIds?: string[];
     toolGroupIds?: string[];
     tagIds?: string[];
@@ -79,6 +80,7 @@ export function useAgentForm({
   
   // Form state
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(initialData?.thumbnailUrl || null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialData?.avatarUrl || null);
   const [primaryModelId, setPrimaryModelId] = useState<string>(initialData?.modelId || "");
   const [alternateModelIds, setAlternateModelIds] = useState<string[]>(initialData?.alternateModelIds || []);
   const [selectedToolGroupIds, setSelectedToolGroupIds] = useState<string[]>(initialData?.toolGroupIds || []);
@@ -266,6 +268,7 @@ export function useAgentForm({
           visibility: formData.get("visibility") as "public" | "private" | "link",
           creatorId: formData.get("userId") as string,
           thumbnailUrl: thumbnailUrl,
+          avatarUrl: avatarUrl,
           alternateModelIds: alternateModelIds,
           toolGroupIds: selectedToolGroupIds,
           tagIds: selectedTags.map(tag => tag.id),
@@ -335,6 +338,7 @@ export function useAgentForm({
     // State
     isPending,
     thumbnailUrl,
+    avatarUrl,
     primaryModelId,
     alternateModelIds,
     selectedToolGroupIds,
@@ -348,6 +352,7 @@ export function useAgentForm({
 
     // State updaters
     setThumbnailUrl,
+    setAvatarUrl,
     setPrimaryModelId,
     setAlternateModelIds,
     setSelectedToolGroupIds,

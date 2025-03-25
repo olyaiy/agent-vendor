@@ -62,6 +62,7 @@ interface AgentFormProps {
         colorSchemeId: string;
       };
     };
+    avatarUrl?: string | null;
   };
 }
 
@@ -95,11 +96,17 @@ export default function AgentForm(props: AgentFormProps) {
         initialData={props.initialData}
         thumbnailUrl={form.thumbnailUrl}
         setThumbnailUrl={form.setThumbnailUrl}
+        avatarUrl={form.avatarUrl}
+        setAvatarUrl={form.setAvatarUrl}
         isPending={form.isPending}
         handleFormValueChange={form.handleFormValueChange as any}
         handleDeleteAgent={form.handleDeleteAgent}
         primaryModelId={form.primaryModelId}
       />
+
+      <div className="pt-4 border-t border-border/50">
+        <Separator />
+      </div>
 
       {/* AI Models Section */}
       <ModelsSection

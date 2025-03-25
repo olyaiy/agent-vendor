@@ -102,7 +102,7 @@ const PurePreviewMessage = ({
           
           {message.role === 'assistant' && (
             <div className={cn(
-              "size-12 sm:size-16 flex items-center rounded-full justify-center ring-1 ring-border shrink-0 bg-background overflow-hidden relative ",
+              "size-12 sm:size-16 flex items-center rounded-full justify-center  shrink-0 bg-background overflow-hidden relative ",
               isCompact && "size-8 sm:size-8 ml-1 mt-1"
             )}>
               {agentImageUrl ? (
@@ -366,7 +366,7 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
       data-role="assistant"
     >
       <div className="flex flex-row gap-4 w-full">
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background overflow-hidden relative">
+        <div className="size-8 flex items-center rounded-full justify-center shrink-0  bg-background overflow-hidden relative">
           {agentImageUrl ? (
             <Image 
               src={agentImageUrl} 

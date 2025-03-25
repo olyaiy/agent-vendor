@@ -98,7 +98,7 @@ function PureMessages({
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
-          agentImageUrl={agent.thumbnail_url || undefined}
+          agentImageUrl={agent.avatar_url || agent.thumbnail_url || undefined}
         />
       ))}
 

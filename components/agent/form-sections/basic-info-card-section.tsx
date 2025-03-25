@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { BasicInfoSection } from "./basic-info-section";
-import { Separator } from "@/components/ui/separator";
 
 interface BasicInfoCardSectionProps {
   mode: "create" | "edit";
@@ -15,9 +14,12 @@ interface BasicInfoCardSectionProps {
     description?: string;
     visibility: "public" | "private" | "link";
     agentSlug?: string;
+    avatarUrl?: string | null;
   };
   thumbnailUrl: string | null;
   setThumbnailUrl: (url: string | null) => void;
+  avatarUrl: string | null;
+  setAvatarUrl: (url: string | null) => void;
   isPending: boolean;
   handleFormValueChange: (field: "title" | "description" | "systemPrompt" | "visibility", value: string) => void;
   handleDeleteAgent: () => void;
@@ -29,6 +31,8 @@ export function BasicInfoCardSection({
   initialData,
   thumbnailUrl,
   setThumbnailUrl,
+  avatarUrl,
+  setAvatarUrl,
   isPending,
   handleFormValueChange,
   handleDeleteAgent,
@@ -107,6 +111,8 @@ export function BasicInfoCardSection({
           initialData={initialData}
           thumbnailUrl={thumbnailUrl}
           setThumbnailUrl={setThumbnailUrl}
+          avatarUrl={avatarUrl}
+          setAvatarUrl={setAvatarUrl}
           handleFormValueChange={handleFormValueChange}
         />
       </div>

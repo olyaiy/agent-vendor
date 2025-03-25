@@ -4,21 +4,15 @@ import React, { useRef, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { AlertCircle } from "lucide-react";
 import { AgentImageUploader } from "../agent-image-uploader";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Globe, Lock, Share } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
+import { InfoIcon } from "@/components/icons/info-icon";
 
 interface BasicInfoSectionProps {
   mode: "create" | "edit";
@@ -27,9 +21,12 @@ interface BasicInfoSectionProps {
     agentDisplayName: string;
     description?: string;
     visibility: "public" | "private" | "link";
+    avatarUrl?: string | null;
   };
   thumbnailUrl: string | null;
   setThumbnailUrl: (url: string | null) => void;
+  avatarUrl: string | null;
+  setAvatarUrl: (url: string | null) => void;
   handleFormValueChange: (field: "title" | "description" | "systemPrompt" | "visibility", value: string) => void;
 }
 
@@ -38,6 +35,8 @@ export function BasicInfoSection({
   initialData, 
   thumbnailUrl, 
   setThumbnailUrl,
+  avatarUrl,
+  setAvatarUrl,
   handleFormValueChange
 }: BasicInfoSectionProps) {
   const agentNameRef = useRef<HTMLInputElement>(null);
@@ -83,12 +82,33 @@ export function BasicInfoSection({
             </p>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-6">
             <AgentImageUploader
               imageUrl={thumbnailUrl}
               setImageUrl={setThumbnailUrl}
               agentId={initialData?.id}
+              label="Agent Thumbnail"
+              description="A visual representation of your agent. Good images help users recognize and connect with your agent."
+              recommendedSize="800×600px (4:3)"
+              imageType="thumbnail"
             />
+            
+            <Separator className="" />
+            
+            <div className="flex flex-row items-start">
+              <h3 className="text-sm font-medium mb-3 ">Agent Avatar (optional)</h3>
+              <AgentImageUploader
+                imageUrl={avatarUrl}
+                setImageUrl={setAvatarUrl}
+                agentId={initialData?.id}
+                label=""
+                recommendedSize="400×400px (1:1)"
+                aspectRatio="aspect-square"
+                className="max-w-[100px] mx-auto rounded-full"
+                imageClassName="rounded-full"
+                imageType="avatar"
+              />
+            </div>
           </div>
         </div>
         

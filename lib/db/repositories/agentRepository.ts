@@ -367,6 +367,7 @@ export async function createAgent({
   creatorId,
   artifactsEnabled,
   thumbnailUrl,
+  avatarUrl,
   customization,
   tagIds
 }: {
@@ -378,6 +379,7 @@ export async function createAgent({
   creatorId: string;
   artifactsEnabled?: boolean;
   thumbnailUrl?: string | null;
+  avatarUrl?: string | null;
   customization?: {
     overview: {
       title: string;
@@ -407,6 +409,7 @@ export async function createAgent({
         creatorId,
         artifacts_enabled: artifactsEnabled !== undefined ? artifactsEnabled : true,
         thumbnail_url: thumbnailUrl,
+        avatar_url: avatarUrl,
         customization: customization as any, // Type cast for Drizzle JSON field
         createdAt: new Date(),
         updatedAt: new Date()
@@ -451,6 +454,7 @@ export async function updateAgentById({
   visibility,
   artifactsEnabled,
   thumbnailUrl,
+  avatarUrl,
   customization,
   tagIds
 }: {
@@ -462,6 +466,7 @@ export async function updateAgentById({
   visibility: 'public' | 'private' | 'link';
   artifactsEnabled?: boolean;
   thumbnailUrl?: string | null;
+  avatarUrl?: string | null;
   customization?: {
     overview: {
       title: string;
@@ -490,6 +495,7 @@ export async function updateAgentById({
         visibility,
         artifacts_enabled: artifactsEnabled !== undefined ? artifactsEnabled : true,
         thumbnail_url: thumbnailUrl,
+        avatar_url: avatarUrl,
         customization: customization as any, // Type cast for Drizzle JSON field
         updatedAt: new Date()
       })
