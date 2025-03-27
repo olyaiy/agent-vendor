@@ -13,14 +13,12 @@ export const INSUFFICIENT_CREDITS_MESSAGE = 'You have insufficient credits to co
  * @returns true if user has any credits, false otherwise
  */
 export async function hasCredits(userId: string): Promise<boolean> {
-  const credits = await db.select()
+  const [credit] = await db.select({ 
+    hasCredits: userCredits.credit_balance 
+  })
     .from(userCredits)
-    .where(eq(userCredits.user_id, userId));
-  
-  if (credits.length === 0) {
-    return false;
-  }
-  
-  const creditBalance = parseFloat(credits[0].credit_balance?.toString() || '0');
-  return creditBalance > 0;
+    .where(eq(userCredits.user_id, userId))
+    .limit(1);
+
+  return credit?.hasCredits ? parseFloat(credit.hasCredits.toString()) > 0 : false;
 } 

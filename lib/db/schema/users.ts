@@ -28,6 +28,11 @@ export const userCredits = pgTable('user_credits', {
   user_id: uuid('user_id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
   credit_balance: numeric('credit_balance', { precision: 19, scale: 9 }).default('0'),
   lifetime_credits: numeric('lifetime_credits', { precision: 19, scale: 9 }).default('0'),
+}, (table) => {
+  return {
+    // Add composite index for credit balance checks
+    balance_idx: index("credit_balance_idx").on(table.user_id, table.credit_balance),
+  };
 });
 
 export type UserCredits = InferSelectModel<typeof userCredits>;

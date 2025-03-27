@@ -68,31 +68,42 @@ export async function POST(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  // Check if user has enough credits
-  console.time('credits-check');
-  const userHasCredits = await hasCredits(session.user.id);
-  console.timeEnd('credits-check');
+  // Fetch critical dependencies in parallel
+  console.time('parallel-dependencies');
+  const [
+    userHasCredits, 
+    modelDetails, 
+    agentTools,
+    userMessage,
+    chat
+  ] = await Promise.all([
+    // Check if user has enough credits
+    hasCredits(session.user.id),
+    // Get model details
+    getModelById(selectedModelId),
+    // Get agent tools
+    getAgentToolsWithSingleQuery(agentId),
+    // Prepare user message - small CPU operation that can run in parallel
+    Promise.resolve(getMostRecentUserMessage(messages)),
+    // Get chat details
+    getChatById({ id })
+  ]);
+  console.timeEnd('parallel-dependencies');
+
+  // Extract provider options early
+  const providerOptions = modelDetails?.provider_options;
+
+  // Check if credit check failed
   if (!userHasCredits) {
     return new Response(INSUFFICIENT_CREDITS_MESSAGE, { status: 402 });
   }
-
-  // Get the most recent user message
-  console.time('get-user-message');
-  const userMessage = getMostRecentUserMessage(messages);
-  console.timeEnd('get-user-message');
 
   // If the user message is not found, return an error
   if (!userMessage) {
     return new Response('No user message found', { status: 400 });
   }
 
-  console.time('get-chat');
-  const chat = await getChatById({ id });
-  console.timeEnd('get-chat');
-
-
-
-  // If the chat is not found, generate a title and save the chat FIRST
+  // If the chat is not found, generate a title and save the chat
   if (!chat) {
     console.time('save-new-chat');
     try {
@@ -111,13 +122,10 @@ export async function POST(request: Request) {
     console.timeEnd('save-new-chat');
   }
 
-
-  
   // THEN save messages 
   console.time('save-messages');
   await saveMessages({
     messages: [{
-
       chatId: id,
       id: userMessage.id,
       role: 'user',
@@ -126,14 +134,10 @@ export async function POST(request: Request) {
       model_id: selectedModelId,
       createdAt: new Date(),
     }],
+    // User messages are critical, don't defer
+    deferNonCritical: false
   });
   console.timeEnd('save-messages');
-
-  // Get the model details
-  console.time('get-model-details');
-  const modelDetails = await getModelById(selectedModelId);
-  const providerOptions = modelDetails?.provider_options;
-  console.timeEnd('get-model-details');
 
   // Initialize running tally for usage outside execute to make it accessible to onError
   const runningTally = {
@@ -158,9 +162,6 @@ export async function POST(request: Request) {
 
       /* -------- TOOLS SET UP -------- */
       console.time('tools-setup');
-      // Get all tools for this agent in a single database query
-      const agentTools = await getAgentToolsWithSingleQuery(agentId);
-
       // Extract unique tool names
       const availableToolNames = [...new Set(agentTools.map(tool => tool.tool))];
 
@@ -261,22 +262,27 @@ export async function POST(request: Request) {
           // Save the messages
           if (session.user?.id) {
             try {
-
-
-              const assistantId = getTrailingMessageId({
-                messages: response.messages.filter(
-                  (message) => message.role === 'assistant',
-                ),
-              });
+              // Get the assistant ID and prepare the message concurrently
+              const [assistantId, assistantMessagePrep] = await Promise.all([
+                // Get the trailing message ID
+                Promise.resolve(getTrailingMessageId({
+                  messages: response.messages.filter(
+                    (message) => message.role === 'assistant',
+                  ),
+                })),
+                // Append response messages
+                Promise.resolve(appendResponseMessages({
+                  messages: [userMessage],
+                  responseMessages: response.messages,
+                }))
+              ]);
 
               if (!assistantId) {
                 throw new Error('No assistant message found!');
               }
 
-              const [, assistantMessage] = appendResponseMessages({
-                messages: [userMessage],
-                responseMessages: response.messages,
-              });
+              // Extract the assistant message
+              const assistantMessage = assistantMessagePrep[1];
 
               // Create a new parts array that includes sources first, then the text content
               const augmentedParts = [
@@ -293,9 +299,12 @@ export async function POST(request: Request) {
                 ...(assistantMessage.parts || [])
               ];
 
-
-
+              // Record the message ID as saved to prevent duplicates in error handling
+              savedMessageIds.add(assistantId);
               
+              // When we need to record a transaction, we can't defer message saving
+              // because the transaction needs the message to exist first
+              // First save the message
               await saveMessages({
                 messages: [
                   {
@@ -303,31 +312,31 @@ export async function POST(request: Request) {
                     chatId: id,
                     role: assistantMessage.role,
                     parts: augmentedParts,
-                    attachments:
-                        assistantMessage.experimental_attachments ?? [],
+                    attachments: assistantMessage.experimental_attachments ?? [],
                     createdAt: new Date(),
                     model_id: selectedModelId
                   },
                 ],
+                // Don't defer when we need to record transactions that reference this message
+                deferNonCritical: false
               });
 
-
-              // Instead of calculating cost here, use recordTransaction to track usage
+              // Second, record usage transaction if necessary
               if (usage && modelDetails) {
-              await recordTransaction({
-                agentId: agentId,
-                userId: session.user.id,
-                type: creatorId === session.user.id ? 'self_usage' : 'usage',
-                messageId: assistantId,
-                modelId: selectedModelId,
-                costPerMillionInput: modelDetails.cost_per_million_input_tokens || '0',
-                costPerMillionOutput: modelDetails.cost_per_million_output_tokens || '0',
-                usage: {
-                  promptTokens: usage.promptTokens,
-                  completionTokens: usage.completionTokens
-                }
-              });
-            }
+                await recordTransaction({
+                  agentId: agentId,
+                  userId: session.user.id,
+                  type: creatorId === session.user.id ? 'self_usage' : 'usage',
+                  messageId: assistantId,
+                  modelId: selectedModelId,
+                  costPerMillionInput: modelDetails.cost_per_million_input_tokens || '0',
+                  costPerMillionOutput: modelDetails.cost_per_million_output_tokens || '0',
+                  usage: {
+                    promptTokens: usage.promptTokens,
+                    completionTokens: usage.completionTokens
+                  }
+                });
+              }
                   
             } catch (error) {
               console.log('failed to save chat')
@@ -350,32 +359,6 @@ export async function POST(request: Request) {
     
     /* -------- ERROR HANDLING -------- */
     onError: (error: unknown) => {
-      // Record the transaction using runningTally if we have accumulated tokens
-      if (runningTally.totalTokens > 0 && session?.user?.id && modelDetails) {
-        const userId = session.user.id; // Capture in variable for TypeScript
-        // We use a fire-and-forget pattern here to avoid changing the return type of onError
-        (async () => {
-          try {
-            await recordTransaction({
-              agentId: agentId,
-              userId: userId,
-              type: creatorId === userId ? 'self_usage' : 'usage',
-              messageId: userMessage.id || generateUUID(), // Ensure we have an ID
-              modelId: selectedModelId,
-              costPerMillionInput: modelDetails.cost_per_million_input_tokens || '0',
-              costPerMillionOutput: modelDetails.cost_per_million_output_tokens || '0',
-              usage: {
-                promptTokens: runningTally.promptTokens,
-                completionTokens: runningTally.completionTokens
-              },
-              description: 'Error occurred during generation - this was the usage up until the error'
-            });
-          } catch (txError) {
-            // Failed to record transaction on error
-          }
-        })().catch(e => {/* Unhandled error in fire-and-forget transaction */});
-      }
-      
       // Save accumulated messages to the database if we have any
       if (accumulatedMessages.length > 0 && session?.user?.id) {
         (async () => {
@@ -390,20 +373,88 @@ export async function POST(request: Request) {
               const uniqueMessages = accumulatedMessages.filter(msg => !savedMessageIds.has(msg.id));
               
               if (uniqueMessages.length > 0) {
+                // Don't defer these messages if we need to reference them in transactions
                 await saveMessages({
                   messages: uniqueMessages,
+                  // Only use deferred writes if no transactions will reference these messages
+                  deferNonCritical: false
                 });
               }
             } else {
               // No duplicates, proceed with saving all accumulated messages
               await saveMessages({
                 messages: accumulatedMessages,
+                // Only use deferred writes if no transactions will reference these messages
+                deferNonCritical: false
               });
             }
+            
+            // After messages are saved, we can safely record the transaction
+            if (runningTally.totalTokens > 0 && session?.user?.id && modelDetails) {
+              try {
+                // Ensure user exists and extract ID
+                if (!session.user || !session.user.id) {
+                  console.error('User session missing when trying to record transaction');
+                  return;
+                }
+                
+                const userId = session.user.id;
+                await recordTransaction({
+                  agentId: agentId,
+                  userId: userId,
+                  type: creatorId && creatorId === userId ? 'self_usage' : 'usage',
+                  messageId: userMessage.id || generateUUID(),
+                  modelId: selectedModelId,
+                  costPerMillionInput: modelDetails.cost_per_million_input_tokens || '0',
+                  costPerMillionOutput: modelDetails.cost_per_million_output_tokens || '0',
+                  usage: {
+                    promptTokens: runningTally.promptTokens,
+                    completionTokens: runningTally.completionTokens
+                  },
+                  description: 'Error occurred during generation - this was the usage up until the error'
+                });
+              } catch (txError) {
+                console.error('Failed to record transaction on error:', txError);
+              }
+            }
           } catch (saveError) {
-            // Failed to save accumulated messages on error
+            console.error('Failed to save accumulated messages on error:', saveError);
           }
-        })().catch(e => {/* Unhandled error in fire-and-forget message save */});
+        })().catch(e => {
+          console.error('Unhandled error in error handling:', e);
+        });
+      } 
+      // If no accumulated messages but we still have token usage to record
+      else if (runningTally.totalTokens > 0 && session?.user?.id && modelDetails) {
+        (async () => {
+          try {
+            // Ensure user exists and extract ID
+            if (!session.user || !session.user.id) {
+              console.error('User session missing when trying to record transaction');
+              return;
+            }
+            
+            const userId = session.user.id;
+            await recordTransaction({
+              agentId: agentId,
+              userId: userId,
+              type: creatorId && creatorId === userId ? 'self_usage' : 'usage',
+              messageId: userMessage.id || generateUUID(),
+              modelId: selectedModelId,
+              costPerMillionInput: modelDetails.cost_per_million_input_tokens || '0',
+              costPerMillionOutput: modelDetails.cost_per_million_output_tokens || '0',
+              usage: {
+                promptTokens: runningTally.promptTokens,
+                completionTokens: runningTally.completionTokens
+              },
+              description: 'Error occurred during generation - this was the usage up until the error'
+            });
+          } catch (txError) {
+            console.error('Failed to record transaction on error:', txError);
+          }
+        })().catch(e => {
+          console.error('Unhandled error in transaction recording:', e);
+        });
       }
       
       // Return a more descriptive error message

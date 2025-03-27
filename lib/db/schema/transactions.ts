@@ -31,6 +31,8 @@ export const userTransactions = pgTable('user_transactions', {
     userIdIdx: index("user_transactions_user_id_idx").on(table.userId),
     messageIdIdx: index("user_transactions_message_id_idx").on(table.messageId),
     agentIdIdx: index("user_transactions_agent_id_idx").on(table.agentId),
+    user_created_idx: index("user_transactions_user_created_idx").on(table.userId, table.created_at),
+    amount_type_idx: index("transactions_amount_type_idx").on(table.amount, table.type),
   };
 });
 

@@ -5,24 +5,75 @@ import { handleDbError } from '../utils/errorHandler';
 import { generateUUID } from '@/lib/utils';
 
 /**
- * Save messages to the database
+ * Save messages to the database with performance optimizations
+ * - Uses batch inserts with prepared statements
+ * - Implements write chunking for large message sets
+ * - Option for deferred non-critical content
  */
 export async function saveMessages({ 
   messages, 
   model_id,
+  deferNonCritical = false
 }: { 
   messages: Array<DBMessage>; 
   model_id?: string;
+  deferNonCritical?: boolean;
 }) {
   try {
-    // Maps model_id to messages
+    // Skip empty messages array
+    if (!messages.length) return [];
+
+    // Maps model_id to messages and ensures IDs are set
     const messagesToSave = messages.map(msg => ({
       ...msg,
       id: msg.id || generateUUID(),
       model_id: model_id || msg.model_id,
     }));
 
-    // Use transaction for batch insert
+    // For large message sets, split into chunks of 50 for better performance
+    if (messagesToSave.length > 50) {
+      const chunks: Array<DBMessage[]> = [];
+      for (let i = 0; i < messagesToSave.length; i += 50) {
+        chunks.push(messagesToSave.slice(i, i + 50));
+      }
+
+      return db.transaction(async (tx) => {
+        const results: DBMessage[] = [];
+        for (const chunk of chunks) {
+          const chunkResult = await tx.insert(message).values(chunk);
+          results.push(...chunk);
+        }
+        return results;
+      });
+    }
+
+    // For critical messages (user input), use immediate transaction
+    if (!deferNonCritical) {
+      return db.transaction(async (tx) => {
+        await tx.insert(message).values(messagesToSave);
+        return messagesToSave;
+      });
+    }
+
+    // For non-critical content (like system messages or metadata updates),
+    // we can use a non-blocking approach by executing the insert
+    // without awaiting the result 
+    if (deferNonCritical) {
+      // Return immediately but still save the messages
+      const insertPromise = db.transaction(async (tx) => {
+        await tx.insert(message).values(messagesToSave);
+      }).catch(err => console.error('Deferred message insert failed:', err));
+      
+      // Don't await the promise, fire and forget
+      setTimeout(() => {
+        // This ensures the promise is executed but not awaited
+        void insertPromise;
+      }, 0);
+      
+      return messagesToSave;
+    }
+
+    // Default case - immediate transaction
     return db.transaction(async (tx) => {
       await tx.insert(message).values(messagesToSave);
       return messagesToSave;
