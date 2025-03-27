@@ -1,6 +1,6 @@
 import { UIMessage } from 'ai';
 import { PreviewMessage, ThinkingMessage } from '@/components/chat/message';
-import { useScrollToBottom } from '@/components/hooks/use-scroll-to-bottom';
+import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useMemo, memo} from 'react';
 import equal from 'fast-deep-equal';
 import type { Agent } from '@/lib/db/schema';
@@ -55,8 +55,11 @@ function PureMessages({
 
   // Custom hook that provides refs for container and end element
   // to enable automatic scrolling to the bottom when new messages arrive
-  const [messagesContainerRef, messagesEndRef] =
-    useScrollToBottom<HTMLDivElement>();
+  const { scrollRef } = useAutoScroll({
+    content: messages,  // Use messages as content dependency
+    offset: 32,         // Match previous scroll offset
+    smooth: true        // Enable smooth scrolling
+  });
   
   
   // Process the last tool data from the provided data array for conditional rendering of the "thinking..." message.
@@ -84,7 +87,7 @@ function PureMessages({
 
   return (
     <div
-      ref={messagesContainerRef}
+      ref={scrollRef}
       className="flex flex-col min-w-0 gap-6 absolute inset-0 overflow-y-auto pt-4 px-4 md:px-8"
     >
       {/* Render each message with its associated metadata and interactions */}
@@ -108,16 +111,6 @@ function PureMessages({
         messages[messages.length - 1].role === 'user' && 
         !lastToolData && <ThinkingMessage />
       }
-
-
-
-
-      {/* Empty div at the end for scroll targeting */}
-      <div
-        ref={messagesEndRef}
-        className="shrink-0 min-w-[24px] min-h-[24px]"
-      />
-      
     </div>
   );
 }

@@ -235,10 +235,10 @@ export async function POST(request: Request) {
         // Tools
           tools,
         // config
-        experimental_transform: smoothStream({
-          delayInMs: 20, // optional: defaults to 10ms
-          chunking: 'line', // optional: defaults to 'word'
-        }),
+        // experimental_transform: smoothStream({
+          // delayInMs: 20, // optional: defaults to 10ms
+          // chunking: 'line', // optional: defaults to 'word'
+        // }),
         providerOptions: providerOptions as any,
         experimental_generateMessageId: generateUUID,
         experimental_telemetry: {

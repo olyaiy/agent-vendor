@@ -7,6 +7,19 @@ import { AgentCard } from "./agent-card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+// Define the expected agent format for AgentCard component
+interface AgentCardType {
+  id: string;
+  agent_display_name: string;
+  thumbnail_url?: string;
+  description?: string;
+  visibility: 'public' | 'private' | 'link';
+  creatorId?: string;
+  createdAt: Date;
+  tags?: { name: string }[];
+  toolGroups?: { display_name: string }[];
+}
+
 interface RecentAgentsScrollProps {
   agents: (Omit<InferSelectModel<typeof agents>, 'model'> & {
     models?: InferSelectModel<typeof models>[] | null;
@@ -14,6 +27,21 @@ interface RecentAgentsScrollProps {
     tags?: { id: string; name: string; createdAt: Date; updatedAt: Date }[] | null;
   })[];
   userId?: string;
+}
+
+// Transform database agent to AgentCard format
+function transformAgentForCard(agent: RecentAgentsScrollProps['agents'][0]): AgentCardType {
+  return {
+    id: agent.id,
+    agent_display_name: agent.agent_display_name,
+    thumbnail_url: agent.thumbnail_url || undefined,
+    description: agent.description || undefined,
+    visibility: agent.visibility as 'public' | 'private' | 'link' || 'private',
+    creatorId: agent.creatorId || undefined,
+    createdAt: agent.createdAt || new Date(),
+    tags: agent.tags?.map(tag => ({ name: tag.name })) || undefined,
+    toolGroups: agent.toolGroups?.map(tg => ({ display_name: tg.display_name })) || undefined,
+  };
 }
 
 export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) {
@@ -120,7 +148,7 @@ export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) 
           {agents.map((agent) => (
             <div key={agent.id} className="w-[250px] flex-shrink-0">
               <AgentCard 
-                agent={agent}
+                agent={transformAgentForCard(agent)}
                 userId={userId}
                 onClick={handleAgentClick}
               />
@@ -134,7 +162,7 @@ export function RecentAgentsScroll({ agents, userId }: RecentAgentsScrollProps) 
         {visibleAgents.map((agent) => (
           <div key={agent.id}>
             <AgentCard 
-              agent={agent}
+              agent={transformAgentForCard(agent)}
               userId={userId}
               onClick={handleAgentClick}
             />
