@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { getUserById } from "./actions";
 import { EditUsername } from "./edit-username";
 import { auth } from "@/app/(auth)/auth";
-import { AgentList } from "@/components/agent/agent-list";
-import { getAgents } from "@/lib/db/queries";
-import { MainHeader } from "@/components/layout/main-header";
+import { AgentList } from "@/components/agent/agent-list";;
 import { TokenUsage } from '@/app/components/TokenUsage';
 import { DollarSign, Plus } from "lucide-react"; // Added Plus icon for the Add Credits button
-
+import { getAgentsWithFullDetails } from "@/lib/db/repositories/agentRepository";
 
 export const metadata: Metadata = {
   title: "Profile",
@@ -42,25 +40,18 @@ export default async function ProfilePage() {
 
 
   // Fetch user's agents
-  const userAgents = await getAgents(userId, true, false, true);
+  const userAgents = await getAgentsWithFullDetails(userId, true, false, true);
   // Limit to just a preview (3 agents)
   const agentPreview = userAgents.slice(0, 3).map(agent => ({
-    ...agent,
-    featured: (agent as any).featured || false,
-    createdAt: (agent as any).createdAt || new Date(),
-    updatedAt: (agent as any).updatedAt || new Date(),
-    avatar_url: (agent as any).avatar_url || null,
-    customization: (agent as any).customization || {
-      overview: {
-        title: "Welcome to your AI assistant!",
-        content: "I'm here to help answer your questions and provide information.",
-        showPoints: false,
-        points: []
-      },
-      style: {
-        colorSchemeId: "default"
-      }
-    }
+    id: agent.id,
+    agent_display_name: agent.agent_display_name,
+    description: agent.description || undefined,
+    thumbnail_url: agent.thumbnail_url ?? undefined,
+    visibility: agent.visibility || 'private' as const,
+    creatorId: agent.creatorId || undefined,
+    createdAt: new Date(),
+    tags: agent.tags || [],
+    toolGroups: agent.toolGroups || []
   }));
 
   return (
