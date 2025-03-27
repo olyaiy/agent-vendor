@@ -1,7 +1,7 @@
 import { UIMessage } from 'ai';
 import { PreviewMessage, ThinkingMessage } from '@/components/chat/message';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
-import { useMemo, memo} from 'react';
+import { useMemo, memo, useEffect, useRef} from 'react';
 import equal from 'fast-deep-equal';
 import type { Agent } from '@/lib/db/schema';
 import { UseChatHelpers } from '@ai-sdk/react';
@@ -56,6 +56,9 @@ function PureMessages({
   agent,
 }: MessagesProps) {
 
+  // Track previous messages state for comparison
+  const prevMessagesRef = useRef<UIMessage[]>([]);
+  
   // Custom hook that provides refs for container and end element
   // to enable automatic scrolling to the bottom when new messages arrive
   const { scrollRef, isAtBottom, scrollToBottom } = useAutoScroll({
@@ -68,6 +71,24 @@ function PureMessages({
   
   // Debounce the "not at bottom" state to prevent flickering of the button
   const isNotAtBottomDebounced = useDebounce(!isAtBottom, 300);
+  
+  // Force scroll to bottom when a new user message is added
+  useEffect(() => {
+    const prevMessages = prevMessagesRef.current;
+    
+    // Check if a new user message was added
+    if (
+      messages.length > prevMessages.length && 
+      messages.length > 0 && 
+      messages[messages.length - 1].role === 'user'
+    ) {
+      // Always scroll to bottom when user adds a new message
+      scrollToBottom();
+    }
+    
+    // Update ref with current messages
+    prevMessagesRef.current = messages;
+  }, [messages, scrollToBottom]);
   
   // Process the last tool data from the provided data array for conditional rendering of the "thinking..." message.
   const lastToolData = useMemo(() => {
