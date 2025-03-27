@@ -11,10 +11,16 @@ import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 
 interface AgentCardProps {
-  agent: Omit<InferSelectModel<typeof agents>, 'model'> & {
-    models?: InferSelectModel<typeof models>[] | null;
-    toolGroups?: { id: string; name: string; display_name: string; description: string | null }[] | null;
-    tags?: { id: string; name: string; createdAt: Date; updatedAt: Date }[] | null;
+  agent: {
+    id: string;
+    agent_display_name: string;
+    thumbnail_url?: string;
+    description?: string;
+    visibility: 'public' | 'private' | 'link';
+    creatorId?: string;
+    createdAt: Date;
+    tags?: { name: string }[];
+    toolGroups?: { display_name: string }[];
   };
   userId?: string;
   onClick?: (agentId: string) => void;
@@ -87,7 +93,7 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
                 {/* Display tags first */}
                 {agent.tags && agent.tags.slice(0, 2).map((tag) => (
                   <Badge 
-                    key={`tag-${tag.id}`} 
+                    key={`tag-${tag.name}`} 
                     variant="secondary" 
                     className="text-[10px] px-2 py-0 h-5 truncate max-w-28"
                   >
@@ -108,7 +114,7 @@ export function AgentCard({ agent, userId, onClick, stepNumber }: AgentCardProps
                 {/* Display tool groups */}
                 {agent.toolGroups && agent.toolGroups.slice(0, 2).map((toolGroup) => (
                   <Badge 
-                    key={`tool-${toolGroup.id}`} 
+                    key={`tool-${toolGroup.display_name}`} 
                     variant="outline" 
                     className="text-[10px] px-2 py-0 h-5 truncate max-w-28 border-dashed"
                   >

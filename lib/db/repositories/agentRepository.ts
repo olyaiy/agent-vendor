@@ -7,7 +7,13 @@ import { generateSlug } from '@/lib/utils';
 /**
  * Get all agents with optional filtering and includes
  */
-export const getAgents = async (userId?: string, includeAllModels?: boolean, includeEarnings?: boolean, onlyUserCreated?: boolean, timePeriod: string = 'all-time') => {
+export const getAgentsWithFullDetails = async (
+  userId?: string, 
+  includeAllModels?: boolean, 
+  includeEarnings?: boolean, 
+  onlyUserCreated?: boolean, 
+  timePeriod: string = 'all-time'
+) => {
   try {
     const result = await db.select({
       id: agents.id,
@@ -601,5 +607,52 @@ export async function getAgentWithAvailableModels(id: string) {
     };
   } catch (error) {
     return handleDbError(error, 'Failed to get agent with available models from database', null);
+  }
+}
+
+/**
+ * Get agents with minimal details
+ */
+export const getAgents = async (userId?: string, onlyUserCreated?: boolean) => {
+  try {
+    const result = await db.select({
+      id: agents.id,
+      agent_display_name: agents.agent_display_name,
+      thumbnail_url: agents.thumbnail_url,
+      description: agents.description,
+      visibility: agents.visibility,
+      creatorId: agents.creatorId,
+      createdAt: agents.createdAt,
+      tags: sql<string[]>`(
+        SELECT array_agg(tags.name)
+        FROM agent_tags
+        INNER JOIN tags ON agent_tags.tag_id = tags.id
+        WHERE agent_tags.agent_id = agents.id
+      )`,
+      tool_groups: sql<string[]>`(
+        SELECT array_agg(tool_groups.display_name)
+        FROM agent_tool_groups
+        INNER JOIN tool_groups ON agent_tool_groups.tool_group_id = tool_groups.id
+        WHERE agent_tool_groups.agent_id = agents.id
+      )`
+    })
+    .from(agents)
+    .where(
+      onlyUserCreated && userId 
+        ? eq(agents.creatorId, userId)
+        : or(
+            eq(agents.visibility, 'public'), 
+            userId ? eq(agents.creatorId, userId) : undefined
+          )
+    )
+    .orderBy(desc(agents.createdAt));
+
+    return result.map(agent => ({
+      ...agent,
+      tags: agent.tags?.map(name => ({ name })), // Convert to minimal tag shape
+      toolGroups: agent.tool_groups?.map(display_name => ({ display_name })) // Convert to minimal tool group shape
+    }));
+  } catch (error) {
+    return handleDbError(error, 'Failed to get agents from database', []);
   }
 } 

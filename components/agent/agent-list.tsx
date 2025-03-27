@@ -11,11 +11,17 @@ import { Search } from "lucide-react";
 import { TagFilters } from "./tag-filters";
 
 interface AgentListProps {
-  agents: (Omit<InferSelectModel<typeof agents>, 'model'> & {
-    models?: InferSelectModel<typeof models>[] | null;
-    toolGroups?: { id: string; name: string; display_name: string; description: string | null }[] | null;
-    tags?: { id: string; name: string; createdAt: Date; updatedAt: Date }[] | null;
-  })[];
+  agents: {
+    id: string;
+    agent_display_name: string;
+    thumbnail_url?: string;
+    description?: string;
+    visibility: 'public' | 'private' | 'link';
+    creatorId?: string;
+    createdAt: Date;
+    tags?: { name: string }[];
+    toolGroups?: { display_name: string }[];
+  }[];
   userId?: string;
   tags?: { id: string; name: string; count: number }[];
 }
@@ -115,7 +121,7 @@ export function AgentList({ agents: initialAgents, userId, tags = [] }: AgentLis
     // Filter by selected tags if any
     if (selectedTags.length > 0) {
       filtered = filtered.filter((agent) => {
-        return agent.tags?.some(tag => selectedTags.includes(tag.id));
+        return agent.tags?.some(tag => selectedTags.includes(tag.name));
       });
     }
 

@@ -21,11 +21,12 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
     finalUserId = session?.user?.id;
   }
   
-  // Fetch agents
-  const agents = await getAgents(finalUserId, true);
-  
-  // Fetch featured agents (limited to 8)
-  const featuredAgents = await getFeaturedAgents(8);
+  // Fetch all data in parallel
+  const [agents, featuredAgents, commonTags] = await Promise.all([
+    getAgents(finalUserId, true),
+    getFeaturedAgents(8),
+    getMostCommonTags(20)
+  ]);
   
   // Get recent agents from cookie
   const cookieStore = await cookies();
@@ -45,10 +46,6 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
       })
       .slice(0, 5); // Ensure max 5 agents
   }
-  
-  // Fetch the most common tags
-  const commonTags = await getMostCommonTags(20);
-
 
   return (
     <div className="w-full space-y-8">
