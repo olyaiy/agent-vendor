@@ -15,7 +15,29 @@ export const getAgentsWithFullDetails = async (
   timePeriod: string = 'all-time'
 ) => {
   try {
+    // First prepare the date condition for transactions if needed
+    let dateCondition;
+    if (includeEarnings) {
+      if (timePeriod === 'current-month') {
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        dateCondition = and(
+          gte(userTransactions.created_at, firstDayOfMonth)
+        );
+      } else if (timePeriod === 'previous-month') {
+        const now = new Date();
+        const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDayOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        dateCondition = and(
+          gte(userTransactions.created_at, firstDayOfPreviousMonth),
+          lt(userTransactions.created_at, firstDayOfCurrentMonth)
+        );
+      }
+    }
+
+    // Main query with JOINs for all related data
     const result = await db.select({
+      // Agent data
       id: agents.id,
       agent: agents.agent,
       agent_display_name: agents.agent_display_name,
@@ -25,8 +47,99 @@ export const getAgentsWithFullDetails = async (
       creatorId: agents.creatorId,
       artifacts_enabled: agents.artifacts_enabled,
       thumbnail_url: agents.thumbnail_url,
+      
+      // Models data using aggregation
+      models: sql<any>`
+        COALESCE(
+          JSONB_AGG(
+            DISTINCT JSONB_BUILD_OBJECT(
+              'id', ${models.id},
+              'name', ${models.model_display_name},
+              'provider', ${models.provider},
+              'isDefault', ${agentModels.isDefault}
+            )
+          ) FILTER (WHERE ${models.id} IS NOT NULL),
+          '[]'::jsonb
+        )`,
+      
+      // Tool groups data using aggregation
+      toolGroups: sql<any>`
+        COALESCE(
+          JSONB_AGG(
+            DISTINCT JSONB_BUILD_OBJECT(
+              'id', ${toolGroups.id},
+              'name', ${toolGroups.name},
+              'display_name', ${toolGroups.display_name},
+              'description', ${toolGroups.description}
+            )
+          ) FILTER (WHERE ${toolGroups.id} IS NOT NULL),
+          '[]'::jsonb
+        )`,
+      
+      // Tags data using aggregation
+      tags: sql<any>`
+        COALESCE(
+          JSONB_AGG(
+            DISTINCT JSONB_BUILD_OBJECT(
+              'id', ${tags.id},
+              'name', ${tags.name},
+              'createdAt', ${tags.createdAt},
+              'updatedAt', ${tags.updatedAt}
+            )
+          ) FILTER (WHERE ${tags.id} IS NOT NULL),
+          '[]'::jsonb
+        )`,
+      
+      // Total spent if includeEarnings is true
+      totalSpent: includeEarnings 
+        ? sql<string>`
+            COALESCE(
+              ABS(SUM(
+                CASE WHEN ${userTransactions.type} = 'usage' 
+                THEN ${userTransactions.amount}::numeric 
+                ELSE 0 END
+              )),
+              0
+            )::text`
+        : sql<string>`'0'`
     })
     .from(agents)
+    // JOIN with models
+    .leftJoin(
+      agentModels,
+      eq(agentModels.agentId, agents.id)
+    )
+    .leftJoin(
+      models,
+      eq(agentModels.modelId, models.id)
+    )
+    // JOIN with tool groups
+    .leftJoin(
+      agentToolGroups,
+      eq(agentToolGroups.agentId, agents.id)
+    )
+    .leftJoin(
+      toolGroups,
+      eq(agentToolGroups.toolGroupId, toolGroups.id)
+    )
+    // JOIN with tags
+    .leftJoin(
+      agentTags,
+      eq(agentTags.agentId, agents.id)
+    )
+    .leftJoin(
+      tags,
+      eq(agentTags.tagId, tags.id)
+    )
+    // Conditionally JOIN with transactions
+    .leftJoin(
+      userTransactions,
+      and(
+        eq(userTransactions.agentId, agents.id),
+        eq(userTransactions.type, 'usage'),
+        includeEarnings && dateCondition ? dateCondition : undefined
+      )
+    )
     .where(
       onlyUserCreated && userId 
         ? eq(agents.creatorId, userId)
@@ -35,127 +148,37 @@ export const getAgentsWithFullDetails = async (
             userId ? eq(agents.creatorId, userId) : undefined
           )
     )
+    .groupBy(agents.id)
     .orderBy(desc(agents.id));
 
-    // For each agent, fetch their models, tool groups, and tags
-    const agentsWithModels = await Promise.all(
-      result.map(async (agent) => {
-        // Fetch models
-        const agentModelResults = await db.select({
-          model: models,
-          isDefault: agentModels.isDefault
-        })
-        .from(agentModels)
-        .leftJoin(models, eq(agentModels.modelId, models.id)) // Will use the index on agentModels.modelId
-        .where(eq(agentModels.agentId, agent.id)); // Will use the index on agentModels.agentId
-
-        const agentModelsArray = agentModelResults
-          .map(r => r.model)
-          .filter((model): model is typeof models.$inferSelect => model !== null);
-          
-        const defaultModel = agentModelResults.find(r => r.isDefault)?.model || null;
-
-        // Fetch tool groups
-        const toolGroupResults = await db.select({
-          id: toolGroups.id,
-          name: toolGroups.name,
-          display_name: toolGroups.display_name,
-          description: toolGroups.description,
-        })
-        .from(agentToolGroups)
-        .leftJoin(toolGroups, eq(agentToolGroups.toolGroupId, toolGroups.id)) // Will use the index on agentToolGroups.toolGroupId
-        .where(eq(agentToolGroups.agentId, agent.id)); // Will use the index on agentToolGroups.agentId
-
-        const toolGroupsArray = toolGroupResults
-          .filter(tg => tg.id !== null && tg.name !== null && tg.display_name !== null)
-          .map(tg => ({
-            ...tg,
-            id: tg.id!,
-            name: tg.name!,
-            display_name: tg.display_name!
-          }));
-
-        // Fetch tags
-        const tagResults = await db.select({
-          id: tags.id,
-          name: tags.name,
-          createdAt: tags.createdAt,
-          updatedAt: tags.updatedAt
-        })
-        .from(agentTags)
-        .innerJoin(tags, eq(agentTags.tagId, tags.id)) // Will use the index on agentTags.tagId
-        .where(eq(agentTags.agentId, agent.id)) // Will use the index on agentTags.agentId
-        .orderBy(tags.name);
-        
-        // Always fetch total earnings for this agent if includeEarnings is true
-        let totalSpent = 0;
-        
-        if (includeEarnings) {
-          // Define date filtering conditions based on timePeriod
-          let dateCondition;
-          
-          if (timePeriod === 'current-month') {
-            // Current month
-            const now = new Date();
-            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            dateCondition = and(
-              gte(userTransactions.created_at, firstDayOfMonth)
-            );
-          } else if (timePeriod === 'previous-month') {
-            // Previous month
-            const now = new Date();
-            const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const firstDayOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            dateCondition = and(
-              gte(userTransactions.created_at, firstDayOfPreviousMonth),
-              lt(userTransactions.created_at, firstDayOfCurrentMonth)
-            );
-          }
-          
-          // Get total amount spent on this agent (only "usage" transactions, not "self_usage")
-          const transactionResults = await db
-            .select({
-              totalSpent: sql<string>`COALESCE(SUM(${userTransactions.amount}::numeric), 0)::text`
-            })
-            .from(userTransactions)
-            .where(
-              dateCondition 
-                ? and(
-                    eq(userTransactions.agentId, agent.id),
-                    eq(userTransactions.type, 'usage'),
-                    dateCondition
-                  )
-                : and(
-                    eq(userTransactions.agentId, agent.id),
-                    eq(userTransactions.type, 'usage')
-                  )
-            );
-          
-          // Convert the string to a number, Math.abs because usage transactions are negative
-          totalSpent = transactionResults[0] ? Math.abs(Number(transactionResults[0].totalSpent)) : 0;
-        }
-
-        if (includeAllModels) {
-          return {
-            ...agent,
-            models: agentModelsArray,
-            toolGroups: toolGroupsArray,
-            tags: tagResults,
-            totalSpent
-          };
-        } else {
-          return {
-            ...agent,
-            model: defaultModel,
-            toolGroups: toolGroupsArray,
-            tags: tagResults,
-            totalSpent
-          };
-        }
-      })
-    );
-
-    return agentsWithModels;
+    // Post-process the results to match the expected format
+    return result.map(agent => {
+      // Parse JSON strings to objects
+      const modelsArray = JSON.parse(agent.models);
+      const toolGroupsArray = JSON.parse(agent.toolGroups);
+      const tagsArray = JSON.parse(agent.tags);
+      
+      // Format based on whether we need all models or just the default
+      if (includeAllModels) {
+        return {
+          ...agent,
+          models: modelsArray,
+          toolGroups: toolGroupsArray,
+          tags: tagsArray,
+          totalSpent: Number(agent.totalSpent)
+        };
+      } else {
+        // Find the default model when not including all models
+        const defaultModel = modelsArray.find((m: any) => m.isDefault) || null;
+        return {
+          ...agent,
+          model: defaultModel,
+          toolGroups: toolGroupsArray,
+          tags: tagsArray,
+          totalSpent: Number(agent.totalSpent)
+        };
+      }
+    });
   } catch (error) {
     return handleDbError(error, 'Failed to get agents from database', []);
   }
