@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "agents_visibility_created_at_idx" ON "agents" USING btree ("visibility","created_at");

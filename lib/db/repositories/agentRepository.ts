@@ -15,17 +15,16 @@ export const getAgentsWithFullDetails = async (
   timePeriod: string = 'all-time'
 ) => {
   try {
-    // First prepare the date condition for transactions if needed
+    // Prepare date condition for transaction filtering
     let dateCondition;
     if (includeEarnings) {
+      const now = new Date();
       if (timePeriod === 'current-month') {
-        const now = new Date();
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         dateCondition = and(
           gte(userTransactions.created_at, firstDayOfMonth)
         );
       } else if (timePeriod === 'previous-month') {
-        const now = new Date();
         const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const firstDayOfPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         dateCondition = and(
@@ -35,7 +34,15 @@ export const getAgentsWithFullDetails = async (
       }
     }
 
-    // Main query with JOINs for all related data
+    // Define filter condition based on parameters
+    const filterCondition = onlyUserCreated && userId 
+      ? eq(agents.creatorId, userId)
+      : or(
+          eq(agents.visibility, 'public'), 
+          userId ? eq(agents.creatorId, userId) : undefined
+        );
+
+    // Execute single optimized query
     const result = await db.select({
       // Agent data
       id: agents.id,
@@ -48,7 +55,7 @@ export const getAgentsWithFullDetails = async (
       artifacts_enabled: agents.artifacts_enabled,
       thumbnail_url: agents.thumbnail_url,
       
-      // Models data using aggregation
+      // Models data
       models: sql<any>`
         COALESCE(
           JSONB_AGG(
@@ -62,7 +69,7 @@ export const getAgentsWithFullDetails = async (
           '[]'::jsonb
         )`,
       
-      // Tool groups data using aggregation
+      // Tool groups data
       toolGroups: sql<any>`
         COALESCE(
           JSONB_AGG(
@@ -76,7 +83,7 @@ export const getAgentsWithFullDetails = async (
           '[]'::jsonb
         )`,
       
-      // Tags data using aggregation
+      // Tags data 
       tags: sql<any>`
         COALESCE(
           JSONB_AGG(
@@ -90,7 +97,7 @@ export const getAgentsWithFullDetails = async (
           '[]'::jsonb
         )`,
       
-      // Total spent if includeEarnings is true
+      // Usage calculations
       totalSpent: includeEarnings 
         ? sql<string>`
             COALESCE(
@@ -104,7 +111,7 @@ export const getAgentsWithFullDetails = async (
         : sql<string>`'0'`
     })
     .from(agents)
-    // JOIN with models
+    // Join with models
     .leftJoin(
       agentModels,
       eq(agentModels.agentId, agents.id)
@@ -113,7 +120,7 @@ export const getAgentsWithFullDetails = async (
       models,
       eq(agentModels.modelId, models.id)
     )
-    // JOIN with tool groups
+    // Join with tool groups
     .leftJoin(
       agentToolGroups,
       eq(agentToolGroups.agentId, agents.id)
@@ -122,7 +129,7 @@ export const getAgentsWithFullDetails = async (
       toolGroups,
       eq(agentToolGroups.toolGroupId, toolGroups.id)
     )
-    // JOIN with tags
+    // Join with tags
     .leftJoin(
       agentTags,
       eq(agentTags.agentId, agents.id)
@@ -131,34 +138,28 @@ export const getAgentsWithFullDetails = async (
       tags,
       eq(agentTags.tagId, tags.id)
     )
-    // Conditionally JOIN with transactions
+    // Conditionally join with transactions (only if needed)
     .leftJoin(
       userTransactions,
-      and(
-        eq(userTransactions.agentId, agents.id),
-        eq(userTransactions.type, 'usage'),
-        includeEarnings && dateCondition ? dateCondition : undefined
-      )
+      includeEarnings ? 
+        and(
+          eq(userTransactions.agentId, agents.id),
+          eq(userTransactions.type, 'usage'),
+          dateCondition
+        ) : 
+        undefined
     )
-    .where(
-      onlyUserCreated && userId 
-        ? eq(agents.creatorId, userId)
-        : or(
-            eq(agents.visibility, 'public'), 
-            userId ? eq(agents.creatorId, userId) : undefined
-          )
-    )
+    .where(filterCondition)
     .groupBy(agents.id)
     .orderBy(desc(agents.id));
 
-    // Post-process the results to match the expected format
+    // Process results 
     return result.map(agent => {
-      // Parse JSON strings to objects
+      // Parse JSON aggregations
       const modelsArray = JSON.parse(agent.models);
       const toolGroupsArray = JSON.parse(agent.toolGroups);
       const tagsArray = JSON.parse(agent.tags);
       
-      // Format based on whether we need all models or just the default
       if (includeAllModels) {
         return {
           ...agent,
@@ -168,7 +169,7 @@ export const getAgentsWithFullDetails = async (
           totalSpent: Number(agent.totalSpent)
         };
       } else {
-        // Find the default model when not including all models
+        // Find default model
         const defaultModel = modelsArray.find((m: any) => m.isDefault) || null;
         return {
           ...agent,
@@ -580,48 +581,41 @@ export async function getAgentWithAvailableModels(id: string) {
   }
 
   try {
-    // Get the agent
-    const [agentData] = await db.select().from(agents).where(eq(agents.id, id));
+    // Fetch agent, models, and knowledge items in parallel
+    const [agentData, knowledgeItems] = await Promise.all([
+      // Get the agent
+      db.select().from(agents).where(eq(agents.id, id)).then(rows => rows[0]),
+      
+      // Get knowledge items for this agent
+      db.select().from(knowledge_items).where(eq(knowledge_items.agentId, id))
+    ]);
     
     if (!agentData) return null;
 
-    // Get all models for this agent
-    const agentModelResults = await db.select({
-      modelId: agentModels.modelId,
+    // Use a single query with JOIN to get all models at once
+    const modelResults = await db.select({
+      id: models.id,
+      model: models.model,
+      model_display_name: models.model_display_name,
+      provider: models.provider,
+      model_type: models.model_type,
+      description: models.description,
+      cost_per_million_input_tokens: models.cost_per_million_input_tokens,
+      cost_per_million_output_tokens: models.cost_per_million_output_tokens,
+      provider_options: models.provider_options,
+      // Only select known fields from schema
       isDefault: agentModels.isDefault
     })
     .from(agentModels)
+    .innerJoin(models, eq(agentModels.modelId, models.id))
     .where(eq(agentModels.agentId, id));
-
-    // Get full model details for each agent model
-    const modelDetails = await Promise.all(
-      agentModelResults.map(async (modelRef) => {
-        const [modelData] = await db
-          .select()
-          .from(models)
-          .where(eq(models.id, modelRef.modelId));
-        
-        return modelData ? {
-          ...modelData,
-          isDefault: modelRef.isDefault
-        } : null;
-      })
-    );
-
-    // Filter out null results and sort (default first)
-    const availableModels = modelDetails
-      .filter((model): model is (typeof models.$inferSelect & { isDefault: boolean | null }) => model !== null)
-      .sort((a, b) => {
-        if (a.isDefault && !b.isDefault) return -1;
-        if (!a.isDefault && b.isDefault) return 1;
-        return 0;
-      });
-
-    // Get knowledge items for this agent
-    const knowledgeItems = await db
-      .select()
-      .from(knowledge_items)
-      .where(eq(knowledge_items.agentId, id));
+    
+    // Sort (default first)
+    const availableModels = modelResults.sort((a, b) => {
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      return 0;
+    });
 
     return {
       agent: agentData,

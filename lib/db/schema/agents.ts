@@ -47,6 +47,9 @@ export const agents = pgTable("agents", {
     creatorIdIdx: index("agents_creator_id_idx").on(table.creatorId),
     visibilityIdx: index("agents_visibility_idx").on(table.visibility),
     visibilityCreatorIdx: index("agents_visibility_creator_idx").on(table.visibility, table.creatorId),
+    visibilityCreatedAtIdx: index("agents_visibility_created_at_idx").on(
+      table.visibility, table.createdAt
+    ),
   };
 });
 
