@@ -31,7 +31,6 @@ export const myProvider = customProvider({
     'sonar-pro': perplexity('sonar-pro'),
     'sonar': perplexity('sonar'),
     'sonar-reasoning-pro': perplexity('sonar-reasoning-pro'),
-    'sonar-reasoning': perplexity('sonar-reasoning'),
     'r1-1776': perplexity('r1-1776'),
 
     // Mistral Models
@@ -42,6 +41,16 @@ export const myProvider = customProvider({
     // Groq Models
     'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'),
     'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'),
+    'gemma2-9b-it': groq('gemma2-9b-it'),
+    'llama-guard-3-8b': groq('llama-guard-3-8b'),
+    'llama3-70b-8192': groq('llama3-70b-8192'),
+    'llama3-8b-8192': groq('llama3-8b-8192'),
+    'mixtral-8x7b-32768': groq('mixtral-8x7b-32768'),
+    'qwen-qwq-32b': groq('qwen-qwq-32b'),
+    'mistral-saba-24b': groq('mistral-saba-24b'),
+    'qwen-2.5-32b': groq('qwen-2.5-32b'),
+
+    
 
     // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
@@ -256,6 +265,57 @@ export const chatModels: Array<ChatModel> = [
     name: 'Gemini 1.5 Flash 8B Latest',
     description: 'Latest version of Google Gemini 1.5 Flash 8B model',
     provider: 'Google'
+  },
+  // Groq Models
+  {
+    id: 'gemma2-9b-it',
+    name: 'Gemma2 9B',
+    description: 'Google Gemma2 9B model via Groq',
+    provider: 'Groq'
+  },
+  {
+    id: 'llama-guard-3-8b',
+    name: 'Llama Guard 3 8B',
+    description: 'Meta Llama Guard 3 8B model via Groq',
+    provider: 'Groq'
+  },
+  {
+    id: 'llama3-70b-8192',
+    name: 'Llama3 70B 8K',
+    description: 'Meta Llama3 70B 8K context model via Groq',
+    provider: 'Groq'
+  },
+  {
+    id: 'llama3-8b-8192',
+    name: 'Llama3 8B 8K',
+    description: 'Meta Llama3 8B 8K context model via Groq',
+    provider: 'Groq'
+  },
+  {
+    id: 'mixtral-8x7b-32768',
+    name: 'Mixtral 8x7B 32K',
+    description: 'Mixtral 8x7B with 32K context via Groq',
+    provider: 'Groq'
+  },
+  {
+    id: 'qwen-qwq-32b',
+    name: 'Qwen QWQ 32B',
+    description: 'Qwen QWQ 32B reasoning model via Groq',
+    provider: 'Groq',
+    supportsReasoning: true
+  },
+  {
+    id: 'mistral-saba-24b',
+    name: 'Mistral Saba 24B',
+    description: 'Mistral Saba 24B model via Groq',
+    provider: 'Groq'
+  },
+  {
+    id: 'deepseek-r1-distill-llama-70b',
+    name: 'DeepSeek R1 Llama 70B',
+    description: 'DeepSeek R1 distilled Llama 70B via Groq',
+    provider: 'Groq',
+    supportsReasoning: true
   }
 ];
 
@@ -270,7 +330,9 @@ export const REASONING_MODEL_IDS = [
   'claude-3-5-haiku-20241022',
   'gemini-2.0-flash-exp',
   'gemini-1.5-pro',
-  'gemini-1.5-pro-latest'
+  'gemini-1.5-pro-latest',
+  'qwen-qwq-32b',
+  'deepseek-r1-distill-llama-70b'
 ];
 
 // Models that support tools

@@ -223,6 +223,11 @@ export async function POST(request: Request) {
             hasSearchTool: activeToolNames.includes('searchTool'),
             knowledgeItems
           }),
+          experimental_transform: smoothStream({
+            delayInMs: 20, // optional: defaults to 10ms
+            chunking: 'word', // optional: defaults to 'word'
+          }),
+        
         // Messages
           messages,
         // Max Steps
