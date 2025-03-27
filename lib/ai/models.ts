@@ -70,6 +70,10 @@ export const myProvider = customProvider({
     'gemini-1.5-flash-latest': google('gemini-1.5-flash-latest'),
     'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
     'gemini-1.5-flash-8b-latest': google('gemini-1.5-flash-8b-latest'),
+
+    // xAI Grok Models
+    'grok-2-1212': xai('grok-2-1212'),
+    'grok-2-latest': xai('grok-2-latest'),
   },
   imageModels: {
     'small-model': openai.image('dall-e-2'),
@@ -316,6 +320,23 @@ export const chatModels: Array<ChatModel> = [
     description: 'DeepSeek R1 distilled Llama 70B via Groq',
     provider: 'Groq',
     supportsReasoning: true
+  },
+  // Grok-2 Models
+  {
+    id: 'grok-2-1212',
+    name: 'Grok-2 1212',
+    description: 'xAI Grok-2 1212 model',
+    provider: 'xai'
+  },
+  {
+    id: 'grok-2-latest',
+    name: 'Grok-2 (Latest)',
+    description: 'xAI Grok-2 latest version with reasoning',
+    provider: 'xai',
+    supportsReasoning: true,
+    defaultReasoningConfig: {
+      thinking: { type: 'enabled', budgetTokens: 15000 }
+    }
   }
 ];
 
@@ -332,7 +353,8 @@ export const REASONING_MODEL_IDS = [
   'gemini-1.5-pro',
   'gemini-1.5-pro-latest',
   'qwen-qwq-32b',
-  'deepseek-r1-distill-llama-70b'
+  'deepseek-r1-distill-llama-70b',
+  'grok-2-latest'
 ];
 
 // Models that support tools
@@ -344,7 +366,8 @@ export const TOOLS_SUPPORTED_MODEL_IDS = [
   'o3-mini',
   'gemini-2.0-flash-exp',
   'gemini-1.5-pro',
-  'gemini-1.5-pro-latest'
+  'gemini-1.5-pro-latest',
+  'grok-2-latest'
 ];
 
 // Models that support structured object generation
