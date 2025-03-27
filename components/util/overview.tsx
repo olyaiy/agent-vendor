@@ -21,15 +21,16 @@ export const Overview = ({ agent }: { agent: Agent }) => {
         {(agent.thumbnail_url || agent.agent_display_name) && (
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             {agent.thumbnail_url && (
-              <div className="relative w-20 h-20 min-w-20 min-h-20 overflow-hidden rounded-full border border-muted shrink-0">
+              <div className="relative w-20 h-20 min-w-20 min-h-20 overflow-hidden rounded-full  shrink-0">
                 <Image
-                  src={agent.thumbnail_url}
+                  src={agent.avatar_url || agent.thumbnail_url}
                   alt={agent.agent_display_name || "Agent"}
                   fill
                   sizes="(max-width: 640px) 80px, 80px"
                   className="object-cover"
                   priority
-                  quality={100}
+                  quality={90}
+                  unoptimized={false}
                 />
               </div>
             )}

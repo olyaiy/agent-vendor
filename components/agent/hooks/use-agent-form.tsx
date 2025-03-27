@@ -119,11 +119,12 @@ export function useAgentForm({
   const [formValues, setFormValues] = useState({
     title: initialData?.agentDisplayName || '',
     description: initialData?.description || '',
-    systemPrompt: initialData?.systemPrompt || ''
+    systemPrompt: initialData?.systemPrompt || '',
+    visibility: initialData?.visibility || 'public'
   });
 
   // Update form values when inputs change
-  const handleFormValueChange = (field: "title" | "description" | "systemPrompt", value: string) => {
+  const handleFormValueChange = (field: "title" | "description" | "systemPrompt" | "visibility", value: string) => {
     setFormValues(prev => ({
       ...prev,
       [field]: value

@@ -99,7 +99,7 @@ export default function AgentForm(props: AgentFormProps) {
         avatarUrl={form.avatarUrl}
         setAvatarUrl={form.setAvatarUrl}
         isPending={form.isPending}
-        handleFormValueChange={form.handleFormValueChange as any}
+        handleFormValueChange={form.handleFormValueChange}
         handleDeleteAgent={form.handleDeleteAgent}
         primaryModelId={form.primaryModelId}
       />
@@ -211,6 +211,7 @@ export default function AgentForm(props: AgentFormProps) {
       />
       
       <input type="hidden" name="userId" value={props.userId || ''} />
+      <input type="hidden" name="visibility" value={form.formValues.visibility} />
     </form>
   );
 } 
