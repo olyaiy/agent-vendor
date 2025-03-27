@@ -98,18 +98,21 @@ export default async function Page(props: {
   const { agent: agentSlug, 'chat-id': chatId } = await props.params;
   const session = await auth();
 
-  const agentWithModel = await getAgentWithModelById(agentSlug);
-  if (!agentWithModel?.agent) {
+  // Parallelize core data fetches
+  const [agentWithModel, chat] = await Promise.all([
+    getAgentWithModelById(agentSlug),
+    getChatById({ id: chatId }),
+  ]);
+
+  if (!agentWithModel?.agent || !chat) {
     return notFound();
   }
 
-  const chat = await getChatById({ id: chatId }) as {
-    id: string;
-    title: string;
-    visibility: 'public' | 'private';
-    userId: string;
-  };
-  if (!chat) notFound();
+  // Parallelize secondary data fetches
+  const [agentWithAvailableModels, messagesFromDb] = await Promise.all([
+    getAgentWithAvailableModels(agentSlug),
+    getMessagesByChatId({ id: chatId }),
+  ]);
 
   // Access control: Check if the user has permission to view this chat
   if (chat.visibility === 'private') {
@@ -133,7 +136,6 @@ export default async function Page(props: {
   }
   
   // Get all available models for this agent
-  const agentWithAvailableModels = await getAgentWithAvailableModels(agentSlug);
   const availableModels = agentWithAvailableModels?.availableModels || [];
   
   // Get the chat's existing model ID if one exists
@@ -145,8 +147,6 @@ export default async function Page(props: {
   
   // Use existing model ID if available, otherwise use the default model
   const selectedModelId = existingModelId || defaultModelId;
-
-  const messagesFromDb = await getMessagesByChatId({ id: chatId });
 
   function convertToUIMessages(messages: Array<DBMessage>): Array<UIMessage> {
     return messages.map((message) => ({

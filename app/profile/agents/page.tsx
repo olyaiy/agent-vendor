@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { auth } from "@/app/(auth)/auth";
-import { getAgents } from "@/lib/db/queries";
+import { getAgentsWithFullDetails } from "@/lib/db/repositories/agentRepository";
 import { redirect } from "next/navigation";
 import { MyAgentList } from "@/components/agent/my-agent-list";
 
@@ -26,7 +26,7 @@ export default async function MyAgentsPage({
   const timePeriod = resolvedParams.timePeriod || 'all-time';
   
   // Fetch only agents created by the current user including models, tools, tags, and earnings
-  const userAgents = await getAgents(session.user.id, true, true, true, timePeriod);
+  const userAgents = await getAgentsWithFullDetails(session.user.id, true, true, true, timePeriod);
 
   return (
     <div className="container py-6 space-y-6 px-4 mx-auto">
