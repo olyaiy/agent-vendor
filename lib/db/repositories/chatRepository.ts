@@ -99,7 +99,7 @@ export async function updateChatVisiblityById({
   visibility,
 }: {
   chatId: string;
-  visibility: 'private' | 'public';
+  visibility: 'private' | 'public' | 'link';
 }) {
   try {
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));

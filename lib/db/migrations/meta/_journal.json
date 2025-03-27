@@ -351,6 +351,13 @@
       "when": 1742880298433,
       "tag": "0049_abandoned_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1743105210013,
+      "tag": "0050_parallel_tusk",
+      "breakpoints": true
     }
   ]
 }

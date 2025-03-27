@@ -101,12 +101,13 @@ export async function doesAgentHaveSearchTool(agentId: string): Promise<boolean>
  */
 export async function getAgentToolsWithSingleQuery(agentId: string) {
   try {
-    // JOIN query that gets all tools for an agent in one database operation
-    return await db.select({
-      tool: tools.tool
+    return db.select({
+      tool: tools.tool,
+      toolGroupId: toolGroups.id
     })
     .from(agentToolGroups)
-    .innerJoin(toolGroupTools, eq(agentToolGroups.toolGroupId, toolGroupTools.toolGroupId))
+    .innerJoin(toolGroups, eq(agentToolGroups.toolGroupId, toolGroups.id))
+    .innerJoin(toolGroupTools, eq(toolGroups.id, toolGroupTools.toolGroupId))
     .innerJoin(tools, eq(toolGroupTools.toolId, tools.id))
     .where(eq(agentToolGroups.agentId, agentId));
   } catch (error) {

@@ -46,6 +46,7 @@ export const agents = pgTable("agents", {
   return {
     creatorIdIdx: index("agents_creator_id_idx").on(table.creatorId),
     visibilityIdx: index("agents_visibility_idx").on(table.visibility),
+    visibilityCreatorIdx: index("agents_visibility_creator_idx").on(table.visibility, table.creatorId),
   };
 });
 
@@ -93,6 +94,7 @@ export const agentModels = pgTable("agent_models", {
     pk: primaryKey({ columns: [table.agentId, table.modelId] }),
     agentIdIdx: index("agent_models_agent_id_idx").on(table.agentId),
     modelIdIdx: index("agent_models_model_id_idx").on(table.modelId),
+    isDefaultIdx: index("agent_models_is_default_idx").on(table.isDefault)
   };
 });
 

@@ -22,12 +22,11 @@ export async function saveMessages({
       model_id: model_id || msg.model_id,
     }));
 
-
-
-    await db.insert(message).values(messagesToSave);
-    
-    // Return the messages with their generated IDs
-    return messagesToSave;
+    // Use transaction for batch insert
+    return db.transaction(async (tx) => {
+      await tx.insert(message).values(messagesToSave);
+      return messagesToSave;
+    });
   } catch (error) {
     return handleDbError(error, 'Failed to save messages in database', []);
   }

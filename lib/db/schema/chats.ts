@@ -21,7 +21,7 @@ export const chat = pgTable('Chat', {
     .references(() => user.id),
   agentId: uuid('agentId')
     .references(() => agents.id, { onDelete: 'cascade' }),
-  visibility: varchar('visibility', { enum: ['public', 'private'] })
+  visibility: varchar('visibility', { enum: ['public', 'private', 'link'] })
     .notNull()
     .default('private'),
 }, (table) => {
