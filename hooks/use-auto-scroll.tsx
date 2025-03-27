@@ -63,11 +63,10 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
 
     const atBottom = checkIsAtBottom(scrollRef.current);
 
-    setScrollState((prev) => ({
+    setScrollState({
       isAtBottom: atBottom,
-      // Re-enable auto-scroll if at the bottom
-      autoScrollEnabled: atBottom ? true : prev.autoScrollEnabled,
-    }));
+      autoScrollEnabled: atBottom
+    });
   }, [checkIsAtBottom]);
 
   useEffect(() => {
