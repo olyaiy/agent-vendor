@@ -5,6 +5,9 @@ import { useMemo, memo} from 'react';
 import equal from 'fast-deep-equal';
 import type { Agent } from '@/lib/db/schema';
 import { UseChatHelpers } from '@ai-sdk/react';
+import { ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useDebounce } from '@/hooks/use-debounce';
 
 /**
  * Interface defining the props for the Messages component
@@ -55,7 +58,7 @@ function PureMessages({
 
   // Custom hook that provides refs for container and end element
   // to enable automatic scrolling to the bottom when new messages arrive
-  const { scrollRef } = useAutoScroll({
+  const { scrollRef, isAtBottom, scrollToBottom } = useAutoScroll({
     content: messages.length > 0 
       ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}` 
       : null,
@@ -63,6 +66,8 @@ function PureMessages({
     smooth: true        // Enable smooth scrolling
   });
   
+  // Debounce the "not at bottom" state to prevent flickering of the button
+  const isNotAtBottomDebounced = useDebounce(!isAtBottom, 300);
   
   // Process the last tool data from the provided data array for conditional rendering of the "thinking..." message.
   const lastToolData = useMemo(() => {
@@ -88,32 +93,46 @@ function PureMessages({
 
 
   return (
-    <div
-      ref={scrollRef}
-      className="flex flex-col min-w-0 gap-6 absolute inset-0 overflow-y-auto pt-4 px-4 md:px-8"
-    >
-      {/* Render each message with its associated metadata and interactions */}
-      {messages.map((message, index) => (
-        <PreviewMessage
-          key={message.id}
-          chatId={chatId}
-          message={message}
-          // Only show loading state on the last message when it's an AI response being generated
-          isLoading={status === 'streaming' && messages.length - 1 === index}
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-          agentImageUrl={agent.avatar_url || agent.thumbnail_url || undefined}
-        />
-      ))}
+    <>
+      <div
+        ref={scrollRef}
+        className="flex flex-col min-w-0 gap-6 absolute inset-0 overflow-y-auto pt-4 px-4 md:px-8"
+      >
+        {/* Render each message with its associated metadata and interactions */}
+        {messages.map((message, index) => (
+          <PreviewMessage
+            key={message.id}
+            chatId={chatId}
+            message={message}
+            // Only show loading state on the last message when it's an AI response being generated
+            isLoading={status === 'streaming' && messages.length - 1 === index}
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+            agentImageUrl={agent.avatar_url || agent.thumbnail_url || undefined}
+          />
+        ))}
 
-      {/* Show thinking message when waiting for first assistant response */}
-      {status === 'submitted' &&
-        messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && 
-        !lastToolData && <ThinkingMessage />
-      }
-    </div>
+        {/* Show thinking message when waiting for first assistant response */}
+        {status === 'submitted' &&
+          messages.length > 0 &&
+          messages[messages.length - 1].role === 'user' && 
+          !lastToolData && <ThinkingMessage />
+        }
+      </div>
+      
+      {/* Scroll to bottom button - appears when streaming and not at bottom, with debounce */}
+      {status === 'streaming' && isNotAtBottomDebounced && (
+        <Button
+          onClick={scrollToBottom}
+          className="fixed bottom-24 right-8 rounded-full p-2 shadow-md z-10"
+          size="icon"
+          variant="secondary"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      )}
+    </>
   );
 }
 
