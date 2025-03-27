@@ -38,8 +38,8 @@ export const getAgentsWithFullDetails = async (
     const filterCondition = onlyUserCreated && userId 
       ? eq(agents.creatorId, userId)
       : or(
-          eq(agents.visibility, 'public'), 
-          userId ? eq(agents.creatorId, userId) : undefined
+          eq(agents.visibility, 'public'),
+          userId ? eq(agents.creatorId, userId) : sql`1 = 1`
         );
 
     // Execute single optimized query

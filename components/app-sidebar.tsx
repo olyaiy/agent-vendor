@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { HistoryIcon, PlusIcon } from 'lucide-react';
 import { SidebarHistory } from './layout/sidebar-history';
+import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
@@ -23,6 +24,7 @@ import useSWR from 'swr';
 import { Logo } from './logo';
 import { UserNav } from './layout/sidebar-user-nav';
 import { useEffect, useState } from 'react';
+import { RecentAgentsAvatars } from './layout/recent-agents-avatars';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
@@ -45,6 +47,27 @@ function getMostRecentAgentId(defaultAgentId: string): string {
   return recentAgentIds.length > 0 ? recentAgentIds[0] : defaultAgentId;
 }
 
+// Function to get recent agent IDs from cookies
+function getRecentAgentIds(): string[] {
+  if (typeof document === 'undefined') return [];
+  
+  const recentAgentsCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('recent-agents='));
+  
+  if (!recentAgentsCookie) return [];
+  
+  return recentAgentsCookie.split('=')[1].split(',');
+}
+
+// Interface for recent agents
+interface RecentAgent {
+  id: string;
+  avatar_url?: string | null;
+  thumbnail_url?: string | null;
+  agent_display_name: string;
+}
+
 export function AppSidebar({ user: initialUser }: { user: User | undefined | null }) {
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
@@ -54,6 +77,7 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
   const [mostRecentAgentId, setMostRecentAgentId] = useState<string>(defaultAgentId);
   const chatId = params['chat-id'] as string | undefined;
   const isHistoryPage = pathname === '/chats';
+  const [recentAgents, setRecentAgents] = useState<RecentAgent[]>([]);
 
   // Use SWR to fetch and keep user data updated
   const { data: userData } = useSWR<User | null>('/api/user', fetcher, {
@@ -68,6 +92,22 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
   // Update the most recent agent ID on component mount and when pathname changes
   useEffect(() => {
     setMostRecentAgentId(getMostRecentAgentId(defaultAgentId));
+    
+    // Get recent agent IDs
+    const recentIds = getRecentAgentIds().slice(0, 4);
+    
+    // Fetch details for recent agents
+    if (recentIds.length > 0) {
+      Promise.all(
+        recentIds.map(id => 
+          fetch(`/api/agents/${id}/minimal`)
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null)
+        )
+      ).then(agents => {
+        setRecentAgents(agents.filter(Boolean));
+      });
+    }
   }, [defaultAgentId, pathname]);
 
   // Function to handle the new chat button click
@@ -127,7 +167,7 @@ export function AppSidebar({ user: initialUser }: { user: User | undefined | nul
           <TooltipContent align="end">New Chat</TooltipContent>
         </Tooltip>
         
-        
+        <RecentAgentsAvatars agents={recentAgents} />
       </SidebarHeader>
       <SidebarContent className="custom-sidebar-scrollbar">
         <SidebarHistory user={user} currentConversationId={chatId} />

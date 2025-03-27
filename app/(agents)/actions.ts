@@ -345,7 +345,16 @@ export async function getSuggestedPromptsByAgentId(agentId: string): Promise<str
       ];
     }
 
-    return result[0].prompts as string[];
+    if (result[0].prompts && Array.isArray(result[0].prompts)) {
+      return result[0].prompts as string[];
+    }
+    // Add fallback return here
+    return [
+      "What can you help me with?",
+      "Tell me about yourself", 
+      "What features do you have?",
+      "How do I get started?"
+    ];
   } catch (error) {
     console.error('Failed to get suggested prompts for agent:', error);
     // Return default prompts on error
