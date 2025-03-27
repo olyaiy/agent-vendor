@@ -7,6 +7,19 @@ import { AgentCard } from "./agent-card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+// Define the expected agent format for AgentCard component
+interface AgentCardType {
+  id: string;
+  agent_display_name: string;
+  thumbnail_url?: string;
+  description?: string;
+  visibility: 'public' | 'private' | 'link';
+  creatorId?: string;
+  createdAt: Date;
+  tags?: { name: string }[];
+  toolGroups?: { display_name: string }[];
+}
+
 interface FeaturedAgentsCarouselProps {
   agents: (Omit<InferSelectModel<typeof agents>, 'model'> & {
     models?: InferSelectModel<typeof models>[] | null;
@@ -14,6 +27,27 @@ interface FeaturedAgentsCarouselProps {
     tags?: { id: string; name: string; createdAt: Date; updatedAt: Date }[] | null;
   })[];
   userId?: string;
+}
+
+// Transform database agent to AgentCard format
+function transformAgentForCard(agent: FeaturedAgentsCarouselProps['agents'][0]): AgentCardType {
+  return {
+    id: agent.id,
+    agent_display_name: agent.agent_display_name,
+    // Convert null to undefined for thumbnail_url
+    thumbnail_url: agent.thumbnail_url || undefined,
+    // Convert null to undefined for description
+    description: agent.description || undefined,
+    // Ensure visibility is never null
+    visibility: agent.visibility as 'public' | 'private' | 'link' || 'private',
+    // Convert null to undefined for creatorId
+    creatorId: agent.creatorId || undefined,
+    createdAt: agent.createdAt || new Date(),
+    // Transform tags if they exist
+    tags: agent.tags?.map(tag => ({ name: tag.name })) || undefined,
+    // Transform toolGroups if they exist
+    toolGroups: agent.toolGroups?.map(tg => ({ display_name: tg.display_name })) || undefined,
+  };
 }
 
 export function FeaturedAgentsCarousel({ agents, userId }: FeaturedAgentsCarouselProps) {
@@ -120,7 +154,7 @@ export function FeaturedAgentsCarousel({ agents, userId }: FeaturedAgentsCarouse
           {agents.map((agent) => (
             <div key={agent.id} className="w-[250px] flex-shrink-0">
               <AgentCard 
-                agent={agent}
+                agent={transformAgentForCard(agent)}
                 userId={userId}
                 onClick={handleAgentClick}
               />
@@ -134,7 +168,7 @@ export function FeaturedAgentsCarousel({ agents, userId }: FeaturedAgentsCarouse
         {visibleAgents.map((agent) => (
           <div key={agent.id}>
             <AgentCard 
-              agent={agent}
+              agent={transformAgentForCard(agent)}
               userId={userId}
               onClick={handleAgentClick}
             />
