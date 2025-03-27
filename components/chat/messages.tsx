@@ -56,7 +56,9 @@ function PureMessages({
   // Custom hook that provides refs for container and end element
   // to enable automatic scrolling to the bottom when new messages arrive
   const { scrollRef } = useAutoScroll({
-    content: null,  // Use messages as content dependency
+    content: messages.length > 0 
+      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}` 
+      : null,
     offset: 32,         // Match previous scroll offset
     smooth: true        // Enable smooth scrolling
   });
