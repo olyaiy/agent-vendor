@@ -17,6 +17,8 @@ import { VisibilityType } from '../util/visibility-selector';
 import { Artifact } from '../artifact/artifact';
 import { Overview } from '../util/overview';
 import { AuthPopup } from '@/components/auth/auth-popup';
+import Link from 'next/link';
+import { ArrowUpIcon, PaperclipIcon } from '@/components/util/icons';
 
 // Define the ModelSettings interface
 export interface ModelSettings {
@@ -35,6 +37,42 @@ export interface ModelSettings {
     presencePenalty?: boolean;
     frequencyPenalty?: boolean;
   };
+}
+
+// Read-only prompt component that mimics MultimodalInput shape
+function ReadOnlyPrompt({ agent }: { agent: Agent }) {
+  return (
+    <Link 
+      href={`/${agent.id}`}
+      className="w-full block"
+    >
+      <div className="relative w-full">
+        <div className="sm:min-h-[98px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] 
+          overflow-auto resize-none rounded-md !text-base bg-muted/70 pb-8 sm:pb-10 
+          dark:border-zinc-700 border relative px-4 py-3 flex items-center justify-center">
+          <span className="flex items-center gap-2 text-muted-foreground font-medium">
+            Chat with {agent.agent_display_name}
+          </span>
+          
+          {/* Mimicking attachment button position */}
+          <div className="absolute bottom-0 left-0 p-1 sm:p-2 w-fit flex flex-row justify-start opacity-50">
+            <div className="p-[6px] sm:p-[7px] h-fit border rounded-md rounded-bl-lg dark:border-zinc-700">
+              <PaperclipIcon size={14} />
+            </div>
+          </div>
+          
+          {/* Mimicking send button position */}
+          <div className="absolute bottom-0 right-0 p-1 sm:p-2 w-fit flex flex-row justify-end opacity-50">
+            <div className="rounded-full p-3 sm:p-1.5 h-fit border dark:border-zinc-600">
+              <div className="sm:scale-[0.65]">
+                <ArrowUpIcon size={22} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 export function Chat({
@@ -252,31 +290,37 @@ export function Chat({
           )}
         </div>
 
-        {messages.length > 0 && !isReadonly && (
-          <form className="flex flex-col mx-auto px-2 sm:px-4 bg-background pb-1 sm:pb-2 md:pb-4 gap-1 sm:gap-2 w-full md:max-w-3xl">
-            <MultimodalInput
-              isAuthenticated={isAuthenticated}
-              agentId={agent.id}
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              status={status}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
-              append={append}
-              availableModels={availableModels}
-              currentModel={currentModel}
-              onModelChange={handleModelChange}
-              isReadonly={isReadonly}
-              searchEnabled={searchEnabled}
-              setSearchEnabled={setSearchEnabled}
-              suggestedPrompts={suggestedPrompts}
-            />
-          </form>
+        {messages.length > 0 && (
+          <div className="flex flex-col mx-auto px-2 sm:px-4 bg-background pb-1 sm:pb-2 md:pb-4 gap-1 sm:gap-2 w-full md:max-w-3xl">
+            {isReadonly ? (
+              <ReadOnlyPrompt agent={agent} />
+            ) : (
+              <form className="flex flex-col w-full">
+                <MultimodalInput
+                  isAuthenticated={isAuthenticated}
+                  agentId={agent.id}
+                  chatId={id}
+                  input={input}
+                  setInput={setInput}
+                  handleSubmit={handleSubmit}
+                  status={status}
+                  stop={stop}
+                  attachments={attachments}
+                  setAttachments={setAttachments}
+                  messages={messages}
+                  setMessages={setMessages}
+                  append={append}
+                  availableModels={availableModels}
+                  currentModel={currentModel}
+                  onModelChange={handleModelChange}
+                  isReadonly={isReadonly}
+                  searchEnabled={searchEnabled}
+                  setSearchEnabled={setSearchEnabled}
+                  suggestedPrompts={suggestedPrompts}
+                />
+              </form>
+            )}
+          </div>
         )}
       </div>
 
