@@ -15,14 +15,15 @@ const components: Partial<Components> = {
     const hasBlockElement = childrenArray.some(child => 
       isValidElement(child) && 
       (
-        // Check for pre/code blocks
+        // Check for CodeBlock component or pre/code blocks
+        child.type === CodeBlock ||
         child.type === 'pre' || 
         (child.props && 
           (typeof child.props === 'object' && 
           'node' in (child.props as object) && 
           (child.props as any).node?.tagName === 'code' && 
           !(child.props as any).inline)) ||
-        // Check for any block-level elements (div, img wrapper, etc)
+        // Check for any block-level elements
         (typeof child.type === 'string' && ['div', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'].includes(child.type))
       )
     );

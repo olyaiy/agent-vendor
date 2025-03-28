@@ -63,7 +63,7 @@ function PureMessages({
   // to enable automatic scrolling to the bottom when new messages arrive
   const { scrollRef, isAtBottom, scrollToBottom } = useAutoScroll({
     content: messages.length > 0 
-      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}` 
+      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}-${messages[messages.length - 1].reasoning?.length ?? 0}` 
       : null,
     offset: 32,         // Match previous scroll offset
     smooth: true        // Enable smooth scrolling

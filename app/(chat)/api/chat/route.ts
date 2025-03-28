@@ -192,7 +192,6 @@ export async function POST(request: Request) {
       // Extract unique tool names
       const availableToolNames = [
         ...new Set(agentTools.map((tool: { tool: string }) => tool.tool)),
-        'createReactDocument' // Hardcoded addition
       ];
 
       // Create tools object with the appropriate tools
