@@ -3,6 +3,13 @@ import { db } from '../client';
 import { chat, agents, message } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
 import { ilike } from '../utils/queryUtils';
+import { redis } from '@/lib/ratelimit';
+
+// Cache key prefixes
+const CHAT_KEY_PREFIX = 'chat:';
+
+// Cache expiration time in seconds (10 minutes)
+const CACHE_EXPIRATION = 600;
 
 /**
  * Save a new chat
@@ -33,6 +40,14 @@ export async function saveChat({
 }
 
 /**
+ * Invalidate chat cache
+ * @param id Chat ID
+ */
+export async function invalidateChatCache(id: string): Promise<void> {
+  await redis.del(`${CHAT_KEY_PREFIX}${id}`);
+}
+
+/**
  * Delete a chat by ID
  */
 export async function deleteChatById({ id }: { id: string }) {
@@ -40,6 +55,9 @@ export async function deleteChatById({ id }: { id: string }) {
     // First delete all messages for this chat
     await db.delete(message).where(eq(message.chatId, id));
 
+    // Invalidate cache when chat is deleted
+    await invalidateChatCache(id);
+    
     // Then delete the chat itself
     return await db.delete(chat).where(eq(chat.id, id));
   } catch (error) {
@@ -72,7 +90,7 @@ export async function getChatsByUserId({ id }: { id: string }) {
 }
 
 /**
- * Get a single chat by ID
+ * Get a single chat by ID with Redis caching
  */
 export async function getChatById({ id }: { id: string }): Promise<{
   id: string;
@@ -83,7 +101,31 @@ export async function getChatById({ id }: { id: string }): Promise<{
   createdAt: Date;
 } | undefined> {
   try {
+    // Try to get from cache first
+    const cacheKey = `${CHAT_KEY_PREFIX}${id}`;
+    const cachedChat = await redis.get<string>(cacheKey);
+    
+    if (cachedChat) {
+      // Handle case where Redis client might have already parsed the JSON
+      if (typeof cachedChat === 'object') {
+        return cachedChat;
+      }
+      
+      try {
+        return JSON.parse(cachedChat);
+      } catch (e) {
+        console.error('Failed to parse cached chat:', e);
+        // Continue to fetch from database if parsing fails
+      }
+    }
+    
+    // If not in cache, get from database
     const [selectedChat] = await db.select().from(chat).where(eq(chat.id, id));
+    
+    // Cache the result if chat exists
+    if (selectedChat) {
+      await redis.set(cacheKey, JSON.stringify(selectedChat), { ex: CACHE_EXPIRATION });
+    }
     
     return selectedChat;
   } catch (error) {
@@ -102,6 +144,9 @@ export async function updateChatVisiblityById({
   visibility: 'private' | 'public' | 'link';
 }) {
   try {
+    // Invalidate cache when chat is updated
+    await invalidateChatCache(chatId);
+    
     return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
   } catch (error) {
     return handleDbError(error, 'Failed to update chat visibility in database');

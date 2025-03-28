@@ -31,7 +31,23 @@ async function getUserCredits(userId: string): Promise<number | null> {
   
   // If found in cache, parse and return
   if (cachedCredits !== null) {
-    return parseFloat(cachedCredits);
+    // If already a number, return directly
+    if (typeof cachedCredits === 'number') {
+      return cachedCredits;
+    }
+    
+    // If it's an object that Redis client might have already parsed
+    if (typeof cachedCredits === 'object') {
+      return Number(cachedCredits);
+    }
+    
+    // Otherwise parse as string
+    try {
+      return parseFloat(cachedCredits);
+    } catch (e) {
+      console.error('Failed to parse cached credits:', e);
+      // Continue to fetch from database if parsing fails
+    }
   }
   
   // Otherwise, get from database

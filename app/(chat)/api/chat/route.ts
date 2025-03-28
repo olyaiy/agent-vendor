@@ -28,10 +28,37 @@ import { toolRegistry } from '@/lib/ai/tools/registry';
 import { hasCredits, INSUFFICIENT_CREDITS_MESSAGE } from '@/lib/credits';
 import { KnowledgeItem } from '@/lib/db/schema';
 import type { ModelSettings } from '@/components/chat/chat';
+import { modelLimiter, getIP } from '@/lib/ratelimit';
 
 export async function POST(request: Request) {
   console.time('total-request');
   console.time('parse-request');
+  
+  // Apply rate limiting
+  const ip = getIP(request);
+  const { success, limit, reset, remaining } = await modelLimiter.limit(ip);
+  
+  // If rate limit exceeded, return 429 Too Many Requests
+  if (!success) {
+    return new Response(
+      JSON.stringify({
+        error: 'Too many requests',
+        limit,
+        remaining,
+        reset: new Date(reset).toISOString(),
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': reset.toString(),
+        },
+      }
+    );
+  }
+  
   const {
     id,
     messages,
@@ -164,7 +191,7 @@ export async function POST(request: Request) {
       console.time('tools-setup');
       // Extract unique tool names
       const availableToolNames = [
-        ...new Set(agentTools.map(tool => tool.tool)),
+        ...new Set(agentTools.map((tool: { tool: string }) => tool.tool)),
         'createReactDocument' // Hardcoded addition
       ];
 
@@ -175,7 +202,7 @@ export async function POST(request: Request) {
       });
 
       const tools: Record<string, any> = {};
-      for (const toolName of availableToolNames) {
+      for (const toolName of availableToolNames as string[]) {
         // Special handling for searchTool based on the searchEnabled flag
         // Only exclude the search tool if searchEnabled is explicitly false
         if (toolName === 'searchTool' && searchEnabled === false) {
@@ -186,8 +213,12 @@ export async function POST(request: Request) {
           continue; // Skip adding the search tool if searchEnabled is false
         }
         
-        if (registry[toolName as keyof typeof registry]) {
-          tools[toolName] = registry[toolName as keyof typeof registry];
+        // Check if the tool exists in registry using type guard
+        const isValidTool = (key: string): key is keyof typeof registry => 
+          key in registry && typeof registry[key as keyof typeof registry] !== 'undefined';
+        
+        if (isValidTool(toolName)) {
+          tools[toolName] = registry[toolName];
         }
       }
 

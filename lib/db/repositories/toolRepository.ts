@@ -1,7 +1,14 @@
 import { asc, eq } from 'drizzle-orm';
 import { db } from '../client';
-import { toolGroups, agentToolGroups, tools, toolGroupTools } from '../schema';
+import { toolGroups, agentToolGroups, tools as toolsTable, toolGroupTools } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
+import { redis } from '@/lib/ratelimit';
+
+// Cache key prefixes
+const AGENT_TOOLS_KEY_PREFIX = 'agent:tools:';
+
+// Cache expiration time in seconds (5 minutes)
+const CACHE_EXPIRATION = 300;
 
 /**
  * Get all tool groups
@@ -48,15 +55,15 @@ export async function getToolGroupsByAgentId(agentId: string) {
 export async function getToolsByToolGroupId(toolGroupId: string) {
   try {
     const result = await db.select({
-      id: tools.id,
-      displayName: tools.tool_display_name,
-      tool: tools.tool,
-      description: tools.description,
+      id: toolsTable.id,
+      displayName: toolsTable.tool_display_name,
+      tool: toolsTable.tool,
+      description: toolsTable.description,
     })
-    .from(tools)
+    .from(toolsTable)
     .innerJoin(
       toolGroupTools, 
-      eq(tools.id, toolGroupTools.toolId)
+      eq(toolsTable.id, toolGroupTools.toolId)
     )
     .where(eq(toolGroupTools.toolGroupId, toolGroupId));
     
@@ -79,10 +86,10 @@ export async function doesAgentHaveSearchTool(agentId: string): Promise<boolean>
     
     // Check each tool group for a search tool
     for (const toolGroup of agentToolGroups) {
-      const tools = await getToolsByToolGroupId(toolGroup.id);
+      const toolsList = await getToolsByToolGroupId(toolGroup.id);
       
       // Look for a tool with 'search' or 'web_search' in the name or tool identifier
-      const hasSearchTool = tools.some(tool => 
+      const hasSearchTool = toolsList.some(tool => 
         tool.displayName.toLowerCase().includes('search') || 
         tool.tool.toLowerCase().includes('search')
       );
@@ -97,19 +104,52 @@ export async function doesAgentHaveSearchTool(agentId: string): Promise<boolean>
 }
 
 /**
+ * Invalidate agent tools cache
+ * @param agentId Agent ID
+ */
+export async function invalidateAgentToolsCache(agentId: string): Promise<void> {
+  await redis.del(`${AGENT_TOOLS_KEY_PREFIX}${agentId}`);
+}
+
+/**
  * Optimized function to get all tools for an agent in a single query
+ * with Redis caching
  */
 export async function getAgentToolsWithSingleQuery(agentId: string) {
   try {
-    return db.select({
-      tool: tools.tool,
+    // Try to get from cache first
+    const cacheKey = `${AGENT_TOOLS_KEY_PREFIX}${agentId}`;
+    const cachedTools = await redis.get<string>(cacheKey);
+    
+    if (cachedTools) {
+      // Handle case where Redis client might have already parsed the JSON
+      if (typeof cachedTools === 'object') {
+        return cachedTools;
+      }
+      
+      try {
+        return JSON.parse(cachedTools);
+      } catch (e) {
+        console.error('Failed to parse cached tools:', e);
+        // Continue to fetch from database if parsing fails
+      }
+    }
+    
+    // If not in cache, get from database
+    const toolsList = await db.select({
+      tool: toolsTable.tool,
       toolGroupId: toolGroups.id
     })
     .from(agentToolGroups)
     .innerJoin(toolGroups, eq(agentToolGroups.toolGroupId, toolGroups.id))
     .innerJoin(toolGroupTools, eq(toolGroups.id, toolGroupTools.toolGroupId))
-    .innerJoin(tools, eq(toolGroupTools.toolId, tools.id))
+    .innerJoin(toolsTable, eq(toolGroupTools.toolId, toolsTable.id))
     .where(eq(agentToolGroups.agentId, agentId));
+    
+    // Cache the result
+    await redis.set(cacheKey, JSON.stringify(toolsList), { ex: CACHE_EXPIRATION });
+    
+    return toolsList;
   } catch (error) {
     return handleDbError(error, 'Failed to get agent tools with single query', []);
   }
