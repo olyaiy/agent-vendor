@@ -57,6 +57,14 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
       case 'createLogo':
         return <ToolWrapper><LogoGenerationSection tool={tool} /></ToolWrapper>;
       case 'createDocument':
+      case 'createReactDocument':
+        return <ToolWrapper> 
+          <DocumentPreview 
+            isReadonly={isReadonly} 
+            result={result}
+            kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet' | 'react'}
+          />
+         </ToolWrapper>;
       case 'createTextDocument':
       case 'createCodeDocument':
       case 'createImageDocument':
@@ -66,7 +74,7 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
             <DocumentPreview 
               isReadonly={isReadonly} 
               result={result}
-              kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet'}
+              kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet' | 'react'}
             />
           </ToolWrapper>
         );
@@ -141,7 +149,7 @@ export function ToolSection({ tool, isOpen, onOpenChange, isReadonly = false }: 
           <DocumentPreview 
             isReadonly={isReadonly} 
             args={args}
-            kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet'}
+            kind={toolName.replace('create', '').replace('Document', '').toLowerCase() as 'text' | 'code' | 'image' | 'sheet' | 'react'}
           />
         </ToolWrapper>
       );

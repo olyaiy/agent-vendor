@@ -356,7 +356,8 @@ export async function getSuggestedPromptsByAgentId(agentId: string): Promise<str
       "How do I get started?"
     ];
   } catch (error) {
-    console.error('Failed to get suggested prompts for agent:', error);
+    console.log('THE ERROR IS COMING FROM APP/(AGENTS)/ACTIONS.TS')
+    console.error('Failed to get suggested prompts for agent FROM ACTIONS.TS:', error);
     // Return default prompts on error
     return [
       "What can you help me with?",

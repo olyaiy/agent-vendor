@@ -3,6 +3,12 @@ import { db } from '../client';
 import { knowledge_items, suggestedPrompts } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
 
+// Add isValidUUID helper function
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 /**
  * Get all knowledge items for an agent
  */
@@ -111,6 +117,17 @@ export async function deleteKnowledgeItem({ id }: { id: string }) {
  */
 export async function getSuggestedPromptsByAgentId(agentId: string): Promise<string[]> {
   try {
+    // Validate that agentId is a valid UUID before querying the database
+    if (!isValidUUID(agentId)) {
+      console.warn(`Invalid UUID format for agentId: ${agentId}`);
+      return [
+        "What are the advantages of using Next.js?",
+        "Help me write an essay about silicon valley",
+        "Write code to demonstrate djikstras algorithm",
+        "What is the weather in San Francisco?"
+      ];
+    }
+
     const [result] = await db
       .select({
         prompts: suggestedPrompts.prompts
@@ -130,7 +147,9 @@ export async function getSuggestedPromptsByAgentId(agentId: string): Promise<str
 
     return result.prompts as string[];
   } catch (error) {
+    console.log('THE ERROR IS COMING FROM LIB/DB/REPOSITORIES/KNOWLEDGE.TS')
     return handleDbError(error, 'Failed to get suggested prompts for agent', [
+      
       "What are the advantages of using Next.js?",
       "Help me write an essay about silicon valley",
       "Write code to demonstrate djikstras algorithm",

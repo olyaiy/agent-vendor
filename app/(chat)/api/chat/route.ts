@@ -163,7 +163,10 @@ export async function POST(request: Request) {
       /* -------- TOOLS SET UP -------- */
       console.time('tools-setup');
       // Extract unique tool names
-      const availableToolNames = [...new Set(agentTools.map(tool => tool.tool))];
+      const availableToolNames = [
+        ...new Set(agentTools.map(tool => tool.tool)),
+        'createReactDocument' // Hardcoded addition
+      ];
 
       // Create tools object with the appropriate tools
       const registry = toolRegistry({ 

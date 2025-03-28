@@ -28,7 +28,7 @@ interface DocumentPreviewProps {
   isReadonly: boolean;
   result?: any;
   args?: any;
-  kind?: 'text' | 'code' | 'image' | 'sheet';
+  kind?: 'text' | 'code' | 'image' | 'sheet' | 'react';
 }
 
 export function DocumentPreview({
@@ -282,6 +282,11 @@ const DocumentContent = ({ document }: { document: Document }) => {
           status={artifact.status}
           isInline={true}
         />
+      ) : document.kind === 'react' ? (
+        <>
+          <pre>{document.content}</pre>
+
+        </>
       ) : null}
     </div>
   );

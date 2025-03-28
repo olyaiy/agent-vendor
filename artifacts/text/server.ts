@@ -18,97 +18,76 @@ interface ToolCallItem {
 
 type ContentItem = TextItem | ToolCallItem;
 
-// Helper function to filter messages to essential content
+// Core message filtering logic to reduce payload size and remove sensitive/non-essential data
 function filterMessages(messages: any[]) {
   return messages.map(message => {
-    // For user messages, just keep the text content
+    // User messages: Keep only text content to prevent leaking any structured data
     if (message.role === 'user') {
       return {
         role: 'user',
         content: typeof message.content === 'string' 
-          ? message.content 
-          : 'User query'
+          ? message.content  // Direct text input
+          : 'User query'     // Fallback for structured messages
       };
     }
     
-    // For assistant messages, extract only text content (no tool calls)
+    // Assistant responses: Extract only text content to avoid forwarding tool calls
     if (message.role === 'assistant') {
+      // Handle string responses directly
       if (typeof message.content === 'string') {
-        return {
-          role: 'assistant',
-          content: message.content
-        };
+        return { role: 'assistant', content: message.content };
       }
       
-      // If content is an array, only keep text items
+      // Filter array content to only text items
       if (Array.isArray(message.content)) {
         const textItems = message.content
           .filter((item: ContentItem) => item.type === 'text')
-          .map((item: TextItem) => item.text || '');
+          .map((item: TextItem) => item.text || '');  // Safely handle missing text
           
-        return {
-          role: 'assistant',
-          content: textItems.join(' ')
-        };
+        return { role: 'assistant', content: textItems.join(' ') };
       }
       
-      return {
-        role: 'assistant',
-        content: 'Assistant response'
-      };
+      return { role: 'assistant', content: 'Assistant response' };
     }
     
-    // For tool messages, create a brief summary instead of full content
+    // Tool messages: Create condensed summaries to avoid large payloads
     if (message.role === 'tool') {
-      // Check if it's a search tool result
+      // Process search tool results specifically
       if (Array.isArray(message.content) && message.content.length > 0) {
         const toolContent = message.content[0];
         
-        // Handle search results specifically
         if (toolContent.type === 'tool-result') {
-          // Handle search tools
+          // Special handling for search-related tools
           if (toolContent.toolName === 'searchTool' || toolContent.toolName === 'newsSearch') {
-            // Extract just the search query and number of results
             const result = toolContent.result;
             const query = result?.query || 'unknown query';
             const resultCount = result?.results?.length || 0;
             
-            // Format a brief summary of each result
+            // Process and limit results to prevent context overload
             let resultSummaries = '';
             if (result?.results && Array.isArray(result.results)) {
-              // Limit to max 5 results to prevent overload while keeping context
-              const limitedResults = result.results.slice(0, 5);
+              const limitedResults = result.results.slice(0, 5); // Keep only top 5 results
               resultSummaries = limitedResults.map((item: any, index: number) => {
-                // Extract all available useful information
+                // Extract key fields with fallbacks
                 const title = item.title || 'No title';
                 const url = item.url || item.link || '';
                 const snippet = item.snippet || item.description || item.content || '';
-                // Include more content (up to 200 chars) for better context
                 const truncatedSnippet = snippet.length > 200 ? snippet.substring(0, 200) + '...' : snippet;
                 
-                // If there are any additional fields that might be useful, extract those too
+                // Build metadata section from available fields
                 const extraFields = [];
-                if (item.authors) {
-                  extraFields.push(`Authors: ${Array.isArray(item.authors) ? item.authors.join(', ') : item.authors}`);
-                }
-                if (item.date || item.publishedDate) {
-                  extraFields.push(`Date: ${item.date || item.publishedDate}`);
-                }
-                if (item.source) {
-                  extraFields.push(`Source: ${item.source}`);
-                }
+                if (item.authors) extraFields.push(`Authors: ${Array.isArray(item.authors) ? item.authors.join(', ') : item.authors}`);
+                if (item.date || item.publishedDate) extraFields.push(`Date: ${item.date || item.publishedDate}`);
+                if (item.source) extraFields.push(`Source: ${item.source}`);
                 
-                const extraInfo = extraFields.length > 0 ? extraFields.join(' | ') : '';
-                
-                // Create a more comprehensive result entry
                 return `Result ${index + 1}: ${title}
                 URL: ${url}
-                ${extraInfo ? extraInfo + '\n' : ''}
+                ${extraFields.join(' | ')}
                 Summary: ${truncatedSnippet}`;
-                              }).join('\n\n');
-                            }
+              }).join('\n\n');
+            }
             
-            // Add a note about filtering to indicate there might be more results
+            // Add truncation note if results were limited
             const noteAboutFiltering = result?.results && result.results.length > 5 
               ? `\n\nNote: Only showing 5 of ${result.results.length} results` 
               : '';
@@ -119,25 +98,15 @@ function filterMessages(messages: any[]) {
             };
           }
           
-          // Handle other tool types (image generation, code, etc.)
-          return {
-            role: 'tool',
-            content: formatToolResult(toolContent)
-          };
+          // Generic tool result formatting
+          return { role: 'tool', content: formatToolResult(toolContent) };
         }
       }
       
-      return {
-        role: 'tool',
-        content: 'Tool results summary'
-      };
+      return { role: 'tool', content: 'Tool results summary' };
     }
     
-    // Default fallback
-    return {
-      role: message.role,
-      content: 'Message content'
-    };
+    return { role: message.role, content: 'Message content' };
   });
 }
 
@@ -203,15 +172,8 @@ function formatToolResult(toolContent: any): string {
   return resultSummary;
 }
 
-// Add logging function for message filtering stats
-function logFilteringStats(original: any[], filtered: any[]) {
-  // More detailed logging for diagnostic purposes
 
-  
-  // Log size reduction percentage
-  const originalSize = JSON.stringify(original).length;
-  const filteredSize = JSON.stringify(filtered).length;
-}
+
 
 let articlePrompt = `
 # News Article Writing Expert (Canadian Press Style)
@@ -242,28 +204,25 @@ THIS IS CRITICAL. SO AGAIN. WRITE the  title in a way to only capitlize names an
 `
 
 
+// Core document handler for text generation/processing
 export const textDocumentHandler = createDocumentHandler<'text'>({
   kind: 'text',
   onCreateDocument: async ({ title, dataStream, messages }) => {
-    // Filter messages to reduce size
+    // Step 1: Filter and reduce message history to essential content
     const filteredMessages = filterMessages(messages);
     
-    // Further limit conversation length if still too large (max ~10k tokens)
+    // Step 2: Apply additional size constraints to prevent overload
     let processedMessages = filteredMessages;
     const messagesSizeBytes = JSON.stringify(filteredMessages).length;
     
-    // If still very large (>100KB), only keep the most recent messages
+    // Aggressive truncation for very large histories (>100KB)
     if (messagesSizeBytes > 100 * 1024) {
-      // Get last 20 messages which typically provides enough context
-      processedMessages = filteredMessages.slice(-20);
+      processedMessages = filteredMessages.slice(-20); // Keep last 20 messages
     }
     
-    // Log detailed stats
-    logFilteringStats(messages, processedMessages);
-    
-    // Format conversation as readable text with proper attribution
+    // Step 3: Convert message history to readable text format
     const conversationText = processedMessages.map(msg => {
-      // Format based on role for better context
+      // Add emoji prefixes for better visual parsing
       const rolePrefix = msg.role === 'user' 
         ? '👤 USER' 
         : msg.role === 'assistant' 
@@ -273,37 +232,27 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       return `${rolePrefix}: ${msg.content}`;
     }).join('\n\n');
     
+    // Step 4: Stream document generation using AI model
     let draftContent = '';
-
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
-      system:
-        `Write about the given topic. 
-        Markdown is supported. 
-        Use headings wherever appropriate.`,
+      system: `Write about the given topic. Markdown is supported. Use headings wherever appropriate.`,
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: articlePrompt + `
       Based on the conversation history, write a document about the user's requests.
-      
-      The conversation history is provided below:
-      
+      Conversation history:
       ${conversationText}
-
-      The title of the document is: ${title}
+      Document title: ${title}
       `,
     });
 
+    // Stream processing loop
     for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === 'text-delta') {
-        const { textDelta } = delta;
-
-        draftContent += textDelta;
-
+      if (delta.type === 'text-delta') {
+        draftContent += delta.textDelta;
         dataStream.writeData({
           type: 'text-delta',
-          content: textDelta,
+          content: delta.textDelta,
         });
       }
     }

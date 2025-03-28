@@ -121,3 +121,17 @@ export const createSheetDocument = ({ session, dataStream }: CreateDocumentProps
       );
     },
   });
+
+export const createReactDocument = ({ session, dataStream }: CreateDocumentProps) =>
+  tool({
+    description: 'Create a new react document',
+    parameters: z.object({ title: z.string() }),
+    execute: async ({ title }, options) => {
+      return createDocument({ session, dataStream }).execute(
+        { title, kind: 'react' },
+        options
+      );
+    },
+  });
+  
+  

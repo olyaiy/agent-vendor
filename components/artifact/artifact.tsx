@@ -28,12 +28,13 @@ import { MultimodalInput } from '../chat/multimodal-input';
 import { VersionFooter } from '../layout/version-footer';
 import { Toolbar } from '../util/toolbar';
 import { UseChatHelpers } from '@ai-sdk/react';
-
+import { reactArtifact } from '@/artifacts/react-artifact/client';
 export const artifactDefinitions = [
   textArtifact,
   codeArtifact,
   imageArtifact,
   sheetArtifact,
+  reactArtifact,
 ];
 export type ArtifactKind = (typeof artifactDefinitions)[number]['kind'];
 

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Check, ChevronsUpDown, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -40,16 +40,27 @@ export function TagSelector<T>({
   const [open, setOpen] = useState(false)
   const [inputValue, setInputValue] = useState("")
 
-  const filteredTags = availableTags.filter(
-    (tag) =>
-      getLabel(tag).toLowerCase().includes(inputValue.toLowerCase()) &&
-      !selectedTags.some((selected) => getValue(selected) === getValue(tag))
-  )
+  // Filter tags based on search query and exclude already selected tags
+  const filteredTags = availableTags.filter(tag => {
+    // Always exclude already selected tags
+    if (selectedTags.some(selected => getValue(selected) === getValue(tag))) {
+      return false
+    }
+    
+    // If there's any input, filter by it
+    if (inputValue.trim()) {
+      return getLabel(tag).toLowerCase().includes(inputValue.toLowerCase())
+    }
+    
+    // If no input, show all unselected tags
+    return true
+  })
 
   const handleSelect = (value: string) => {
     const existingTag = availableTags.find((tag) => getValue(tag) === value)
     if (existingTag) {
       onChange([...selectedTags, existingTag])
+      setOpen(false)
     }
     setInputValue("")
   }
@@ -57,6 +68,7 @@ export function TagSelector<T>({
   const handleRemove = (value: string) => {
     onChange(selectedTags.filter((tag) => getValue(tag) !== value))
   }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -68,34 +80,39 @@ export function TagSelector<T>({
             selectedTags.length > 0 && "hover:bg-background"
           )}
         >
-          {selectedTags.map((tag) => (
-            <span
-              key={getValue(tag)}
-              className="flex items-center gap-1 rounded bg-secondary px-2 py-1 text-sm break-words"
-            >
-              {getLabel(tag)}
-              <button
-                type="button"
-                className="cursor-pointer hover:bg-red-400/40 p-0.5 rounded transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemove(getValue(tag))
-                }}
+          {selectedTags.length > 0 ? (
+            selectedTags.map((tag) => (
+              <span
+                key={getValue(tag)}
+                className="flex items-center gap-1 rounded bg-secondary px-2 py-1 text-sm break-words"
               >
-                <X size={12} />
-              </button>
-            </span>
-          ))}
+                {getLabel(tag)}
+                <button
+                  type="button"
+                  className="cursor-pointer hover:bg-red-400/40 p-0.5 rounded transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleRemove(getValue(tag))
+                  }}
+                >
+                  <X size={12} />
+                </button>
+              </span>
+            ))
+          ) : (
+            <span className="text-muted-foreground">Select tags...</span>
+          )}
           <span className="flex-grow" />
           <ChevronsUpDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-full p-0" align="start">
         <Command>
           <CommandInput
             placeholder="Search tags..."
             value={inputValue}
-            onValueChange={(value) => setInputValue(value)}
+            onValueChange={setInputValue}
+            className="border-none focus:ring-0"
           />
           <CommandList>
             <CommandEmpty>
@@ -109,27 +126,30 @@ export function TagSelector<T>({
                 </p>
               )}
             </CommandEmpty>
-            <CommandGroup heading="Tags">
-              {filteredTags.map((tag) => (
-                <CommandItem
-                  key={getValue(tag)}
-                  value={getValue(tag)}
-                  onSelect={handleSelect}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedTags.some(
-                        (selected) => getValue(selected) === getValue(tag),
-                      )
-                        ? "opacity-100"
-                        : "opacity-0",
-                    )}
-                  />
-                  {getLabel(tag)}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {filteredTags.length > 0 && (
+              <CommandGroup heading="Tags">
+                {filteredTags.map((tag) => (
+                  <CommandItem
+                    key={getValue(tag)}
+                    value={getValue(tag)}
+                    onSelect={handleSelect}
+                    className="cursor-pointer"
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedTags.some(
+                          (selected) => getValue(selected) === getValue(tag),
+                        )
+                          ? "opacity-100"
+                          : "opacity-0",
+                      )}
+                    />
+                    {getLabel(tag)}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
