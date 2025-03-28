@@ -49,8 +49,7 @@ export const reactDocumentHandler = createDocumentHandler<'react'>({
       }
     }
 
-    console.log('fullStream');
-    console.log(fullStream);
+
 
     return draftContent;
   },

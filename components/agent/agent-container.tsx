@@ -47,9 +47,7 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
       .slice(0, 5); // Ensure max 5 agents
   }
 
-  console.log("agents are");
 
-  console.log(agents);
 
   return (
     <div className="w-full space-y-8">

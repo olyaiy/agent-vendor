@@ -23,7 +23,7 @@ import {
   getMostRecentUserMessage,
   getTrailingMessageId,
 } from '@/lib/utils';
-import { generateTitleAsynchronously, generateTitleFromUserMessage } from '../../actions';
+import { generateTitleAsynchronously } from '../../actions';
 import { toolRegistry } from '@/lib/ai/tools/registry';
 import { hasCredits, INSUFFICIENT_CREDITS_MESSAGE } from '@/lib/credits';
 import { KnowledgeItem } from '@/lib/db/schema';

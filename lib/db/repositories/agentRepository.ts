@@ -632,8 +632,7 @@ export async function getAgentWithAvailableModels(id: string) {
  */
 export const getAgents = async (userId?: string, onlyUserCreated?: boolean) => {
   try {
-    console.log("userId is---------");
-    console.log(userId);
+
     const result = await db.select({
       id: agents.id,
       agent_display_name: agents.agent_display_name,

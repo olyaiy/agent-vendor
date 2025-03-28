@@ -3,6 +3,7 @@ import { db } from '../client';
 import { userTransactions, userCredits, message, models } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
 import { withTransaction } from '../utils/queryUtils';
+import { updateUserCreditsCache } from '@/lib/credits';
 
 /**
  * Get token usage for a specific user
@@ -318,29 +319,55 @@ export async function recordTransaction({
       }
       
       // Update the user's credit balance based on transaction type
+      let newBalance = 0;
+      
       if (type === 'usage' || type === 'self_usage') {
-        await tx
+        const [updatedCredits] = await tx
           .update(userCredits)
           .set({
             credit_balance: sql`${userCredits.credit_balance} + ${calculatedAmount.toString()}`
           })
-          .where(eq(userCredits.user_id, userId));
+          .where(eq(userCredits.user_id, userId))
+          .returning({
+            newBalance: userCredits.credit_balance
+          });
+          
+        if (updatedCredits) {
+          newBalance = parseFloat(updatedCredits.newBalance.toString());
+        }
       } else if (type === 'purchase' || type === 'promotional') {
-        await tx
+        const [updatedCredits] = await tx
           .update(userCredits)
           .set({
             credit_balance: sql`${userCredits.credit_balance} + ${calculatedAmount.toString()}`,
             lifetime_credits: sql`${userCredits.lifetime_credits} + ${calculatedAmount.toString()}`
           })
-          .where(eq(userCredits.user_id, userId));
+          .where(eq(userCredits.user_id, userId))
+          .returning({
+            newBalance: userCredits.credit_balance
+          });
+          
+        if (updatedCredits) {
+          newBalance = parseFloat(updatedCredits.newBalance.toString());
+        }
       } else if (type === 'refund' || type === 'adjustment') {
-        await tx
+        const [updatedCredits] = await tx
           .update(userCredits)
           .set({
             credit_balance: sql`${userCredits.credit_balance} + ${calculatedAmount.toString()}`
           })
-          .where(eq(userCredits.user_id, userId));
+          .where(eq(userCredits.user_id, userId))
+          .returning({
+            newBalance: userCredits.credit_balance
+          });
+          
+        if (updatedCredits) {
+          newBalance = parseFloat(updatedCredits.newBalance.toString());
+        }
       }
+      
+      // Update Redis cache with new balance
+      await updateUserCreditsCache(userId, newBalance);
       
       return result[0]; // Return the first transaction for backward compatibility
     }, 'Failed to record transaction');

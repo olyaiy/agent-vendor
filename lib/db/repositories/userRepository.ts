@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../client';
 import { user, type User, userCredits } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
+import { updateUserCreditsCache } from '@/lib/credits';
 
 /**
  * Get a user by email address
@@ -32,13 +33,18 @@ export async function createUser(email: string, password: string, userName?: str
         .returning({ id: user.id });
       
       // Then create the credits for the user with a default starting amount
+      const initialCredits = 1; // Starting credits (same as in the DB)
+      
       if (newUser?.id) {
         await tx.insert(userCredits)
           .values({ 
             user_id: newUser.id,
-            credit_balance: '1', // Give new users 5 credits to start
-            lifetime_credits: '1' 
+            credit_balance: initialCredits.toString(),
+            lifetime_credits: initialCredits.toString()
           });
+          
+        // Initialize Redis cache for the new user
+        await updateUserCreditsCache(newUser.id, initialCredits);
       }
       
       return newUser;

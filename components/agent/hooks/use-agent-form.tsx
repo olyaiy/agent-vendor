@@ -145,13 +145,7 @@ export function useAgentForm({
     }
   }, [initialData?.systemPrompt]);
 
-  useEffect(() => {
-    if (thumbnailUrl) {
-      console.log('Avatar URL exists:', thumbnailUrl);
-    } else {
-      console.log('No avatar URL exists');
-    }
-  }, [thumbnailUrl]);
+
 
   // Knowledge item handlers
   const handleAddKnowledgeItem = async (item: { title: string; content: any; description?: string; type?: string }) => {

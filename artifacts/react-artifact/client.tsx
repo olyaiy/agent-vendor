@@ -32,8 +32,8 @@ export const reactArtifact = new Artifact<"react", Metadata>({
 
   // Handle streamed parts from the server (if your artifact supports streaming updates)
   onStreamPart: ({ streamPart, setMetadata, setArtifact }) => {
-    console.log('streamPart');
-    console.log(streamPart);
+
+
     if (streamPart.type === "metadata-update" as any) {
       setMetadata((metadata) => ({
         ...metadata,
@@ -105,7 +105,7 @@ export const reactArtifact = new Artifact<"react", Metadata>({
       description: "Refresh artifact info",
       onClick: (context) => {
         // No appendMessage in ArtifactActionContext
-        console.log("Refresh artifact info", context);
+
       },
     },
   ],
