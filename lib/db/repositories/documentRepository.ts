@@ -57,7 +57,7 @@ export async function getDocumentsById({ id }: { id: string }) {
 export async function getDocumentById({ id }: { id: string }): Promise<{
   id: string;
   title: string;
-  kind: "text" | "code" | "image" | "sheet";
+  kind: "text" | "code" | "image" | "sheet" | "react";
   content: string | null;
   userId: string;
   createdAt: Date;
