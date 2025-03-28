@@ -23,7 +23,7 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
   
   // Fetch all data in parallel
   const [agents, featuredAgents, commonTags] = await Promise.all([
-    getAgents(finalUserId, true),
+    getAgents(finalUserId, false),
     getFeaturedAgents(8),
     getMostCommonTags(20)
   ]);
@@ -46,6 +46,10 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
       })
       .slice(0, 5); // Ensure max 5 agents
   }
+
+  console.log("agents are");
+
+  console.log(agents);
 
   return (
     <div className="w-full space-y-8">

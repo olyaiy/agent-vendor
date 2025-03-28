@@ -632,6 +632,8 @@ export async function getAgentWithAvailableModels(id: string) {
  */
 export const getAgents = async (userId?: string, onlyUserCreated?: boolean) => {
   try {
+    console.log("userId is---------");
+    console.log(userId);
     const result = await db.select({
       id: agents.id,
       agent_display_name: agents.agent_display_name,
@@ -670,6 +672,8 @@ export const getAgents = async (userId?: string, onlyUserCreated?: boolean) => {
       toolGroups: agent.tool_groups?.map(display_name => ({ display_name })) // Convert to minimal tool group shape
     }));
   } catch (error) {
+    console.log("error is---------");
+    console.log(error);
     return handleDbError(error, 'Failed to get agents from database', []);
   }
 } 
