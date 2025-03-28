@@ -36,8 +36,8 @@ export async function createUser(email: string, password: string, userName?: str
         await tx.insert(userCredits)
           .values({ 
             user_id: newUser.id,
-            credit_balance: '5', // Give new users 5 credits to start
-            lifetime_credits: '5' 
+            credit_balance: '1', // Give new users 5 credits to start
+            lifetime_credits: '1' 
           });
       }
       
