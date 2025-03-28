@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAgentById } from '@/lib/db/repositories/agentRepository';
 import { auth } from '@/app/(auth)/auth';
+import { apiLimiter, getIP } from '@/lib/ratelimit';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Apply rate limiting
+    const ip = getIP(req);
+    const { success, limit, reset, remaining } = await apiLimiter.limit(ip);
+    
+    // If rate limit is exceeded, return 429 Too Many Requests
+    if (!success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': reset.toString(),
+          }
+        }
+      );
+    }
+
     const { id: agentId } = await params;
     const session = await auth();
 

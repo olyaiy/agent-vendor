@@ -1,109 +1,21 @@
-'use client';
-
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { RegisterForm } from '@/components/auth/register-form';
 
-
-import { AuthForm } from '@/components/auth/auth-form';
-import { SubmitButton } from '@/components/util/submit-button';
-
-import { register, type RegisterActionState } from '../actions';
-
-export default function Page() {
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [userName, setUserName] = useState('');
-  const [isSuccessful, setIsSuccessful] = useState(false);
-
-  const [state, formAction] = useActionState<RegisterActionState, FormData>(
-    register,
-    {
-      status: 'idle',
-    },
-  );
-
-  useEffect(() => {
-    if (state.status === 'user_exists') {
-      toast.error('Account already exists');
-    } else if (state.status === 'failed') {
-      toast.error('Failed to create account');
-    } else if (state.status === 'invalid_data') {
-      toast.error('Failed validating your submission!');
-    } else if (state.status === 'success') {
-      toast.success('Account created successfully');
-      setIsSuccessful(true);
-      router.refresh();
-    }
-  }, [state, router]);
-
-  const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get('email') as string);
-    setUserName(formData.get('userName') as string);
-    formAction(formData);
-  };
-
+export default function RegisterPage() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-md">
-            <div className="mb-8 text-center">
-              <h1 className="text-2xl font-bold tracking-tight">Create Account</h1>
-              <p className="text-sm text-muted-foreground">
-                Enter your details to register a new account
-              </p>
-            </div>
-            
-            <AuthForm 
-              action={handleSubmit} 
-              defaultEmail={email} 
-              additionalFields={
-                <div className="space-y-2">
-                  <label htmlFor="userName" className="text-sm font-medium">
-                    Username
-                  </label>
-                  <input
-                    id="userName"
-                    name="userName"
-                    type="text"
-                    defaultValue={userName}
-                    required
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="johndoe"
-                  />
-                </div>
-              }
-              className="space-y-6"
-            >
-              <SubmitButton 
-                isSuccessful={isSuccessful}
-                className="w-full font-medium"
-              >
-                Sign Up
-              </SubmitButton>
-              
-              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
-                <span className="relative z-10 bg-card px-2 text-muted-foreground">
-                  Already have an account?
-                </span>
-              </div>
-              
-              <p className="text-center text-sm">
-                <Link
-                  href="/login"
-                  className="font-medium text-primary hover:underline underline-offset-4"
-                >
-                  Sign in instead
-                </Link>
-              </p>
-            </AuthForm>
-          </div>
+    <div className="flex flex-col items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold">Create an account</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link href="/login" className="font-medium underline underline-offset-4">
+              Log in
+            </Link>
+          </p>
         </div>
+        <RegisterForm />
       </div>
-      <div className="hidden lg:block bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500"></div>
     </div>
   );
 }

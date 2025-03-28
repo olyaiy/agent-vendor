@@ -35,6 +35,7 @@ export function TagSelector<T>({
   onChange,
   getValue,
   getLabel,
+  createTag,
   className,
 }: TagSelectorProps<T>) {
   const [open, setOpen] = useState(false)
@@ -61,6 +62,10 @@ export function TagSelector<T>({
     if (existingTag) {
       onChange([...selectedTags, existingTag])
       setOpen(false)
+    } else if (createTag) {
+      // Handle new tag creation
+      const newTag = createTag(value)
+      onChange([...selectedTags, newTag])
     }
     setInputValue("")
   }
@@ -117,9 +122,19 @@ export function TagSelector<T>({
           <CommandList>
             <CommandEmpty>
               {inputValue.trim() !== "" ? (
-                <p className="py-3 px-4 text-sm text-muted-foreground">
-                  No matching tags found.
-                </p>
+                createTag ? (
+                  <CommandItem
+                    value={inputValue}
+                    onSelect={() => handleSelect(inputValue)}
+                    className="cursor-pointer"
+                  >
+                    Create "{inputValue}"
+                  </CommandItem>
+                ) : (
+                  <p className="py-3 px-4 text-sm text-muted-foreground">
+                    No matching tags found.
+                  </p>
+                )
               ) : (
                 <p className="py-3 px-4 text-sm text-muted-foreground">
                   No tags available.
