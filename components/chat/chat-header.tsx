@@ -42,9 +42,27 @@ import {
   LayoutGrid,
   Repeat,
   Sparkles,
-  Camera
+  Camera,
+  Share2,
+  Copy,
+  Link as LinkIcon,
+  Code
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 
 // Export the props interface so that it can be imported in chat.tsx
 export interface ChatHeaderProps {
@@ -81,6 +99,10 @@ function PureChatHeader({
   const [tempMaxTokens, setTempMaxTokens] = useState<string>(modelSettings.maxTokens?.toString() || '');
   const [tempTopK, setTempTopK] = useState<string>(modelSettings.topK?.toString() || '');
   
+  // State for share dialog
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [copiedType, setCopiedType] = useState<string | null>(null);
+  
   // Track active settings count for badge
   const [activeSettingsCount, setActiveSettingsCount] = useState<number>(0);
   
@@ -94,6 +116,21 @@ function PureChatHeader({
     }
   }, [modelSettings]);
   
+  // Function to copy text to clipboard and show feedback
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
+  };
+
+  // Generate embed and share URLs
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const directLink = `${baseUrl}/${agentId}`;
+  const embedCode = `<iframe src="${baseUrl}/${agentId}" width="100%" height="600" frameborder="0" allow="microphone"></iframe>`;
+  
+
+  console.log(embedCode);
+  console.log('THE EMBED CODE IS')
   // Function to update model settings
   const updateModelSetting = <K extends keyof Omit<ModelSettings, '_changed'>>(key: K, value: ModelSettings[K]) => {
     setModelSettings(prev => {
@@ -497,6 +534,98 @@ function PureChatHeader({
               <TooltipContent side="bottom">New Chat</TooltipContent>
             </Tooltip>
 
+            {/* Share/Embed Button */}
+            <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Share2 className="size-4" />
+                      <span className="sr-only">Share & Embed</span>
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Share & Embed</TooltipContent>
+              </Tooltip>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Share this chatbot</DialogTitle>
+                  <DialogDescription>
+                    Share a link or embed this chatbot on your website.
+                  </DialogDescription>
+                </DialogHeader>
+                <Tabs defaultValue="link" className="mt-2">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="link">
+                      <LinkIcon className="size-4 mr-2" />
+                      Direct Link
+                    </TabsTrigger>
+                    <TabsTrigger value="embed">
+                      <Code className="size-4 mr-2" />
+                      Embed Code
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="link" className="mt-4">
+                    <div className="flex space-x-2">
+                      <Input
+                        readOnly
+                        value={directLink}
+                        className="flex-1 font-mono text-sm"
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => copyToClipboard(directLink, 'link')}
+                        className={cn(
+                          "shrink-0 flex items-center gap-1.5",
+                          copiedType === 'link' && "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                        )}
+                      >
+                        {copiedType === 'link' ? (
+                          <>
+                            <CheckCircle2 className="size-4" />
+                            Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="size-4" />
+                            Copy
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="embed" className="mt-4">
+                    <div className="mb-4 rounded-md bg-muted p-3">
+                      <pre className="text-xs overflow-x-auto whitespace-pre-wrap font-mono">
+                        {embedCode}
+                      </pre>
+                    </div>
+                    <Button
+                      variant="default"
+                      onClick={() => copyToClipboard(embedCode, 'embed')}
+                      className={cn(
+                        "w-full flex items-center justify-center gap-1.5",
+                        copiedType === 'embed' && "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                      )}
+                    >
+                      {copiedType === 'embed' ? (
+                        <>
+                          <CheckCircle2 className="size-4" />
+                          Copied to clipboard
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-4" />
+                          Copy embed code
+                        </>
+                      )}
+                    </Button>
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+
             {!isReadonly && (
               <VisibilitySelector
                 chatId={chatId}
@@ -613,7 +742,94 @@ function PureChatHeader({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
-                
+                {/* Share & Embed Item for Mobile */}
+                <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+                  <DialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <div className="flex items-center gap-2">
+                        <Share2 className="size-4" />
+                        <span>Share & Embed</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Share this chatbot</DialogTitle>
+                      <DialogDescription>
+                        Share a link or embed this chatbot on your website.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Tabs defaultValue="link" className="mt-2">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="link">
+                          <LinkIcon className="size-4 mr-2" />
+                          Direct Link
+                        </TabsTrigger>
+                        <TabsTrigger value="embed">
+                          <Code className="size-4 mr-2" />
+                          Embed Code
+                        </TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="link" className="mt-4">
+                        <div className="flex space-x-2">
+                          <Input
+                            readOnly
+                            value={directLink}
+                            className="flex-1 font-mono text-sm"
+                          />
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => copyToClipboard(directLink, 'link')}
+                            className={cn(
+                              "shrink-0 flex items-center gap-1.5",
+                              copiedType === 'link' && "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                            )}
+                          >
+                            {copiedType === 'link' ? (
+                              <>
+                                <CheckCircle2 className="size-4" />
+                                Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="size-4" />
+                                Copy
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="embed" className="mt-4">
+                        <div className="mb-4 rounded-md bg-muted p-3">
+                          <pre className="text-xs overflow-x-auto whitespace-pre-wrap font-mono">
+                            {embedCode}
+                          </pre>
+                        </div>
+                        <Button
+                          variant="default"
+                          onClick={() => copyToClipboard(embedCode, 'embed')}
+                          className={cn(
+                            "w-full flex items-center justify-center gap-1.5",
+                            copiedType === 'embed' && "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                          )}
+                        >
+                          {copiedType === 'embed' ? (
+                            <>
+                              <CheckCircle2 className="size-4" />
+                              Copied to clipboard
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="size-4" />
+                              Copy embed code
+                            </>
+                          )}
+                        </Button>
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
                 
                 {!isReadonly && (
                   <DropdownMenuItem asChild>
