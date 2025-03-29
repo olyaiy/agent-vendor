@@ -233,6 +233,9 @@ importers:
       install:
         specifier: ^0.13.0
         version: 0.13.0
+      jose:
+        specifier: ^6.0.10
+        version: 6.0.10
       lucide-react:
         specifier: ^0.446.0
         version: 0.446.0(react@19.0.0-rc-45804af1-20241021)

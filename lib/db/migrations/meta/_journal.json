@@ -372,6 +372,13 @@
       "when": 1743109261302,
       "tag": "0052_small_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1743213141640,
+      "tag": "0053_open_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }
