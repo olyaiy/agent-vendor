@@ -7,6 +7,8 @@ import {
   integer,
   timestamp,
   index,
+  varchar,
+  boolean,
 } from 'drizzle-orm/pg-core';
 import { user } from './users';
 import { models } from './models';
@@ -34,6 +36,16 @@ export const userTransactions = pgTable('user_transactions', {
     user_created_idx: index("user_transactions_user_created_idx").on(table.userId, table.created_at),
     amount_type_idx: index("transactions_amount_type_idx").on(table.amount, table.type),
   };
+});
+
+export const embedTokens = pgTable('embed_tokens', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 64 }).notNull(),
+  allowedDomains: text('allowed_domains').array(),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at'),
 });
 
 export type UserTransaction = InferSelectModel<typeof userTransactions>; 
