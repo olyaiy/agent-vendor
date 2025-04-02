@@ -1,0 +1,17 @@
+  <TableBody>
+    {users.map((user) => (
+      <TableRow
+        key={user.id}
+        className="group relative hover:bg-muted/50"
+        onClick={() => window.location.href = `/admin/${user.id}`}
+      >
+        <TableCell className="font-medium">
+          {user.user_name || 'N/A'}
+        </TableCell>
+        <TableCell className="text-primary hover:underline font-medium">
+          {user.email}
+        </TableCell>
+        // ... existing table cells ...
+      </TableRow>
+    ))}
+  </TableBody>

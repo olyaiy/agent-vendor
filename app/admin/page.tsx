@@ -70,7 +70,14 @@ export default async function AdminPage() {
                 {users.map((user) => (
                     
                   <TableRow key={user.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{user.user_name || 'N/A'}</TableCell>
+                    <TableCell className="font-medium">
+                        <Link
+                        href={`/admin/${user.id}`}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        {user.user_name || 'N/A'}
+                      </Link>
+                        </TableCell>
                     <TableCell>
                       <Link
                         href={`/admin/${user.id}`}
