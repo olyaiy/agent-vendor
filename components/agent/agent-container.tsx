@@ -1,9 +1,11 @@
 import { getAgents, getMostCommonTags, getFeaturedAgents } from "@/lib/db/queries";
+import { getGroupChats } from "@/lib/db/queries";
 import { AgentList } from "./agent-list";
 import { auth } from "@/app/(auth)/auth";
 import { cookies } from "next/headers";
 import { RecentAgentsScroll } from "./recent-agents-carousel";
 import { FeaturedAgentsCarousel } from "./featured-agents-carousel";
+import { GroupChatsCarousel } from "../group-chat/group-chats-carousel";
 
 interface AgentContainerProps {
   // Make userId optional since we'll fetch it if not provided
@@ -22,10 +24,11 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
   }
   
   // Fetch all data in parallel
-  const [agents, featuredAgents, commonTags] = await Promise.all([
+  const [agents, featuredAgents, commonTags, groupChats] = await Promise.all([
     getAgents(finalUserId, false),
     getFeaturedAgents(8),
-    getMostCommonTags(20)
+    getMostCommonTags(20),
+    getGroupChats(finalUserId)
   ]);
   
   // Get recent agents from cookie
@@ -47,8 +50,6 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
       .slice(0, 5); // Ensure max 5 agents
   }
 
-
-
   return (
     <div className="w-full space-y-8">
       {recentAgents.length > 0 && (
@@ -58,7 +59,9 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
         <FeaturedAgentsCarousel agents={featuredAgents as any} userId={finalUserId} />
       )}
       
-    
+      {groupChats.length > 0 && (
+        <GroupChatsCarousel groupChats={groupChats} />
+      )}
       
       <AgentList agents={agents as any} userId={finalUserId} tags={commonTags} />
     </div>

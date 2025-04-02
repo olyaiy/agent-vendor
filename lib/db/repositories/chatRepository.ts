@@ -426,4 +426,69 @@ export async function getGroupChatById({ id }: { id: string }): Promise<any | un
   } catch (error) {
     return handleDbError(error, 'Failed to get group chat by id');
   }
+}
+
+/**
+ * Get all group chats for a user
+ */
+export async function getGroupChatsByUserId({ id }: { id: string }) {
+  try {
+    // First get all group chats for the user
+    const userGroupChats = await db
+      .select({
+        id: groupChat.id,
+        createdAt: groupChat.createdAt,
+        title: groupChat.title,
+        userId: groupChat.userId,
+        visibility: groupChat.visibility,
+      })
+      .from(groupChat)
+      .where(eq(groupChat.userId, id))
+      .orderBy(desc(groupChat.createdAt));
+
+    if (!userGroupChats.length) {
+      return [];
+    }
+
+    // Get all agents for these group chats
+    const groupChatIds = userGroupChats.map(chat => chat.id);
+    
+    const agentsForGroupChats = await db
+      .select({
+        groupChatId: groupChatAgents.groupChatId,
+        agentId: groupChatAgents.agentId,
+        agentName: agents.agent_display_name,
+        thumbnailUrl: agents.thumbnail_url,
+      })
+      .from(groupChatAgents)
+      .innerJoin(agents, eq(groupChatAgents.agentId, agents.id))
+      .where(inArray(groupChatAgents.groupChatId, groupChatIds));
+
+    // Group the agents by group chat ID
+    const agentsByGroupChat: Record<string, Array<{
+      agentId: string;
+      agentName: string | null;
+      thumbnailUrl: string | null;
+    }>> = {};
+
+    agentsForGroupChats.forEach(agentInfo => {
+      if (!agentsByGroupChat[agentInfo.groupChatId]) {
+        agentsByGroupChat[agentInfo.groupChatId] = [];
+      }
+      
+      agentsByGroupChat[agentInfo.groupChatId].push({
+        agentId: agentInfo.agentId,
+        agentName: agentInfo.agentName,
+        thumbnailUrl: agentInfo.thumbnailUrl,
+      });
+    });
+
+    // Combine the group chats with their agents
+    return userGroupChats.map(chat => ({
+      ...chat,
+      agents: agentsByGroupChat[chat.id] || [],
+    }));
+  } catch (error) {
+    return handleDbError(error, 'Failed to get group chats by user from database', []);
+  }
 } 
