@@ -15,9 +15,11 @@ export const user = pgTable('User', {
   email: varchar('email', { length: 64 }).notNull(),
   password: varchar('password', { length: 64 }),
   user_name: varchar('user_name', { length: 64 }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => {
   return {
     emailIdx: index("user_email_idx").on(table.email),
+    createdAtIdx: index("user_created_at_idx").on(table.createdAt),
   };
 });
 

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 import { auth } from '@/app/(auth)/auth';
 import { getAllUsersAction } from './actions';
@@ -58,7 +59,11 @@ export default async function AdminPage() {
           {users.map((user) => (
             <TableRow key={user.id}>
               <TableCell>{user.user_name || 'N/A'}</TableCell>
-              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <Link href={`/admin/${user.id}`} className="text-blue-600 hover:underline">
+                  {user.email}
+                </Link>
+              </TableCell>
               <TableCell className="text-right">{formatCreditsToDollars(user.credit_balance)}</TableCell>
               <TableCell className="text-right">{formatCreditsToDollars(user.lifetime_credits)}</TableCell>
               <TableCell>{user.id}</TableCell>

@@ -63,6 +63,36 @@ export async function createUser(email: string, password: string, userName?: str
 }
 
 /**
+ * Get a single user by ID with their credit details.
+ */
+export async function getUserByIdWithCredits(userId: string): Promise<UserWithCredits | null> {
+  try {
+    const result = await db
+      .select({
+        id: user.id,
+        email: user.email,
+        password: user.password,
+        user_name: user.user_name,
+        createdAt: user.createdAt, // Select createdAt
+        credit_balance: userCredits.credit_balance,
+        lifetime_credits: userCredits.lifetime_credits,
+      })
+      .from(user)
+      .leftJoin(userCredits, eq(user.id, userCredits.user_id))
+      .where(eq(user.id, userId));
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    // Ensure the return type matches UserWithCredits
+    return result[0] as UserWithCredits;
+  } catch (error) {
+    return handleDbError(error, 'Failed to get user by ID with credits', null);
+  }
+}
+
+/**
  * Get all users with their credit balances and lifetime credits.
  */
 export async function getAllUsersWithCredits(): Promise<Array<UserWithCredits>> {
@@ -73,6 +103,7 @@ export async function getAllUsersWithCredits(): Promise<Array<UserWithCredits>> 
         email: user.email,
         password: user.password,
         user_name: user.user_name,
+        createdAt: user.createdAt, // Select createdAt
         credit_balance: userCredits.credit_balance,
         lifetime_credits: userCredits.lifetime_credits,
       })
