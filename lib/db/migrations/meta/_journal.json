@@ -379,6 +379,13 @@
       "when": 1743629295570,
       "tag": "0053_loose_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1743631995396,
+      "tag": "0054_rare_professor_monster",
+      "breakpoints": true
     }
   ]
 }
