@@ -1,12 +1,14 @@
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { db } from '../client';
-import { chat, agents, message } from '../schema';
+import { chat, agents, message, groupChat, groupChatAgents } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
 import { ilike } from '../utils/queryUtils';
 import { redis } from '@/lib/ratelimit';
+import { v4 as uuidv4 } from 'uuid';
 
 // Cache key prefixes
 const CHAT_KEY_PREFIX = 'chat:';
+const GROUP_CHAT_KEY_PREFIX = 'groupchat:';
 
 // Cache expiration time in seconds (10 minutes)
 const CACHE_EXPIRATION = 600;
@@ -319,5 +321,103 @@ export async function searchChatsByContent({
     return result;
   } catch (error) {
     return handleDbError(error, 'Failed to search chats by content', []);
+  }
+}
+
+// --------------------------------------------------
+// Group Chat Functions
+// --------------------------------------------------
+
+/**
+ * Invalidate group chat cache
+ * @param id Group Chat ID
+ */
+export async function invalidateGroupChatCache(id: string): Promise<void> {
+  await redis.del(`${GROUP_CHAT_KEY_PREFIX}${id}`);
+}
+
+/**
+ * Creates a new group chat and assigns the initial agents within a transaction.
+ *
+ * @param userId The ID of the user creating the chat.
+ * @param title The title of the group chat.
+ * @param agentIds An array of agent IDs to add to the chat.
+ * @returns The ID of the newly created group chat or null if an error occurred.
+ */
+export async function createGroupChatWithAgents(
+  userId: string,
+  title: string,
+  agentIds: string[]
+): Promise<string | null> {
+  const newGroupChatId = uuidv4();
+
+  try {
+    await db.transaction(async (tx) => {
+      // 1. Create the group chat entry
+      await tx.insert(groupChat).values({
+        id: newGroupChatId,
+        userId,
+        title,
+        createdAt: new Date(),
+        visibility: 'private', // Default visibility
+      });
+
+      // 2. Create entries in the junction table for each agent
+      if (agentIds.length > 0) {
+        const agentMappings = agentIds.map((agentId) => ({
+          groupChatId: newGroupChatId,
+          agentId,
+          joinedAt: new Date(),
+        }));
+        await tx.insert(groupChatAgents).values(agentMappings);
+      }
+    });
+
+    // Optionally invalidate any relevant caches here if needed later
+
+    return newGroupChatId;
+  } catch (error) {
+    return handleDbError(error, 'Failed to create group chat with agents', null);
+  }
+}
+
+/**
+ * Get a single group chat by ID with Redis caching (Example - adjust as needed)
+ */
+export async function getGroupChatById({ id }: { id: string }): Promise<any | undefined> {
+  try {
+    const cacheKey = `${GROUP_CHAT_KEY_PREFIX}${id}`;
+    const cachedGroupChat = await redis.get<string>(cacheKey);
+
+    if (cachedGroupChat) {
+        try {
+            return JSON.parse(cachedGroupChat);
+        } catch (e) {
+            console.error('Failed to parse cached group chat:', e);
+        }
+    }
+
+    // Example: Fetch group chat and its agents
+    const [selectedGroupChat] = await db
+        .select()
+        .from(groupChat)
+        .where(eq(groupChat.id, id));
+
+    if (!selectedGroupChat) return undefined;
+
+    const agentsInChat = await db
+        .select({ agentId: groupChatAgents.agentId })
+        .from(groupChatAgents)
+        .where(eq(groupChatAgents.groupChatId, id));
+
+    const result = { ...selectedGroupChat, agentIds: agentsInChat.map(a => a.agentId) };
+
+    if (result) {
+        await redis.set(cacheKey, JSON.stringify(result), { ex: CACHE_EXPIRATION });
+    }
+
+    return result;
+  } catch (error) {
+    return handleDbError(error, 'Failed to get group chat by id');
   }
 } 

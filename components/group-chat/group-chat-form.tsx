@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { createGroupChatAction } from "@/app/(chat)/group-chat/actions";
+import { useToast } from "@/hooks/use-toast";
 
 // Minimal Agent type based on getAgents return type
 interface MinimalAgent {
@@ -29,15 +32,43 @@ interface GroupChatFormProps {
   agents: MinimalAgent[];
 }
 
+// Submit button component to show pending state
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      disabled={pending}
+      className="w-48 gap-2"
+    >
+      {pending ? (
+        <>
+          <Loader2 className="size-4 animate-spin" />
+          Creating...
+        </>
+      ) : (
+        <>
+          <Users className="size-4" />
+          Create Group Chat
+        </>
+      )}
+    </Button>
+  );
+}
+
 export default function GroupChatForm({ userId, agents }: GroupChatFormProps) {
   const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
+  const { toast } = useToast();
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   
   // Pagination state
   const itemsPerPage = 9; // Show 9 agents per page (3x3 grid on desktop)
   const [currentPage, setCurrentPage] = useState(1);
+
+  // useActionState hook
+  const initialState = { message: null, error: null, newGroupChatId: null };
+  const [state, dispatch] = useActionState(createGroupChatAction, initialState);
 
   // Handle agent selection/deselection
   const handleSelectAgent = (agentId: string) => {
@@ -83,15 +114,33 @@ export default function GroupChatForm({ userId, agents }: GroupChatFormProps) {
     setCurrentPage(prev => Math.max(prev - 1, 1));
   };
 
-  // Placeholder for future submit handler
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted (no action)");
-    console.log("Selected Agent IDs:", Array.from(selectedAgentIds));
-  };
+  // Effect to handle redirection and toast messages
+  useEffect(() => {
+    if (state?.error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: state.error,
+      });
+    }
+    if (state?.message && state.newGroupChatId) {
+      toast({
+        title: "Success",
+        description: state.message,
+      });
+      router.push(`/group-chat/${state.newGroupChatId}`);
+    }
+  }, [state, router, toast]);
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+    <form action={dispatch} className="max-w-4xl mx-auto">
+      {/* Add hidden inputs for selected agent IDs */}
+      {Array.from(selectedAgentIds).map(id => (
+        <input key={id} type="hidden" name="selectedAgentIds" value={id} />
+      ))}
+      {/* Add hidden input for userId */}
+      <input type="hidden" name="userId" value={userId} />
+
       <div className="space-y-12 pb-10 pt-8">
         {/* Basic Info Section */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -367,25 +416,8 @@ export default function GroupChatForm({ userId, agents }: GroupChatFormProps) {
         >
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={isPending || selectedAgentIds.size === 0}
-          className="w-48 gap-2"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            <>
-              <Users className="size-4" />
-              Create Group Chat
-            </>
-          )}
-        </Button>
+        <SubmitButton />
       </div>
-      <input type="hidden" name="userId" value={userId || ''} />
     </form>
   );
 } 
