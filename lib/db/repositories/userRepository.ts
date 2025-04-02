@@ -1,7 +1,7 @@
 import { genSaltSync, hashSync } from 'bcrypt-ts';
-import { eq } from 'drizzle-orm';
+import { eq, sql, count, desc } from 'drizzle-orm';
 import { db } from '../client';
-import { user, type User, userCredits, type UserCredits } from '../schema';
+import { user, type User, userCredits, type UserCredits, chat, message } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
 import { updateUserCreditsCache } from '@/lib/credits';
 
@@ -11,6 +11,7 @@ import { updateUserCreditsCache } from '@/lib/credits';
 export interface UserWithCredits extends User {
   credit_balance: string | null;
   lifetime_credits: string | null;
+  messageCount: number;
 }
 
 /**
@@ -93,27 +94,34 @@ export async function getUserByIdWithCredits(userId: string): Promise<UserWithCr
 }
 
 /**
- * Get all users with their credit balances and lifetime credits.
+ * Get all users with their credit balances, lifetime credits, and message count, sorted by message count descending.
  */
 export async function getAllUsersWithCredits(): Promise<Array<UserWithCredits>> {
   try {
+    const messageCountSql = sql<number>`count(distinct ${message.id})`.mapWith(Number).as('message_count');
+
     const result = await db
       .select({
         id: user.id,
         email: user.email,
         password: user.password,
         user_name: user.user_name,
-        createdAt: user.createdAt, // Select createdAt
+        createdAt: user.createdAt,
         credit_balance: userCredits.credit_balance,
         lifetime_credits: userCredits.lifetime_credits,
+        messageCount: messageCountSql,
       })
       .from(user)
-      .leftJoin(userCredits, eq(user.id, userCredits.user_id));
+      .leftJoin(userCredits, eq(user.id, userCredits.user_id))
+      .leftJoin(chat, eq(user.id, chat.userId))
+      .leftJoin(message, eq(chat.id, message.chatId))
+      .groupBy(user.id, userCredits.user_id)
+      .orderBy(desc(messageCountSql)); // Order by message count descending
 
-    // Drizzle's select with joins might return a slightly different shape,
-    // ensure the return type matches UserWithCredits[]
+    // Ensure the return type matches UserWithCredits[]
+    // Cast is needed because groupBy changes the return shape slightly
     return result as Array<UserWithCredits>;
   } catch (error) {
-    return handleDbError(error, 'Failed to get all users with credits', []);
+    return handleDbError(error, 'Failed to get all users with credits and message count', []);
   }
 } 

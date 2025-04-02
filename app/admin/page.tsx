@@ -12,6 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 function formatCreditsToDollars(credits: string | null | undefined): string {
   const numericCredits = Number(credits);
@@ -32,45 +39,57 @@ export default async function AdminPage() {
   // Fetch users using the server action
   const { success, data: users, error } = await getAllUsersAction();
 
-  if (!success || !users) {
-    return (
-      <div className="container mx-auto py-8">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <p className="text-red-500">Error fetching users: {error || 'Unknown error'}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard - User Management</h1>
-      <Table>
-        <TableCaption>A list of all registered users.</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead className="text-right">Credit Balance</TableHead>
-            <TableHead className="text-right">Lifetime Credits</TableHead>
-            <TableHead>User ID</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.user_name || 'N/A'}</TableCell>
-              <TableCell>
-                <Link href={`/admin/${user.id}`} className="text-blue-600 hover:underline">
-                  {user.email}
-                </Link>
-              </TableCell>
-              <TableCell className="text-right">{formatCreditsToDollars(user.credit_balance)}</TableCell>
-              <TableCell className="text-right">{formatCreditsToDollars(user.lifetime_credits)}</TableCell>
-              <TableCell>{user.id}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Admin Dashboard</CardTitle>
+          <CardDescription>Manage all registered users.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!success || !users ? (
+            <div className="text-center py-10">
+              <p className="text-destructive font-medium">
+                Error fetching users: {error || 'Unknown error'}
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableCaption>A list of all registered users.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[150px]">User Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right">Credit Balance</TableHead>
+                  <TableHead className="text-right">Lifetime Credits</TableHead>
+                  <TableHead className="text-right">Message Count</TableHead>
+                  <TableHead className="text-right">User ID</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                    
+                  <TableRow key={user.id} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{user.user_name || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/admin/${user.id}`}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        {user.email}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">{formatCreditsToDollars(user.credit_balance)}</TableCell>
+                    <TableCell className="text-right">{formatCreditsToDollars(user.lifetime_credits)}</TableCell>
+                    <TableCell className="text-right">{user.messageCount ?? 0}</TableCell>
+                    <TableCell className="text-right text-muted-foreground text-sm">{user.id}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
