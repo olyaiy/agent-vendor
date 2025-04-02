@@ -122,57 +122,90 @@ function GroupChatCard({ groupChat }: { groupChat: GroupChat }) {
   const moreAgentsCount = hasMoreAgents ? agents.length - 3 : 0;
 
   return (
-    <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
-      <Link href={`/group-chat/${id}`}>
-        <CardHeader className="p-4 pb-2">
-          <h3 className="font-medium truncate" title={title}>
-            {title}
-          </h3>
-          <p className="text-xs text-muted-foreground">
+    <Card className="group h-full overflow-hidden hover:shadow-lg transition-all duration-300 border-muted/40">
+      <Link href={`/group-chat/${id}`} className="h-full flex flex-col">
+        <CardHeader className="p-4 pb-3 space-y-1.5">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-base truncate flex-1" title={title}>
+              {title}
+            </h3>
+            <div className="px-2 py-1 rounded-full bg-muted/30 text-xs font-medium">
+              {agents.length} {agents.length === 1 ? 'agent' : 'agents'}
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <span className="inline-block w-1 h-1 rounded-full bg-muted-foreground/60" />
             Created {formattedDate}
           </p>
         </CardHeader>
         
-        <CardContent className="p-4 pt-0">
-          <div className="grid grid-cols-2 gap-1 mt-2">
-            {displayAgents.map((agent, index) => (
-              <div key={agent.agentId} className="aspect-square relative overflow-hidden rounded-md">
-                {agent.thumbnailUrl ? (
-                  <Image
-                    src={agent.thumbnailUrl}
-                    alt={agent.agentName || "Agent"}
-                    fill
-                    sizes="(max-width: 768px) 100px, 150px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
-                    <Users className="h-8 w-8 text-muted-foreground" />
+        <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+          <div className="relative mt-2 flex-1">
+            <div className="grid grid-cols-2 gap-2 h-full">
+              {displayAgents.map((agent, index) => (
+                <div 
+                  key={agent.agentId} 
+                  className="aspect-square relative overflow-hidden rounded-xl group-hover:scale-[1.02] transition-transform duration-300"
+                >
+                  {agent.thumbnailUrl ? (
+                    <div className="relative w-full h-full  items-start justify-start">
+                      <Image
+                        src={agent.thumbnailUrl}
+                        alt={agent.agentName || "Agent"}
+                        fill
+                        sizes="(max-width: 768px) 100px, 150px"
+                        className="object-contain rounded-xl border-2 border-muted"
+                      />
+                      {agent.agentName && (
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-4">
+                          <p className="text-[10px] text-white truncate">
+                            {agent.agentName}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/80 to-muted rounded-xl">
+                      <Users className="h-6 w-6 text-muted-foreground/70" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {hasMoreAgents && (
+                <div className="aspect-square relative overflow-hidden rounded-xl bg-gradient-to-br from-primary/90 to-primary flex items-center justify-center group-hover:scale-[1.02] transition-transform duration-300">
+                  <div className="text-center">
+                    <p className="text-primary-foreground font-semibold text-lg">
+                      +{moreAgentsCount}
+                    </p>
+                    <p className="text-primary-foreground/80 text-[10px] font-medium">
+                      more agents
+                    </p>
                   </div>
-                )}
-              </div>
-            ))}
-            
-            {hasMoreAgents && (
-              <div className="aspect-square relative overflow-hidden rounded-md bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-medium">
-                  +{moreAgentsCount} more
-                </span>
-              </div>
-            )}
-            
-            {/* Fill empty slots with placeholders when less than 4 agents and no "more" indicator */}
-            {!hasMoreAgents && displayAgents.length < 4 && 
-              Array.from({ length: 4 - displayAgents.length }).map((_, index) => (
-                <div key={`empty-${index}`} className="aspect-square bg-muted rounded-md" />
-              ))
-            }
+                </div>
+              )}
+              
+              {/* Fill empty slots with placeholders when less than 4 agents and no "more" indicator */}
+              {!hasMoreAgents && displayAgents.length < 4 && 
+                Array.from({ length: 4 - displayAgents.length }).map((_, index) => (
+                  <div 
+                    key={`empty-${index}`} 
+                    className="aspect-square bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl border border-muted/20"
+                  />
+                ))
+              }
+            </div>
           </div>
         </CardContent>
         
-        <CardFooter className="p-4 pt-0">
-          <div className="w-full text-sm text-muted-foreground">
-            {agents.length} {agents.length === 1 ? 'agent' : 'agents'}
+        <CardFooter className="p-4 pt-2">
+          <div className="w-full flex items-center justify-between">
+            <div className="text-xs text-muted-foreground/70">
+              Click to open chat
+            </div>
+            <div className="text-xs font-medium text-primary group-hover:translate-x-0.5 transition-transform duration-300">
+              View →
+            </div>
           </div>
         </CardFooter>
       </Link>
