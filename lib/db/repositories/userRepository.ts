@@ -1,9 +1,17 @@
 import { genSaltSync, hashSync } from 'bcrypt-ts';
 import { eq } from 'drizzle-orm';
 import { db } from '../client';
-import { user, type User, userCredits } from '../schema';
+import { user, type User, userCredits, type UserCredits } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
 import { updateUserCreditsCache } from '@/lib/credits';
+
+/**
+ * Represents a user combined with their credit information.
+ */
+export interface UserWithCredits extends User {
+  credit_balance: string | null;
+  lifetime_credits: string | null;
+}
 
 /**
  * Get a user by email address
@@ -51,5 +59,30 @@ export async function createUser(email: string, password: string, userName?: str
     });
   } catch (error) {
     return handleDbError(error, 'Failed to create user in database');
+  }
+}
+
+/**
+ * Get all users with their credit balances and lifetime credits.
+ */
+export async function getAllUsersWithCredits(): Promise<Array<UserWithCredits>> {
+  try {
+    const result = await db
+      .select({
+        id: user.id,
+        email: user.email,
+        password: user.password,
+        user_name: user.user_name,
+        credit_balance: userCredits.credit_balance,
+        lifetime_credits: userCredits.lifetime_credits,
+      })
+      .from(user)
+      .leftJoin(userCredits, eq(user.id, userCredits.user_id));
+
+    // Drizzle's select with joins might return a slightly different shape,
+    // ensure the return type matches UserWithCredits[]
+    return result as Array<UserWithCredits>;
+  } catch (error) {
+    return handleDbError(error, 'Failed to get all users with credits', []);
   }
 } 
