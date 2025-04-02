@@ -1,3 +1,13 @@
+/**
+ * Core chat interface handling user interactions with AI agents.
+ * 
+ * Key responsibilities:
+ * - Manage chat session state and message history
+ * - Handle multi-modal inputs (text + attachments)
+ * - Configure and switch between different AI models
+ * - Integrate with authentication and authorization systems
+ * - Persist user preferences and recent agents
+ */
 'use client';
 
 import type { Attachment, UIMessage } from 'ai';
@@ -21,8 +31,12 @@ import Link from 'next/link';
 import { ArrowUpIcon, PaperclipIcon } from '@/components/util/icons';
 import { ReadOnlyPrompt } from '@/components/chat/readonly-prompt';
 
-// Define the ModelSettings interface
-export interface ModelSettings {
+// Data types and core interfaces
+interface ModelSettings {
+  /** 
+   * LLM parameters with change tracking. Only modified values 
+   * are sent to the API to preserve default behaviors 
+   */
   maxTokens?: number;
   temperature?: number;
   topP?: number;
@@ -30,14 +44,7 @@ export interface ModelSettings {
   presencePenalty?: number;
   frequencyPenalty?: number;
   // Track which settings have been explicitly changed by the user
-  _changed?: {
-    maxTokens?: boolean;
-    temperature?: boolean;
-    topP?: boolean;
-    topK?: boolean;
-    presencePenalty?: boolean;
-    frequencyPenalty?: boolean;
-  };
+  _changed?: Record<string, boolean>;
 }
 
 export function Chat({
@@ -52,7 +59,9 @@ export function Chat({
   suggestedPrompts = [],
   knowledgeItems = []
 }: {
+  /** Unique session identifier for chat history management */
   id: string;
+  /** Configured agent with system prompt and settings */
   agent: Agent;
   availableModels?: ModelWithDefault[];
   initialMessages: Array<UIMessage>;
@@ -66,14 +75,27 @@ export function Chat({
   const { mutate } = useSWRConfig();
   const [currentModel, setCurrentModel] = useState<string>(selectedChatModel);
   
-  // Use localStorage to persist search enabled state
+  /**
+   * Search functionality state
+   * - Persisted in localStorage for continuity between sessions
+   * - Toggles RAG integration with knowledge base
+   */
   const [searchEnabledStorage, setSearchEnabledStorage] = useLocalStorage<boolean>('search-enabled', false);
   const [searchEnabled, setSearchEnabled] = useState<boolean>(searchEnabledStorage);
   
-  // Add state for model settings with tracking of changed settings
+  /**
+   * Model configuration lifecycle
+   * - Tracks user-modified settings separately from defaults
+   * - Only sends changed values to API endpoints
+   */
   const [modelSettings, setModelSettings] = useState<ModelSettings>({ _changed: {} });
   
-  // Add state for auth popup
+  /**
+   * Authentication error handling
+   * - Captures unauthorized responses
+   * - Preserves draft input during login flow
+   * - Manages modal state for auth popup
+   */
   const [isAuthPopupOpen, setIsAuthPopupOpen] = useState(false);
 
   // Update localStorage when searchEnabled changes
@@ -102,7 +124,10 @@ export function Chat({
   const selectedModelDetails = availableModels.find(model => model.id === currentModel);
   const modelIdentifier = selectedModelDetails?.model || selectedChatModel;
 
-  // Process model settings to only include changed values
+  /**
+   * Filters model settings to only include user-modified values
+   * prevents overriding default model behaviors when unchanged
+   */
   const getProcessedModelSettings = () => {
     const processedSettings: any = {};
     const { _changed, ...settings } = modelSettings;
@@ -119,6 +144,12 @@ export function Chat({
     return processedSettings;
   };
 
+  /**
+   * Chat core functionality using AI SDK
+   * - Handles message streaming and tool calls
+   * - Manages API error states
+   * - Integrates with SWR for data revalidation
+   */
   const {
     messages,
     setMessages,
@@ -151,34 +182,10 @@ export function Chat({
       mutate('/api/history');
     },
     onError: (error) => {
-      // Check for unauthorized error
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : typeof error === 'string' 
-          ? error 
-          : 'An error occurred, please try again!';
-      
-      // Check if this is an unauthorized error
-      if (
-        errorMessage.includes('Unauthorized') || 
-        (error instanceof Error && error.message.includes('Unauthorized'))
-      ) {
-
-
-        // Save input to localStorage before showing auth popup
-        if (input && input.trim() !== '' && input.trim().length > 1) {
-          localStorage.setItem('input', JSON.stringify(input));
-        }
-
-        // Show auth popup instead of error toast
-        setIsAuthPopupOpen(true);
-      } else {
-        // Show regular error toast for other errors
-        toast.error(errorMessage);
-      }
+      // Unified error handling pipeline
+      handleChatError(error);
     },
   });
-
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
@@ -187,6 +194,38 @@ export function Chat({
   const handleModelChange = async (modelId: string) => {
     setCurrentModel(modelId);
     // We don't need to update the chat - next message will use the new model
+  };
+
+  /**
+   * Centralized error handler for chat operations
+   * - Distinguishes auth errors from operational failures
+   * - Preserves user input during auth flows
+   * - Integrates with notification system
+   */
+  const handleChatError = (error: unknown) => {
+    // Check for unauthorized error
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : typeof error === 'string' 
+        ? error 
+        : 'An error occurred, please try again!';
+    
+    // Check if this is an unauthorized error
+    if (
+      errorMessage.includes('Unauthorized') || 
+      (error instanceof Error && error.message.includes('Unauthorized'))
+    ) {
+      // Save input to localStorage before showing auth popup
+      if (input && input.trim() !== '' && input.trim().length > 1) {
+        localStorage.setItem('input', JSON.stringify(input));
+      }
+
+      // Show auth popup instead of error toast
+      setIsAuthPopupOpen(true);
+    } else {
+      // Show regular error toast for other errors
+      toast.error(errorMessage);
+    }
   };
 
   return (
