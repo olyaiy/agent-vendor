@@ -390,10 +390,16 @@ export async function getGroupChatById({ id }: { id: string }): Promise<any | un
     const cachedGroupChat = await redis.get<string>(cacheKey);
 
     if (cachedGroupChat) {
+        // Handle case where Redis client might have already parsed the JSON
+        if (typeof cachedGroupChat === 'object') {
+          return cachedGroupChat;
+        }
+        
         try {
             return JSON.parse(cachedGroupChat);
         } catch (e) {
             console.error('Failed to parse cached group chat:', e);
+            // Continue to fetch from database if parsing fails
         }
     }
 

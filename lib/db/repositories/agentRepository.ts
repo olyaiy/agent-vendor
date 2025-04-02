@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, or, lt, gte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, or, lt, gte, sql, inArray } from 'drizzle-orm';
 import { db } from '../client';
 import { agents, agentModels, models, agentToolGroups, toolGroups, agentTags, tags, knowledge_items, userTransactions } from '../schema';
 import { handleDbError } from '../utils/errorHandler';
@@ -630,8 +630,22 @@ export async function getAgentWithAvailableModels(id: string) {
 /**
  * Get agents with minimal details
  */
-export const getAgents = async (userId?: string, onlyUserCreated?: boolean) => {
+export const getAgents = async (userId?: string, onlyUserCreated?: boolean, agentIds?: string[]) => {
   try {
+    let baseCondition;
+    
+    if (agentIds && agentIds.length > 0) {
+      // Filter by specific agent IDs when provided
+      baseCondition = inArray(agents.id, agentIds);
+    } else {
+      // Otherwise use the existing visibility/user filtering
+      baseCondition = onlyUserCreated && userId 
+        ? eq(agents.creatorId, userId)
+        : or(
+            eq(agents.visibility, 'public'), 
+            userId ? eq(agents.creatorId, userId) : undefined
+          );
+    }
 
     const result = await db.select({
       id: agents.id,
@@ -655,14 +669,7 @@ export const getAgents = async (userId?: string, onlyUserCreated?: boolean) => {
       )`
     })
     .from(agents)
-    .where(
-      onlyUserCreated && userId 
-        ? eq(agents.creatorId, userId)
-        : or(
-            eq(agents.visibility, 'public'), 
-            userId ? eq(agents.creatorId, userId) : undefined
-          )
-    )
+    .where(baseCondition)
     .orderBy(desc(agents.createdAt));
 
     return result.map(agent => ({

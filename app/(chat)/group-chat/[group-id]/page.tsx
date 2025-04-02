@@ -8,12 +8,14 @@ import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { AccessDenied } from '@/components/ui/access-denied';
 import { DataStreamHandler } from '@/components/util/data-stream-handler';
 import type { Metadata, ResolvingMetadata } from 'next';
+import { generateUUID } from '@/lib/utils';
+import type { Agent } from '@/lib/db/schema';
 
 export async function generateMetadata(
   { params }: { params: { 'group-id': string } },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const groupId = params['group-id'];
+  const { 'group-id': groupId } = await params;
   
   // Fetch group chat data
   const groupChat = await getGroupChatById({ id: groupId });
@@ -47,7 +49,7 @@ export async function generateMetadata(
 }
 
 export default async function Page({ params }: { params: { 'group-id': string } }) {
-  const groupId = params['group-id'];
+  const { 'group-id': groupId } = await params;
   const session = await auth();
 
   // Fetch group chat data
@@ -96,12 +98,14 @@ export default async function Page({ params }: { params: { 'group-id': string } 
   }
   
   // Get details of all agents in this group chat
-  const groupAgents = await getAgents(session?.user?.id, agentIds);
+  const groupAgents = await getAgents(session?.user?.id, false, agentIds);
   
   if (!groupAgents || groupAgents.length === 0) {
     return notFound();
   }
   
+
+
   // For now, just use the first agent for the UI
   // A complete implementation would handle all agents in the group chat UI
   const firstAgentId = agentIds[0];
@@ -123,6 +127,9 @@ export default async function Page({ params }: { params: { 'group-id': string } 
   // Get the default model's ID
   const defaultModel = availableModels.find(model => model.isDefault);
   const defaultModelId = defaultModel?.id || DEFAULT_CHAT_MODEL;
+
+    // Generate a unique ID for this chat session
+    const id = generateUUID();
   
   // Basic implementation using the first agent's data
   // TODO: Implement proper multi-agent UI
@@ -130,7 +137,7 @@ export default async function Page({ params }: { params: { 'group-id': string } 
     <>
       <Chat
         isAuthenticated={!!session?.user}
-        id={groupId}
+        id={id}
         agent={agentWithModel.agent}
         availableModels={availableModels}
         initialMessages={[]}
@@ -138,8 +145,12 @@ export default async function Page({ params }: { params: { 'group-id': string } 
         selectedVisibilityType={groupChat.visibility}
         isReadonly={session?.user?.id !== groupChat.userId}
         knowledgeItems={agentWithAvailableModels?.knowledgeItems}
+        isGroupChat={true}
+        groupAgents={groupAgents}
+        groupChatTitle={groupChat.title}
+
       />
-      <DataStreamHandler id={groupId} />
+      <DataStreamHandler id={id} />
     </>
   );
 }

@@ -47,6 +47,14 @@ interface ModelSettings {
   _changed?: Record<string, boolean>;
 }
 
+// Define a minimal type for group agent display
+interface GroupAgentDisplayInfo {
+  id: string;
+  agent_display_name: string | null;
+  avatar_url?: string | null;
+  thumbnail_url?: string | null;
+}
+
 export function Chat({
   id,
   agent,
@@ -57,7 +65,10 @@ export function Chat({
   isReadonly,
   isAuthenticated,
   suggestedPrompts = [],
-  knowledgeItems = []
+  knowledgeItems = [],
+  isGroupChat = false,
+  groupAgents,
+  groupChatTitle
 }: {
   /** Unique session identifier for chat history management */
   id: string;
@@ -71,6 +82,9 @@ export function Chat({
   isAuthenticated: boolean;
   suggestedPrompts?: string[];
   knowledgeItems?: KnowledgeItem[];
+  isGroupChat?: boolean;
+  groupAgents?: GroupAgentDisplayInfo[]; // Use the minimal type
+  groupChatTitle?: string;
 }) {
   const { mutate } = useSWRConfig();
   const [currentModel, setCurrentModel] = useState<string>(selectedChatModel);
@@ -261,7 +275,12 @@ export function Chat({
           ) : (
             <div className="flex flex-col h-full justify-center items-center px-4 md:px-8 gap-6">
               <div className="w-full md:max-w-3xl overflow-scroll  overflow-x-hidden">
-                <Overview agent={agent} />
+                <Overview 
+                  agent={agent} 
+                  isGroupChat={isGroupChat} 
+                  groupAgents={groupAgents}
+                  groupChatTitle={groupChatTitle}
+                />
               </div>
               
               {!isReadonly && (

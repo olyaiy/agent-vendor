@@ -129,8 +129,6 @@ function PureChatHeader({
   const embedCode = `<iframe src="${baseUrl}/${agentId}" width="100%" height="600" frameborder="0" allow="microphone"></iframe>`;
   
 
-  console.log(embedCode);
-  console.log('THE EMBED CODE IS')
   // Function to update model settings
   const updateModelSetting = <K extends keyof Omit<ModelSettings, '_changed'>>(key: K, value: ModelSettings[K]) => {
     setModelSettings(prev => {
