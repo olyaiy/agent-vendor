@@ -21,7 +21,6 @@ import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 import { ArrowUpIcon, PaperclipIcon, StopIcon } from '@/components/util/icons';
 import { Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { SuggestedActions } from '@/components/chat/suggested-actions';
 import equal from 'fast-deep-equal';
 import { type ModelWithDefault } from '@/components/chat/chat-model-selector';
@@ -37,6 +36,67 @@ import { Label } from '@/components/ui/label';
 import { PreviewAttachment } from '../util/preview-attachment';
 import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+
+function TiptapEditor({
+  value,
+  onChange,
+  onKeyDown,
+  onPaste,
+  placeholder,
+  className,
+  autoFocus,
+  editorRef,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onKeyDown?: (event: React.KeyboardEvent) => void;
+  onPaste?: (event: React.ClipboardEvent) => void;
+  placeholder?: string;
+  className?: string;
+  autoFocus?: boolean;
+  editorRef?: React.MutableRefObject<any>;
+}) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+    ],
+    content: value,
+    editorProps: {
+      attributes: {
+        class: cx(
+          'outline-none w-full sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700 p-3',
+          className
+        ),
+      },
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getText());
+    },
+    autofocus: autoFocus,
+  });
+
+  useEffect(() => {
+    if (editorRef && editor) {
+      editorRef.current = editor;
+    }
+  }, [editor, editorRef]);
+
+  useEffect(() => {
+    if (editor && editor.getText() !== value) {
+      editor.commands.setContent(value);
+    }
+  }, [editor, value]);
+
+  return (
+    <EditorContent 
+      editor={editor} 
+      onKeyDown={onKeyDown}
+      onPaste={onPaste}
+    />
+  );
+}
 
 function PureMultimodalInput({
   chatId,
@@ -83,49 +143,23 @@ function PureMultimodalInput({
   setSearchEnabled: Dispatch<SetStateAction<boolean>>;
   suggestedPrompts?: string[];
 }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<any>(null);
   const { width } = useWindowSize();
   const [hasSearchTool, setHasSearchTool] = useState(false);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      adjustHeight();
-    }
-  }, []);
-
-  const adjustHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
-    }
-  };
-
-  const resetHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
-    }
-  };
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
     '',
   );
 
-  // Handler for toggling search
   const handleSearchToggle = useCallback((checked: boolean) => {
     setSearchEnabled(checked);
   }, [setSearchEnabled]);
 
   useEffect(() => {
-    if (textareaRef.current) {
-      const domValue = textareaRef.current.value;
-      // Prefer DOM value over localStorage to handle hydration
-      const finalValue = domValue || localStorageInput || '';
-      setInput(finalValue);
-      adjustHeight();
+    if (localStorageInput) {
+      setInput(localStorageInput);
     }
-    // Only run once after hydration
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -133,22 +167,17 @@ function PureMultimodalInput({
     setLocalStorageInput(input);
   }, [input, setLocalStorageInput]);
 
-  const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value);
-    adjustHeight();
-  };
+  const handleInput = useCallback((value: string) => {
+    setInput(value);
+  }, [setInput]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-
-  
-
     if (isAuthenticated) {
       window.history.replaceState({}, '', `/${agentId}/${chatId}`);
     }
-
 
     handleSubmit(undefined, {
       experimental_attachments: attachments,
@@ -156,10 +185,9 @@ function PureMultimodalInput({
 
     setAttachments([]);
     setLocalStorageInput('');
-    resetHeight();
-
-    if (width && width > 768) {
-      textareaRef.current?.focus();
+    
+    if (width && width > 768 && editorRef.current) {
+      editorRef.current.commands.focus();
     }
   }, [
     attachments,
@@ -200,7 +228,7 @@ function PureMultimodalInput({
   }, []);
 
   const handlePaste = useCallback(
-    async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    async (event: React.ClipboardEvent) => {
       const clipboardItems = event.clipboardData.items;
       const imageItems = Array.from(clipboardItems).filter(
         item => item.type.startsWith('image/')
@@ -274,14 +302,12 @@ function PureMultimodalInput({
     [setAttachments, uploadFile],
   );
 
-  // Check if agent has search capability
   useEffect(() => {
     const checkSearchCapability = async () => {
       try {
         const hasSearchTool = await checkAgentHasSearchTool(agentId);
         setHasSearchTool(hasSearchTool);
         
-        // If agent doesn't have search tool, make sure search is disabled
         if (!hasSearchTool && searchEnabled) {
           setSearchEnabled(false);
         }
@@ -304,10 +330,8 @@ function PureMultimodalInput({
         tabIndex={-1}
       />
 
-      {/* Model Selector and Search Toggle */}
       {!isReadonly && (
         <div className="w-full flex justify-between items-center gap-2">
-          {/* Model Selector - only show if we have models */}
           {availableModels.length > 1 && (
             <Select
               value={currentModel}
@@ -329,7 +353,6 @@ function PureMultimodalInput({
             </Select>
           )}
           
-          {/* Search Toggle - Only show if agent has search tool */}
           {hasSearchTool && (
             <div className="flex items-center space-x-2 cursor-pointer order-first ">
               <Switch
@@ -377,25 +400,20 @@ function PureMultimodalInput({
       )}
 
       <div className="relative ">
-        <Textarea
-          ref={textareaRef}
-          placeholder="Send a message..."
+        <TiptapEditor
+          editorRef={editorRef}
           value={input}
           onChange={handleInput}
           onPaste={handlePaste}
-          className={cx(
-            'sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700',
-            className
-          )}
-          rows={2}
+          className={className}
           autoFocus
+          placeholder="Send a message..."
           onKeyDown={(event) => {
             if (
               event.key === "Enter" &&
               !event.shiftKey &&
               !event.nativeEvent.isComposing
             ) {
-              // Only submit on Enter key for desktop devices (width > 768px)
               if (width && width > 768) {
                 event.preventDefault();
                 submitForm();
@@ -421,7 +439,6 @@ function PureMultimodalInput({
         </div>
       </div>
 
-      {/* Suggested Actions moved below input */}
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
