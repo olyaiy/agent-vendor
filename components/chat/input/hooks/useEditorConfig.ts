@@ -85,6 +85,16 @@ export function useEditorConfig({
         class: cx(
           // Responsive height calculations
           'outline-none w-full sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700 p-3',
+
+            // Match the textarea styling
+            'border border-input bg-background p-3',
+            'placeholder:text-muted-foreground',
+            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            'pb-8 sm:pb-10',
+
+
+          
           className
         ),
         placeholder,

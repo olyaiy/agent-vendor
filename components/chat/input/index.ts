@@ -6,7 +6,7 @@
  */
 
 // Re-export the MultimodalInput component
-export { MultimodalInput } from './MultimodalInput';
+export { MultimodalInput } from './multi-modal-input';
 
 // Re-export the rich text editor
 export { RichTextEditor } from './editor/RichTextEditor';
