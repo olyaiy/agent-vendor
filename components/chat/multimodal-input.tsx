@@ -46,25 +46,56 @@ import tippy, { type Instance, type Props } from 'tippy.js';
 import 'tippy.js/dist/tippy.css'; // Import tippy styles
 import { GroupAgentDisplayInfo } from './chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { PluginKey } from '@tiptap/pm/state'; // Import PluginKey
 
-// --- Mention Suggestion Logic ---
-
+/**
+ * Interface defining the reference methods for the MentionList component.
+ * This allows parent components to control keyboard navigation within the mention list.
+ */
 interface MentionListRef {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean;
 }
 
+/**
+ * Component that renders a list of mention suggestions for group chat participants.
+ * 
+ * Features:
+ * - Keyboard navigation (up/down arrows)
+ * - Enter key selection
+ * - Avatar display for each agent
+ * - Highlighting of selected item
+ * 
+ * @param props - Contains the list of agents and command handler
+ * @param ref - Reference for keyboard navigation methods
+ */
 const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplayInfo>>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  /**
+   * Handles selection of an item from the mention list
+   * @param index - The index of the selected item
+   */
   const selectItem = useCallback((index: number) => {
     const item = props.items[index];
     if (item) {
+      mentionJustSelected = true; // Set flag when mention is selected
+      
+      // Reset the flag after a short delay to allow other handlers to check it
+      setTimeout(() => {
+        mentionJustSelected = false;
+      }, 100);
+      
       props.command({ id: item.id, label: item.agent_display_name });
     }
   }, [props]);
 
+  // Reset selection when the list of items changes
   useEffect(() => setSelectedIndex(0), [props.items]);
 
+  /**
+   * Exposes keyboard navigation methods to the parent component
+   * This allows the parent to control navigation when the list is focused
+   */
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
       if (event.key === 'ArrowUp') {
@@ -83,6 +114,7 @@ const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplay
     },
   }));
 
+  // Don't render if there are no items to show
   if (props.items.length === 0) {
     return null;
   }
@@ -98,7 +130,7 @@ const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplay
           key={index}
           onClick={() => selectItem(index)}
         >
-           <Avatar className="h-6 w-6">
+          <Avatar className="h-6 w-6">
             <AvatarImage src={item.avatar_url || item.thumbnail_url || undefined} alt={item.agent_display_name || 'Agent'} />
             <AvatarFallback>{item.agent_display_name?.charAt(0).toUpperCase() || 'A'}</AvatarFallback>
           </Avatar>
@@ -111,7 +143,19 @@ const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplay
 
 MentionList.displayName = 'MentionList';
 
+/**
+ * Configuration for the mention suggestion functionality
+ * 
+ * This function creates the suggestion configuration for Tiptap's Mention extension
+ * It handles:
+ * - Filtering agents based on the query
+ * - Rendering the suggestion list
+ * - Keyboard navigation
+ * 
+ * @param agents - List of group agents available for mentioning
+ */
 const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
+  pluginKey: mentionSuggestionPluginKey,
   items: ({ query }: { query: string }) => {
     return agents
       .filter(item =>
@@ -175,8 +219,22 @@ const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
   },
 });
 
-// --- TiptapEditor Component ---
+// Custom plugin key for tracking mention suggestions
+const mentionSuggestionPluginKey = new PluginKey('mention-suggestion');
 
+// Tracks if a mention was just selected to prevent form submission
+let mentionJustSelected = false;
+
+// --- Core Editor Component ---
+/**
+ * Rich text editor component with mention support for group chats
+ * Features:
+ * - Tiptap-based editor with real-time collaboration capabilities
+ * - Dynamic extension loading (mentions only in group chats)
+ * - Controlled input synchronization with parent component
+ * - Automatic placeholder updates
+ * - Cross-component focus management
+ */
 function TiptapEditor({
   value,
   onChange,
@@ -201,8 +259,9 @@ function TiptapEditor({
   groupAgents?: GroupAgentDisplayInfo[];
 }) {
 
+  // Configure editor extensions based on chat type
   const extensions: AnyExtension[] = [
-    StarterKit,
+    StarterKit, // Base text editing capabilities
   ];
 
   if (isGroupChat) {
@@ -211,17 +270,20 @@ function TiptapEditor({
         HTMLAttributes: {
           class: 'mention bg-primary/10 text-primary rounded px-1',
         },
+        // Inject group agent data into mention suggestions
         suggestion: mentionSuggestion(groupAgents),
       }),
     );
   }
 
+  // Editor instance management
   const editor = useEditor({
     extensions,
     content: value,
     editorProps: {
       attributes: {
         class: cx(
+          // Responsive height calculations
           'outline-none w-full sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700 p-3',
           className
         ),
@@ -229,27 +291,28 @@ function TiptapEditor({
       },
     },
     onUpdate: ({ editor }) => {
-      // Emit plain text for input state, mentions will be rendered visually
+      // Sync editor content with parent state while maintaining
+      // visual formatting for mentions in the editor
       onChange(editor.getText());
-      // Note: If you need the HTML content with mentions for sending,
-      // you might need to adjust how the input is processed on submit.
-      // Currently, it sends plain text.
     },
     autofocus: autoFocus,
   });
 
+  // --- Editor Lifecycle Management ---
+  // Expose editor reference to parent component
   useEffect(() => {
     if (editorRef && editor) {
       editorRef.current = editor;
     }
   }, [editor, editorRef]);
 
+  // Content synchronization guard
   useEffect(() => {
     if (editor) {
-      const editorText = editor.getText(); // Get plain text
+      const editorText = editor.getText();
+      // Prevent infinite update loops by only resetting
+      // when content diverges significantly
       if (editorText !== value) {
-        // Reset content if external value changes significantly
-        // This prevents issues if the parent component clears the input
         editor.commands.setContent(value);
       }
     }
@@ -277,7 +340,21 @@ function TiptapEditor({
   );
 }
 
+
+
+
 // --- Main Input Component ---
+
+/**
+ * Primary chat input component with multimodal capabilities
+ * Features:
+ * - File upload management with progress tracking
+ * - Model selection dropdown
+ * - Web search toggle
+ * - Rich text editor integration
+ * - Attachment preview system
+ * - Keyboard shortcut handling
+ */
 
 function PureMultimodalInput({
   chatId,
@@ -600,8 +677,27 @@ function PureMultimodalInput({
               !event.nativeEvent.isComposing
             ) {
               if (width && width > 768) {
-                event.preventDefault();
-                submitForm();
+                // Check if a mention was just selected
+                if (mentionJustSelected) {
+                  // Prevent form submission if a mention was just selected
+                  event.preventDefault();
+                  return;
+                }
+                
+                // Only proceed if suggestions aren't active
+                const editor = editorRef.current;
+                if (editor) {
+                  const suggestionState = mentionSuggestionPluginKey.getState(editor.state);
+                  // Only submit if suggestion is not active
+                  if (!suggestionState?.active) {
+                    event.preventDefault();
+                    submitForm();
+                  }
+                } else {
+                  // If no editor reference, proceed as normal
+                  event.preventDefault();
+                  submitForm();
+                }
               }
             }
           }}
