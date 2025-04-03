@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Attachment } from 'ai';
 import { toast } from 'sonner';
 
@@ -23,11 +23,42 @@ interface UploadResponse {
  * - Error handling
  * 
  * @param initialAttachments - Initial list of attachments
+ * @param onAttachmentsChange - Optional callback when attachments change
  * @returns Object containing attachment state and handler functions
  */
-export function useFileUpload(initialAttachments: Attachment[] = []) {
-  const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments);
+export function useFileUpload(
+  initialAttachments: Attachment[] = [], 
+  onAttachmentsChange?: (attachments: Attachment[]) => void
+) {
+  const [attachments, setAttachmentsState] = useState<Attachment[]>(initialAttachments);
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
+
+  // Create a wrapper for setAttachments that also calls the callback
+  const setAttachments = useCallback((newAttachments: Attachment[] | ((prev: Attachment[]) => Attachment[])) => {
+    setAttachmentsState(newAttachments);
+  }, []);
+
+  // When attachments change internally, notify parent via callback
+  useEffect(() => {
+    if (onAttachmentsChange && attachments !== initialAttachments) {
+      onAttachmentsChange(attachments);
+    }
+  }, [attachments, initialAttachments, onAttachmentsChange]);
+
+  // Sync with external attachments when they change (one-way binding)
+  useEffect(() => {
+    // Deep equality check to avoid unnecessary updates
+    const areEqual = 
+      initialAttachments.length === attachments.length &&
+      initialAttachments.every((attachment, i) => 
+        attachment.url === attachments[i]?.url && 
+        attachment.name === attachments[i]?.name
+      );
+    
+    if (!areEqual) {
+      setAttachmentsState(initialAttachments);
+    }
+  }, [initialAttachments]);
 
   /**
    * Uploads a file to the server
@@ -104,7 +135,7 @@ export function useFileUpload(initialAttachments: Attachment[] = []) {
         setUploadQueue([]);
       }
     },
-    [uploadFile],
+    [uploadFile, setAttachments],
   );
 
   /**
@@ -162,7 +193,7 @@ export function useFileUpload(initialAttachments: Attachment[] = []) {
         setUploadQueue([]);
       }
     },
-    [uploadFile],
+    [uploadFile, setAttachments],
   );
 
   /**
@@ -170,7 +201,7 @@ export function useFileUpload(initialAttachments: Attachment[] = []) {
    */
   const clearAttachments = useCallback(() => {
     setAttachments([]);
-  }, []);
+  }, [setAttachments]);
 
   return {
     // State

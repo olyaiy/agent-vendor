@@ -27,6 +27,17 @@ export interface MentionListRef {
 }
 
 /**
+ * Extended props for MentionList component to support both direct use and hook integration
+ */
+export interface MentionListProps extends SuggestionProps<GroupAgentDisplayInfo> {
+  /**
+   * Optional callback when an item is selected
+   * Used by useMention hook to manage selection state
+   */
+  onSelectItem?: () => void;
+}
+
+/**
  * Component that renders a list of mention suggestions for group chat participants.
  * 
  * Features:
@@ -38,21 +49,22 @@ export interface MentionListRef {
  * @param props - Contains the list of agents and command handler
  * @param ref - Reference for keyboard navigation methods
  */
-export const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplayInfo>>((props, ref) => {
+export const MentionList = forwardRef<MentionListRef, MentionListProps>((props, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   /**
    * Handles selection of an item from the mention list
-   * Sets the mentionJustSelected flag to prevent form submission
-   * when the Enter key is used to select a mention
+   * Calls onSelectItem callback to notify parent (usually the useMention hook)
    * 
    * @param index - The index of the selected item
    */
   const selectItem = useCallback((index: number) => {
     const item = props.items[index];
     if (item) {
-      // Set flag when mention is selected
-      setMentionJustSelected(true);
+      // Notify parent that a mention was selected (if callback provided)
+      if (props.onSelectItem) {
+        props.onSelectItem();
+      }
       
       props.command({ id: item.id, label: item.agent_display_name });
     }

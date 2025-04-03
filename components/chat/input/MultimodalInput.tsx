@@ -318,27 +318,20 @@ function PureMultimodalInput({
     '',
   );
 
-  // Use our file upload hook for managing attachments
+  // Use our file upload hook for managing attachments - with callback pattern
   const {
     attachments,
-    setAttachments,
     uploadQueue,
     handleFileChange,
     handlePaste,
     clearAttachments
-  } = useFileUpload(externalAttachments);
+  } = useFileUpload(
+    externalAttachments, 
+    // Pass callback to sync changes up to parent
+    (newAttachments) => setExternalAttachments(newAttachments)
+  );
 
-  // Sync internal state with external state
-  useEffect(() => {
-    setExternalAttachments(attachments);
-  }, [attachments, setExternalAttachments]);
-
-  // Sync external state with internal state
-  useEffect(() => {
-    if (externalAttachments !== attachments) {
-      setAttachments(externalAttachments);
-    }
-  }, [externalAttachments, attachments, setAttachments]);
+  // No need for manual sync effects anymore - the hook handles it
 
   const handleSearchToggle = useCallback((checked: boolean) => {
     setSearchEnabled(checked);

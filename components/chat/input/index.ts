@@ -13,7 +13,7 @@ export { RichTextEditor } from './editor/RichTextEditor';
 
 // Re-export the mention components
 export { MentionList } from './editor/mention/MentionList';
-export { mentionSuggestion, mentionSuggestionPluginKey } from './editor/mention/mention-utils';
+export type { MentionListProps, GroupAgentDisplayInfo, MentionListRef } from './editor/mention/MentionList';
 
 // Re-export the control components
 export { AttachmentButton } from './controls/AttachmentButton';
@@ -27,3 +27,5 @@ export { AttachmentUploader } from './attachments/AttachmentUploader';
 
 // Re-export custom hooks
 export { useFileUpload } from './hooks/useFileUpload';
+export { useMention, mentionSuggestionPluginKey } from './hooks/useMention';
+export { useEditorConfig } from './hooks/useEditorConfig';
