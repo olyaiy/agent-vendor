@@ -64,9 +64,14 @@ export function useEditorConfig({
         Mention.configure({
           HTMLAttributes: {
             class: 'mention bg-primary/10 text-primary rounded px-1',
+            command: () => {
+                console.log('HELLO command');
+              }
           },
           // Use our hook to create the mention suggestion config
           suggestion: createMentionSuggestion(groupAgents),
+          
+          
         }),
       );
     }

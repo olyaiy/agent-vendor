@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { PluginKey } from '@tiptap/pm/state';
 import { ReactRenderer } from '@tiptap/react';
-import tippy, { type Instance, type Props } from 'tippy.js';
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
 import type { GroupAgentDisplayInfo } from '../editor/mention/MentionList';
 
@@ -83,11 +82,11 @@ export function useMention() {
 
     /**
      * Render the mention suggestion popover
-     * Uses tippy.js for positioning and rendering the suggestion list
+     * Uses Shadcn Popover for positioning and rendering the suggestion list
      */
     render: () => {
       let component: ReactRenderer<any, SuggestionProps<GroupAgentDisplayInfo>> | null = null;
-      let popup: Instance<Props>[] | null = null;
+      let popupContainer: HTMLElement | null = null;
 
       return {
         onStart: (props: SuggestionProps<GroupAgentDisplayInfo>) => {
@@ -108,16 +107,24 @@ export function useMention() {
             return;
           }
 
-          // Create and position the popup
-          popup = tippy('body', {
-            getReferenceClientRect: props.clientRect as () => DOMRect,
-            appendTo: () => document.body,
-            content: component.element,
-            showOnCreate: true,
-            interactive: true,
-            trigger: 'manual',
-            placement: 'bottom-start',
-          });
+          // Create container for the popup
+          popupContainer = document.createElement('div');
+          popupContainer.style.position = 'absolute';
+          popupContainer.style.zIndex = '1000';
+          document.body.appendChild(popupContainer);
+
+          // Position the popup based on clientRect
+          const updatePosition = () => {
+            if (!popupContainer || !props.clientRect) return;
+            const rect = (props.clientRect as () => DOMRect)();
+            popupContainer.style.top = `${rect.bottom}px`;
+            popupContainer.style.left = `${rect.left}px`;
+          };
+          
+          updatePosition();
+          
+          // Append the component to the container
+          popupContainer.appendChild(component.element);
         },
 
         /**
@@ -126,13 +133,14 @@ export function useMention() {
         onUpdate(props: SuggestionProps<GroupAgentDisplayInfo>) {
           component?.updateProps(props);
 
-          if (!props.clientRect) {
+          if (!props.clientRect || !popupContainer) {
             return;
           }
 
-          popup?.[0]?.setProps({
-            getReferenceClientRect: props.clientRect as () => DOMRect,
-          });
+          // Update position on content change
+          const rect = (props.clientRect as () => DOMRect)();
+          popupContainer.style.top = `${rect.bottom}px`;
+          popupContainer.style.left = `${rect.left}px`;
         },
 
         /**
@@ -140,7 +148,10 @@ export function useMention() {
          */
         onKeyDown(props: SuggestionKeyDownProps) {
           if (props.event.key === 'Escape') {
-            popup?.[0]?.hide();
+            if (popupContainer) {
+              document.body.removeChild(popupContainer);
+              popupContainer = null;
+            }
             return true;
           }
           return component?.ref?.onKeyDown(props) ?? false;
@@ -150,7 +161,9 @@ export function useMention() {
          * Clean up when suggestion is no longer active
          */
         onExit() {
-          popup?.[0]?.destroy();
+          if (popupContainer && document.body.contains(popupContainer)) {
+            document.body.removeChild(popupContainer);
+          }
           component?.destroy();
         },
       };
@@ -158,7 +171,7 @@ export function useMention() {
   }), [setMentionJustSelected]);
 
   // Clean up timeouts when component unmounts
-  useCallback(() => {
+  useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

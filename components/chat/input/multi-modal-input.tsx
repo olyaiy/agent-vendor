@@ -1,7 +1,6 @@
 'use client';
 import type {
   Attachment,
-  Message,
   UIMessage,
 } from 'ai';
 import cx from 'classnames';
@@ -15,34 +14,18 @@ import {
   useImperativeHandle,
   type Dispatch,
   type SetStateAction,
-  type ChangeEvent,
   memo,
 } from 'react';
-import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from '@/components/util/icons';
 import { Search as SearchIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { SuggestedActions } from '@/components/chat/suggested-actions';
 import equal from 'fast-deep-equal';
 import { type ModelWithDefault } from '@/components/chat/chat-model-selector';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-
 import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
-import { useEditor, EditorContent, ReactRenderer, type AnyExtension } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Mention from '@tiptap/extension-mention';
-import suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
-import tippy, { type Instance, type Props } from 'tippy.js';
+import  { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
 import 'tippy.js/dist/tippy.css'; // Import tippy styles
 import { GroupAgentDisplayInfo } from '@/components/chat/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -50,7 +33,6 @@ import { PluginKey } from '@tiptap/pm/state'; // Import PluginKey
 
 // Import our new components
 import { RichTextEditor } from './editor/RichTextEditor';
-import { PreviewAttachment } from '@/components/util/preview-attachment';
 import { AttachmentButton } from './controls/AttachmentButton';
 import { StopButton } from './controls/StopButton';
 import { SendButton } from './controls/SendButton';
@@ -155,82 +137,6 @@ const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplay
 });
 
 MentionList.displayName = 'MentionList';
-
-/**
- * Configuration for the mention suggestion functionality
- * 
- * This function creates the suggestion configuration for Tiptap's Mention extension
- * It handles:
- * - Filtering agents based on the query
- * - Rendering the suggestion list
- * - Keyboard navigation
- * 
- * @param agents - List of group agents available for mentioning
- */
-const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
-  pluginKey: mentionSuggestionPluginKey,
-  items: ({ query }: { query: string }) => {
-    return agents
-      .filter(item =>
-        item.agent_display_name?.toLowerCase().startsWith(query.toLowerCase()) ||
-        item.id.toLowerCase().startsWith(query.toLowerCase())
-      )
-      .slice(0, 5);
-  },
-
-  render: () => {
-    let component: ReactRenderer<MentionListRef, SuggestionProps<GroupAgentDisplayInfo>> | null = null;
-    let popup: Instance<Props>[] | null = null;
-
-    return {
-      onStart: (props: SuggestionProps<GroupAgentDisplayInfo>) => {
-        component = new ReactRenderer(MentionList, {
-          props,
-          editor: props.editor,
-        });
-
-        if (!props.clientRect) {
-          return;
-        }
-
-        popup = tippy('body', {
-          getReferenceClientRect: props.clientRect as () => DOMRect,
-          appendTo: () => document.body,
-          content: component.element,
-          showOnCreate: true,
-          interactive: true,
-          trigger: 'manual',
-          placement: 'bottom-start',
-        });
-      },
-
-      onUpdate(props: SuggestionProps<GroupAgentDisplayInfo>) {
-        component?.updateProps(props);
-
-        if (!props.clientRect) {
-          return;
-        }
-
-        popup?.[0]?.setProps({
-          getReferenceClientRect: props.clientRect as () => DOMRect,
-        });
-      },
-
-      onKeyDown(props: SuggestionKeyDownProps) {
-        if (props.event.key === 'Escape') {
-          popup?.[0]?.hide();
-          return true;
-        }
-        return component?.ref?.onKeyDown(props) ?? false;
-      },
-
-      onExit() {
-        popup?.[0]?.destroy();
-        component?.destroy();
-      },
-    };
-  },
-});
 
 // Custom plugin key for tracking mention suggestions
 // Note: We keep this for compatibility with Tiptap, but primarily rely on the flag method below

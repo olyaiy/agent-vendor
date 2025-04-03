@@ -27,8 +27,6 @@ import { VisibilityType } from '../util/visibility-selector';
 import { Artifact } from '../artifact/artifact';
 import { Overview } from '../util/overview';
 import { AuthPopup } from '@/components/auth/auth-popup';
-import Link from 'next/link';
-import { ArrowUpIcon, PaperclipIcon } from '@/components/util/icons';
 import { ReadOnlyPrompt } from '@/components/chat/readonly-prompt';
 import { MultimodalInput } from './input';
 
