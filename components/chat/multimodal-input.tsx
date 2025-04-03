@@ -11,6 +11,8 @@ import {
   useEffect,
   useState,
   useCallback,
+  forwardRef,
+  useImperativeHandle,
   type Dispatch,
   type SetStateAction,
   type ChangeEvent,
@@ -36,10 +38,144 @@ import { Label } from '@/components/ui/label';
 import { PreviewAttachment } from '../util/preview-attachment';
 import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, ReactRenderer, type AnyExtension } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Mention from '@tiptap/extension-mention';
+import suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
+import tippy, { type Instance, type Props } from 'tippy.js';
+import 'tippy.js/dist/tippy.css'; // Import tippy styles
 import { GroupAgentDisplayInfo } from './chat';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+// --- Mention Suggestion Logic ---
+
+interface MentionListRef {
+  onKeyDown: (props: SuggestionKeyDownProps) => boolean;
+}
+
+const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplayInfo>>((props, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const selectItem = useCallback((index: number) => {
+    const item = props.items[index];
+    if (item) {
+      props.command({ id: item.id, label: item.agent_display_name });
+    }
+  }, [props]);
+
+  useEffect(() => setSelectedIndex(0), [props.items]);
+
+  useImperativeHandle(ref, () => ({
+    onKeyDown: ({ event }) => {
+      if (event.key === 'ArrowUp') {
+        setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
+        return true;
+      }
+      if (event.key === 'ArrowDown') {
+        setSelectedIndex((selectedIndex + 1) % props.items.length);
+        return true;
+      }
+      if (event.key === 'Enter') {
+        selectItem(selectedIndex);
+        return true;
+      }
+      return false;
+    },
+  }));
+
+  if (props.items.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="z-50 rounded-md border bg-popover p-1 text-popover-foreground shadow-md max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+      {props.items.map((item, index) => (
+        <button
+          className={cx(
+            'flex w-full items-center space-x-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[state=selected]:bg-accent data-[state=selected]:text-accent-foreground',
+            index === selectedIndex ? 'bg-accent text-accent-foreground' : ''
+          )}
+          key={index}
+          onClick={() => selectItem(index)}
+        >
+           <Avatar className="h-6 w-6">
+            <AvatarImage src={item.avatar_url || item.thumbnail_url || undefined} alt={item.agent_display_name || 'Agent'} />
+            <AvatarFallback>{item.agent_display_name?.charAt(0).toUpperCase() || 'A'}</AvatarFallback>
+          </Avatar>
+          <span>{item.agent_display_name || item.id}</span>
+        </button>
+      ))}
+    </div>
+  );
+});
+
+MentionList.displayName = 'MentionList';
+
+const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
+  items: ({ query }: { query: string }) => {
+    return agents
+      .filter(item =>
+        item.agent_display_name?.toLowerCase().startsWith(query.toLowerCase()) ||
+        item.id.toLowerCase().startsWith(query.toLowerCase())
+      )
+      .slice(0, 5);
+  },
+
+  render: () => {
+    let component: ReactRenderer<MentionListRef, SuggestionProps<GroupAgentDisplayInfo>> | null = null;
+    let popup: Instance<Props>[] | null = null;
+
+    return {
+      onStart: (props: SuggestionProps<GroupAgentDisplayInfo>) => {
+        component = new ReactRenderer(MentionList, {
+          props,
+          editor: props.editor,
+        });
+
+        if (!props.clientRect) {
+          return;
+        }
+
+        popup = tippy('body', {
+          getReferenceClientRect: props.clientRect as () => DOMRect,
+          appendTo: () => document.body,
+          content: component.element,
+          showOnCreate: true,
+          interactive: true,
+          trigger: 'manual',
+          placement: 'bottom-start',
+        });
+      },
+
+      onUpdate(props: SuggestionProps<GroupAgentDisplayInfo>) {
+        component?.updateProps(props);
+
+        if (!props.clientRect) {
+          return;
+        }
+
+        popup?.[0]?.setProps({
+          getReferenceClientRect: props.clientRect as () => DOMRect,
+        });
+      },
+
+      onKeyDown(props: SuggestionKeyDownProps) {
+        if (props.event.key === 'Escape') {
+          popup?.[0]?.hide();
+          return true;
+        }
+        return component?.ref?.onKeyDown(props) ?? false;
+      },
+
+      onExit() {
+        popup?.[0]?.destroy();
+        component?.destroy();
+      },
+    };
+  },
+});
+
+// --- TiptapEditor Component ---
 
 function TiptapEditor({
   value,
@@ -50,6 +186,8 @@ function TiptapEditor({
   className,
   autoFocus,
   editorRef,
+  isGroupChat,
+  groupAgents,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -59,11 +197,27 @@ function TiptapEditor({
   className?: string;
   autoFocus?: boolean;
   editorRef?: React.MutableRefObject<any>;
+  isGroupChat?: boolean;
+  groupAgents?: GroupAgentDisplayInfo[];
 }) {
+
+  const extensions: AnyExtension[] = [
+    StarterKit,
+  ];
+
+  if (isGroupChat) {
+    extensions.push(
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention bg-primary/10 text-primary rounded px-1',
+        },
+        suggestion: mentionSuggestion(groupAgents),
+      }),
+    );
+  }
+
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-    ],
+    extensions,
     content: value,
     editorProps: {
       attributes: {
@@ -71,10 +225,15 @@ function TiptapEditor({
           'outline-none w-full sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700 p-3',
           className
         ),
+        placeholder: placeholder ?? '',
       },
     },
     onUpdate: ({ editor }) => {
+      // Emit plain text for input state, mentions will be rendered visually
       onChange(editor.getText());
+      // Note: If you need the HTML content with mentions for sending,
+      // you might need to adjust how the input is processed on submit.
+      // Currently, it sends plain text.
     },
     autofocus: autoFocus,
   });
@@ -86,19 +245,39 @@ function TiptapEditor({
   }, [editor, editorRef]);
 
   useEffect(() => {
-    if (editor && editor.getText() !== value) {
-      editor.commands.setContent(value);
+    if (editor) {
+      const editorText = editor.getText(); // Get plain text
+      if (editorText !== value) {
+        // Reset content if external value changes significantly
+        // This prevents issues if the parent component clears the input
+        editor.commands.setContent(value);
+      }
     }
   }, [editor, value]);
 
+  // Update placeholder dynamically
+  useEffect(() => {
+    if (editor && placeholder) {
+      editor.setOptions({
+        editorProps: {
+          attributes: {
+            placeholder: placeholder,
+          },
+        },
+      });
+    }
+  }, [editor, placeholder]);
+
   return (
-    <EditorContent 
-      editor={editor} 
+    <EditorContent
+      editor={editor}
       onKeyDown={onKeyDown}
       onPaste={onPaste}
     />
   );
 }
+
+// --- Main Input Component ---
 
 function PureMultimodalInput({
   chatId,
@@ -413,7 +592,7 @@ function PureMultimodalInput({
           onPaste={handlePaste}
           className={className}
           autoFocus
-          placeholder="Send a message..."
+          placeholder={isGroupChat ? "Send a message or type '@' to mention..." : "Send a message..."}
           onKeyDown={(event) => {
             if (
               event.key === "Enter" &&
@@ -426,6 +605,8 @@ function PureMultimodalInput({
               }
             }
           }}
+          isGroupChat={isGroupChat}
+          groupAgents={groupAgents}
         />
 
         <div className="absolute bottom-0 p-1 sm:p-2 w-fit flex flex-row justify-start">
@@ -469,6 +650,8 @@ export const MultimodalInput = memo(
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
     if (prevProps.currentModel !== nextProps.currentModel) return false;
     if (prevProps.searchEnabled !== nextProps.searchEnabled) return false;
+    if (prevProps.isGroupChat !== nextProps.isGroupChat) return false;
+    if (!equal(prevProps.groupAgents, nextProps.groupAgents)) return false;
 
     return true;
   },
