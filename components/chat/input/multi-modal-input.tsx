@@ -26,7 +26,6 @@ import { Label } from '@/components/ui/label';
 import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
 import  { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
-
 import { GroupAgentDisplayInfo } from '@/components/chat/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PluginKey } from '@tiptap/pm/state'; // Import PluginKey
@@ -262,10 +261,13 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const submitForm = useCallback(() => {
+
+    // If the user is authenticated, we need to replace the URL to the chat
     if (isAuthenticated) {
       window.history.replaceState({}, '', `/${agentId}/${chatId}`);
     }
 
+    // Submit the form
     handleSubmit(undefined, {
       experimental_attachments: attachments,
     });
