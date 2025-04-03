@@ -14,3 +14,9 @@ export { RichTextEditor } from './editor/RichTextEditor';
 // Re-export the mention components
 export { MentionList } from './editor/mention/MentionList';
 export { mentionSuggestion, mentionSuggestionPluginKey } from './editor/mention/mention-utils';
+
+// Re-export the control components
+export { AttachmentButton } from './controls/AttachmentButton';
+export { StopButton } from './controls/StopButton';
+export { SendButton } from './controls/SendButton';
+export { ModelSelector } from './controls/ModelSelector';

@@ -51,6 +51,10 @@ import { PluginKey } from '@tiptap/pm/state'; // Import PluginKey
 // Import our new components
 import { RichTextEditor } from './editor/RichTextEditor';
 import { PreviewAttachment } from '@/components/util/preview-attachment';
+import { AttachmentButton } from './controls/AttachmentButton';
+import { StopButton } from './controls/StopButton';
+import { SendButton } from './controls/SendButton';
+import { ModelSelector } from './controls/ModelSelector';
 
 /**
  * Interface defining the reference methods for the MentionList component.
@@ -492,26 +496,11 @@ function PureMultimodalInput({
 
       {!isReadonly && (
         <div className="w-full flex justify-between items-center gap-2">
-          {availableModels.length > 1 && (
-            <Select
-              value={currentModel}
-              onValueChange={onModelChange}
-            >
-              <SelectTrigger className="h-8 w-[50%] sm:w-full md:w-52 text-xs">
-                <SelectValue placeholder="Select model" />
-              </SelectTrigger>
-              <SelectContent position="popper" className="max-w-[90vw] md:max-w-none">
-                {availableModels.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    <div className="flex items-center justify-between w-full">
-                      <span className="truncate">{model.model_display_name}</span>
-                      {model.isDefault && <span className="text-xxs text-muted-foreground ml-2 shrink-0">(Default)</span>}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <ModelSelector 
+            availableModels={availableModels}
+            currentModel={currentModel}
+            onModelChange={onModelChange}
+          />
           
           {hasSearchTool && (
             <div className="flex items-center space-x-2 cursor-pointer order-first ">
@@ -593,7 +582,7 @@ function PureMultimodalInput({
         />
 
         <div className="absolute bottom-0 p-1 sm:p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+          <AttachmentButton fileInputRef={fileInputRef} status={status} />
         </div>
 
         <div className="absolute bottom-0 right-0 p-1 sm:p-2 w-fit flex flex-row justify-end">
@@ -639,82 +628,3 @@ export const MultimodalInput = memo(
     return true;
   },
 );
-
-function PureAttachmentsButton({
-  fileInputRef,
-  status
-}: {
-  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  status: UseChatHelpers['status'];
-}) {
-  return (
-    <Button
-      className="rounded-md rounded-bl-lg p-[6px] sm:p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
-      onClick={(event) => {
-        event.preventDefault();
-        fileInputRef.current?.click();
-      }}
-      disabled={status !== 'ready'}
-      variant="ghost"
-    >
-      <PaperclipIcon size={14} />
-    </Button>
-  );
-}
-
-const AttachmentsButton = memo(PureAttachmentsButton);
-
-function PureStopButton({
-  stop,
-  setMessages,
-}: {
-  stop: () => void;
-  setMessages: Dispatch<SetStateAction<Array<Message>>>;
-}) {
-  return (
-    <Button
-      className="rounded-full p-1 sm:p-1.5 h-fit border dark:border-zinc-600 relative animate-pulse before:content-[''] before:absolute before:inset-0 before:rounded-full before:border before:border-zinc-400 dark:before:border-zinc-500 before:animate-[spin_3s_linear_infinite]"
-      onClick={(event) => {
-        event.preventDefault();
-        stop();
-        setMessages((messages) => messages);
-      }}
-    >
-      <StopIcon size={14} />
-    </Button>
-  );
-}
-
-const StopButton = memo(PureStopButton);
-
-function PureSendButton({
-  submitForm,
-  input,
-  uploadQueue,
-}: {
-  submitForm: () => void;
-  input: string;
-  uploadQueue: Array<string>;
-}) {
-  return (
-    <Button
-      className="rounded-full p-3 sm:p-1.5 h-fit border dark:border-zinc-600"
-      onClick={(event) => {
-        event.preventDefault();
-        submitForm();
-      }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
-    >
-      <div className="sm:scale-[0.65]">
-        <ArrowUpIcon size={22} />
-      </div>
-    </Button>
-  );
-}
-
-const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
-  if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
-    return false;
-  if (prevProps.input !== nextProps.input) return false;
-  return true;
-});
