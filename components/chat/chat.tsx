@@ -48,7 +48,7 @@ interface ModelSettings {
 }
 
 // Define a minimal type for group agent display
-interface GroupAgentDisplayInfo {
+export interface GroupAgentDisplayInfo {
   id: string;
   agent_display_name: string | null;
   avatar_url?: string | null;
@@ -306,6 +306,8 @@ export function Chat({
                     searchEnabled={searchEnabled}
                     setSearchEnabled={setSearchEnabled}
                     suggestedPrompts={suggestedPrompts}
+                    isGroupChat={isGroupChat}
+                    groupAgents={groupAgents}
                   />
                 </div>
               )}
@@ -340,6 +342,8 @@ export function Chat({
                   searchEnabled={searchEnabled}
                   setSearchEnabled={setSearchEnabled}
                   suggestedPrompts={suggestedPrompts}
+                  isGroupChat={isGroupChat}
+                  groupAgents={groupAgents}
                 />
               </form>
             )}

@@ -38,6 +38,8 @@ import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { GroupAgentDisplayInfo } from './chat';
+
 
 function TiptapEditor({
   value,
@@ -120,6 +122,8 @@ function PureMultimodalInput({
   setSearchEnabled,
   isAuthenticated,
   suggestedPrompts,
+  isGroupChat,
+  groupAgents,
 }: {
   chatId: string;
   agentId: string;
@@ -142,6 +146,8 @@ function PureMultimodalInput({
   searchEnabled: boolean;
   setSearchEnabled: Dispatch<SetStateAction<boolean>>;
   suggestedPrompts?: string[];
+  isGroupChat?: boolean;
+  groupAgents?: GroupAgentDisplayInfo[];
 }) {
   const editorRef = useRef<any>(null);
   const { width } = useWindowSize();
