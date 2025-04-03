@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PreviewAttachment } from '../util/preview-attachment';
+
 import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { useEditor, EditorContent, ReactRenderer, type AnyExtension } from '@tiptap/react';
@@ -44,9 +44,13 @@ import Mention from '@tiptap/extension-mention';
 import suggestion, { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props } from 'tippy.js';
 import 'tippy.js/dist/tippy.css'; // Import tippy styles
-import { GroupAgentDisplayInfo } from './chat';
+import { GroupAgentDisplayInfo } from '@/components/chat/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PluginKey } from '@tiptap/pm/state'; // Import PluginKey
+
+// Import our new components
+import { RichTextEditor } from './editor/RichTextEditor';
+import { PreviewAttachment } from '@/components/util/preview-attachment';
 
 /**
  * Interface defining the reference methods for the MentionList component.
@@ -236,124 +240,6 @@ const mentionSuggestionPluginKey = new PluginKey('mention-suggestion');
  * and to ensure the flag can be accessed across component closures.
  */
 let mentionJustSelected = false;
-
-// --- Core Editor Component ---
-/**
- * Rich text editor component with mention support for group chats
- * Features:
- * - Tiptap-based editor with real-time collaboration capabilities
- * - Dynamic extension loading (mentions only in group chats)
- * - Controlled input synchronization with parent component
- * - Automatic placeholder updates
- * - Cross-component focus management
- */
-function TiptapEditor({
-  value,
-  onChange,
-  onKeyDown,
-  onPaste,
-  placeholder,
-  className,
-  autoFocus,
-  editorRef,
-  isGroupChat,
-  groupAgents,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  onKeyDown?: (event: React.KeyboardEvent) => void;
-  onPaste?: (event: React.ClipboardEvent) => void;
-  placeholder?: string;
-  className?: string;
-  autoFocus?: boolean;
-  editorRef?: React.MutableRefObject<any>;
-  isGroupChat?: boolean;
-  groupAgents?: GroupAgentDisplayInfo[];
-}) {
-
-  // Configure editor extensions based on chat type
-  const extensions: AnyExtension[] = [
-    StarterKit, // Base text editing capabilities
-  ];
-
-  if (isGroupChat) {
-    extensions.push(
-      Mention.configure({
-        HTMLAttributes: {
-          class: 'mention bg-primary/10 text-primary rounded px-1',
-        },
-        // Inject group agent data into mention suggestions
-        suggestion: mentionSuggestion(groupAgents),
-      }),
-    );
-  }
-
-  // Editor instance management
-  const editor = useEditor({
-    extensions,
-    content: value,
-    editorProps: {
-      attributes: {
-        class: cx(
-          // Responsive height calculations
-          'outline-none w-full sm:min-h-[24px] max-h-[calc(50vh)] sm:max-h-[calc(50vh)] overflow-auto resize-none rounded-md !text-base bg-muted pb-8 sm:pb-10 dark:border-zinc-700 p-3',
-          className
-        ),
-        placeholder: placeholder ?? '',
-      },
-    },
-    onUpdate: ({ editor }) => {
-      // Sync editor content with parent state while maintaining
-      // visual formatting for mentions in the editor
-      onChange(editor.getText());
-    },
-    autofocus: autoFocus,
-  });
-
-  // --- Editor Lifecycle Management ---
-  // Expose editor reference to parent component
-  useEffect(() => {
-    if (editorRef && editor) {
-      editorRef.current = editor;
-    }
-  }, [editor, editorRef]);
-
-  // Content synchronization guard
-  useEffect(() => {
-    if (editor) {
-      const editorText = editor.getText();
-      // Prevent infinite update loops by only resetting
-      // when content diverges significantly
-      if (editorText !== value) {
-        editor.commands.setContent(value);
-      }
-    }
-  }, [editor, value]);
-
-  // Update placeholder dynamically
-  useEffect(() => {
-    if (editor && placeholder) {
-      editor.setOptions({
-        editorProps: {
-          attributes: {
-            placeholder: placeholder,
-          },
-        },
-      });
-    }
-  }, [editor, placeholder]);
-
-  return (
-    <EditorContent
-      editor={editor}
-      onKeyDown={onKeyDown}
-      onPaste={onPaste}
-    />
-  );
-}
-
-
-
 
 // --- Main Input Component ---
 
@@ -674,7 +560,7 @@ function PureMultimodalInput({
       )}
 
       <div className="relative ">
-        <TiptapEditor
+        <RichTextEditor
           editorRef={editorRef}
           value={input}
           onChange={handleInput}
@@ -690,7 +576,7 @@ function PureMultimodalInput({
             ) {
               if (width && width > 768) {
                 // Check if a mention was just selected via the Enter key
-                if (mentionJustSelected) {
+                if (editorRef.current?.wasMentionJustSelected?.()) {
                   // Prevent form submission when a mention was just selected
                   event.preventDefault();
                   return;

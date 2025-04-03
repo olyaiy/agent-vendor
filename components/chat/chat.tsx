@@ -18,7 +18,7 @@ import type { Agent, KnowledgeItem } from '@/lib/db/schema';
 import { useLocalStorage } from 'usehooks-ts';
 import { ChatHeader } from '@/components/chat/chat-header';
 import { generateUUID } from '@/lib/utils';
-import { MultimodalInput } from '@/components/chat/multimodal-input';
+
 import { Messages } from '@/components/chat/messages';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
@@ -30,6 +30,7 @@ import { AuthPopup } from '@/components/auth/auth-popup';
 import Link from 'next/link';
 import { ArrowUpIcon, PaperclipIcon } from '@/components/util/icons';
 import { ReadOnlyPrompt } from '@/components/chat/readonly-prompt';
+import { MultimodalInput } from './input';
 
 // Data types and core interfaces
 interface ModelSettings {
