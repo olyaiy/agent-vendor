@@ -31,7 +31,7 @@ import { ReadOnlyPrompt } from '@/components/chat/readonly-prompt';
 import { MultimodalInput } from './input';
 
 // Data types and core interfaces
-interface ModelSettings {
+export interface ModelSettings {
   /** 
    * LLM parameters with change tracking. Only modified values 
    * are sent to the API to preserve default behaviors 
