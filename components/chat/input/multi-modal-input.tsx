@@ -26,7 +26,7 @@ import { Label } from '@/components/ui/label';
 import { checkAgentHasSearchTool } from '@/lib/db/actions';
 import { UseChatHelpers } from '@ai-sdk/react';
 import  { type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion';
-import 'tippy.js/dist/tippy.css'; // Import tippy styles
+
 import { GroupAgentDisplayInfo } from '@/components/chat/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PluginKey } from '@tiptap/pm/state'; // Import PluginKey

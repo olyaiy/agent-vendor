@@ -1,6 +1,5 @@
 import { ReactRenderer } from '@tiptap/react';
 import { PluginKey } from '@tiptap/pm/state';
-import tippy, { type Instance, type Props } from 'tippy.js';
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
 import type { GroupAgentDisplayInfo, MentionListRef } from './MentionList';
 
@@ -69,11 +68,11 @@ export const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
 
   /**
    * Render the mention suggestion popover
-   * Uses tippy.js for positioning and rendering the suggestion list
+   * Uses DOM positioning for the suggestion list
    */
   render: () => {
     let component: ReactRenderer<MentionListRef, SuggestionProps<GroupAgentDisplayInfo>> | null = null;
-    let popup: Instance<Props>[] | null = null;
+    let popupContainer: HTMLElement | null = null;
 
     return {
       onStart: (props: SuggestionProps<GroupAgentDisplayInfo>) => {
@@ -92,16 +91,24 @@ export const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
           return;
         }
 
-        // Create and position the popup
-        popup = tippy('body', {
-          getReferenceClientRect: props.clientRect as () => DOMRect,
-          appendTo: () => document.body,
-          content: component.element,
-          showOnCreate: true,
-          interactive: true,
-          trigger: 'manual',
-          placement: 'bottom-start',
-        });
+        // Create container for the popup
+        popupContainer = document.createElement('div');
+        popupContainer.style.position = 'absolute';
+        popupContainer.style.zIndex = '1000';
+        document.body.appendChild(popupContainer);
+
+        // Position the popup based on clientRect
+        const updatePosition = () => {
+          if (!popupContainer || !props.clientRect) return;
+          const rect = (props.clientRect as () => DOMRect)();
+          popupContainer.style.top = `${rect.bottom}px`;
+          popupContainer.style.left = `${rect.left}px`;
+        };
+        
+        updatePosition();
+        
+        // Append the component to the container
+        popupContainer.appendChild(component.element);
       },
 
       /**
@@ -110,13 +117,14 @@ export const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
       onUpdate(props: SuggestionProps<GroupAgentDisplayInfo>) {
         component?.updateProps(props);
 
-        if (!props.clientRect) {
+        if (!props.clientRect || !popupContainer) {
           return;
         }
 
-        popup?.[0]?.setProps({
-          getReferenceClientRect: props.clientRect as () => DOMRect,
-        });
+        // Update position on content change
+        const rect = (props.clientRect as () => DOMRect)();
+        popupContainer.style.top = `${rect.bottom}px`;
+        popupContainer.style.left = `${rect.left}px`;
       },
 
       /**
@@ -124,7 +132,10 @@ export const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
        */
       onKeyDown(props: SuggestionKeyDownProps) {
         if (props.event.key === 'Escape') {
-          popup?.[0]?.hide();
+          if (popupContainer) {
+            document.body.removeChild(popupContainer);
+            popupContainer = null;
+          }
           return true;
         }
         return component?.ref?.onKeyDown(props) ?? false;
@@ -134,7 +145,9 @@ export const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
        * Clean up when suggestion is no longer active
        */
       onExit() {
-        popup?.[0]?.destroy();
+        if (popupContainer && document.body.contains(popupContainer)) {
+          document.body.removeChild(popupContainer);
+        }
         component?.destroy();
       },
     };
