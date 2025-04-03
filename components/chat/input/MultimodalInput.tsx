@@ -133,7 +133,7 @@ const MentionList = forwardRef<MentionListRef, SuggestionProps<GroupAgentDisplay
   }
 
   return (
-    <div className="z-50 rounded-md border bg-popover p-1 text-popover-foreground shadow-md max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
+    <div className="z-50 rounded-md border bg-popover p-1 text-popover-foreground shadow-md max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 overflow-visible">
       {props.items.map((item, index) => (
         <button
           className={cx(
@@ -324,7 +324,8 @@ function PureMultimodalInput({
     uploadQueue,
     handleFileChange,
     handlePaste,
-    clearAttachments
+    clearAttachments,
+    removeAttachment
   } = useFileUpload(
     externalAttachments, 
     // Pass callback to sync changes up to parent
@@ -443,9 +444,13 @@ function PureMultimodalInput({
       )}
 
       {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div className="flex flex-row gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 items-end">
+        <div className="flex flex-row gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 items-end  pt-4 px-2" >
           {attachments.map((attachment) => (
-            <AttachmentPreview key={attachment.url} attachment={attachment} />
+            <AttachmentPreview 
+              key={attachment.url} 
+              attachment={attachment} 
+              onRemove={removeAttachment}
+            />
           ))}
 
           {uploadQueue.map((filename) => (

@@ -61,6 +61,19 @@ export function useFileUpload(
   }, [initialAttachments]);
 
   /**
+   * Removes a specific attachment from the list
+   * @param attachmentToRemove - The attachment to remove
+   */
+  const removeAttachment = useCallback((attachmentToRemove: Attachment) => {
+    setAttachments(currentAttachments => 
+      currentAttachments.filter(attachment => 
+        // Compare by URL since it should be unique per attachment
+        attachment.url !== attachmentToRemove.url
+      )
+    );
+  }, [setAttachments]);
+
+  /**
    * Uploads a file to the server
    * @param file - File to upload
    * @returns Promise with attachment data or undefined on error
@@ -214,5 +227,6 @@ export function useFileUpload(
     handlePaste,
     uploadFile,
     clearAttachments,
+    removeAttachment,
   };
 }
