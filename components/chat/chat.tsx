@@ -193,6 +193,13 @@ export function Chat({
     generateId: generateUUID,
     onFinish: () => {
       mutate('/api/history');
+      // Detect mentions in the input
+      if (isGroupChat && groupAgents) {
+        const { detectMentions } = require('./input/editor/mention/mention-utils');
+
+        detectMentions([input], groupAgents);
+      }
+
     },
     onError: (error) => {
       // Unified error handling pipeline
