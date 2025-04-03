@@ -55,6 +55,8 @@ import { AttachmentButton } from './controls/AttachmentButton';
 import { StopButton } from './controls/StopButton';
 import { SendButton } from './controls/SendButton';
 import { ModelSelector } from './controls/ModelSelector';
+import { AttachmentPreview } from './attachments/AttachmentPreview';
+import { useFileUpload } from './hooks/useFileUpload';
 
 /**
  * Interface defining the reference methods for the MentionList component.
@@ -265,8 +267,8 @@ function PureMultimodalInput({
   setInput,
   status,
   stop,
-  attachments,
-  setAttachments,
+  attachments: externalAttachments,
+  setAttachments: setExternalAttachments,
   messages,
   setMessages,
   append,
@@ -316,6 +318,28 @@ function PureMultimodalInput({
     '',
   );
 
+  // Use our file upload hook for managing attachments
+  const {
+    attachments,
+    setAttachments,
+    uploadQueue,
+    handleFileChange,
+    handlePaste,
+    clearAttachments
+  } = useFileUpload(externalAttachments);
+
+  // Sync internal state with external state
+  useEffect(() => {
+    setExternalAttachments(attachments);
+  }, [attachments, setExternalAttachments]);
+
+  // Sync external state with internal state
+  useEffect(() => {
+    if (externalAttachments !== attachments) {
+      setAttachments(externalAttachments);
+    }
+  }, [externalAttachments, attachments, setAttachments]);
+
   const handleSearchToggle = useCallback((checked: boolean) => {
     setSearchEnabled(checked);
   }, [setSearchEnabled]);
@@ -336,7 +360,6 @@ function PureMultimodalInput({
   }, [setInput]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
     if (isAuthenticated) {
@@ -347,7 +370,7 @@ function PureMultimodalInput({
       experimental_attachments: attachments,
     });
 
-    setAttachments([]);
+    clearAttachments();
     setLocalStorageInput('');
     
     if (width && width > 768 && editorRef.current) {
@@ -356,115 +379,13 @@ function PureMultimodalInput({
   }, [
     attachments,
     handleSubmit,
-    setAttachments,
+    clearAttachments,
     setLocalStorageInput,
     width,
     chatId,
     agentId,
     isAuthenticated
   ]);
-
-  const uploadFile = useCallback(async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
-        return {
-          url,
-          name: pathname,
-          contentType: contentType,
-        };
-      }
-      const { error } = await response.json();
-      toast.error(error);
-    } catch (error) {
-      toast.error('Failed to upload file, please try again!');
-    }
-  }, []);
-
-  const handlePaste = useCallback(
-    async (event: React.ClipboardEvent) => {
-      const clipboardItems = event.clipboardData.items;
-      const imageItems = Array.from(clipboardItems).filter(
-        item => item.type.startsWith('image/')
-      );
-
-      if (imageItems.length === 0) {
-        // No images in clipboard, proceed with normal paste
-        return;
-      }
-
-      // Get the images from clipboard
-      const imageFiles = imageItems.map(item => {
-        const blob = item.getAsFile();
-        if (!blob) return null;
-        
-        // Create a new file with a reasonable name
-        const fileExtension = blob.type.split('/')[1] || 'png';
-        const fileName = `clipboard-image-${Date.now()}.${fileExtension}`;
-        return new File([blob], fileName, { type: blob.type });
-      }).filter(Boolean) as File[];
-
-      if (imageFiles.length === 0) return;
-
-      // Add files to upload queue
-      setUploadQueue(imageFiles.map(file => file.name));
-
-      try {
-        const uploadPromises = imageFiles.map(file => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          attachment => attachment !== undefined
-        );
-
-        setAttachments(currentAttachments => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
-      } catch (error) {
-        console.error('Error uploading clipboard images!', error);
-        toast.error('Failed to upload clipboard image, please try again!');
-      } finally {
-        setUploadQueue([]);
-      }
-    },
-    [setAttachments, setUploadQueue, uploadFile]
-  );
-
-  const handleFileChange = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(event.target.files || []);
-
-      setUploadQueue(files.map((file) => file.name));
-
-      try {
-        const uploadPromises = files.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
-        const successfullyUploadedAttachments = uploadedAttachments.filter(
-          (attachment) => attachment !== undefined,
-        );
-
-        setAttachments((currentAttachments) => [
-          ...currentAttachments,
-          ...successfullyUploadedAttachments,
-        ]);
-      } catch (error) {
-        console.error('Error uploading files!', error);
-      } finally {
-        setUploadQueue([]);
-      }
-    },
-    [setAttachments, uploadFile],
-  );
 
   useEffect(() => {
     const checkSearchCapability = async () => {
@@ -531,11 +452,11 @@ function PureMultimodalInput({
       {(attachments.length > 0 || uploadQueue.length > 0) && (
         <div className="flex flex-row gap-2 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 items-end">
           {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
+            <AttachmentPreview key={attachment.url} attachment={attachment} />
           ))}
 
           {uploadQueue.map((filename) => (
-            <PreviewAttachment
+            <AttachmentPreview
               key={filename}
               attachment={{
                 url: '',

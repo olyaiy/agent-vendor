@@ -20,3 +20,10 @@ export { AttachmentButton } from './controls/AttachmentButton';
 export { StopButton } from './controls/StopButton';
 export { SendButton } from './controls/SendButton';
 export { ModelSelector } from './controls/ModelSelector';
+
+// Re-export the attachment components
+export { AttachmentPreview } from './attachments/AttachmentPreview';
+export { AttachmentUploader } from './attachments/AttachmentUploader';
+
+// Re-export custom hooks
+export { useFileUpload } from './hooks/useFileUpload';
