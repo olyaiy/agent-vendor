@@ -29,6 +29,7 @@ import { Overview } from '../util/overview';
 import { AuthPopup } from '@/components/auth/auth-popup';
 import { ReadOnlyPrompt } from '@/components/chat/readonly-prompt';
 import { MultimodalInput } from './input';
+import { detectMentions } from './input/editor/mention/mention-utils';
 
 // Data types and core interfaces
 export interface ModelSettings {
@@ -52,6 +53,12 @@ export interface GroupAgentDisplayInfo {
   agent_display_name: string | null;
   avatar_url?: string | null;
   thumbnail_url?: string | null;
+}
+
+// Define types for content parts
+interface ContentPart {
+  type: string;
+  text?: string;
 }
 
 export function Chat({
@@ -185,21 +192,17 @@ export function Chat({
       agentSystemPrompt: agent?.system_prompt,
       searchEnabled, // Pass the search toggle state to the API
       knowledgeItems, // Pass the knowledge items to the API
-      modelSettings: getProcessedModelSettings() // Pass only changed model settings to the API
+      modelSettings: getProcessedModelSettings(), // Pass only changed model settings to the API
+      isGroupChat,
+      groupAgents
     },
     initialMessages,
     // experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
+ 
     onFinish: () => {
       mutate('/api/history');
-      // Detect mentions in the input
-      if (isGroupChat && groupAgents) {
-        const { detectMentions } = require('./input/editor/mention/mention-utils');
-
-        detectMentions([input], groupAgents);
-      }
-
     },
     onError: (error) => {
       // Unified error handling pipeline

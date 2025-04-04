@@ -22,6 +22,8 @@ import {
   generateUUID,
   getMostRecentUserMessage,
   getTrailingMessageId,
+  detectMentions,
+  GroupAgentInfo
 } from '@/lib/utils';
 import { generateTitleAsynchronously } from '../../actions';
 import { toolRegistry } from '@/lib/ai/tools/registry';
@@ -29,6 +31,7 @@ import { hasCredits, INSUFFICIENT_CREDITS_MESSAGE } from '@/lib/credits';
 import { KnowledgeItem } from '@/lib/db/schema';
 import type { ModelSettings } from '@/components/chat/chat';
 import { modelLimiter, getIP } from '@/lib/ratelimit';
+import { GroupAgentDisplayInfo } from '@/components/chat/input';
 
 export async function POST(request: Request) {
   console.time('total-request');
@@ -69,7 +72,9 @@ export async function POST(request: Request) {
     creatorId,
     searchEnabled,
     knowledgeItems,
-    modelSettings = {} // Add model settings with default empty object
+    modelSettings = {}, // Add model settings with default empty object
+    isGroupChat,
+    groupAgents
   }: { 
     id: string; 
     messages: Array<UIMessage>; 
@@ -81,6 +86,8 @@ export async function POST(request: Request) {
     searchEnabled?: boolean;
     knowledgeItems?: KnowledgeItem[];
     modelSettings?: ModelSettings;
+    isGroupChat: boolean;
+    groupAgents: GroupAgentDisplayInfo[];
   } = await request.json();
   console.timeEnd('parse-request');
   
@@ -90,10 +97,37 @@ export async function POST(request: Request) {
   const session = await auth();
   console.timeEnd('auth-check');
 
+
   // If the user is not logged in, return an error
   if (!session || !session.user || !session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
+
+
+
+console.log(' ------------ IS GROUP CHAT? ------------ ', isGroupChat)
+console.log(' ------------ GROUP AGENTS ------------ ', groupAgents)
+const currentMessage = messages[messages.length - 1];
+const content = currentMessage.content;
+const messageTexts = Array.isArray(content) 
+  ? content.map(part => typeof part === 'string' ? part : part.text || '')
+  : [typeof content === 'string' ? content : ''];
+
+console.log(' ------------ MESSAGES ------------ ', content);
+
+// Detect which agents are mentioned in the message
+if (isGroupChat && groupAgents && groupAgents.length > 0) {
+  // Cast groupAgents to GroupAgentInfo[] since it's compatible
+  const mentionedAgentIds = detectMentions(messageTexts, groupAgents as unknown as GroupAgentInfo[]);
+  const mentionedAgents = groupAgents.filter(agent => mentionedAgentIds.includes(agent.id));
+  console.log(' ------------ MENTIONED AGENTS ------------ ', mentionedAgents);
+}
+
+
+
+
+
+
 
   // Fetch critical dependencies in parallel
   console.time('parallel-dependencies');
@@ -148,6 +182,9 @@ export async function POST(request: Request) {
     }
     console.timeEnd('save-new-chat');
   }
+
+  console.log("The AGENT ID IS", agentId)
+  console.log("The MODEL ID IS", selectedChatModel)
 
   // THEN save messages 
   console.time('save-messages');

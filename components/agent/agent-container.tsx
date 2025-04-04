@@ -59,9 +59,9 @@ export async function AgentContainer({ userId }: AgentContainerProps) {
         <FeaturedAgentsCarousel agents={featuredAgents as any} userId={finalUserId} />
       )}
       
-      {groupChats.length > 0 && (
+      {/* {groupChats.length > 0 && (
         <GroupChatsCarousel groupChats={groupChats} />
-      )}
+      )} */}
       
       <AgentList agents={agents as any} userId={finalUserId} tags={commonTags} />
     </div>

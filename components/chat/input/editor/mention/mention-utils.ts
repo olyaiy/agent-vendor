@@ -156,27 +156,30 @@ export const mentionSuggestion = (agents: GroupAgentDisplayInfo[] = []) => ({
 
 /**
  * Detects @mentions in a list of strings
- * Logs when an agent is mentioned with an @ symbol
+ * Returns mentioned agents
  * 
  * @param texts - Array of strings to search for mentions
  * @param agents - List of agents that could be mentioned
+ * @returns An array of mentioned agent IDs
  */
-export function detectMentions(texts: string[], agents: GroupAgentDisplayInfo[]) {
-
-    
-    console.log('we enteered the detectMentions function')
-    console.log('texts', texts)
-    console.log('agents', agents)
-  if (!texts || !agents?.length) return;
+export function detectMentions(texts: string[], agents: GroupAgentDisplayInfo[]): string[] {
+  if (!texts || !agents?.length) return [];
+  
+  const mentionedAgentIds: string[] = [];
   
   texts.forEach(text => {
     if (!text) return;
     
     agents.forEach(agent => {
+      if (!agent.agent_display_name) return;
+      
       const mentionPattern = `@${agent.agent_display_name}`;
-      if (text.includes(mentionPattern)) {
+      if (text.includes(mentionPattern) && !mentionedAgentIds.includes(agent.id)) {
         console.log(`found ${agent.agent_display_name}!`);
+        mentionedAgentIds.push(agent.id);
       }
     });
   });
+  
+  return mentionedAgentIds;
 }

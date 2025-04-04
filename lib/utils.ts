@@ -14,6 +14,13 @@ export interface ExtendedMessage extends Message {
   model_id?: string | null;
 }
 
+// Type definition for group agent info
+export interface GroupAgentInfo {
+  id: string;
+  agent_display_name: string | null;
+  avatar_url?: string | null;
+  thumbnail_url?: string | null;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -55,12 +62,6 @@ export function generateUUID(): string {
     return v.toString(16);
   });
 }
-
-
-
-
-
-
 
 type ResponseMessageWithoutId = CoreToolMessage | CoreAssistantMessage;
 type ResponseMessage = ResponseMessageWithoutId & { id: string };
@@ -125,10 +126,6 @@ export function sanitizeResponseMessages({
   );
 }
 
-
-
-
-
 /**
  * Format a number as USD currency
  * @param amount The number to format as currency
@@ -171,7 +168,6 @@ export function sanitizeUrl(url: string): string {
   return url.replace(/\s+/g, '%20')
 }
 
-
 export function getTrailingMessageId({
   messages,
 }: {
@@ -182,4 +178,33 @@ export function getTrailingMessageId({
   if (!trailingMessage) return null;
 
   return trailingMessage.id;
+}
+
+/**
+ * Detects @mentions in a list of strings
+ * Returns mentioned agents
+ * 
+ * @param texts - Array of strings to search for mentions
+ * @param agents - List of agents that could be mentioned
+ * @returns An array of mentioned agent IDs
+ */
+export function detectMentions(texts: string[], agents: GroupAgentInfo[]): string[] {
+  if (!texts || !agents?.length) return [];
+  
+  const mentionedAgentIds: string[] = [];
+  
+  texts.forEach(text => {
+    if (!text) return;
+    
+    agents.forEach(agent => {
+      if (!agent.agent_display_name) return;
+      
+      const mentionPattern = `@${agent.agent_display_name}`;
+      if (text.includes(mentionPattern) && !mentionedAgentIds.includes(agent.id)) {
+        mentionedAgentIds.push(agent.id);
+      }
+    });
+  });
+  
+  return mentionedAgentIds;
 }
