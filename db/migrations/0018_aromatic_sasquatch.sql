@@ -1,0 +1,2 @@
+ALTER TABLE "models" ALTER COLUMN "cost_per_million_input_tokens" SET DATA TYPE numeric(10, 4);--> statement-breakpoint
+ALTER TABLE "models" ALTER COLUMN "cost_per_million_output_tokens" SET DATA TYPE numeric(10, 4);

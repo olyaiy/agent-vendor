@@ -1,0 +1,1 @@
+ALTER TABLE "models" ALTER COLUMN "provider_options" SET DATA TYPE jsonb;

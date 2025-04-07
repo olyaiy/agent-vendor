@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "featured" boolean DEFAULT false;

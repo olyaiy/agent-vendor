@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ADD COLUMN "artifacts_enabled" boolean DEFAULT true;

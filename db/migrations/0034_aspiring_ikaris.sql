@@ -1,0 +1,1 @@
+ALTER TABLE "models" DROP COLUMN IF EXISTS "provider_options";

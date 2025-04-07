@@ -1,0 +1,1 @@
+ALTER TABLE "agents" ALTER COLUMN "customization" SET DEFAULT '{"overview":{"title":"Welcome to your AI assistant!","content":"Im here to help answer your questions and provide information. Feel free to ask me anything.","showPoints":false,"points":[]},"style":{"colorSchemeId":"default"}}'::json;
