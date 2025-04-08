@@ -1,6 +1,7 @@
 "use client"
 
-import Link from "next/link" // Add Link import
+import Link from "next/link"
+import { useRouter } from "next/navigation" // Import useRouter
 import {
   BadgeCheck,
   Bell,
@@ -32,11 +33,26 @@ import {
 } from "@/components/ui/sidebar"
 import { authClient } from "@/lib/auth-client" // Import authClient
 import { Skeleton } from "@/components/ui/skeleton" // Import Skeleton
-import { Button } from "@/components/ui/button" // Import Button
+import { Button } from "@/components/ui/button"
 
-export function NavUser() { // Remove user prop
+export function NavUser() {
   const { isMobile } = useSidebar()
-  const { data: session, isPending } = authClient.useSession() // Use the hook
+  const { data: session, isPending } = authClient.useSession()
+  const router = useRouter() // Initialize router
+
+  // Sign out handler
+  const handleSignOut = async () => {
+    try {
+      // Assuming better-auth client has a signOut method
+      // If not, we might need to check documentation or authClient definition
+      await authClient.signOut() 
+      console.log("Sign out successful")
+      router.push('/') // Redirect to home page after sign out
+    } catch (error) {
+      console.error("Sign out failed:", error)
+      // Optionally show an error message to the user
+    }
+  }
 
   // Loading state
   if (isPending) {
@@ -137,8 +153,9 @@ export function NavUser() { // Remove user prop
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut />
+            {/* Add onSelect handler to the Log out item */}
+            <DropdownMenuItem onSelect={handleSignOut}> 
+              <LogOut className="mr-2 h-4 w-4" /> {/* Added spacing */}
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
