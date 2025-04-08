@@ -42,6 +42,7 @@ return (
               isArtifactVisible={false}
             />
             <ChatInput 
+
               value={input}
               onChange={handleInputChange}
               onSubmit={handleSubmit}
@@ -52,6 +53,7 @@ return (
         ) : (
     <div className=" items-center justify-center flex h-full">
           <ChatInput 
+          
             value={input}
             onChange={handleInputChange}
             onSubmit={handleSubmit}
