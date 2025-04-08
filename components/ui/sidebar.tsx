@@ -266,7 +266,7 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon"
-      className={cn("size-4 duration-75 ", state === "collapsed" && "bg-sidebar", className)}
+      className={cn("size-4 duration-75 cursor-pointer", state === "collapsed" && "bg-sidebar", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()

@@ -6,7 +6,7 @@ export function Logo() {
       href="/"
       className="absolute 
 
-      text-base font-bold tracking-tight hover:cursor-pointer hover:opacity-80 transition-opacity "
+      text-lg font-bold tracking-tight hover:cursor-pointer hover:opacity-80 transition-opacity "
     >
       Agent Vendor
     </Link>

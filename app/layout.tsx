@@ -2,8 +2,9 @@
 import { ThemeProvider } from "@/components/theme-provider" 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Header } from "@/components/header";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -41,7 +42,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
 
-      <SidebarTrigger className="absolute top-4 left-4 z-10 cursor-pointer"/>
+      <Header />
 
       <SidebarInset className="overflow-hidden">
 

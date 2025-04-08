@@ -16,6 +16,9 @@ export const agent = pgTable("agent", {
   creatorId: text("creator_id").notNull().references(() => user.id, { onDelete: "cascade" }),
 });
 
+export type Agent = typeof agent.$inferSelect;
+
+
 export const models = pgTable("models", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   model: text("model").notNull(),
@@ -23,3 +26,5 @@ export const models = pgTable("models", {
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
 });
+
+export type Model = typeof models.$inferSelect;

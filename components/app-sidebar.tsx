@@ -111,7 +111,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="flex items-center justify-center  h-8">
+      <SidebarHeader className="flex items-center justify-center  h-14">
         <Logo/>
       </SidebarHeader>
 
