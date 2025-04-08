@@ -30,7 +30,7 @@ return (
 
     {/* Main Chat Column */}
       <div className="flex flex-col min-w-0 h-dvh col-span-9">
-        <ChatHeader />
+        <ChatHeader hasMessages={messages.length > 0} />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>

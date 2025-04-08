@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, History, Plus, Users } from "lucide-react"
+import { ChevronRight, History, Plus, Users, LifeBuoy, Send, Info } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -22,6 +22,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { NavUser } from "./nav-user"
+import { NavSecondary } from "./nav-secondary"
 
 // Mock conversation history
 const historyItems = [
@@ -36,6 +38,25 @@ const agentItems = [
   { title: "Create", url: "/agents/create" },
   { title: "Browse", url: "/agents/browse" },
   { title: "My Agents", url: "/agents/my-agents" },
+]
+
+// NavSecondary items
+const navSecondary = [
+  {
+    title: "Support",
+    url: "#",
+    icon: LifeBuoy,
+  },
+  {
+    title: "Contact",
+    url: "#",
+    icon: Send,
+  },
+  {
+    title: "About",
+    url: "#",
+    icon: Info,
+  }
 ]
 
 export function AppSidebar() {
@@ -117,14 +138,26 @@ export function AppSidebar() {
                         </SidebarMenuSubItem>
                       ))}
                     </SidebarMenuSub>
+                   
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <NavSecondary
+        className="mt-auto"
+                      items={navSecondary}
+                    />
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter >
+        <NavUser user={{
+          name: "John Doe",
+          email: "john.doe@example.com",
+          avatar: "https://github.com/shadcn.png"
+        }} />
+        
+      </SidebarFooter >
     </Sidebar>
   )
 }
