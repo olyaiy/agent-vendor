@@ -36,7 +36,7 @@ export function ChatHeader({ hasMessages = false }: ChatHeaderProps) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/assistant">Assistant</BreadcrumbLink>
+            <BreadcrumbLink href="/agent">Agent</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, History, Plus, Users, LifeBuoy, Send, Info } from "lucide-react"
+import { ChevronRight, History, Plus, Users, LifeBuoy, Send, Info, Command } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -24,6 +24,9 @@ import {
 } from "@/components/ui/collapsible"
 import { NavUser } from "./nav-user"
 import { NavSecondary } from "./nav-secondary"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 // Mock conversation history
 const historyItems = [
@@ -60,6 +63,22 @@ const navSecondary = [
 ]
 
 export function AppSidebar() {
+  const router = useRouter()
+
+  // Handle keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Command+K (Mac) or Ctrl+K (Windows/Linux)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        router.push('/agent/new')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [router])
+
   return (
     <Sidebar variant="inset">
       <SidebarHeader className="flex items-center justify-center  h-8">
@@ -71,16 +90,18 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* New Chat Button */}
-              <SidebarMenuItem>
+              {/* New Chat Button with Command+K shortcut */}
+              <SidebarMenuItem className="flex">
                 <SidebarMenuButton asChild tooltip="New Chat">
-
-                  <a href="/c" className="flex items-center gap-2 bg-input rounded-xl border-border border-2 py-4 ">
+                  <Link href="/agent/new" className="flex items-center gap-2 bg-input rounded-xl border-border border-2 py-4 flex-1">
                     <Plus size={18} />
                     <span>New Chat</span>
-                  </a>
-
+                  </Link>
                 </SidebarMenuButton>
+                <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-md px-2 border border-border">
+                  <Command size={12} />
+                  <span>K</span>
+                </div>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
