@@ -3,7 +3,6 @@
 import { Globe, Paperclip, Send, StopCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
 
@@ -71,12 +70,7 @@ export function ChatInput({
 
   return (
     <div className={cn("w-full px-4 pb-4 md:pb-6 md:px-8 relative", className)}>
-      <motion.div 
-        className="max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden"
-        initial={{ y: 10, opacity: 0.8 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.2 }}
-      >
+      <div className="max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden">
         <div className="flex flex-col">
           <div
             className="overflow-y-auto"
@@ -104,10 +98,8 @@ export function ChatInput({
 
           <div className="px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <motion.label 
+              <label 
                 className="cursor-pointer rounded-full p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <input 
                   type="file" 
@@ -115,7 +107,7 @@ export function ChatInput({
                   onChange={handleFileChange}
                 />
                 <Paperclip className="w-4 h-4 text-black/60 dark:text-white/60" />
-              </motion.label>
+              </label>
               
               <button
                 type="button"
@@ -128,56 +120,20 @@ export function ChatInput({
                 )}
               >
                 <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                  <motion.div
-                    animate={{
-                      rotate: showSearch ? 180 : 0,
-                      scale: showSearch ? 1.1 : 1,
-                    }}
-                    whileHover={{
-                      rotate: showSearch ? 180 : 15,
-                      scale: 1.1,
-                      transition: {
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 10,
-                      },
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 25,
-                    }}
-                  >
-                    <Globe
-                      className={cn(
-                        "w-4 h-4",
-                        showSearch
-                          ? "text-sky-500"
-                          : "text-inherit"
-                      )}
-                    />
-                  </motion.div>
+                  <Globe className={cn(
+                    "w-4 h-4",
+                    showSearch ? "text-sky-500" : "text-inherit"
+                  )} />
                 </div>
-                <AnimatePresence>
-                  {showSearch && (
-                    <motion.span
-                      initial={{ width: 0, opacity: 0 }}
-                      animate={{
-                        width: "auto",
-                        opacity: 1,
-                      }}
-                      exit={{ width: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap text-sky-500 flex-shrink-0"
-                    >
-                      Search
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                {showSearch && (
+                  <span className="text-sm overflow-hidden whitespace-nowrap text-sky-500 flex-shrink-0">
+                    Search
+                  </span>
+                )}
               </button>
             </div>
             
-            <motion.button
+            <button
               type="button"
               onClick={isStreaming ? stop : handleInternalSubmit}
               disabled={!isStreaming && !canSubmit}
@@ -189,24 +145,12 @@ export function ChatInput({
                   ? "bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
                   : "text-black/30 dark:text-white/30 cursor-not-allowed"
               )}
-              whileHover={isStreaming || canSubmit ? { scale: 1.05 } : {}}
-              whileTap={isStreaming || canSubmit ? { scale: 0.95 } : {}}
             >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={isStreaming ? 'stop' : 'send'}
-                  initial={{ scale: 0.8, opacity: 0, rotate: isStreaming ? 0 : -45 }}
-                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                  exit={{ scale: 0.8, opacity: 0, rotate: isStreaming ? 45 : 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {isStreaming ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />}
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
+              {isStreaming ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

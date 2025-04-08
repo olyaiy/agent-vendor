@@ -1,1 +1,2 @@
-export * from './auth-schema';
+// export * as agents from "./agent";
+export * as auth from "./auth-schema";
