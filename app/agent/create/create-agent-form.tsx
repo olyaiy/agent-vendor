@@ -13,14 +13,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { createAgent } from "./actions";
+import { createAgent } from "@/db/actions/agent-actions";
+
 
 export interface ModelInfo {
   id: string;
-  displayName: string;
-  modelType: "search" | "text-large" | "text-small" | "reasoning" | "image" | null;
+  model: string;
   description: string | null;
-  provider: string;
 }
 
 interface CreateAgentFormProps {
@@ -335,7 +334,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                   <SelectContent>
                     {models.map(model => (
                       <SelectItem key={model.id} value={model.id}>
-                        {model.displayName} - {model.provider}
+                        {model.model}
                       </SelectItem>
                     ))}
                   </SelectContent>

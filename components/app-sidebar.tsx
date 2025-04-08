@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, History, Plus, Users, LifeBuoy, Send, Info, Command } from "lucide-react"
+import { History, Plus, Users, LifeBuoy, Send, Info, Command } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -17,11 +17,6 @@ import {
     SidebarMenuSubItem,
   } from "@/components/ui/sidebar"
 import { Logo } from "./logo"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import { NavUser } from "./nav-user"
 import { NavSecondary } from "./nav-secondary"
 import Link from "next/link"
@@ -111,10 +106,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="flex items-center justify-center  h-14">
+      <SidebarHeader className="flex items-center justify-center h-14">
         <Logo/>
       </SidebarHeader>
-
 
       <SidebarContent className="py-6">
         <SidebarGroup>
@@ -157,70 +151,58 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* History Collapsible Menu */}
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="History">
-                      <History size={18} />
-                      <span>History</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub className="">
-                      {historyItems.map((item) => (
-                        <SidebarMenuSubItem key={item.title} className="">
-                          <SidebarMenuSubButton asChild className="">
-                            <Link href={item.url} className="flex items-center justify-start">
-                              <span className="text-xs truncate">{item.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {/* History with submenu */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="History">
+                  <Link href="/history">
+                    <History size={18} />
+                    <span>History</span>
+                  </Link>
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  {historyItems.map((item) => (
+                    <SidebarMenuSubItem key={item.title}>
+                      <SidebarMenuSubButton asChild>
+                        <Link href={item.url} className="flex items-center justify-start">
+                          <span className="text-xs truncate">{item.title}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </SidebarMenuItem>
               
-              {/* Agents Collapsible Menu */}
-              <Collapsible asChild className="group/collapsible">
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Agents">
-                      <Users size={18} />
-                      <span>Agents</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {agentItems.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton asChild>
-                            <Link href={item.url}>
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                   
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
+              {/* Agents with submenu */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Agents">
+                  <Link href="/agents">
+                    <Users size={18} />
+                    <span>Agents</span>
+                  </Link>
+                </SidebarMenuButton>
+                <SidebarMenuSub>
+                  {agentItems.map((item) => (
+                    <SidebarMenuSubItem key={item.title}>
+                      <SidebarMenuSubButton asChild>
+                        <Link href={item.url}>
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <NavSecondary
-        className="mt-auto"
-                      items={navSecondary}
-                    />
+          className="mt-auto"
+          items={navSecondary}
+        />
       </SidebarContent>
-      <SidebarFooter >
+      <SidebarFooter>
         <NavUser /> 
-        
-      </SidebarFooter >
+      </SidebarFooter>
     </Sidebar>
   )
 }
