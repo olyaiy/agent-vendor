@@ -7,37 +7,42 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
 
-interface AIInputWithSearchProps {
+interface ChatInputProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onSubmit: () => void;
+  status?: "submitted" | "streaming" | "ready" | "error";
+  stop?: () => void;
   id?: string;
   placeholder?: string;
   minHeight?: number;
   maxHeight?: number;
-  onSubmit?: (value: string, withSearch: boolean) => void;
   onFileSelect?: (file: File) => void;
   className?: string;
 }
 
-export function AIInputWithSearch({
+export function ChatInput({
+  value,
+  onChange,
+  onSubmit,
+  status,
+  stop,
   id = "ai-input-with-search",
   placeholder = "Search the web...",
   minHeight = 48,
   maxHeight = 164,
-  onSubmit,
   onFileSelect,
   className
-}: AIInputWithSearchProps) {
-  const [value, setValue] = useState("");
+}: ChatInputProps) {
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight,
     maxHeight,
   });
   const [showSearch, setShowSearch] = useState(true);
 
-  const handleSubmit = () => {
+  const handleInternalSubmit = () => {
     if (value.trim()) {
-      onSubmit?.(value, showSearch);
-      setValue("");
-      adjustHeight(true);
+      onSubmit();
     }
   };
 
@@ -49,8 +54,8 @@ export function AIInputWithSearch({
   };
 
   return (
-    <div className={cn("w-full py-4", className)}>
-      <div className="relative max-w-xl w-full mx-auto">
+    <div className={cn(" p-8 ", className)}>
+      <div className="relative w-xl   mx-auto">
         <div className="relative flex flex-col">
           <div
             className="overflow-y-auto"
@@ -65,13 +70,14 @@ export function AIInputWithSearch({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
-                  handleSubmit();
+                  handleInternalSubmit();
                 }
               }}
               onChange={(e) => {
-                setValue(e.target.value);
+                onChange(e);
                 adjustHeight();
               }}
+              disabled={status !== 'ready'}
             />
           </div>
 
@@ -143,16 +149,22 @@ export function AIInputWithSearch({
                   )}
                 </AnimatePresence>
               </button>
+              {status === 'streaming' && stop && (
+                <button type="button" onClick={stop} className="p-2 rounded-lg bg-red-500/15 text-red-500">
+                  Stop
+                </button>
+              )}
             </div>
             <div className="absolute right-3 bottom-3">
               <button
                 type="button"
-                onClick={handleSubmit}
+                onClick={handleInternalSubmit}
+                disabled={!value.trim() || status !== 'ready'}
                 className={cn(
                   "rounded-lg p-2 transition-colors",
-                  value
-                    ? "bg-sky-500/15 text-sky-500"
-                    : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
+                  value && status === 'ready'
+                    ? "bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
+                    : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 cursor-not-allowed"
                 )}
               >
                 <Send className="w-4 h-4" />

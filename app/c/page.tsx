@@ -1,10 +1,8 @@
-import { AIInputWithSearch } from "@/components/ui/ai-input-with-search";
+import Chat from "@/components/chat";
+
 
 export default function Page() {
     return (
-        <div>
-
-            <AIInputWithSearch />
-        </div>
+        <Chat/>
     );
 }

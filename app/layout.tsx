@@ -40,7 +40,7 @@ export default function RootLayout({
 
       <SidebarTrigger className="absolute top-4 left-4 z-10 cursor-pointer"/>
 
-      <SidebarInset>
+      <SidebarInset className="overflow-hidden">
 
 
         {children}
