@@ -37,6 +37,7 @@ const {
       )}
 
     <ChatInput 
+    // status={"streaming"}
       value={input}
       onChange={handleInputChange}
       onSubmit={handleSubmit}

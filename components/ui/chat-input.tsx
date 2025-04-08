@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Paperclip, Send } from "lucide-react";
+import { Globe, Paperclip, Send, StopCircle } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
@@ -77,7 +77,7 @@ export function ChatInput({
                 onChange(e);
                 adjustHeight();
               }}
-              disabled={status !== 'ready'}
+
             />
           </div>
 
@@ -149,25 +149,30 @@ export function ChatInput({
                   )}
                 </AnimatePresence>
               </button>
-              {status === 'streaming' && stop && (
-                <button type="button" onClick={stop} className="p-2 rounded-lg bg-red-500/15 text-red-500">
-                  Stop
-                </button>
-              )}
+              
             </div>
             <div className="absolute right-3 bottom-3">
               <button
                 type="button"
-                onClick={handleInternalSubmit}
-                disabled={!value.trim() || status !== 'ready'}
+                onClick={(status === 'submitted' || status === 'streaming') ? stop : handleInternalSubmit}
+                disabled={
+                  (status === 'ready' && !value.trim()) ||
+                  (status !== 'ready' && status !== 'submitted' && status !== 'streaming')
+                }
                 className={cn(
                   "rounded-lg p-2 transition-colors",
-                  value && status === 'ready'
+                  (status === 'submitted' || status === 'streaming')
+                    ? "bg-red-500/15 text-red-500 hover:bg-red-500/25"
+                    : value && status === 'ready'
                     ? "bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
                     : "bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 cursor-not-allowed"
                 )}
               >
-                <Send className="w-4 h-4" />
+                {(status === 'submitted' || status === 'streaming') ? (
+                  <StopCircle className="w-4 h-4" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
