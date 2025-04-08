@@ -14,7 +14,6 @@ import { ChevronDown } from 'lucide-react';
 interface MessagesProps {
   chatId: string;
   status: UseChatHelpers['status'];
-
   messages: Array<UIMessage>;
   setMessages: UseChatHelpers['setMessages'];
   reload: UseChatHelpers['reload'];
@@ -29,6 +28,7 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
+
 }: MessagesProps) {
 
 

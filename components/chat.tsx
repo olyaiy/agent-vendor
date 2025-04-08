@@ -15,7 +15,8 @@ const {
     handleInputChange, 
     handleSubmit, 
     status, 
-    stop
+    stop,
+    reload
 } = useChat()
 
 
@@ -29,6 +30,9 @@ const {
         status={status}
         messages={messages}
         setMessages={setMessages}
+        reload={reload}
+        isReadonly={false}
+        isArtifactVisible={false}
       />
       )}
 
