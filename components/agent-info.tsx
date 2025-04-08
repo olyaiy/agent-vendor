@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Brain, ChevronRight, Settings, Code, BookOpen, X, ZapIcon } from "lucide-react"
+import { Brain, ChevronRight, Settings, Code, BookOpen, X } from "lucide-react"
 import { useState } from "react"
 
 export function AgentInfo() {
