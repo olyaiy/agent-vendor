@@ -41,7 +41,7 @@ export function Header() {
       )}
     >
       <div className="size-8 items-center justify-center flex">
-        <SidebarTrigger className="cursor-pointer" />
+        <SidebarTrigger className="cursor-pointer  hover:scale-105 transition-all duration-100" />
       </div>
 
       <AnimatePresence>
@@ -55,8 +55,8 @@ export function Header() {
               exit="exit"
               key="plus-button"
             >
-              <button className="rounded-full hover:bg-gray-100">
-                <Plus className="h-5 w-5" />
+              <button className="rounded-full cursor-pointer  hover:scale-105 transition-all duration-100">
+                <Plus className="h-5 w-5 " />
               </button>
             </motion.div>
 
@@ -69,7 +69,7 @@ export function Header() {
               key="search-button"
               transition={{ delay: 0.05 }}
             >
-              <button className="rounded-full hover:bg-gray-100">
+              <button className="rounded-full cursor-pointer hover:scale-105 transition-all duration-100">
                 <SearchIcon className="h-5 w-5" />
               </button>
             </motion.div>

@@ -1,6 +1,6 @@
 import { db } from '../index';
 import { agent, Agent } from '../schema/agent';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 
 // Define the type for the data needed to insert an agent
 // Excludes fields that have default values or are generated (id, createdAt, updatedAt)
@@ -55,4 +55,16 @@ export async function updateAgent(agentId: string, updateData: Partial<NewAgent>
  */
 export async function deleteAgent(agentId: string): Promise<void> {
   await db.delete(agent).where(eq(agent.id, agentId));
+}
+
+/**
+ * Selects the most recent 20 agents from the database
+ * @returns Array of agent records ordered by creation date
+ */
+export async function selectRecentAgents(): Promise<Agent[]> {
+  return await db
+    .select()
+    .from(agent)
+    .orderBy(desc(agent.createdAt))
+    .limit(20);
 }

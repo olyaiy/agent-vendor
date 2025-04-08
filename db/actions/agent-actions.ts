@@ -1,6 +1,6 @@
 'use server'
 
-import { insertAgent } from "@/db/repository/agent-repository";
+import { insertAgent, selectRecentAgents } from "@/db/repository/agent-repository";
 
 /**
  * Server action to create a new agent
@@ -23,6 +23,16 @@ export async function createAgent(data: {
     return { success: true, data: result };
   } catch (error) {
     console.error("Failed to create agent:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function getRecentAgents() {
+  try {
+    const agents = await selectRecentAgents();
+    return { success: true, data: agents };
+  } catch (error) {
+    console.error("Failed to fetch agents:", error);
     return { success: false, error: (error as Error).message };
   }
 } 
