@@ -4,6 +4,8 @@ import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
+import { ChatHeader } from './chat/chat-header';
+
 
 
 export default function Chat() {
@@ -25,8 +27,10 @@ const {
 return (
   <div className="grid grid-cols-12 min-w-0 h-dvh">
 
+
     {/* Main Chat Column */}
       <div className="flex flex-col min-w-0 h-dvh col-span-9">
+        <ChatHeader />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>

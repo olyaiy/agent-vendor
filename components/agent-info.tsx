@@ -9,7 +9,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
-import { Brain, ChevronDown, ChevronUp, Settings, Wrench, Zap } from "lucide-react"
+import { Brain, ChevronRight, Settings, Code } from "lucide-react"
 import { useState } from "react"
 
 export function AgentInfo() {
@@ -18,7 +18,7 @@ export function AgentInfo() {
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(false)
   
   return (
-    <div className="h-full p-4 space-y-4 overflow-y-auto pb-24">
+    <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
       {/* Full-width Image */}
       <div className="w-full aspect-square bg-gray-200 rounded-lg" />
 
@@ -30,151 +30,136 @@ export function AgentInfo() {
         </p>
       </div>
 
-      {/* Categories Section - Always visible */}
-
-
-        <div className="flex flex-wrap gap-1.5">
-          <Badge variant="outline" className="text-xs px-2 py-0.5">💻 Code</Badge>
-          <Badge variant="outline" className="text-xs px-2 py-0.5">🌐 Web</Badge>
-          <Badge variant="outline" className="text-xs px-2 py-0.5">📊 Data</Badge>
-          <Badge variant="outline" className="text-xs px-2 py-0.5">🔒 Security</Badge>
-          <Badge variant="outline" className="text-xs px-2 py-0.5">🤖 AI</Badge>
-          <Badge variant="outline" className="text-xs px-2 py-0.5">📱 Mobile</Badge>
-        </div>
-
+      {/* Categories Section */}
+      <div className="flex flex-wrap gap-1.5 mt-2">
+        <Badge variant="outline" className="text-xs font-normal">Code</Badge>
+        <Badge variant="outline" className="text-xs font-normal">Web</Badge>
+        <Badge variant="outline" className="text-xs font-normal">Data</Badge>
+        <Badge variant="outline" className="text-xs font-normal">Security</Badge>
+        <Badge variant="outline" className="text-xs font-normal">AI</Badge>
+        <Badge variant="outline" className="text-xs font-normal">Mobile</Badge>
+      </div>
 
       <Separator className="my-4" />
 
-      {/* Behaviour Section */}
-      <Collapsible
-        open={isBehaviourOpen}
-        onOpenChange={setIsBehaviourOpen}
-        className="p-1 cursor-pointer"
-      >
-        <CollapsibleTrigger className="flex items-center justify-between w-full cursor-pointer">
-          <div className="flex items-center gap-2">
-            <Brain size={16} />
-            <span className="font-medium">Behaviour</span>
-          </div>
-          {isBehaviourOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-2 space-y-3">
-          {/* System Prompt */}
-          <div className="space-y-2">
-            <label htmlFor="system-prompt" className="text-sm font-medium">System Prompt</label>
+      {/* Sections Container */}
+      <div className="space-y-1">
+        {/* Behaviour Section */}
+        <Collapsible
+          open={isBehaviourOpen}
+          onOpenChange={setIsBehaviourOpen}
+          className="group"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-md px-3 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3">
+              <Brain className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Behaviour</span>
+            </div>
+            <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isBehaviourOpen ? 'rotate-90' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="py-3 px-3">
             <textarea
-              id="system-prompt"
-              className="w-full min-h-[100px] p-2 text-sm border rounded-md"
+              className="w-full min-h-[100px] p-3 text-sm border-0 rounded-md bg-muted/30 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               placeholder="Define how the AI assistant should behave..."
               defaultValue="You are a helpful, creative, and knowledgeable assistant specialized in software development."
             />
-            <p className="text-xs text-muted-foreground">Determines the assistant&apos;s personality and capabilities</p>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+            <p className="text-xs text-muted-foreground mt-2">Determines the assistant&apos;s personality and behavior</p>
+          </CollapsibleContent>
+        </Collapsible>
 
-      <Separator className="my-4" />
-
-      {/* Tools Section */}
-      <Collapsible 
-        open={isToolsOpen} 
-        onOpenChange={setIsToolsOpen}
-        className="p-1 cursor-pointer"
-      >
-        <CollapsibleTrigger className="flex items-center justify-between w-full cursor-pointer">
-          <div className="flex items-center gap-2">
-            <Wrench size={16} />
-            <span className="font-medium">Active Tools</span>
-          </div>
-          {isToolsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-2 space-y-3">
-          {/* Active Tools List */}
-          <div className="space-y-2">
-            <ul className="space-y-2">
-              <li className="flex items-center gap-2 p-1.5 rounded-md bg-muted/50">
-                <Zap size={14} className="text-amber-500" />
+        {/* Tools Section */}
+        <Collapsible 
+          open={isToolsOpen} 
+          onOpenChange={setIsToolsOpen}
+          className="group"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-md px-3 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3">
+              <Code className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Active Tools</span>
+            </div>
+            <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isToolsOpen ? 'rotate-90' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="py-3 px-3">
+            <div className="grid grid-cols-1 gap-1.5">
+              <div className="flex items-center gap-2.5 py-2">
+                <div className="w-1 h-4 bg-amber-500/80 rounded-full"></div>
                 <span className="text-sm">Code Editor</span>
-              </li>
-              <li className="flex items-center gap-2 p-1.5 rounded-md bg-muted/50">
-                <Zap size={14} className="text-green-500" />
+              </div>
+              <div className="flex items-center gap-2.5 py-2">
+                <div className="w-1 h-4 bg-green-500/80 rounded-full"></div>
                 <span className="text-sm">Web Browser</span>
-              </li>
-              <li className="flex items-center gap-2 p-1.5 rounded-md bg-muted/50">
-                <Zap size={14} className="text-blue-500" />
+              </div>
+              <div className="flex items-center gap-2.5 py-2">
+                <div className="w-1 h-4 bg-blue-500/80 rounded-full"></div>
                 <span className="text-sm">File Explorer</span>
-              </li>
-              <li className="flex items-center gap-2 p-1.5 rounded-md bg-muted/50">
-                <Zap size={14} className="text-purple-500" />
+              </div>
+              <div className="flex items-center gap-2.5 py-2">
+                <div className="w-1 h-4 bg-purple-500/80 rounded-full"></div>
                 <span className="text-sm">Terminal</span>
-              </li>
-            </ul>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
-
-      <Separator className="my-4" />
-
-      {/* Settings Section */}
-      <Collapsible
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-        className="p-1 cursor-pointer"
-      >
-        <CollapsibleTrigger className="flex items-center justify-between w-full  cursor-pointer">
-          <div className="flex items-center gap-2">
-            <Settings size={16} />
-            <span className="font-medium">Agent Settings</span>
-          </div>
-          {isSettingsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-2 space-y-3">
-          {/* Model Selection */}
-          <div className="space-y-2">
-            <label htmlFor="model" className="text-sm font-medium">AI Model</label>
-            <select 
-              id="model" 
-              className="w-full p-2 text-sm border rounded-md"
-              defaultValue="gpt-4"
-            >
-              <option value="gpt-4">GPT-4 Turbo</option>
-              <option value="claude">Claude 3 Opus</option>
-              <option value="mistral">Mistral Large</option>
-            </select>
-          </div>
-
-          {/* Temperature */}
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <label htmlFor="temperature" className="text-sm font-medium">Temperature</label>
-              <span className="text-sm">0.7</span>
+              </div>
             </div>
-            <Slider 
-              id="temperature"
-              defaultValue={[0.7]} 
-              max={1} 
-              step={0.1} 
-              className="w-full" 
-            />
-            <p className="text-xs text-muted-foreground">Controls creativity vs precision</p>
-          </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-          {/* Max Tokens */}
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <label htmlFor="max-tokens" className="text-sm font-medium">Max Tokens</label>
-              <span className="text-sm">4000</span>
+        {/* Settings Section */}
+        <Collapsible
+          open={isSettingsOpen}
+          onOpenChange={setIsSettingsOpen}
+          className="group"
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-md px-3 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3">
+              <Settings className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Agent Settings</span>
             </div>
-            <Slider 
-              id="max-tokens"
-              defaultValue={[4000]} 
-              max={8000} 
-              step={100} 
-              className="w-full" 
-            />
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+            <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isSettingsOpen ? 'rotate-90' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="py-3 px-3 space-y-5">
+            {/* Model Selection */}
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground">AI Model</label>
+              <select 
+                className="w-full p-2 text-sm border-0 rounded-md bg-muted/30 focus:outline-none focus:ring-1 focus:ring-ring"
+                defaultValue="gpt-4"
+              >
+                <option value="gpt-4">GPT-4 Turbo</option>
+                <option value="claude">Claude 3 Opus</option>
+                <option value="mistral">Mistral Large</option>
+              </select>
+            </div>
+
+            {/* Temperature */}
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <label className="text-xs text-muted-foreground">Temperature</label>
+                <span className="text-xs text-muted-foreground">0.7</span>
+              </div>
+              <Slider 
+                defaultValue={[0.7]} 
+                max={1} 
+                step={0.1} 
+                className="w-full" 
+              />
+              <p className="text-xs text-muted-foreground mt-1">Creativity vs precision</p>
+            </div>
+
+            {/* Max Tokens */}
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <label className="text-xs text-muted-foreground">Max Tokens</label>
+                <span className="text-xs text-muted-foreground">4000</span>
+              </div>
+              <Slider 
+                defaultValue={[4000]} 
+                max={8000} 
+                step={100} 
+                className="w-full" 
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
     </div>
   )
 }
