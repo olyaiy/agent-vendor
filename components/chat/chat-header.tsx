@@ -5,6 +5,7 @@ import { HomeIcon, Share2Icon, Copy, Check, DownloadIcon, FileTextIcon, FileIcon
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface ChatHeaderProps {
   hasMessages?: boolean;
@@ -30,14 +31,18 @@ export function ChatHeader({ hasMessages = false }: ChatHeaderProps) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">
-              <HomeIcon className="h-3.5 w-3.5" />
-              <span className="sr-only">Home</span>
+            <BreadcrumbLink asChild>
+              <Link href="/">
+                <HomeIcon className="h-3.5 w-3.5" />
+                <span className="sr-only">Home</span>
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/agent">Agent</BreadcrumbLink>
+            <BreadcrumbLink asChild>
+              <Link href="/agent">Agent</Link>
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
