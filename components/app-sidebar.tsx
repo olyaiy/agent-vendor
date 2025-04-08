@@ -39,7 +39,7 @@ const historyItems = [
 
 // Agent submenu items
 const agentItems = [
-  { title: "Create", url: "/agents/create" },
+  { title: "Create", url: "/agent/create" },
   { title: "Browse", url: "/agents/browse" },
   { title: "My Agents", url: "/agents/my-agents" },
 ]
