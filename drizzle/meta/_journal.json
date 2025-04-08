@@ -15,6 +15,13 @@
       "when": 1744135724256,
       "tag": "0001_slimy_jackpot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744136119799,
+      "tag": "0002_wonderful_old_lace",
+      "breakpoints": true
     }
   ]
 }
