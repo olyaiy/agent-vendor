@@ -11,6 +11,7 @@ export const agent = pgTable("agent", {
   systemPrompt: text("system_prompt"),
   welcomeMessage: text("welcome_message"),
   primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "cascade" }),
+  visibility: text("visibility").default("public").notNull(),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
   creatorId: text("creator_id").notNull().references(() => user.id, { onDelete: "cascade" }),

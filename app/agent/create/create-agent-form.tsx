@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { createAgent } from "./actions";
 
 export interface ModelInfo {
   id: string;
@@ -81,24 +82,37 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
       return;
     }
 
+    // Make sure primaryModelId is selected
+    if (!primaryModelId) {
+      toast.error("Please select an AI model");
+      return;
+    }
+
     startTransition(async () => {
       try {
-        // In a real app, this would call an API endpoint to create the agent
-        // For now, we'll just simulate success
-        console.log("Creating agent with data:", {
-          agentDisplayName: formData.get("agentDisplayName"),
-          systemPrompt: formData.get("systemPrompt"),
-          description: formData.get("description"),
-          modelId: primaryModelId,
-          visibility: visibility,
-          creatorId: userId,
+        // Create agent data object based on schema requirements
+        const newAgentData = {
+          name: formData.get("agentDisplayName") as string,
+          description: (formData.get("description") as string) || null,
+          systemPrompt: (formData.get("systemPrompt") as string) || null,
           thumbnailUrl: thumbnailUrl,
-        });
+          visibility: visibility,
+          primaryModelId: primaryModelId,
+          creatorId: userId,
+          welcomeMessage: null,
+          avatarUrl: null
+        };
+
+        // Use the server action to create the agent
+        const result = await createAgent(newAgentData);
         
-        toast.success("Agent created successfully");
-        
-        // Redirect to the agents page
-        router.push(`/agent`);
+        if (result.success) {
+          toast.success("Agent created successfully");
+          // Redirect to the agents page
+          router.push(`/agent`);
+        } else {
+          throw new Error(result.error || "Failed to create agent");
+        }
       } catch (error) {
         toast.error("Failed to create agent. Please try again.");
         console.error(error);
