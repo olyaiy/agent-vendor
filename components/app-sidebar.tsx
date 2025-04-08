@@ -68,13 +68,19 @@ export function AppSidebar() {
   const newChatPath = "/agent/new"
   const newChatButtonRef = useRef<HTMLAnchorElement>(null)
   const [isHovering, setIsHovering] = useState(false)
+  const [isMac, setIsMac] = useState(false)
+
+  // Detect operating system on client side
+  useEffect(() => {
+    setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform))
+  }, [])
 
   // Prefetch the new chat route for instant navigation
   useEffect(() => {
     router.prefetch(newChatPath)
   }, [router, newChatPath])
 
-  // Handle Command+K shortcut more efficiently using react-hotkeys-hook
+  // Handle Command+K/Ctrl+K shortcut more efficiently using react-hotkeys-hook
   useHotkeys("mod+k", (e) => {
     e.preventDefault()
     
@@ -114,7 +120,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* New Chat Button with Command+K shortcut */}
+              {/* New Chat Button with Command+K/Ctrl+K shortcut */}
               <SidebarMenuItem className="flex">
                 <SidebarMenuButton asChild tooltip="New Chat">
                   <Link 
@@ -130,8 +136,17 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
                 <div className="ml-2 flex items-center gap-1 text-xs text-muted-foreground bg-muted rounded-md px-2 border border-border">
-                  <Command size={12} />
-                  <span>K</span>
+                  {isMac ? (
+                    <>
+                      <Command size={12} />
+                      <span>K</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-medium">Ctrl</span>
+                      <span>+K</span>
+                    </>
+                  )}
                 </div>
               </SidebarMenuItem>
             </SidebarMenu>
