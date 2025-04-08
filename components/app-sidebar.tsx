@@ -148,7 +148,7 @@ export function AppSidebar() {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          {/* <SidebarGroupLabel>Navigation</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
               {/* History with submenu */}
