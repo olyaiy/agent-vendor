@@ -54,8 +54,8 @@ export function ChatInput({
   };
 
   return (
-    <div className={cn(" p-8 ", className)}>
-      <div className="relative w-xl   mx-auto">
+    <div className={cn("w-full p-4 md:p-8 ", className)}>
+      <div className="relative w-xl  mx-auto">
         <div className="relative flex flex-col">
           <div
             className="overflow-y-auto"
