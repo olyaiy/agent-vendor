@@ -5,6 +5,8 @@ import { insertAgent, selectRecentAgents } from "@/db/repository/agent-repositor
 /**
  * Server action to create a new agent
  * This allows us to safely perform database operations from client components
+ * @param data - Object containing all required agent properties
+ * @returns Promise with success status and created agent data or error
  */
 export async function createAgent(data: {
   name: string;
@@ -27,6 +29,11 @@ export async function createAgent(data: {
   }
 }
 
+/**
+ * Server action to fetch the most recent 20 agents
+ * This enables secure data fetching from client components
+ * @returns Promise with success status and agent list or error
+ */
 export async function getRecentAgents() {
   try {
     const agents = await selectRecentAgents();
