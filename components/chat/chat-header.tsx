@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
 import { HomeIcon, Share2Icon, Copy, Check, DownloadIcon, FileTextIcon, FileIcon, FileTypeIcon } from 'lucide-react';
