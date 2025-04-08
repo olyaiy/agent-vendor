@@ -1,1 +1,0 @@
-ALTER TABLE "models" DROP CONSTRAINT "models_provider_unique";

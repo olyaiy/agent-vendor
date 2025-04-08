@@ -1,1 +1,0 @@
-ALTER TABLE "Suggestion" ALTER COLUMN "id" DROP NOT NULL;

@@ -1,1 +1,0 @@
-ALTER TABLE "suggested_prompts" ALTER COLUMN "prompts" SET DEFAULT '["What are the advantages of using Next.js?","Help me write an essay about silicon valley","Write code to demonstrate djikstras algorithm","What is the weather in San Francisco?"]'::jsonb;

@@ -9,13 +9,11 @@ const components: Partial<Components> = {
   // @ts-expect-error Type mismatch between CodeBlock and ReactMarkdown's expected type
   code: CodeBlock,
   pre: ({ children }) => <>{children}</>,
-  p: ({ children, ...props }) => {
-    return (
-      <p className="text-base" {...props}>
-        {children}
-      </p>
-    );
-  },
+  p: ({ children, ...props }) => (
+    <p {...props} className="text-base">
+      {children}
+    </p>
+  ),
   ol: ({ children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4" {...props}>

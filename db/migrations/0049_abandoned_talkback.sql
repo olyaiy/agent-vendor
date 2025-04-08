@@ -1,1 +1,0 @@
-ALTER TABLE "agents" ADD COLUMN "settings" jsonb DEFAULT '{"maxTokens":null,"temperature":null,"topP":null,"topK":null,"presencePenalty":null,"frequencyPenalty":null,"maxRetries":null,"stopSequences":null,"seed":null}'::jsonb;

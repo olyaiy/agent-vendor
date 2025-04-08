@@ -1,1 +1,0 @@
-ALTER TABLE "agents" RENAME COLUMN "image_url" TO "thumbnail_url";

@@ -22,7 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    
     <html lang="en" suppressHydrationWarning>
+
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -41,6 +44,7 @@ export default function RootLayout({
       <SidebarTrigger className="absolute top-4 left-4 z-10 cursor-pointer"/>
 
       <SidebarInset className="overflow-hidden">
+
 
 
         {children}

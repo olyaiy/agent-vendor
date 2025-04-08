@@ -10,7 +10,6 @@ import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '../ui/button';
 import { ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface MessagesProps {
   chatId: string;
@@ -65,34 +64,15 @@ function PureMessages({
     prevMessagesRef.current = messages;
   }, [messages, scrollToBottom]);
 
-  const messageListVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.05 } 
-    }
-  };
-
   return (
-    <motion.div 
+    <div
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-auto pt-4 pb-2 w-full px-4 md:px-8 scrollbar-thin scrollbar-thumb-black/10 dark:scrollbar-thumb-white/10 scrollbar-track-transparent"
       ref={scrollRef}
-      initial="hidden"
-      animate="visible"
-      variants={messageListVariants}
     >
       {/* {messages.length === 0 && <Greeting />} */}
 
       {messages.map((message, index) => (
-        <motion.div
-          key={message.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ 
-            duration: 0.3,
-            ease: "easeOut" 
-          }}
-        >
+        <div key={message.id}>
           <PreviewMessage
             chatId={chatId}
             message={message}
@@ -101,58 +81,43 @@ function PureMessages({
             reload={reload}
             isReadonly={isReadonly}
           />
-        </motion.div>
+        </div>
       ))}
 
-      <AnimatePresence>
-        {status === 'submitted' &&
-          messages.length > 0 &&
-          messages[messages.length - 1].role === 'user' && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ThinkingMessage />
-            </motion.div>
-          )}
-      </AnimatePresence>
-
-      {/* Scroll to bottom button - appears when streaming and not at bottom */}
-      <AnimatePresence>
-        {status === 'streaming' && isNotAtBottomDebounced && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-8 z-10"
-          >
-            <Button
-              onClick={scrollToBottom}
-              className="rounded-full p-2 shadow-md backdrop-blur-sm"
-              size="icon"
-              variant="secondary"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </motion.div>
+      {status === 'submitted' &&
+        messages.length > 0 &&
+        messages[messages.length - 1].role === 'user' && (
+          <div>
+            <ThinkingMessage />
+          </div>
         )}
-      </AnimatePresence>
+
+      {status === 'streaming' && isNotAtBottomDebounced && (
+        <div
+          className="fixed bottom-24 right-8 z-10"
+        >
+          <Button
+            onClick={scrollToBottom}
+            className="rounded-full p-2 shadow-md backdrop-blur-sm"
+            size="icon"
+            variant="secondary"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       <div className="shrink-0 min-w-[24px] min-h-[24px]" />
-    </motion.div>
+    </div>
   );
 }
 
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.isArtifactVisible && nextProps.isArtifactVisible) return true;
-
+  // Proper comparison for all props
+  if (prevProps.isArtifactVisible !== nextProps.isArtifactVisible) return false;
   if (prevProps.status !== nextProps.status) return false;
-  if (prevProps.status && nextProps.status) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
-
+  
   return true;
 });

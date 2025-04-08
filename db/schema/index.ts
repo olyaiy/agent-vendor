@@ -1,11 +1,8 @@
-// Re-export all schema definitions for easier imports
-export * from './enums';
-export * from './users';
-export * from './models';
-export * from './tools';
-export * from './agents';
-export * from './chats';
-export * from './documents';
-export * from './tags';
-export * from './transactions'; 
-export * from './knowledge';
+import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+
+export const usersTable = pgTable("users", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull(),
+  age: integer().notNull(),
+  email: varchar({ length: 255 }).notNull().unique(),
+});
