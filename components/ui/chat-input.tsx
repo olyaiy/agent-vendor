@@ -1,7 +1,7 @@
 "use client";
 
 import { Globe, Paperclip, Send, StopCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -40,9 +40,22 @@ export function ChatInput({
   });
   const [showSearch, setShowSearch] = useState(false);
 
+  // Focus textarea on component mount
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
+
   const handleInternalSubmit = () => {
     if (value.trim()) {
       onSubmit();
+      // Maintain focus after submission
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 0);
     }
   };
 
@@ -75,6 +88,7 @@ export function ChatInput({
               placeholder={placeholder}
               className="w-full overflow-hidden px-4 py-3 bg-transparent border-none dark:text-white placeholder:text-black/50 dark:placeholder:text-white/50 resize-none focus-visible:ring-0 leading-relaxed text-base"
               ref={textareaRef}
+              autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -103,33 +117,64 @@ export function ChatInput({
                 <Paperclip className="w-4 h-4 text-black/60 dark:text-white/60" />
               </motion.label>
               
-              <motion.button
+              <button
                 type="button"
                 onClick={() => setShowSearch(!showSearch)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "rounded-full flex items-center gap-1.5 px-2.5 py-1.5 transition-all",
+                  "rounded-full transition-all flex items-center gap-2 px-1.5 py-1 border h-8 cursor-pointer",
                   showSearch
-                    ? "bg-sky-500/15 text-sky-500"
-                    : "hover:bg-black/10 dark:hover:bg-white/10 text-black/60 dark:text-white/60"
+                    ? "bg-sky-500/15 border-sky-400 text-sky-500"
+                    : "bg-black/5 dark:bg-white/5 border-transparent text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white"
                 )}
               >
-                <Globe className="w-4 h-4" />
+                <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                  <motion.div
+                    animate={{
+                      rotate: showSearch ? 180 : 0,
+                      scale: showSearch ? 1.1 : 1,
+                    }}
+                    whileHover={{
+                      rotate: showSearch ? 180 : 15,
+                      scale: 1.1,
+                      transition: {
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 10,
+                      },
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 260,
+                      damping: 25,
+                    }}
+                  >
+                    <Globe
+                      className={cn(
+                        "w-4 h-4",
+                        showSearch
+                          ? "text-sky-500"
+                          : "text-inherit"
+                      )}
+                    />
+                  </motion.div>
+                </div>
                 <AnimatePresence>
                   {showSearch && (
                     <motion.span
                       initial={{ width: 0, opacity: 0 }}
-                      animate={{ width: "auto", opacity: 1 }}
+                      animate={{
+                        width: "auto",
+                        opacity: 1,
+                      }}
                       exit={{ width: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="text-sm overflow-hidden whitespace-nowrap"
+                      className="text-sm overflow-hidden whitespace-nowrap text-sky-500 flex-shrink-0"
                     >
                       Search
                     </motion.span>
                   )}
                 </AnimatePresence>
-              </motion.button>
+              </button>
             </div>
             
             <motion.button
