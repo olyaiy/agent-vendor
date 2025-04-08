@@ -172,9 +172,9 @@ export function AppSidebar() {
                       {historyItems.map((item) => (
                         <SidebarMenuSubItem key={item.title} className="">
                           <SidebarMenuSubButton asChild className="">
-                            <a href={item.url} className="flex items-center justify-start">
+                            <Link href={item.url} className="flex items-center justify-start">
                               <span className="text-xs truncate">{item.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
@@ -198,9 +198,9 @@ export function AppSidebar() {
                       {agentItems.map((item) => (
                         <SidebarMenuSubItem key={item.title}>
                           <SidebarMenuSubButton asChild>
-                            <a href={item.url}>
+                            <Link href={item.url}>
                               <span>{item.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
