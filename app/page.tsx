@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { getRecentAgents } from "@/db/actions/agent-actions";
-import { Agent } from "@/db/schema/agent";
 import { AgentCard } from "@/components/agent-card";
 
 // Loading component for the agents data
@@ -31,7 +30,7 @@ async function AgentsList() {
   
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {agents.map((agent: Agent) => (
+      {agents.map((agent) => (
         <Suspense key={agent.id} fallback={<AgentItemLoading />}>
           <AgentCard agent={agent} />
         </Suspense>

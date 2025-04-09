@@ -3,11 +3,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Agent } from "@/db/schema/agent";
 import { SparklesIcon } from "@/components/utils/icons";
+import type { Agent } from "@/db/schema/agent";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { GearIcon, PinTopIcon, ChatBubbleIcon } from "@radix-ui/react-icons";
+import { DrawingPinFilledIcon } from "@radix-ui/react-icons";
 
 interface AgentCardProps {
-  agent: Agent;
+  agent: Pick<Agent, 'id' | 'name' | 'description' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId'>;
   className?: string;
 }
 
@@ -38,7 +47,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
   }, [agent.id]);
 
   return (
-    <Link href={`/${agent.id}`} className="block">
+    <Link href={`/agent/${agent.id}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
         <div className="relative aspect-square overflow-hidden rounded-lg">
           {agent.thumbnailUrl ? (
@@ -57,6 +66,29 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
               <SparklesIcon size={32} />
             </div>
           )}
+          
+          {/* Add dropdown menu */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 transition-colors cursor-pointer">
+                <DotsHorizontalIcon className="h-4 w-4 text-muted-foreground" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem className="cursor-pointer">
+                  <GearIcon className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <DrawingPinFilledIcon className="mr-2 h-4 w-4" />
+                  Pin
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <ChatBubbleIcon className="mr-2 h-4 w-4" />
+                  Add to Group Chat
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <div className="p-4">

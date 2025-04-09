@@ -61,9 +61,23 @@ export async function deleteAgent(agentId: string): Promise<void> {
  * Selects the most recent 20 agents from the database
  * @returns Array of agent records ordered by creation date
  */
-export async function selectRecentAgents(): Promise<Agent[]> {
+export async function selectRecentAgents(): Promise<Array<{
+  id: string;
+  name: string;
+  description: string | null;
+  thumbnailUrl: string | null;
+  avatarUrl: string | null;
+  creatorId: string;
+}>> {
   return await db
-    .select()
+    .select({
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      thumbnailUrl: agent.thumbnailUrl,
+      avatarUrl: agent.avatarUrl,
+      creatorId: agent.creatorId
+    })
     .from(agent)
     .orderBy(desc(agent.createdAt))
     .limit(20);
