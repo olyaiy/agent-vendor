@@ -30,9 +30,10 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
     id,
     messages, 
     setMessages,
-    input, 
-    handleInputChange, 
     handleSubmit, 
+    input, 
+    setInput,
+    append,
     status, 
     stop,
     reload
@@ -66,9 +67,9 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
               isArtifactVisible={false}
             />
             <ChatInput 
-              value={input}
-              onChange={handleInputChange}
-              onSubmit={handleSubmit}
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleSubmit}
               status={status}
               stop={stop}
             />
@@ -76,9 +77,9 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
         ) : (
           <div className="items-center justify-center flex h-full">
             <ChatInput 
-              value={input}
-              onChange={handleInputChange}
-              onSubmit={handleSubmit}
+              input={input}
+              setInput={setInput}
+              handleSubmit={handleSubmit}
               status={status}
               stop={stop}
             />

@@ -5,13 +5,15 @@ import React, { useState, useEffect, memo, useCallback } from "react"; // Import
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
+import { UseChatHelpers } from "@ai-sdk/react";
 
 interface ChatInputProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  onSubmit: () => void;
-  status?: "submitted" | "streaming" | "ready" | "error";
-  stop?: () => void;
+  input: UseChatHelpers['input'];
+  setInput: UseChatHelpers['setInput'];
+  status: UseChatHelpers['status'];
+  stop: () => void;
+  handleSubmit: UseChatHelpers['handleSubmit'];
+
   id?: string;
   placeholder?: string;
   minHeight?: number;
@@ -77,23 +79,26 @@ interface SendStopButtonProps {
   canSubmit: boolean;
 }
 
-const MemoizedSendStopButton = memo(({ onClick, isStreaming, canSubmit }: SendStopButtonProps) => (
-  <button
-    type="button"
-    onClick={onClick} // Use passed handler
-    disabled={!isStreaming && !canSubmit}
-    className={cn(
-      "rounded-full p-2 transition-colors",
-      isStreaming
-        ? "bg-red-500/15 text-red-500 hover:bg-red-500/25"
-        : canSubmit
-        ? "bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
-        : "text-black/30 dark:text-white/30 cursor-not-allowed"
-    )}
-  >
-    {isStreaming ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />}
-  </button>
-));
+const MemoizedSendStopButton = memo(({ onClick, isStreaming, canSubmit }: SendStopButtonProps) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick} // Use passed handler
+      disabled={!isStreaming && !canSubmit}
+      className={cn(
+        "rounded-full p-2 transition-colors cursor-pointer",
+        isStreaming
+          ? "bg-red-500/15 text-red-500 hover:bg-red-500/25"
+          : canSubmit
+          ? "bg-sky-500/15 text-sky-500 hover:bg-sky-500/25"
+          : "text-black/30 dark:text-white/30 cursor-not-allowed"
+      )}
+    >
+      {isStreaming ? <StopCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+    </button>
+  );
+}
+);
 MemoizedSendStopButton.displayName = 'MemoizedSendStopButton'; // Add display name
 
 // --- End: Memoized Button Components ---
@@ -101,11 +106,11 @@ MemoizedSendStopButton.displayName = 'MemoizedSendStopButton'; // Add display na
 
 // Main component remains largely the same, but uses the memoized buttons
 function ChatInputComponent({
-  value,
-  onChange,
-  onSubmit,
+  input,  
+  setInput,
   status,
   stop,
+  handleSubmit,
   id = "ai-input-with-search",
   placeholder = "Ask Anything...",
   minHeight = 48,
@@ -113,11 +118,18 @@ function ChatInputComponent({
   onFileSelect,
   className
 }: ChatInputProps) {
+  // Ref to store the latest value without causing re-renders for handler definitions
+  const inputRef = React.useRef(input);
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight,
     maxHeight,
   });
   const [showSearch, setShowSearch] = useState(false);
+
+  // Keep the ref updated with the latest value
+  useEffect(() => {
+    inputRef.current = input;
+  }, [input]);
 
   // Focus textarea on component mount
   useEffect(() => {
@@ -127,8 +139,9 @@ function ChatInputComponent({
   }, [textareaRef]); // Added textareaRef dependency
 
   const handleInternalSubmit = useCallback(() => {
-    if (value.trim()) {
-      onSubmit();
+    // Read value from ref inside the handler
+    if (inputRef.current.trim()) {
+      handleSubmit();
       // Maintain focus after submission
       setTimeout(() => {
         if (textareaRef.current) {
@@ -136,7 +149,8 @@ function ChatInputComponent({
         }
       }, 0);
     }
-  }, [value, onSubmit, textareaRef]); // Added dependencies
+  // Remove 'value' from dependencies, use stable 'onSubmit' and 'textareaRef'
+  }, [handleSubmit, textareaRef]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,8 +160,30 @@ function ChatInputComponent({
   }, [onFileSelect]); // Added dependency
 
   const isStreaming = status === 'submitted' || status === 'streaming';
+
+  
   // Ensure canSubmit is always boolean using double negation (!!)
-  const canSubmit = status === 'ready' && !!value.trim(); 
+  const canSubmit = status === 'ready' && !!input.trim();
+
+  // Memoize the onClick handler for the Send/Stop button
+  const handleSendStopClick = useCallback(() => {
+    if (isStreaming) {
+      stop?.(); // Use optional chaining for stop
+    } else {
+      handleInternalSubmit();
+    }
+  }, [isStreaming, stop, handleInternalSubmit]); // Add dependencies
+  
+
+  
+  // Track if handleSendStopClick reference changes
+  const prevHandlerRef = React.useRef(handleSendStopClick);
+  useEffect(() => {
+    if (prevHandlerRef.current !== handleSendStopClick) {
+
+      prevHandlerRef.current = handleSendStopClick;
+    }
+  }, [handleSendStopClick]);
 
   return (
     <div className={cn("w-full px-4 pb-4 md:pb-6 md:px-8 relative", className)}>
@@ -159,7 +195,7 @@ function ChatInputComponent({
           >
             <Textarea
               id={id}
-              value={value}
+              value={input}
               placeholder={placeholder}
               className="w-full overflow-hidden px-4 py-3 bg-transparent border-none dark:text-white placeholder:text-black/50 dark:placeholder:text-white/50 resize-none focus-visible:ring-0 leading-relaxed text-base"
               ref={textareaRef}
@@ -171,9 +207,9 @@ function ChatInputComponent({
                 }
               }, [handleInternalSubmit])} // Added dependency
               onChange={useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                onChange(e);
+                setInput(e.target.value);
                 adjustHeight();
-              }, [onChange, adjustHeight])} // Added dependencies
+              }, [setInput, adjustHeight])} // Added dependencies
             />
           </div>
 
@@ -190,10 +226,10 @@ function ChatInputComponent({
             </div>
             
             {/* Use Memoized Send/Stop Button */}
-            <MemoizedSendStopButton 
-              onClick={isStreaming ? stop! : handleInternalSubmit} // Pass correct handler based on state
-              isStreaming={isStreaming} 
-              canSubmit={canSubmit} 
+            <MemoizedSendStopButton
+              onClick={handleSendStopClick} // Use the memoized handler
+              isStreaming={isStreaming}
+              canSubmit={canSubmit}
             />
           </div>
         </div>
@@ -206,10 +242,10 @@ function ChatInputComponent({
 export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
   // Only re-render if value, status, or function references change
   return (
-    prevProps.value === nextProps.value &&
+    prevProps.input === nextProps.input &&
     prevProps.status === nextProps.status &&
-    prevProps.onSubmit === nextProps.onSubmit &&
-    prevProps.onChange === nextProps.onChange &&
+    prevProps.handleSubmit === nextProps.handleSubmit &&
+    prevProps.setInput === nextProps.setInput &&
     prevProps.stop === nextProps.stop &&
     prevProps.onFileSelect === nextProps.onFileSelect &&
     prevProps.id === nextProps.id &&
