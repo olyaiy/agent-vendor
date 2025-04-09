@@ -16,6 +16,7 @@ import { generateUUID } from '@/lib/utils';
 interface ChatProps {
   chatId: string;
   agent: Agent & { modelName: string };
+  initialMessages?: Array<UIMessage>;
   knowledgeItems: Knowledge[]; // Add knowledgeItems prop
   // selectedModelId and setSelectedModelId are managed internally, not passed as props
 }
@@ -39,7 +40,12 @@ const fetcher = (url: string) => fetch(url).then(res => {
 });
 
 
-export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // Destructure knowledgeItems
+export default function Chat({ 
+  agent, 
+  knowledgeItems, 
+  chatId, 
+  initialMessages 
+}: ChatProps) { // Destructure knowledgeItems
   // State for the selected model, initialized with the agent's primary model
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
 
@@ -87,6 +93,7 @@ export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // 
       systemPrompt: agent.systemPrompt,
       model: selectedModelId // Use the state variable for the model
     },
+    initialMessages,
     generateId: generateUUID,
     sendExtraMessageFields: true, 
   })

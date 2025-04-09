@@ -1,6 +1,6 @@
 import { db } from '../index';
 import { chat, type Chat, message, type DBMessage } from '../schema/chat';
-import { eq } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 
 /**
  * Retrieves a chat by its ID
@@ -62,6 +62,25 @@ export async function saveMessages({ messages }: { messages: DBMessage[] }) {
     return await db.insert(message).values(messages);
   } catch (error) {
     console.error('Failed to save messages in database', error);
+    throw error;
+  }
+}
+
+/**
+ * Retrieves messages for a specific chat ordered chronologically
+ * @param id - UUID of the chat to retrieve messages for
+ * @returns Array of message records
+ * @throws Error if database operation fails
+ */
+export async function getMessagesByChatId({ id }: { id: string }): Promise<DBMessage[]> {
+  try {
+    return await db
+      .select()
+      .from(message)
+      .where(eq(message.chatId, id))
+      .orderBy(asc(message.createdAt));
+  } catch (error) {
+    console.error('Failed to get messages by chat id from database', error);
     throw error;
   }
 }

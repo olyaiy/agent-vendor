@@ -36,6 +36,12 @@ export async function POST(req: Request) {
     systemPrompt 
   } = await req.json();
 
+  console.log('the request body is --------------------------------');
+  console.log(chatId);
+  console.log(modelId);
+  console.log(messages);
+  console.log(systemPrompt);
+
 
 
   /* ---- GET MOST RECENT USER MESSAGE ---- */
@@ -127,7 +133,7 @@ export async function POST(req: Request) {
     model: modelInstance,
     system: systemPrompt,
     messages,
-    experimental_generateMessageId: generateUUID,
+    experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
     onFinish: async ({ response }) => {
       if (session.user?.id) {
         try {
@@ -171,6 +177,9 @@ export async function POST(req: Request) {
         }
       }
     },
+    onError: (error) => {
+      console.error('Error streaming text', error);
+    }
   });
   
 
