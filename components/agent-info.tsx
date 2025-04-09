@@ -35,6 +35,7 @@ import { Pencil2Icon } from "@radix-ui/react-icons"
 import { useState } from "react"
 import { Agent, Knowledge } from "@/db/schema/agent" // Import Knowledge type
 import { AgentImage } from "@/components/agent-image"
+import { ModelSelect } from '@/components/model-select'
 
 interface AgentInfoProps {
   agent: Agent;
@@ -263,30 +264,7 @@ export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { 
             {/* Model Selection */}
             <div className="space-y-2">
               <label className="text-xs text-muted-foreground">AI Model</label>
-              <Select defaultValue="gpt-4">
-                <SelectTrigger className="w-full bg-muted/30 border-0 focus:ring-1 focus:ring-ring">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>OpenAI</SelectLabel>
-                    <SelectItem value="gpt-4">GPT-4 Turbo</SelectItem>
-                    <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                    <SelectItem value="gpt-3.5">GPT-3.5 Turbo</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Anthropic</SelectLabel>
-                    <SelectItem value="claude-3-opus">Claude 3 Opus</SelectItem>
-                    <SelectItem value="claude-3-sonnet">Claude 3 Sonnet</SelectItem>
-                    <SelectItem value="claude-3-haiku">Claude 3 Haiku</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Others</SelectLabel>
-                    <SelectItem value="mistral-large">Mistral Large</SelectItem>
-                    <SelectItem value="llama-3">Llama 3</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <ModelSelect defaultValue="gpt-4" />
             </div>
 
             {/* Temperature */}

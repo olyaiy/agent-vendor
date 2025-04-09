@@ -2,7 +2,7 @@ import Chat from "@/components/chat";
 import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository"; // Added selectKnowledgeByAgentId
 import { parseAgentSlug } from "@/lib/utils";
 import { notFound } from "next/navigation";
-import { Knowledge } from "@/db/schema/agent"; // Added Knowledge type
+
 
 export default async function Page({
   // No changes needed here for params type

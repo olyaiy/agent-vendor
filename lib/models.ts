@@ -46,7 +46,6 @@ export const myProvider = customProvider({
     'mistral-saba-24b': groq('mistral-saba-24b'),
     'qwen-2.5-32b': groq('qwen-2.5-32b'),
 
-    
 
     // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
