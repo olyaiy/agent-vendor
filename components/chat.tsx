@@ -1,6 +1,8 @@
 'use client'
 import React, { useState } from 'react' // Import useState
 import { useChat } from '@ai-sdk/react';
+import useSWR from 'swr'; // Import useSWR
+import type { Chat as DbChat } from '@/db/schema/chat'; // Import DB Chat type
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
@@ -17,9 +19,40 @@ interface ChatProps {
   // selectedModelId and setSelectedModelId are managed internally, not passed as props
 }
 
+// Simple fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then(res => {
+  if (!res.ok) {
+    // You might want more sophisticated error handling
+    const error = new Error('An error occurred while fetching the data.');
+    // Attach extra info to the error object.
+    // @ts-expect-error - Adding custom properties info/status to Error object
+    error.info = res.statusText;
+    // @ts-expect-error - Adding custom properties info/status to Error object
+    error.status = res.status;
+    throw error;
+  }
+  return res.json();
+});
+
+
 export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // Destructure knowledgeItems
   // State for the selected model, initialized with the agent's primary model
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
+
+  // Fetch chat data using SWR
+  const { data: chatData, error: chatError } = useSWR<DbChat>(
+    chatId ? `/api/chat/${chatId}` : null, // API endpoint URL, conditional on chatId
+    fetcher,
+    {
+      revalidateOnFocus: true, // Optional: Revalidate when window gets focus
+      onError: (err) => { // Add basic error logging
+        console.error("SWR Error fetching chat data:", err);
+      }
+    }
+  );
+
+  // Determine the title to display
+  const displayTitle = chatData?.title;
 
   // Try using useSession hook from authClient
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
@@ -56,7 +89,13 @@ export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // 
     <div className="grid grid-cols-12 min-w-0 h-full">
       {/* Main Chat Column */}
       <div className="flex flex-col min-w-0 h-full col-span-9 overflow-y-scroll">
-        <ChatHeader hasMessages={messages.length > 0} agentName={agent.name} agentId={agent.id} />
+        {/* Pass the fetched title to ChatHeader */}
+        <ChatHeader
+          hasMessages={messages.length > 0}
+          agentName={agent.name}
+          agentId={agent.id}
+          chatTitle={displayTitle} // Pass the title here
+        />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>

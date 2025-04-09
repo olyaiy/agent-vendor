@@ -16,9 +16,10 @@ interface ChatHeaderProps {
   hasMessages?: boolean;
   agentName?: string;
   agentId?: string;
+  chatTitle?: string | null; // Add chatTitle prop
 }
 
-function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId }: ChatHeaderProps) {
+function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId, chatTitle }: ChatHeaderProps) { // Destructure chatTitle
   const [copied, setCopied] = useState(false);
   // Get sidebar state
   const { state: sidebarState } = useSidebar();
@@ -31,7 +32,7 @@ function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId
 
   const handleDownload = (format: string) => {
     // Mock download functionality
-    console.log(`Downloading as ${format}`);
+    void format;
     // In a real app, this would trigger the actual download
   };
 
@@ -77,7 +78,8 @@ function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId
             <BreadcrumbSeparator />
             <motion.div layout>
               <BreadcrumbItem>
-                <BreadcrumbPage>New Conversation</BreadcrumbPage>
+                {/* Display fetched title or fallback */}
+                <BreadcrumbPage>{chatTitle || 'New Conversation'}</BreadcrumbPage>
               </BreadcrumbItem>
             </motion.div>
           </BreadcrumbList>

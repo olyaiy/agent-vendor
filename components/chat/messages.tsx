@@ -65,7 +65,7 @@ function PureMessages({
     prevMessagesRef.current = messages;
   }, [messages, scrollToBottom]);
 
-  console.log("message length is ", messages.length)
+
 
   return (
     <div

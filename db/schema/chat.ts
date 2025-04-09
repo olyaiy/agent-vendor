@@ -19,6 +19,7 @@ import { agent, models } from './agent';
 // Chat Table 
 // --------------------------------------------------
 export const chat = pgTable('Chat', {
+
     id: uuid('id').primaryKey().notNull().defaultRandom(),
     createdAt: timestamp('createdAt').notNull(),
     title: text('title').notNull(),
@@ -49,6 +50,7 @@ export const chat = pgTable('Chat', {
 // Modern Message Table (Supports complex content)
 // --------------------------------------------------
 export const message = pgTable("Message", {
+    // Use UUID v7 for better performance - time-ordered for efficient indexing
     id: uuid('id').primaryKey().notNull().defaultRandom(),
     chatId: uuid('chatId')  // Links to either Chat or GroupChat
       .notNull()
