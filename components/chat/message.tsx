@@ -6,7 +6,7 @@ import { memo, useState } from 'react';
 
 // import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon, SparklesIcon } from '../utils/icons';
-import { Markdown } from './markdown';
+// import { Markdown } from './markdown';
 // import { MessageActions } from './message-actions';
 // import { PreviewAttachment } from './preview-attachment';
 import equal from 'fast-deep-equal';
@@ -122,9 +122,10 @@ const PurePreviewMessage = ({
                           message.role === 'user',
                       })}
                     >
-                      <Markdown key={`${message.id}-${index}`}>
+                      {/* <Markdown key={`${message.id}-${index}`}>
                         {part.text}
-                      </Markdown>
+                      </Markdown> */}
+                      {part.text}
                     </div>
                   </div>
                 );

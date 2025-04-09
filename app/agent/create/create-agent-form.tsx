@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, ChevronRight, Globe, Loader2, Lock, Save, Share } from "lucide-react";
+import { Loader2  } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { createAgent } from "@/db/actions/agent-actions";
+import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
+import { VisibilitySelector } from "@/app/components/visibility-selector";
 
 
 export interface ModelInfo {
@@ -39,28 +40,6 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
   
-  // Visibility options with icons and descriptions
-  const visibilityOptions = [
-    {
-      id: "private",
-      label: "Private",
-      description: "Only you can access this agent",
-      icon: <Lock className="size-4" />
-    },
-    {
-      id: "public",
-      label: "Public",
-      description: "Anyone can see and use this agent",
-      icon: <Globe className="size-4" />
-    },
-    {
-      id: "link",
-      label: "Link sharing",
-      description: "Only people with the link can access",
-      icon: <Share className="size-4" />
-    }
-  ];
-
   // Adjust system prompt height
   const adjustSystemPromptHeight = () => {
     const textarea = systemPromptRef.current;
@@ -178,7 +157,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                        <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
                       </TooltipTrigger>
                       <TooltipContent side="right" className="max-w-[250px]">
                         <p>The name of your agent as displayed to users.</p>
@@ -207,7 +186,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                      <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
                     </TooltipTrigger>
                     <TooltipContent side="right" className="max-w-[250px]">
                       <p>A brief description of what your agent does.</p>
@@ -223,67 +202,10 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
               />
             </div>
             
-            <div className="space-y-4">
-              <div className="flex items-start justify-between mb-1.5">
-                <div className="flex items-start gap-1.5">
-                  <Label className="text-sm font-medium flex items-center gap-1.5">
-                    Visibility
-                  </Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
-                      </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-[250px]">
-                        <p>Control who can see and use your agent.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-              
-              <div className="bg-secondary/50 border rounded-lg p-2">
-                <div className="grid grid-cols-3 gap-2">
-                  {visibilityOptions.map((option) => (
-                    <Label
-                      key={option.id}
-                      htmlFor={option.id}
-                      className={cn(
-                        "flex flex-col items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors h-full",
-                        visibility === option.id 
-                          ? "bg-background border-primary/30 ring-1 ring-primary/20" 
-                          : "hover:bg-background/80"
-                      )}
-                      onClick={() => setVisibility(option.id as "public" | "private" | "link")}
-                    >
-                      <div className="flex flex-col items-center gap-2 w-full">
-                        <div className={cn(
-                          "flex items-center justify-center w-8 h-8 rounded-full",
-                          visibility === option.id
-                            ? "bg-primary/10 text-primary"
-                            : "bg-secondary text-muted-foreground"
-                        )}>
-                          {option.icon}
-                        </div>
-                        <div className="flex flex-col items-center gap-0.5 text-center">
-                          <span className="font-medium">{option.label}</span>
-                          <span className="text-xs text-muted-foreground">{option.description}</span>
-                        </div>
-                      </div>
-                      <input 
-                        type="radio" 
-                        id={option.id} 
-                        name="visibility" 
-                        value={option.id} 
-                        checked={visibility === option.id}
-                        onChange={() => {}}
-                        className="mt-2 h-4 w-4"
-                      />
-                    </Label>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <VisibilitySelector 
+              value={visibility}
+              onValueChange={setVisibility}
+            />
           </div>
         </section>
         
@@ -311,7 +233,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                        <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
                       </TooltipTrigger>
                       <TooltipContent side="right" className="max-w-[250px]">
                         <p>Select the AI model that will power your agent.</p>
@@ -371,7 +293,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                        <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
                       </TooltipTrigger>
                       <TooltipContent side="right" className="max-w-[250px]">
                         <p>Instructions that define how your agent behaves.</p>
@@ -397,7 +319,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
               
               <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border text-sm">
                 <h3 className="font-medium mb-2 text-primary flex items-center gap-2">
-                  <ChevronRight className="size-4" />
+                  <ChevronRightIcon className="size-4" />
                   Tips for effective system prompts:
                 </h3>
                 <ul className="list-disc list-inside space-y-1.5 pl-1 text-muted-foreground">
@@ -434,7 +356,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
             </>
           ) : (
             <>
-              <Save className="size-4" />
+              <DiscIcon className="size-4" />
               Create Agent
             </>
           )}
