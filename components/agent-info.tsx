@@ -18,22 +18,37 @@ import {
   SelectGroup,
   SelectLabel
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog" // Added Dialog components
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button" // Import Button
 import Link from "next/link" // Import Link
-import { Brain, ChevronRight, Settings, Code, BookOpen, X } from "lucide-react" // Add Edit icon
+import { Brain, ChevronRight, Settings, Code, BookOpen, FileText } from "lucide-react" // Removed X icon, Added FileText
 import { Pencil2Icon } from "@radix-ui/react-icons"
 import { useState } from "react"
-import { Agent } from "@/db/schema/agent"
+import { Agent, Knowledge } from "@/db/schema/agent" // Import Knowledge type
 import { AgentImage } from "@/components/agent-image"
 
 interface AgentInfoProps {
   agent: Agent;
   isOwner: boolean; // Add isOwner prop
+  knowledgeItems: Knowledge[]; // Add knowledgeItems prop
 }
 
-export function AgentInfo({ agent, isOwner }: AgentInfoProps) {
+// Helper function to calculate word count
+const countWords = (text: string | null): number => {
+  if (!text) return 0;
+  return text.trim().split(/\s+/).length;
+};
+
+export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { // Destructure knowledgeItems
   // Debugging logs for isOwner
   console.log("AgentInfo - Agent Creator ID:", agent.creatorId);
   console.log("AgentInfo - Received isOwner prop:", isOwner);
@@ -41,7 +56,8 @@ export function AgentInfo({ agent, isOwner }: AgentInfoProps) {
   const [isToolsOpen, setIsToolsOpen] = useState(false)
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(true)
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false)
-  
+  const [selectedKnowledgeItem, setSelectedKnowledgeItem] = useState<Knowledge | null>(null); // State for dialog
+
   return (
     <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
       {/* Replace image section */}
@@ -130,61 +146,60 @@ export function AgentInfo({ agent, isOwner }: AgentInfoProps) {
               <div>
                 <p className="text-xs text-muted-foreground">Reference materials the agent can access</p>
               </div>
-              
+
+              {/* Display actual knowledge items with Dialog */}
               <div className="space-y-2">
-                {/* Knowledge Item */}
-                <div className="bg-muted/30 p-3 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">React Documentation</h4>
-                    <button className="text-muted-foreground hover:text-foreground transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Official React documentation including hooks, components, and patterns</p>
-                  <div className="flex items-center mt-2">
-                    <Badge variant="secondary" className="text-xs">Website</Badge>
-                    <span className="text-xs text-muted-foreground ml-2 max-w-[150px] truncate" title="react.dev">react.dev</span>
-                  </div>
-                  <div className="flex justify-end mt-1">
-                    <span className="text-[10px] text-muted-foreground">125,000 words</span>
-                  </div>
-                </div>
-                
-                {/* Knowledge Item */}
-                <div className="bg-muted/30 p-3 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">Next.js 14 App Router Guide</h4>
-                    <button className="text-muted-foreground hover:text-foreground transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Complete guide to the App Router architecture including server components</p>
-                  <div className="flex items-center mt-2">
-                    <Badge variant="secondary" className="text-xs">PDF</Badge>
-                    <span className="text-xs text-muted-foreground ml-2 max-w-[150px] truncate" title="nextjs.org/docs/app-router-guide.pdf">nextjs.org/docs/app-router-guide.pdf</span>
-                  </div>
-                  <div className="flex justify-end mt-1">
-                    <span className="text-[10px] text-muted-foreground">85,500 words</span>
-                  </div>
-                </div>
-                
-                {/* Knowledge Item */}
-                <div className="bg-muted/30 p-3 rounded-md">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium">Company Codebase</h4>
-                    <button className="text-muted-foreground hover:text-foreground transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Private repository with company coding standards and examples</p>
-                  <div className="flex items-center mt-2">
-                    <Badge variant="secondary" className="text-xs">Text</Badge>
-                    <span className="text-xs text-muted-foreground ml-2 max-w-[150px] truncate" title="github.com/company/standards">github.com/company/standards</span>
-                  </div>
-                  <div className="flex justify-end mt-1">
-                    <span className="text-[10px] text-muted-foreground">32,400 words</span>
-                  </div>
-                </div>
+                {knowledgeItems.length > 0 ? (
+                  knowledgeItems.map((item) => (
+                    <Dialog key={item.id} onOpenChange={(open) => !open && setSelectedKnowledgeItem(null)}>
+                      <DialogTrigger asChild>
+                        <button className="w-full text-left bg-muted/30 p-3 rounded-md hover:bg-muted/50 transition-colors cursor-pointer block">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium truncate pr-2" title={item.title}>
+                              <FileText className="inline-block w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
+                              {item.title}
+                            </h4>
+                            {/* Removed X button */}
+                          </div>
+                          {/* Display sourceUrl if available */}
+                          {item.sourceUrl && (
+                            <div className="flex items-center mt-1.5">
+                              <Badge variant="secondary" className="text-xs capitalize">
+                                {item.sourceUrl.split('.').pop() || 'File'} {/* Simple type detection */}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground ml-2 max-w-[150px] truncate" title={item.sourceUrl}>
+                                {item.sourceUrl}
+                              </span>
+                            </div>
+                          )}
+                          {/* Display word count */}
+                          <div className="flex justify-end mt-1">
+                            <span className="text-[10px] text-muted-foreground">
+                              {countWords(item.content).toLocaleString()} words
+                            </span>
+                          </div>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+                        <DialogHeader>
+                          <DialogTitle className="truncate pr-10">{item.title}</DialogTitle>
+                          {item.sourceUrl && (
+                            <DialogDescription>
+                              Source: {item.sourceUrl} ({countWords(item.content).toLocaleString()} words)
+                            </DialogDescription>
+                          )}
+                        </DialogHeader>
+                        <div className="overflow-y-auto flex-1 pr-2">
+                          <pre className="text-sm whitespace-pre-wrap break-words font-sans py-2">
+                            {item.content}
+                          </pre>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">No knowledge items added yet.</p>
+                )}
               </div>
             </div>
           </CollapsibleContent>
@@ -332,7 +347,7 @@ export function AgentInfo({ agent, isOwner }: AgentInfoProps) {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="streaming" className="text-sm">Response Streaming</Label>
-                  <p className="text-xs text-muted-foreground">Display responses as they&apos;re generated</p>
+                  <p className="text-xs text-muted-foreground">Display responses as they&apos;re generated</p> {/* Fixed escaping */}
                 </div>
                 <Switch id="streaming" defaultChecked />
               </div>

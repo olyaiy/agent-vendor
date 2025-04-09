@@ -17,14 +17,6 @@ import { Input } from "@/components/ui/input"; // Adjusted import path
 import { Textarea } from "@/components/ui/textarea"; // Adjusted import path
 import { Label } from "@/components/ui/label"; // Adjusted import path
 import {
-  Card,
-  CardContent,
-  CardDescription, // Keep if needed for sourceUrl display
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card"; // Adjusted import path
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -440,7 +432,7 @@ export function KnowledgeEditor({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-4 transition-colors relative ${ // Added relative positioning
+        className={`border-2 border-dashed rounded-lg p-4 transition-colors relative ${
           isDragging
             ? "border-primary bg-primary/5"
             : "border-gray-200 dark:border-gray-800 hover:border-primary/50 hover:bg-primary/5"
@@ -490,35 +482,35 @@ export function KnowledgeEditor({
           </div>
         )}
 
-        {/* Items Grid */}
+        {/* Simplified Items Grid */}
         {items.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {items.map((item) => (
-              <Card
+              <div
                 key={item.id}
-                className="group relative border overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50"
+                className="group relative border bg-background rounded-lg overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50 p-4"
               >
                 {/* Delete Button & Dialog */}
-                <AlertDialog open={deleteItemId === item.id} onOpenChange={(open: boolean) => !open && setDeleteItemId(null)}> {/* Added boolean type */}
+                <AlertDialog open={deleteItemId === item.id} onOpenChange={(open: boolean) => !open && setDeleteItemId(null)}>
                   <AlertDialogTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 size-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 z-10"
+                      className="absolute top-1 right-1 size-6 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 z-10"
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevent card click
+                        e.stopPropagation();
                         setDeleteItemId(item.id);
                       }}
                       aria-label="Delete knowledge item"
                     >
-                      <Trash2 className="size-4" />
+                      <Trash2 className="size-3" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will permanently delete the knowledge item titled "{item.title}".
+                        This will permanently delete the knowledge item titled &quot;{item.title}&quot;.
                         This action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -527,10 +519,10 @@ export function KnowledgeEditor({
                       <AlertDialogAction
                         onClick={() => handleDelete(item.id)}
                         className="bg-red-500 hover:bg-red-600"
-                        disabled={isSubmitting} // Disable while any submission is happening
+                        disabled={isSubmitting}
                       >
                         {isSubmitting && deleteItemId === item.id ? (
-                          <Loader2 className="size-4 animate-spin mr-2" />
+                          <Loader2 className="size-3 animate-spin mr-1" />
                         ) : null}
                         Delete
                       </AlertDialogAction>
@@ -539,45 +531,36 @@ export function KnowledgeEditor({
                 </AlertDialog>
 
                 {/* Edit Dialog Trigger & Content */}
-                <Dialog open={editingItem?.id === item.id} onOpenChange={(open: boolean) => { // Added boolean type
+                <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => {
                   if (!open) {
                     resetForm();
                     setEditingItem(null);
                   }
                 }}>
                   <DialogTrigger asChild>
-                    {/* Make the main card content clickable */}
-                    <button
-                      className="text-left w-full overflow-hidden cursor-pointer block"
+                    <div 
+                      className="cursor-pointer space-y-2"
                       onClick={() => handleEditClick(item)}
-                      aria-label={`Edit knowledge item ${item.title}`}
                     >
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base font-medium flex items-center gap-2 truncate">
-                          <File className="size-4 flex-shrink-0 text-primary/70" />
-                          {item.title}
-                        </CardTitle>
-                        {/* Display sourceUrl if available */}
-                        {item.sourceUrl && (
-                          <CardDescription className="text-xs truncate mt-1">
-                            Source: {item.sourceUrl}
-                          </CardDescription>
-                        )}
-                      </CardHeader>
-                      <CardContent className="pb-3">
-                        <div className="text-xs text-muted-foreground h-[80px] overflow-hidden">
-                          <p className="whitespace-pre-wrap line-clamp-4">
-                            {truncateContent(item.content)}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </button>
+                      <div className="flex items-center gap-2">
+                        <File className="size-4 text-primary/70" />
+                        <h3 className="font-semibold text-sm truncate">{item.title}</h3>
+                      </div>
+                      {item.sourceUrl && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          Source: {item.sourceUrl}
+                        </p>
+                      )}
+                      <div className="text-xs text-muted-foreground mt-2 line-clamp-3">
+                        {truncateContent(item.content)}
+                      </div>
+                    </div>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[550px]">
                     <DialogHeader>
                       <DialogTitle>Edit Knowledge Item</DialogTitle>
                       <DialogDescription>
-                        Update your agent's knowledge base.
+                        Update your agent&apos;s knowledge base.
                       </DialogDescription>
                     </DialogHeader>
 
@@ -593,14 +576,13 @@ export function KnowledgeEditor({
                         />
                       </div>
 
-                      {/* Optional: Display/Edit sourceUrl if needed */}
                       {formValues.sourceUrl && (
                          <div className="space-y-2">
                            <Label htmlFor="edit-sourceUrl">Source File</Label>
                            <Input
                              id="edit-sourceUrl"
                              value={formValues.sourceUrl}
-                             readOnly // Typically read-only after upload
+                             readOnly
                              className="bg-muted/50"
                            />
                          </div>
@@ -621,7 +603,6 @@ export function KnowledgeEditor({
                       <DialogFooter>
                         <Button
                           type="button"
-                          variant="outline"
                           onClick={() => {
                             resetForm();
                             setEditingItem(null);
@@ -630,7 +611,7 @@ export function KnowledgeEditor({
                           Cancel
                         </Button>
                         <Button type="submit" disabled={isSubmitting}>
-                          {isSubmitting && editingItem?.id === item.id ? ( // Show loading only for this item's update
+                          {isSubmitting && editingItem?.id === item.id ? (
                             <>
                               <Loader2 className="mr-2 size-4 animate-spin" />
                               Updating...
@@ -642,37 +623,31 @@ export function KnowledgeEditor({
                   </DialogContent>
                 </Dialog>
 
-                {/* Card Footer with Stats */}
-                <CardFooter className="flex flex-col items-start pt-0 pb-3 gap-1">
-                  {(() => {
-                    const stats = getContentStats(item.content);
-                    return (
-                      <Badge variant="outline" className="text-xs font-normal">
-                        {stats.words.toLocaleString()} word{stats.words !== 1 ? 's' : ''}
-                      </Badge>
-                    );
-                  })()}
-
+                {/* Footer with Stats */}
+                <div className="mt-4 pt-2 border-t flex justify-between items-center">
+                  <div className="text-xs text-muted-foreground">
+                    {getContentStats(item.content).words.toLocaleString()} words
+                  </div>
                   {item.updatedAt && (
-                    <Badge variant="outline" className="text-xs font-normal">
-                      Updated: {formatDate(item.updatedAt)}
-                    </Badge>
+                    <div className="text-xs text-muted-foreground">
+                      {formatDate(item.updatedAt)}
+                    </div>
                   )}
-                </CardFooter>
-              </Card>
+                </div>
+              </div>
             ))}
 
-            {/* Add More Files Card */}
-            <Card className="flex flex-col items-center justify-center p-6 cursor-pointer border-dashed hover:border-primary/50 hover:bg-primary/5 transition-colors" onClick={handleDropzoneClick}>
+            {/* Simplified Add More Files */}
+            <div 
+              className="border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors p-6"
+              onClick={handleDropzoneClick}
+            >
               <div className="text-center">
-                <div className="bg-primary/10 rounded-full p-3 mx-auto mb-2">
-                  <FileUp className="size-6 text-primary" />
-                </div>
+                <FileUp className="size-6 text-primary mx-auto mb-2" />
                 <p className="text-sm font-medium">Add more files</p>
                 <p className="text-xs text-muted-foreground mt-1">Click or drop</p>
-                {/* Button removed as the whole card is clickable */}
               </div>
-            </Card>
+            </div>
           </div>
         )}
 

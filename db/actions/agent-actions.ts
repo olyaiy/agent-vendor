@@ -8,10 +8,8 @@ import {
   insertKnowledge, // Added
   updateKnowledge, // Added
   deleteKnowledge, // Added
-  selectKnowledgeById // Added (optional, but good for validation)
 } from "@/db/repository/agent-repository";
-import { Agent, Knowledge } from "@/db/schema/agent"; // Added Knowledge type
-import { revalidatePath } from "next/cache"; // Added for potential revalidation
+import { Agent } from "@/db/schema/agent"; // Added Knowledge type
 import { z } from "zod"; // Added for input validation
 
 /**

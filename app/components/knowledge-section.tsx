@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { KnowledgeEditor } from "./knowledge-editor"; // Adjusted import path
+import { KnowledgeEditor } from "@/app/components/knowledge-editor"; // Adjusted import path
 import { AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label"; // Adjusted import path
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Adjusted import path

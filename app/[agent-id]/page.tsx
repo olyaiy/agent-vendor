@@ -1,7 +1,8 @@
 import Chat from "@/components/chat";
-import { selectAgentWithModelById } from "@/db/repository/agent-repository";
+import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository"; // Added selectKnowledgeByAgentId
 import { parseAgentSlug } from "@/lib/utils";
 import { notFound } from "next/navigation";
+import { Knowledge } from "@/db/schema/agent"; // Added Knowledge type
 
 export default async function Page({
   // No changes needed here for params type
@@ -12,15 +13,20 @@ export default async function Page({
   const { "agent-id": agentIdParam } = await params;
 
   const { agentId } = parseAgentSlug(agentIdParam);
-  // Fetch only the agent
-  const agent = await selectAgentWithModelById(agentId);
+
+  // Fetch agent and knowledge items in parallel for efficiency
+  const [agent, knowledgeItems] = await Promise.all([
+    selectAgentWithModelById(agentId),
+    selectKnowledgeByAgentId(agentId) // Fetch knowledge items
+  ]);
+
   if (!agent) {
     notFound();
   }
 
-  // Ownership check will happen in the client component
+  // Ownership check happens in the client component (Chat)
 
   return (
-    <Chat agent={agent} /> // Pass only agent
+    <Chat agent={agent} knowledgeItems={knowledgeItems} /> // Pass agent and knowledgeItems
   );
 }

@@ -6,15 +6,16 @@ import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
-import type { Agent } from '@/db/schema/agent';
+import type { Agent, Knowledge } from '@/db/schema/agent'; // Import Knowledge type
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 
 interface ChatProps {
   agent: Agent & { modelName: string };
+  knowledgeItems: Knowledge[]; // Add knowledgeItems prop
   // No isOwner prop needed here anymore, it's calculated internally
 }
 
-export default function Chat({ agent }: ChatProps) {
+export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destructure knowledgeItems
 
   // Try using useSession hook from authClient
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
@@ -88,10 +89,9 @@ export default function Chat({ agent }: ChatProps) {
 
       {/* Sidebar Agent Details Column */}
       <div className="col-span-3 h-dvh sticky top-0 right-0">
-        {/* Pass isOwner down to AgentInfo */}
-        <AgentInfo agent={agent} isOwner={isOwner} />
+        {/* Pass isOwner and knowledgeItems down to AgentInfo */}
+        <AgentInfo agent={agent} isOwner={isOwner} knowledgeItems={knowledgeItems} />
       </div>
     </div>
   )
 }
-

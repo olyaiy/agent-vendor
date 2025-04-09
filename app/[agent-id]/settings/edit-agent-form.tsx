@@ -45,7 +45,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
 
   // Form state initialized with agent data
   // Form state
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload
+  const [thumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload
   const [primaryModelId, setPrimaryModelId] = useState<string>(agent.primaryModelId);
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
   const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge); // State for knowledge items
