@@ -29,3 +29,15 @@ export const models = pgTable("models", {
 });
 
 export type Model = typeof models.$inferSelect;
+
+export const knowledge = pgTable("knowledge", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  agentId: text("agent_id").notNull().references(() => agent.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content"),
+  sourceUrl: text("source_url"),
+  createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
+  updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
+});
+
+export type Knowledge = typeof knowledge.$inferSelect;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useTransition } from "react";
+import React, { useState, useRef, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -8,16 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2  } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { createAgent } from "@/db/actions/agent-actions";
+import { updateAgentAction } from "@/db/actions/agent-actions"; // Updated import
 import { generateAgentSlug } from "@/lib/utils";
-import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
+import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons'; // Added ChatBubbleIcon
 import { VisibilitySelector } from "@/app/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
 import { FormSection } from "@/app/components/form-section";
+import { Agent } from "@/db/schema/agent"; // Import Agent type
 
 export interface ModelInfo {
   id: string;
@@ -25,23 +26,24 @@ export interface ModelInfo {
   description: string | null;
 }
 
-interface CreateAgentFormProps {
-  userId: string | undefined;
+interface EditAgentFormProps {
+  agent: Agent; // Accept agent data
   models: ModelInfo[];
 }
 
-export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
+export function EditAgentForm({ agent, models }: EditAgentFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  
-  // Form state
-  const [thumbnailUrl] = useState<string | null>(null); // TODO: Implement image upload and use setThumbnailUrl
-  const [primaryModelId, setPrimaryModelId] = useState<string>("");
-  const [visibility, setVisibility] = useState<"public" | "private" | "link">("public");
-  
+
+  // Form state initialized with agent data
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload and use setThumbnailUrl
+  const [primaryModelId, setPrimaryModelId] = useState<string>(agent.primaryModelId);
+  const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
+
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Adjust system prompt height
   const adjustSystemPromptHeight = () => {
     const textarea = systemPromptRef.current;
@@ -51,16 +53,15 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
     }
   };
 
+  // Adjust height on initial render and when agent data changes
+  useEffect(() => {
+    adjustSystemPromptHeight();
+  }, [agent.systemPrompt]); // Dependency on agent.systemPrompt
+
   // Form submission handler
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-
-    // Make sure userId is defined
-    if (!userId) {
-      toast.error("User ID is required to create an agent");
-      return;
-    }
 
     // Make sure primaryModelId is selected
     if (!primaryModelId) {
@@ -70,33 +71,30 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
 
     startTransition(async () => {
       try {
-        // Create agent data object based on schema requirements
-        const newAgentData = {
+        // Create agent update data object
+        const updatedAgentData = {
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
           systemPrompt: (formData.get("systemPrompt") as string) || null,
-          thumbnailUrl: thumbnailUrl,
-          visibility: visibility,
-          primaryModelId: primaryModelId,
-          creatorId: userId,
-          welcomeMessage: null,
-          avatarUrl: null
+          thumbnailUrl: thumbnailUrl, // Use state value
+          visibility: visibility, // Use state value
+          primaryModelId: primaryModelId, // Use state value
+          // avatarUrl and welcomeMessage could be added here if editable
         };
 
-        // Use the server action to create the agent
-        const result = await createAgent(newAgentData);
-        
-        if (result.success && result.data && result.data[0]) {
-          const newAgent = result.data[0];
-          toast.success("Agent created successfully");
-          // Generate slug and redirect to the new agent's page
-          const agentSlug = generateAgentSlug(newAgent.name, newAgent.id);
-          router.push(`/${agentSlug}`);
+        // Use the server action to update the agent
+        const result = await updateAgentAction(agent.id, updatedAgentData);
+
+        if (result.success && result.data) {
+          toast.success("Agent updated successfully");
+          // Optionally, refresh data or navigate
+          // router.refresh(); // Refresh server components on the page
+          // Consider if navigation is needed, maybe stay on settings?
         } else {
-          throw new Error(result.error || "Failed to create agent");
+          throw new Error(result.error || "Failed to update agent");
         }
       } catch (error) {
-        toast.error("Failed to create agent. Please try again.");
+        toast.error("Failed to update agent. Please try again.");
         console.error(error);
       }
     });
@@ -113,19 +111,17 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
             <div className="pb-2 border-b">
               <h2 className="text-lg font-medium tracking-tight">Agent Profile</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Define your agent&apos;s identity
+                Update your agent&apos;s identity
               </p>
             </div>
-            
+
             <div className="space-y-3">
               {/* Container for AgentImage, styled to indicate clickability for upload */}
               {/* TODO: Add onClick handler here to trigger file input/upload modal */}
               <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
                 <AgentImage
-                  thumbnailUrl={thumbnailUrl}
-                  // Use a placeholder ID for gradient generation when no image is set.
-                  // The actual agentId isn't available until after creation.
-                  agentId="new-agent-placeholder"
+                  thumbnailUrl={thumbnailUrl} // Use state value
+                  agentId={agent.id} // Use actual agentId
                 />
                 {/* Optional: Add an overlay hint on hover to guide the user */}
                  {!thumbnailUrl && (
@@ -134,10 +130,10 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                    </div>
                  )}
               </div>
-              
+
             </div>
           </div>
-          
+
           <div className="md:col-span-8 space-y-6">
             <div className="space-y-4">
               <div className="flex items-start justify-between mb-1.5">
@@ -167,9 +163,10 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                 required
                 placeholder="Enter a name for your agent"
                 className="h-11"
+                defaultValue={agent.name} // Set default value
               />
             </div>
-            
+
             <div className="space-y-4">
               <div className="flex items-start gap-1.5 mb-1.5">
                 <Label htmlFor="description" className="text-sm font-medium flex items-center gap-1.5">
@@ -191,18 +188,19 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                 name="description"
                 placeholder="Describe what your agent does and how it can help users"
                 className="min-h-24 resize-none"
+                defaultValue={agent.description || ""} // Set default value
               />
             </div>
-            
-            <VisibilitySelector 
-              value={visibility}
+
+            <VisibilitySelector
+              value={visibility} // Use state value
               onValueChange={setVisibility}
             />
           </div>
         </section>
-        
+
         <Separator />
-        
+
         {/* AI Model Section */}
         <FormSection
           title="Intelligence"
@@ -232,8 +230,8 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                 </Badge>
               </div>
               <div className="bg-secondary/50 border rounded-lg p-0.5">
-                <Select 
-                  value={primaryModelId} 
+                <Select
+                  value={primaryModelId} // Use state value
                   onValueChange={setPrimaryModelId}
                 >
                   <SelectTrigger className="h-11 bg-background border-0 focus-visible:ring-1 focus-visible:ring-offset-0">
@@ -254,9 +252,9 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
             </div>
           </div>
         </FormSection>
-        
+
         <Separator />
-        
+
         {/* System Prompt Section */}
         <FormSection
           title="Behavior"
@@ -294,9 +292,10 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
                   required
                   ref={systemPromptRef}
                   onInput={adjustSystemPromptHeight}
+                  defaultValue={agent.systemPrompt || ""} // Set default value
                 />
               </div>
-              
+
               <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border text-sm">
                 <h3 className="font-medium mb-2 text-primary flex items-center gap-2">
                   <ChevronRightIcon className="size-4" />
@@ -313,36 +312,47 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
           </div>
         </FormSection>
       </div>
-      
+
       {/* Footer Actions */}
-      <div className="flex justify-between py-5 border-t mt-8">
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => router.push('/agent')}
-          className="w-28"
-        >
-          Cancel
-        </Button>
-        <Button 
-          type="submit" 
+      <div className="flex justify-between items-center py-5 border-t mt-8">
+        <div className="flex gap-2"> {/* Group Cancel and Chat buttons */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push(`/${generateAgentSlug(agent.name, agent.id)}`)} // Navigate back to agent page
+            className="w-28"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="secondary" // Use secondary variant
+            onClick={() => router.push(`/${generateAgentSlug(agent.name, agent.id)}`)} // Navigate to agent chat page
+            className="gap-2" // Add gap for icon
+          >
+            <ChatBubbleIcon className="size-4" />
+            Chat with Agent
+          </Button>
+        </div>
+        <Button
+          type="submit"
           disabled={isPending || !primaryModelId}
           className="w-36 gap-2"
         >
           {isPending ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Creating...
+              Saving...
             </>
           ) : (
             <>
               <DiscIcon className="size-4" />
-              Create Agent
+              Save Changes
             </>
           )}
         </Button>
       </div>
-      <input type="hidden" name="userId" value={userId || ''} />
+      {/* Removed hidden userId input */}
     </form>
   );
 }

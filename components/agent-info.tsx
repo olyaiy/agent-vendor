@@ -4,7 +4,7 @@
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger
+  CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -20,16 +20,23 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Brain, ChevronRight, Settings, Code, BookOpen, X } from "lucide-react"
+import { Button } from "@/components/ui/button" // Import Button
+import Link from "next/link" // Import Link
+import { Brain, ChevronRight, Settings, Code, BookOpen, X } from "lucide-react" // Add Edit icon
+import { Pencil2Icon } from "@radix-ui/react-icons"
 import { useState } from "react"
 import { Agent } from "@/db/schema/agent"
 import { AgentImage } from "@/components/agent-image"
 
 interface AgentInfoProps {
   agent: Agent;
+  isOwner: boolean; // Add isOwner prop
 }
 
-export function AgentInfo({ agent }: AgentInfoProps) {
+export function AgentInfo({ agent, isOwner }: AgentInfoProps) {
+  // Debugging logs for isOwner
+  console.log("AgentInfo - Agent Creator ID:", agent.creatorId);
+  console.log("AgentInfo - Received isOwner prop:", isOwner);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isToolsOpen, setIsToolsOpen] = useState(false)
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(true)
@@ -47,7 +54,22 @@ export function AgentInfo({ agent }: AgentInfoProps) {
 
       {/* Left-aligned Content */}
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold">{agent.name}</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">{agent.name}</h2>
+          {isOwner && (
+            <Link href={`/${agent.id}/settings`} passHref>
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                className="w-5 h-5 text-muted-foreground hover:text-foreground"
+                aria-label="Edit Agent"
+              >
+                <Pencil2Icon className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground">
           {agent.description || "Your AI-powered assistant for code generation, debugging, and documentation."}
         </p>
@@ -209,12 +231,18 @@ export function AgentInfo({ agent }: AgentInfoProps) {
           onOpenChange={setIsSettingsOpen}
           className="group"
         >
+          {/* Updated CollapsibleTrigger to include Edit button */}
           <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-md px-3 transition-colors cursor-pointer">
             <div className="flex items-center gap-3">
               <Settings className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">Agent Settings</span>
             </div>
-            <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isSettingsOpen ? 'rotate-90' : ''}`} />
+            {/* Container for Edit button and Chevron */}
+            <div className="flex items-center gap-1">
+
+              {/* Chevron is always visible */}
+              <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isSettingsOpen ? 'rotate-90' : ''}`} />
+            </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="py-3 px-3 space-y-5">
             {/* Model Selection */}
@@ -343,7 +371,8 @@ export function AgentInfo({ agent }: AgentInfoProps) {
               </Select>
             </div>
           </CollapsibleContent>
-        </Collapsible>
+          </Collapsible>
+        {/* Removed duplicated content */}
       </div>
     </div>
   )

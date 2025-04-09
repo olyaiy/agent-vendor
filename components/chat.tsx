@@ -7,10 +7,24 @@ import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
 import type { Agent } from '@/db/schema/agent';
+import { authClient } from '@/lib/auth-client'; // Import authClient again
 
+interface ChatProps {
+  agent: Agent & { modelName: string };
+  // No isOwner prop needed here anymore, it's calculated internally
+}
 
-export default function Chat({ agent }: { agent: Agent }) {
+export default function Chat({ agent }: ChatProps) {
 
+  // Try using useSession hook from authClient
+  const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
+  const user = session?.user; // Extract user from session
+
+  // Debugging logs for isOwner calculation
+  console.log("Chat - Agent Creator ID:", agent.creatorId);
+  console.log("Chat - Current User ID:", user?.id);
+  const isOwner = agent.creatorId === user?.id; // Calculate isOwner using user from session
+  console.log("Chat - Calculated isOwner:", isOwner);
 
   const {
     id,
@@ -22,7 +36,12 @@ export default function Chat({ agent }: { agent: Agent }) {
     status, 
     stop,
     reload
-  } = useChat()
+  } = useChat({
+    body: {
+      systemPrompt: agent.systemPrompt,
+      model: agent.modelName
+    }
+  })
 
   
 
@@ -69,7 +88,8 @@ export default function Chat({ agent }: { agent: Agent }) {
 
       {/* Sidebar Agent Details Column */}
       <div className="col-span-3 h-dvh sticky top-0 right-0">
-        <AgentInfo agent={agent} />
+        {/* Pass isOwner down to AgentInfo */}
+        <AgentInfo agent={agent} isOwner={isOwner} />
       </div>
     </div>
   )

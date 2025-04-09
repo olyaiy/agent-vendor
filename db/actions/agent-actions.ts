@@ -1,6 +1,7 @@
 'use server'
 
-import { insertAgent, selectRecentAgents, selectAllModels } from "@/db/repository/agent-repository";
+import { insertAgent, selectRecentAgents, selectAllModels, updateAgent as updateAgentRepo } from "@/db/repository/agent-repository";
+import { Agent } from "@/db/schema/agent";
 
 /**
  * Server action to create a new agent
@@ -55,6 +56,26 @@ export async function getAllModels() {
     return { success: true, data: modelList };
   } catch (error) {
     console.error("Failed to fetch models:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to update an existing agent
+ * @param agentId - The ID of the agent to update
+ * @param data - Object containing the fields to update
+ * @returns Promise with success status and updated agent data or error
+ */
+export async function updateAgentAction(agentId: string, data: Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>>) {
+  try {
+    // Call the repository function to update the agent
+    const result = await updateAgentRepo(agentId, data);
+    if (result.length === 0) {
+      return { success: false, error: "Agent not found or update failed" };
+    }
+    return { success: true, data: result[0] }; // Return the first updated agent
+  } catch (error) {
+    console.error("Failed to update agent:", error);
     return { success: false, error: (error as Error).message };
   }
 }
