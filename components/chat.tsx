@@ -22,9 +22,12 @@ interface ChatProps {
 // Simple fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then(res => {
   if (!res.ok) {
-    // You might want more sophisticated error handling
+    // Specifically handle 404 Not Found by returning null
+    if (res.status === 404) {
+      return null; // Indicate resource not found yet, not an error
+    }
+    // For other errors, create and throw an error object
     const error = new Error('An error occurred while fetching the data.');
-    // Attach extra info to the error object.
     // @ts-expect-error - Adding custom properties info/status to Error object
     error.info = res.statusText;
     // @ts-expect-error - Adding custom properties info/status to Error object
@@ -40,16 +43,21 @@ export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // 
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
 
   // Fetch chat data using SWR
-  const { data: chatData, error: chatError } = useSWR<DbChat>(
+  const { data: chatData, error: chatError } = useSWR<DbChat | null>( // Allow null type
     chatId ? `/api/chat/${chatId}` : null, // API endpoint URL, conditional on chatId
     fetcher,
     {
       revalidateOnFocus: true, // Optional: Revalidate when window gets focus
-      onError: (err) => { // Add basic error logging
+      onError: (err) => { // Log actual SWR errors
         console.error("SWR Error fetching chat data:", err);
       }
     }
   );
+
+  // Log chatError if it occurs (fixes linter warning)
+  if (chatError) {
+    console.error("Error loading chat data:", chatError);
+  }
 
   // Determine the title to display
   const displayTitle = chatData?.title;
