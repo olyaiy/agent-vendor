@@ -84,3 +84,14 @@ export async function getMessagesByChatId({ id }: { id: string }): Promise<DBMes
     throw error;
   }
 }
+
+/**
+ * Deletes a single message by its ID
+ * @param messageId - UUID of the message to delete
+ */
+export async function deleteMessageById(messageId: string) {
+  await db
+    .delete(message)
+    .where(eq(message.id, messageId));
+}
+
