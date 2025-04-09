@@ -4,7 +4,7 @@ import { streamText } from 'ai';
 import { getModelInstanceById } from '@/lib/models'; // Import the helper function
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
-import { createChat, getChatById } from '@/db/repository/chat-repository';
+import { createChat, getChatById, updateChatTitle } from '@/db/repository/chat-repository'; // Import updateChatTitle
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 
 
@@ -47,15 +47,24 @@ export async function POST(req: Request) {
     // --- Start: Fire-and-forget chat creation ---
     (async () => {
       try {
-        console.time('Background chat creation');
-        const title = await generateTitleFromUserMessage({
+        console.time('Background chat placeholder creation');
+        // 1. Create chat with placeholder title immediately
+        await createChat({ id: chatId, userId: session.user.id, title: "New Chat" });
+        console.timeEnd('Background chat placeholder creation');
+        console.log(`Background chat placeholder created: ${chatId}`);
+
+        console.time('Background title generation and update');
+        // 2. Generate the actual title
+        const generatedTitle = await generateTitleFromUserMessage({
           message: messages[0],
         });
-        await createChat({ id: chatId, userId: session.user.id, title });
-        console.timeEnd('Background chat creation');
-        console.log(`Background chat created successfully: ${chatId}`);
+        // 3. Update the chat with the generated title
+        await updateChatTitle(chatId, generatedTitle);
+        console.timeEnd('Background title generation and update');
+        console.log(`Background chat title updated for: ${chatId}`);
+
       } catch (error) {
-        console.error(`Error creating chat in background for ${chatId}:`, error);
+        console.error(`Error in background chat creation/update for ${chatId}:`, error);
         // Optional: Add more robust error logging/reporting here
       }
     })(); // Immediately invoke without await

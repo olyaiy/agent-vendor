@@ -37,3 +37,17 @@ export async function createChat(newChat: NewChat): Promise<Chat[]> {
     
   return insertedChat;
 }
+
+/**
+ * Updates the title of an existing chat
+ * @param chatId - UUID of the chat to update
+ * @param newTitle - The new title for the chat
+ * @returns Update result (implementation might vary based on Drizzle version/needs)
+ */
+export async function updateChatTitle(chatId: string, newTitle: string) {
+  // Consider adding error handling or checking the update result if needed
+  await db
+    .update(chat)
+    .set({ title: newTitle })
+    .where(eq(chat.id, chatId));
+}
