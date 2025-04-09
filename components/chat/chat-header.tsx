@@ -6,13 +6,15 @@ import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { useState } from 'react';
 import Link from 'next/link';
+import { generateAgentSlug } from '@/lib/utils';
 
 interface ChatHeaderProps {
   hasMessages?: boolean;
   agentName?: string;
+  agentId?: string;
 }
 
-export function ChatHeader({ hasMessages = false, agentName = "Agent" }: ChatHeaderProps) {
+export function ChatHeader({ hasMessages = false, agentName = "Agent", agentId }: ChatHeaderProps) {
   const [copied, setCopied] = useState(false);
   
   const handleCopy = () => {
@@ -42,7 +44,9 @@ export function ChatHeader({ hasMessages = false, agentName = "Agent" }: ChatHea
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/agent">{agentName}</Link>
+              <Link href={agentId ? `/${generateAgentSlug(agentName, agentId)}` : "/agent"}>
+                {agentName}
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

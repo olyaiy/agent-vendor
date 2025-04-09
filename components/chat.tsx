@@ -33,7 +33,7 @@ export default function Chat({ agent }: { agent: Agent }) {
     <div className="grid grid-cols-12 min-w-0 h-dvh">
       {/* Main Chat Column */}
       <div className="flex flex-col min-w-0 h-dvh col-span-9">
-        <ChatHeader hasMessages={messages.length > 0} agentName={agent.name} />
+        <ChatHeader hasMessages={messages.length > 0} agentName={agent.name} agentId={agent.id} />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>
