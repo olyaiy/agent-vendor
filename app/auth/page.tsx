@@ -8,7 +8,6 @@ export default function AuthPage() {
     try {
       // The signIn function from better-auth handles the redirect
       await signIn(); 
-      console.log('Sign in process initiated by client.');
     } catch (error) {
       console.error('Sign in failed:', error);
       // Optionally, display an error message to the user

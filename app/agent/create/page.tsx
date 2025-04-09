@@ -29,7 +29,7 @@ export default async function CreateAgentPage() {
           model: model.model, // Ensure field names match ModelInfo
           description: model.description ?? null // Handle potential null description
         }));
-        console.log("Fetched models:", availableModels.length);
+
       } else {
         console.error("Failed to fetch models:", modelsResult.error);
         // Keep availableModels as []

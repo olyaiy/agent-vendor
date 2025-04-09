@@ -2,7 +2,7 @@
 
 import type { UIMessage } from 'ai';
 
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 // import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon, SparklesIcon } from '../utils/icons';
@@ -21,6 +21,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { MessageReasoning } from './message-reasoning';
 import { MessageActions } from './message-actions';
+import { motion } from 'framer-motion';
+import { Image } from 'next/image';
 
 const PurePreviewMessage = ({
   chatId,
@@ -246,33 +248,116 @@ export const PreviewMessage = memo(
   },
 );
 
-export const ThinkingMessage = () => {
-  const role = 'assistant';
+export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) => {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <div
-      data-testid="message-assistant-loading"
-      className="w-full mx-auto max-w-3xl px-4 group/message"
-      data-role={role}
+    <motion.div
+      className="w-full mx-auto max-w-3xl px-0 group/message relative"
+      initial={{ y: 5, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      data-role="assistant"
     >
-      <div
-        className={cn(
-          'flex gap-4 group-data-[role=user]/message:px-3 w-full group-data-[role=user]/message:w-fit group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl group-data-[role=user]/message:py-2 rounded-xl',
-          {
-            'group-data-[role=user]/message:bg-muted': true,
-          },
-        )}
-      >
-        <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
-          <SparklesIcon size={14} />
+      <div className="flex flex-row gap-4 w-full">
+        <div className="size-8 flex items-center rounded-full justify-center shrink-0  bg-background overflow-hidden relative">
+          {agentImageUrl ? (
+            <Image 
+              src={agentImageUrl} 
+              alt="Agent avatar" 
+              width={32} 
+              height={32} 
+              className="size-full object-cover"
+              quality={100}
+              unoptimized={true}
+            />
+          ) : (
+            <div className="translate-y-px">
+              <SparklesIcon size={14} />
+            </div>
+          )}
         </div>
 
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex flex-col gap-4 text-muted-foreground">
-            Hmm...
+        <div className="flex flex-col gap-2 w-full justify-center">
+          <div className="flex flex-row items-center h-8 gap-2 text-muted-foreground">
+            <div className="flex flex-row items-center gap-1.5">
+              <span className="font-medium">Thinking</span>
+              <div className="flex gap-1 items-center">
+                <motion.div
+                  className="size-1.5 rounded-full bg-primary"
+                  animate={{
+                    scale: [0.5, 1, 0.5],
+                    opacity: [0.3, 1, 0.3]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0
+                  }}
+                />
+                <motion.div
+                  className="size-1.5 rounded-full bg-primary"
+                  animate={{
+                    scale: [0.5, 1, 0.5],
+                    opacity: [0.3, 1, 0.3]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.15
+                  }}
+                />
+                <motion.div
+                  className="size-1.5 rounded-full bg-primary"
+                  animate={{
+                    scale: [0.5, 1, 0.5],
+                    opacity: [0.3, 1, 0.3]
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.3
+                  }}
+                />
+              </div>
+            </div>
+            
+            {elapsedTime > 3 && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6 }}
+                className="text-xs text-muted-foreground/70 ml-1"
+              >
+                {elapsedTime}s
+              </motion.div>
+            )}
           </div>
+          
+          {elapsedTime > 1 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              transition={{ duration: 0.4 }}
+              className="text-xs text-muted-foreground/80 max-w-lg"
+            >
+              Working on a thoughtful response{elapsedTime > 8 ? ". This might take a moment for complex questions" : ""}
+            </motion.div>
+          )}
+          <span className="sr-only">AI is thinking - elapsed time: {elapsedTime} seconds</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

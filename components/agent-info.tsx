@@ -21,12 +21,6 @@ interface AgentInfoProps {
 
 // The main component now delegates rendering to sub-components
 function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId }: AgentInfoProps) {
-  // Debugging logs can remain if helpful, or be removed
-  console.log("AgentInfo - Agent Creator ID:", agent.creatorId);
-  console.log("AgentInfo - Received isOwner prop:", isOwner);
-  console.log("AgentInfo - Agent Model:", agent);
-  console.log("AgentInfo - Primary Model ID:", agent.primaryModelId);
-  console.log("AgentInfo - Model Name:", agent.modelName);
 
   // Removed all useState hooks for collapsible sections
 

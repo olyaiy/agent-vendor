@@ -8,6 +8,7 @@ import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent'; // Import Knowledge type
 import { authClient } from '@/lib/auth-client'; // Import authClient again
+import { Greeting } from './chat/greeting';
 
 interface ChatProps {
   agent: Agent & { modelName: string };
@@ -75,7 +76,10 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
             />
           </>
         ) : (
-          <div className="items-center justify-center flex h-full">
+          <div className="flex items-center justify-center  h-full ">
+            <div className="w-full flex flex-col mb-20 gap-10">
+            <Greeting />
+            
             <ChatInput 
               input={input}
               setInput={setInput}
@@ -83,12 +87,13 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
               status={status}
               stop={stop}
             />
+            </div>
           </div>
         )}
       </div>
 
       {/* Sidebar Agent Details Column */}
-      <div className="col-span-3 h-full sticky top-0 right-0">
+      <div className="col-span-3 h-full max-h-full overflow-y-scroll sticky top-0 right-0">
         {/* Pass isOwner, knowledgeItems, selectedModelId, and setSelectedModelId down to AgentInfo */}
         <AgentInfo
           agent={agent}

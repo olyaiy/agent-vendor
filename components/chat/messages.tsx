@@ -10,6 +10,7 @@ import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '../ui/button';
 import { ChevronDown } from 'lucide-react';
+import { Greeting } from './greeting';
 
 interface MessagesProps {
   chatId: string;
@@ -64,12 +65,14 @@ function PureMessages({
     prevMessagesRef.current = messages;
   }, [messages, scrollToBottom]);
 
+  console.log("message length is ", messages.length)
+
   return (
     <div
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-auto pt-4 pb-2 w-full px-4 md:px-8 scrollbar-thin scrollbar-thumb-black/10 dark:scrollbar-thumb-white/10 scrollbar-track-transparent"
       ref={scrollRef}
     >
-      {/* {messages.length === 0 && <Greeting />} */}
+      {messages.length === 0 && <Greeting />}
 
       {messages.map((message, index) => (
         <div key={message.id}>
@@ -91,6 +94,8 @@ function PureMessages({
             <ThinkingMessage />
           </div>
         )}
+
+
 
       {status === 'streaming' && isNotAtBottomDebounced && (
         <div

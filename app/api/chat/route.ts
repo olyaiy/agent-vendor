@@ -15,9 +15,6 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages,
     });
-
-
-    console.log("THE MODEL INSTANCE IS", modelInstance);
   
     return result.toDataStreamResponse();
 

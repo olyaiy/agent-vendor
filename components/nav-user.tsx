@@ -44,7 +44,7 @@ export function NavUser() {
       // Assuming better-auth client has a signOut method
       // If not, we might need to check documentation or authClient definition
       await authClient.signOut() 
-      console.log("Sign out successful")
+
       router.push('/') // Redirect to home page after sign out
     } catch (error) {
       console.error("Sign out failed:", error)
