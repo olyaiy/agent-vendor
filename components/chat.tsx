@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react' // Import useState
 import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
@@ -12,10 +12,12 @@ import { authClient } from '@/lib/auth-client'; // Import authClient again
 interface ChatProps {
   agent: Agent & { modelName: string };
   knowledgeItems: Knowledge[]; // Add knowledgeItems prop
-  // No isOwner prop needed here anymore, it's calculated internally
+  // selectedModelId and setSelectedModelId are managed internally, not passed as props
 }
 
 export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destructure knowledgeItems
+  // State for the selected model, initialized with the agent's primary model
+  const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
 
   // Try using useSession hook from authClient
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
@@ -40,7 +42,7 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
   } = useChat({
     body: {
       systemPrompt: agent.systemPrompt,
-      model: agent.modelName
+      model: selectedModelId // Use the state variable for the model
     }
   })
 
@@ -89,8 +91,14 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
 
       {/* Sidebar Agent Details Column */}
       <div className="col-span-3 h-dvh sticky top-0 right-0">
-        {/* Pass isOwner and knowledgeItems down to AgentInfo */}
-        <AgentInfo agent={agent} isOwner={isOwner} knowledgeItems={knowledgeItems} />
+        {/* Pass isOwner, knowledgeItems, selectedModelId, and setSelectedModelId down to AgentInfo */}
+        <AgentInfo
+          agent={agent}
+          isOwner={isOwner}
+          knowledgeItems={knowledgeItems}
+          selectedModelId={selectedModelId}
+          setSelectedModelId={setSelectedModelId}
+        />
       </div>
     </div>
   )

@@ -39,6 +39,8 @@ interface AgentInfoProps {
   agent: Agent & { modelName?: string };
   isOwner: boolean; // Add isOwner prop
   knowledgeItems: Knowledge[]; // Add knowledgeItems prop
+  selectedModelId: string; // Add state for selected model ID
+  setSelectedModelId: React.Dispatch<React.SetStateAction<string>>; // Add setter for model ID
 }
 
 // Helper function to calculate word count
@@ -47,7 +49,8 @@ const countWords = (text: string | null): number => {
   return text.trim().split(/\s+/).length;
 };
 
-export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { // Destructure knowledgeItems
+// Destructure all props including the new ones in the function signature
+export function AgentInfo({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId }: AgentInfoProps) {
   // Debugging logs for isOwner
   console.log("AgentInfo - Agent Creator ID:", agent.creatorId);
   console.log("AgentInfo - Received isOwner prop:", isOwner);
@@ -62,6 +65,8 @@ export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { 
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(true)
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false)
   const [selectedKnowledgeItem, setSelectedKnowledgeItem] = useState<Knowledge | null>(null); // State for dialog
+
+  // No need for separate destructuring here anymore
 
   return (
     <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
@@ -265,10 +270,14 @@ export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { 
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="py-3 px-3 space-y-5">
-            {/* Model Selection */}
+            {/* Model Selection - Use selectedModelId and setSelectedModelId */}
             <div className="space-y-2">
               <label className="text-xs text-muted-foreground">AI Model</label>
-              <ModelSelect defaultValue={agent.modelName || agent.primaryModelId} />
+              {/* Use defaultValue and onValueChange for ModelSelect */}
+              <ModelSelect
+                defaultValue={selectedModelId}
+                onValueChange={setSelectedModelId}
+              />
             </div>
 
             {/* Temperature */}
