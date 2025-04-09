@@ -23,11 +23,8 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
   const user = session?.user; // Extract user from session
 
-  // Debugging logs for isOwner calculation
-  console.log("Chat - Agent Creator ID:", agent.creatorId);
-  console.log("Chat - Current User ID:", user?.id);
   const isOwner = agent.creatorId === user?.id; // Calculate isOwner using user from session
-  console.log("Chat - Calculated isOwner:", isOwner);
+
 
   const {
     id,

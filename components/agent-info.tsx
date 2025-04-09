@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button" // Import Button
 import Link from "next/link" // Import Link
 import { Brain, ChevronRight, Settings, Code, BookOpen, FileText } from "lucide-react" // Removed X icon, Added FileText
 import { Pencil2Icon } from "@radix-ui/react-icons"
-import { useState } from "react"
+import { useState, memo } from "react" // Import memo
 import { Agent, Knowledge } from "@/db/schema/agent" // Import Knowledge type
 import { AgentImage } from "@/components/agent-image"
 import { ModelSelect } from '@/components/model-select'
@@ -49,8 +49,8 @@ const countWords = (text: string | null): number => {
   return text.trim().split(/\s+/).length;
 };
 
-// Destructure all props including the new ones in the function signature
-export function AgentInfo({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId }: AgentInfoProps) {
+// Rename the original component
+function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId }: AgentInfoProps) {
   // Debugging logs for isOwner
   console.log("AgentInfo - Agent Creator ID:", agent.creatorId);
   console.log("AgentInfo - Received isOwner prop:", isOwner);
@@ -64,7 +64,7 @@ export function AgentInfo({ agent, isOwner, knowledgeItems, selectedModelId, set
   const [isToolsOpen, setIsToolsOpen] = useState(false)
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(true)
   const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false)
-  const [selectedKnowledgeItem, setSelectedKnowledgeItem] = useState<Knowledge | null>(null); // State for dialog
+  const [_selectedKnowledgeItem, setSelectedKnowledgeItem] = useState<Knowledge | null>(null); // State for dialog (prefixed unused var)
 
   // No need for separate destructuring here anymore
 
@@ -383,3 +383,6 @@ export function AgentInfo({ agent, isOwner, knowledgeItems, selectedModelId, set
     </div>
   )
 }
+
+// Export the memoized component
+export const AgentInfo = memo(AgentInfoComponent);

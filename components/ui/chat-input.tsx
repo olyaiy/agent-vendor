@@ -1,7 +1,7 @@
 "use client";
 
 import { Globe, Paperclip, Send, StopCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react"; // Import memo
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
@@ -20,7 +20,8 @@ interface ChatInputProps {
   className?: string;
 }
 
-export function ChatInput({
+// Rename original component
+function ChatInputComponent({
   value,
   onChange,
   onSubmit,
@@ -154,3 +155,21 @@ export function ChatInput({
     </div>
   );
 }
+
+// Export memoized component with custom comparison
+export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
+  // Only re-render if value, status, or function references change
+  return (
+    prevProps.value === nextProps.value &&
+    prevProps.status === nextProps.status &&
+    prevProps.onSubmit === nextProps.onSubmit &&
+    prevProps.onChange === nextProps.onChange &&
+    prevProps.stop === nextProps.stop &&
+    prevProps.onFileSelect === nextProps.onFileSelect &&
+    prevProps.id === nextProps.id &&
+    prevProps.placeholder === nextProps.placeholder &&
+    prevProps.minHeight === nextProps.minHeight &&
+    prevProps.maxHeight === nextProps.maxHeight &&
+    prevProps.className === nextProps.className
+  );
+});

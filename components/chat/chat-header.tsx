@@ -1,10 +1,10 @@
 'use client'
-import React from 'react';
+import React, { memo, useState } from 'react'; // Import memo, move useState here
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
 import { HomeIcon, Share2Icon, Copy, Check, DownloadIcon, FileTextIcon, FileIcon, FileTypeIcon } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { useState } from 'react';
+// useState moved above
 import Link from 'next/link';
 import { generateAgentSlug } from '@/lib/utils';
 
@@ -14,9 +14,10 @@ interface ChatHeaderProps {
   agentId?: string;
 }
 
-export function ChatHeader({ hasMessages = false, agentName = "Agent", agentId }: ChatHeaderProps) {
+// Rename original component
+function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId }: ChatHeaderProps) {
   const [copied, setCopied] = useState(false);
-  
+
   const handleCopy = () => {
     navigator.clipboard.writeText('https://chat.example.com/conversation/123');
     setCopied(true);
@@ -127,4 +128,7 @@ export function ChatHeader({ hasMessages = false, agentName = "Agent", agentId }
       )}
     </div>
   );
-} 
+}
+
+// Export memoized component
+export const ChatHeader = memo(ChatHeaderComponent);
