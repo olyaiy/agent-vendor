@@ -33,7 +33,7 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
     handleSubmit, 
     input, 
     setInput,
-    append,
+    // append,
     status, 
     stop,
     reload
