@@ -2,27 +2,32 @@ import type { Message } from 'ai';
 import { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import {
   TooltipProvider,
-
 } from '../ui/tooltip';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { CopyButton } from '../ui/copy-button';
 import { Button } from '../ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { deleteMessageAction } from '@/db/actions/chat-actions';
 
-
-
+import { cn } from '@/lib/utils';
+import { UseChatHelpers } from '@ai-sdk/react';
+import { toast } from 'sonner';
 
 export function PureMessageActions({
   message,
   isLoading,
   reload,
+  setMessages,
 }: {
   chatId: string;
   message: Message;
   isLoading: boolean;
+  setMessages: UseChatHelpers['setMessages'];
   reload?: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
 }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (isLoading) return null;
   if (message.role === 'user') return null;
 
@@ -31,6 +36,38 @@ export function PureMessageActions({
     .map((part) => part.text)
     .join('\n')
     .trim();
+
+  const handleDelete = async () => {
+    if (!message.id) return;
+    
+    // Optimistic UI update
+    setIsDeleting(true);
+    
+    // Optimistically remove message from UI
+    setMessages((currentMessages) => 
+      currentMessages.filter((msg) => msg.id !== message.id)
+    );
+    
+    // Call server action
+    const result = await deleteMessageAction(message.id);
+    
+    if (!result.success) {
+      // Revert optimistic update on failure
+      setMessages((currentMessages) => {
+        // Check if message is already in the list
+        if (!currentMessages.some(msg => msg.id === message.id)) {
+          return [...currentMessages, message].sort((a, b) => 
+            new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
+          );
+        }
+        return currentMessages;
+      });
+      
+      toast.error(result.message || "Failed to delete message");
+    }
+    
+    setIsDeleting(false);
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -43,7 +80,7 @@ export function PureMessageActions({
         )}
         {reload && (
           <Tooltip>
-            <TooltipTrigger asChild>
+            <TooltipTrigger asChild className="cursor-pointer">
               <Button
                 variant="ghost"
                 size="icon"
@@ -58,6 +95,24 @@ export function PureMessageActions({
             <TooltipContent>Regenerate response</TooltipContent>
           </Tooltip>
         )}
+        
+        <Tooltip>
+          <TooltipTrigger asChild className="cursor-pointer">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn("size-6", {
+                "text-destructive hover:text-destructive cursor-pointer": isDeleting
+              })}
+              onClick={handleDelete}
+              disabled={isLoading || isDeleting}
+              aria-label="Delete message"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete message</TooltipContent>
+        </Tooltip>
       </div>
     </TooltipProvider>
   );
@@ -67,7 +122,6 @@ export const MessageActions = memo(
   PureMessageActions,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
-
     return true;
   },
 );

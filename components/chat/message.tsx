@@ -22,7 +22,7 @@ import { UseChatHelpers } from '@ai-sdk/react';
 import { MessageReasoning } from './message-reasoning';
 import { MessageActions } from './message-actions';
 import { motion } from 'framer-motion';
-import { Image } from 'next/image';
+import Image from 'next/image';
 
 const PurePreviewMessage = ({
   chatId,
@@ -31,6 +31,7 @@ const PurePreviewMessage = ({
   // setMessages,
   reload,
   isReadonly,
+  setMessages,
 }: {
   chatId: string;
   message: UIMessage;
@@ -228,6 +229,7 @@ const PurePreviewMessage = ({
               message={message}
               isLoading={isLoading}
               reload={reload}
+              setMessages={setMessages}
             />
           )}
         </div>
