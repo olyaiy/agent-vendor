@@ -46,13 +46,11 @@ export default function RootLayout({
           >
 
       <Header />
-
-      <SidebarInset className="overflow-hidden">
-
-
-
-        {children}
-        </SidebarInset>
+           <SidebarInset className="overflow-hidden">
+            <div className="max-h-full overflow-hidden">  {/* Added height/overflow */}
+              {children}
+            </div>
+          </SidebarInset>
         </ThemeProvider>
         </SidebarProvider>  
       </body>

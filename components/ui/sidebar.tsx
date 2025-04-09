@@ -309,8 +309,19 @@ function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
     <main
       data-slot="sidebar-inset"
       className={cn(
+        // Base styling for the content area
         "bg-background relative flex w-full flex-1 flex-col rounded-tl",
-        "md:peer-data-[variant=inset]:mt-4 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-tl-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:m-0 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:rounded-tl-none",
+
+        // Desktop styles when sidebar is in "inset" variant
+        "md:peer-data-[variant=inset]:mt-4 md:peer-data-[variant=inset]:ml-0", // Top and left spacing
+         "md:peer-data-[variant=inset]:max-h-[calc(100vh-1rem)]", // Account for mt-24 (6rem)
+        "md:peer-data-[variant=inset]:rounded-tl-xl md:peer-data-[variant=inset]:shadow-sm", // Rounded corners and shadow
+        
+        // Collapsed state adjustments for inset variant
+        "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2", // Left margin when collapsed
+        "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:m-0", // Reset margins
+        "md:peer-data-[variant=inset]:peer-data-[state=collapsed]:rounded-tl-none", // Remove rounded corner when collapsed
+        // Content containment
         "overflow-hidden",
         className
       )}
