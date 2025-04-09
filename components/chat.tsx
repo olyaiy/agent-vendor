@@ -6,8 +6,12 @@ import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
+import type { Agent } from '@/db/schema/agent';
 
-export default function Chat() {
+
+export default function Chat({ agent }: { agent: Agent }) {
+
+
   const {
     id,
     messages, 
@@ -20,6 +24,8 @@ export default function Chat() {
     reload
   } = useChat()
 
+  
+
   // @ts-expect-error There's a version mismatch between UIMessage types
   const messagesProp: UIMessage[] = messages;
 
@@ -27,7 +33,7 @@ export default function Chat() {
     <div className="grid grid-cols-12 min-w-0 h-dvh">
       {/* Main Chat Column */}
       <div className="flex flex-col min-w-0 h-dvh col-span-9">
-        <ChatHeader hasMessages={messages.length > 0} />
+        <ChatHeader hasMessages={messages.length > 0} agentName={agent.name} />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>
@@ -63,7 +69,7 @@ export default function Chat() {
 
       {/* Sidebar Agent Details Column */}
       <div className="col-span-3 h-dvh sticky top-0 right-0">
-        <AgentInfo />
+        <AgentInfo agent={agent} />
       </div>
     </div>
   )

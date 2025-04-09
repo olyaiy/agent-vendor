@@ -1,10 +1,13 @@
+import Chat from "@/components/chat";
+import { selectAgentById } from "@/db/repository/agent-repository";
 
+export default async function Page({ params }: { params: { "agent-id": string } }) {
+  const parameters = await params;
+  const agentId = parameters["agent-id"];
+  const agent = await selectAgentById(agentId);
 
-export default function Page() {
-
-    return (
-        <div>
-            <h1>Agent</h1>
-        </div>
-    );
+  
+  return (
+    <Chat agent={agent} />
+  );
 }

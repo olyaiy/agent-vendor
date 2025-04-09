@@ -9,9 +9,10 @@ import Link from 'next/link';
 
 interface ChatHeaderProps {
   hasMessages?: boolean;
+  agentName?: string;
 }
 
-export function ChatHeader({ hasMessages = false }: ChatHeaderProps) {
+export function ChatHeader({ hasMessages = false, agentName = "Agent" }: ChatHeaderProps) {
   const [copied, setCopied] = useState(false);
   
   const handleCopy = () => {
@@ -41,7 +42,7 @@ export function ChatHeader({ hasMessages = false }: ChatHeaderProps) {
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/agent">Agent</Link>
+              <Link href="/agent">{agentName}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />

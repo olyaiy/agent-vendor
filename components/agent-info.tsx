@@ -1,15 +1,15 @@
 // components/agent-info.tsx
 'use client'
 
-import { 
-  Collapsible, 
-  CollapsibleContent, 
-  CollapsibleTrigger 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
 } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Slider } from "@/components/ui/slider"
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -22,8 +22,14 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Brain, ChevronRight, Settings, Code, BookOpen, X } from "lucide-react"
 import { useState } from "react"
+import { Agent } from "@/db/schema/agent"
+import { AgentImage } from "@/components/agent-image"
 
-export function AgentInfo() {
+interface AgentInfoProps {
+  agent: Agent;
+}
+
+export function AgentInfo({ agent }: AgentInfoProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isToolsOpen, setIsToolsOpen] = useState(false)
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(true)
@@ -31,14 +37,19 @@ export function AgentInfo() {
   
   return (
     <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
-      {/* Full-width Image */}
-      <div className="w-full aspect-square bg-gray-200 rounded-lg" />
+      {/* Replace image section */}
+      <div className="relative aspect-square overflow-hidden rounded-lg">
+        <AgentImage
+          thumbnailUrl={agent.thumbnailUrl || agent.avatarUrl}
+          agentId={agent.id}
+        />
+      </div>
 
       {/* Left-aligned Content */}
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold">Assistant</h2>
+        <h2 className="text-xl font-semibold">{agent.name}</h2>
         <p className="text-sm text-muted-foreground">
-          Your AI-powered assistant for code generation, debugging, and documentation.
+          {agent.description || "Your AI-powered assistant for code generation, debugging, and documentation."}
         </p>
       </div>
 
@@ -73,7 +84,7 @@ export function AgentInfo() {
             <textarea
               className="w-full min-h-[100px] p-3 text-sm border-0 rounded-md bg-muted/30 focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               placeholder="Define how the AI assistant should behave..."
-              defaultValue="You are a helpful, creative, and knowledgeable assistant specialized in software development."
+              defaultValue={agent.systemPrompt || "You are a helpful, creative, and knowledgeable assistant specialized in software development."}
             />
             <p className="text-xs text-muted-foreground mt-2">Determines the assistant&apos;s personality and behavior</p>
           </CollapsibleContent>
@@ -293,7 +304,7 @@ export function AgentInfo() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="streaming" className="text-sm">Response Streaming</Label>
-                  <p className="text-xs text-muted-foreground">Display responses as they're generated</p>
+                  <p className="text-xs text-muted-foreground">Display responses as they&apos;re generated</p>
                 </div>
                 <Switch id="streaming" defaultChecked />
               </div>
