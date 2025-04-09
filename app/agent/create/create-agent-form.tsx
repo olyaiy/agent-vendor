@@ -320,14 +320,14 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
           type="button" 
           variant="outline" 
           onClick={() => router.push('/agent')}
-          className="w-28"
+          className="w-28 cursor-pointer"
         >
           Cancel
         </Button>
         <Button 
           type="submit" 
           disabled={isPending || !primaryModelId}
-          className="w-36 gap-2"
+          className="w-36 gap-2 cursor-pointer"
         >
           {isPending ? (
             <>

@@ -50,9 +50,9 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
   const messagesProp: UIMessage[] = messages;
 
   return (
-    <div className="grid grid-cols-12 min-w-0 h-dvh">
+    <div className="grid grid-cols-12 min-w-0 h-full">
       {/* Main Chat Column */}
-      <div className="flex flex-col min-w-0 h-dvh col-span-9">
+      <div className="flex flex-col min-w-0 h-full col-span-9">
         <ChatHeader hasMessages={messages.length > 0} agentName={agent.name} agentId={agent.id} />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
@@ -88,7 +88,7 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
       </div>
 
       {/* Sidebar Agent Details Column */}
-      <div className="col-span-3 h-dvh sticky top-0 right-0">
+      <div className="col-span-3 h-full sticky top-0 right-0">
         {/* Pass isOwner, knowledgeItems, selectedModelId, and setSelectedModelId down to AgentInfo */}
         <AgentInfo
           agent={agent}

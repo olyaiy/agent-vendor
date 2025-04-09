@@ -48,7 +48,7 @@ export default async function Page({
     }));
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 ">
             {/* Optional: Add a header or breadcrumbs */}
             <h1 className="text-2xl font-semibold mb-6">Agent Settings</h1>
             <EditAgentForm 

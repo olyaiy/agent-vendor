@@ -46,8 +46,8 @@ export default function RootLayout({
           >
 
       <Header />
-           <SidebarInset className="overflow-hidden">
-            <div className="max-h-full overflow-hidden">  {/* Added height/overflow */}
+           <SidebarInset className="">
+            <div className="max-h-full h-full overflow-auto">  {/* Added height/overflow */}
               {children}
             </div>
           </SidebarInset>

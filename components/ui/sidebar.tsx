@@ -4,6 +4,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeftIcon } from "lucide-react"
+import { motion, HTMLMotionProps } from "framer-motion"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -304,10 +305,17 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
   )
 }
 
-function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
+function SidebarInset({ 
+  className, 
+  ...props 
+}: HTMLMotionProps<"main">) {
   return (
-    <main
+    <motion.main
       data-slot="sidebar-inset"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
         // Base styling for the content area
         "bg-background relative flex w-full flex-1 flex-col rounded-tl",

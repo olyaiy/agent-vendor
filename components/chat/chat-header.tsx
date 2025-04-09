@@ -45,7 +45,7 @@ function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId
       <motion.div 
         className={cn(
           "flex",
-          sidebarState === 'collapsed' ? 'flex-grow justify-center' : ''
+          sidebarState === 'collapsed' ? 'flex-grow justify-center mt-4 mb-2' : ''
         )}
         layout
         transition={{ 

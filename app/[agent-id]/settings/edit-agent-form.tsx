@@ -176,7 +176,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
 
   // TODO: Implement actual image upload functionality using the setThumbnailUrl state setter.
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto ">
       {/* Main Form Container */}
       <div className="space-y-12 pb-10 pt-8">
         {/* Image and Basic Info Section */}
@@ -414,7 +414,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
             type="button"
             variant="outline"
             onClick={() => router.push(`/${generateAgentSlug(agent.name, agent.id)}`)} // Navigate back to agent page
-            className="w-28"
+            className="w-28 cursor-pointer"
           >
             Cancel
           </Button>
@@ -422,7 +422,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
             type="button"
             variant="secondary" // Use secondary variant
             onClick={() => router.push(`/${generateAgentSlug(agent.name, agent.id)}`)} // Navigate to agent chat page
-            className="gap-2" // Add gap for icon
+            className="gap-2 cursor-pointer" // Add gap for icon
           >
             <ChatBubbleIcon className="size-4" />
             Chat with Agent
@@ -431,7 +431,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
         <Button
           type="submit"
           disabled={isPending || !primaryModelId}
-          className="w-36 gap-2"
+          className="w-36 gap-2 cursor-pointer"
         >
           {isPending ? (
             <>

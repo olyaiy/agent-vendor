@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { getRecentAgents } from "@/db/actions/agent-actions";
 import { AgentCard } from "@/components/agent-card";
+import HeaderPadding from "@/components/header-padding";
+
 
 // Loading component for the agents data
 function AgentsLoading() {
@@ -40,8 +42,11 @@ async function AgentsList() {
 }
 
 export default function Home() {
+
   return (
     <main className="container mx-auto py-8 px-4">
+
+      <HeaderPadding />
       <h1 className="text-3xl font-bold mb-6">Recent Agents</h1>
       
       {/* Wrap the data fetching component in Suspense for progressive hydration */}
