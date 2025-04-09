@@ -1,5 +1,5 @@
 import { db } from '../index';
-import { chat, type Chat } from '../schema/chat';
+import { chat, type Chat, message, type DBMessage } from '../schema/chat';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -50,4 +50,18 @@ export async function updateChatTitle(chatId: string, newTitle: string) {
     .update(chat)
     .set({ title: newTitle })
     .where(eq(chat.id, chatId));
+}
+
+/**
+ * Saves multiple messages to the database in a single transaction
+ * @param messages - Array of DBMessage records to insert
+ * @returns Promise resolving to the insert operation result
+ */
+export async function saveMessages({ messages }: { messages: DBMessage[] }) {
+  try {
+    return await db.insert(message).values(messages);
+  } catch (error) {
+    console.error('Failed to save messages in database', error);
+    throw error;
+  }
 }

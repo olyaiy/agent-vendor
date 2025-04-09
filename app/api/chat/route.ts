@@ -16,19 +16,18 @@ import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 export async function POST(req: Request) {
   console.time('Total request time');
 
-  // Get the session
+  /* ---- AUTH CHECK ---- */
   console.time('Session retrieval');
   const session = await auth.api.getSession({
       headers: await headers()
   });
   console.timeEnd('Session retrieval');
 
-  // If the user is not logged in, return an error
   if (!session || !session.user || !session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
   
-  // Destructure model, messages, and systemPrompt from the request body
+  /* ---- DESTRUCTURE REQUEST BODY ---- */
   const { 
     chatId,
     model: modelId, 
@@ -36,12 +35,10 @@ export async function POST(req: Request) {
     systemPrompt 
   } = await req.json();
 
-  // Get the chat by id
+  /* ---- GET CHAT BY ID OR CREATE NEW CHAT ---- */
   console.time('Chat lookup');
   const chat = await getChatById(chatId);
   console.timeEnd('Chat lookup');
-
-  // Fetch or Create the chat
   console.time('Chat creation check'); // Renamed timer
   if (!chat) {
     // --- Start: Fire-and-forget chat creation ---
@@ -78,20 +75,26 @@ export async function POST(req: Request) {
   }
   console.timeEnd('Chat creation check'); // End timer for the main path check
 
-  // Get the model instance (This will now run much sooner if chat didn't exist)
+
+  /* ---- GET MODEL INSTANCE ---- */
   console.time('Model instance retrieval');
   const modelInstance = getModelInstanceById(modelId);
   console.timeEnd('Model instance retrieval');
 
-  // Stream text
+
+
+  /* ---- STREAM TEXT ---- */
   console.time('Text streaming');
   const result = streamText({
     model: modelInstance,
     system: systemPrompt,
     messages,
   });
+  
+  
+  
+  
   console.timeEnd('Text streaming');
 
-  console.timeEnd('Total request time');
   return result.toDataStreamResponse();
 }
