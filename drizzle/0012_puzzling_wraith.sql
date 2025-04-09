@@ -1,1 +1,0 @@
-ALTER TABLE "agent" ADD COLUMN "visibility" text DEFAULT 'public' NOT NULL;

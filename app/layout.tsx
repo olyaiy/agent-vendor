@@ -45,9 +45,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
 
-      <Header />
+          <Header />
            <SidebarInset className="">
-            <div className="max-h-full h-full overflow-auto">  {/* Added height/overflow */}
+            <div className=" h-full overflow-auto">  {/* Added height/overflow */}
               {children}
             </div>
           </SidebarInset>

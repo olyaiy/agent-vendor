@@ -53,7 +53,7 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
   return (
     <div className="grid grid-cols-12 min-w-0 h-full">
       {/* Main Chat Column */}
-      <div className="flex flex-col min-w-0 h-full col-span-9">
+      <div className="flex flex-col min-w-0 h-full col-span-9 overflow-y-scroll">
         <ChatHeader hasMessages={messages.length > 0} agentName={agent.name} agentId={agent.id} />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (

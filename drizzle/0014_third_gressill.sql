@@ -1,1 +1,0 @@
-ALTER TABLE "knowledge" ALTER COLUMN "content" DROP NOT NULL;
