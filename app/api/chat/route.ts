@@ -4,6 +4,8 @@ import { streamText } from 'ai';
 import { getModelInstanceById } from '@/lib/models'; // Import the helper function
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
+import { createChat, getChatById } from '@/db/repository/chat-repository';
+import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 
 
 
@@ -22,16 +24,47 @@ export async function POST(req: Request) {
   if (!session || !session.user || !session.user.id) {
     return new Response('Unauthorized', { status: 401 });
   }
-
-   
-
   
     // Destructure model, messages, and systemPrompt from the request body
     const { 
+      chatId,
       model: modelId, 
       messages, 
       systemPrompt 
     } = await req.json();
+
+
+    const chat = await getChatById(chatId);
+
+      
+    if (chat) {
+      console.log("the chat is", chat);
+  } else {
+      console.log("the chat is not found");
+  }
+
+
+  // Fetch or Create the chat
+  if (!chat) {
+  console.log("the chat is not found, creating a new one");
+  const title = await generateTitleFromUserMessage({
+    message: messages[0],
+  });
+
+  console.log("the title is", title);
+  await createChat({ id: chatId, userId: session.user.id, title });
+  console.log("the chat is created");
+
+  } else {
+
+    console.log("the chat is found, checking if the user is authorized");
+    if (chat.userId !== session.user.id) {
+      
+      return new Response('Unauthorized', { status: 401 });
+    }
+  }
+
+
 
 
     // Get the model instance using the helper function

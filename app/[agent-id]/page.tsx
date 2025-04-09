@@ -1,6 +1,6 @@
 import Chat from "@/components/chat";
 import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository"; // Added selectKnowledgeByAgentId
-import { parseAgentSlug } from "@/lib/utils";
+import { generateUUID, parseAgentSlug } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
 
@@ -10,9 +10,13 @@ export default async function Page({
 }: {
   params: Promise<{ "agent-id": string }>;
 }) {
-  const { "agent-id": agentIdParam } = await params;
 
+  // Get the agent id from the url
+  const { "agent-id": agentIdParam } = await params;
   const { agentId } = parseAgentSlug(agentIdParam);
+
+  // Generate a random id for the chat
+  const id = generateUUID();
 
   // Fetch agent and knowledge items in parallel for efficiency
   const [agent, knowledgeItems] = await Promise.all([
@@ -27,6 +31,10 @@ export default async function Page({
   // Ownership check happens in the client component (Chat)
 
   return (
-    <Chat agent={agent} knowledgeItems={knowledgeItems} /> // Pass agent and knowledgeItems
+    <Chat 
+    agent={agent} 
+    knowledgeItems={knowledgeItems} 
+    chatId={id}
+    /> // Pass agent and knowledgeItems
   );
 }

@@ -13,7 +13,8 @@ interface ChatInputProps {
   status: UseChatHelpers['status'];
   stop: () => void;
   handleSubmit: UseChatHelpers['handleSubmit'];
-
+  agentId: string;
+  chatId: string; 
   id?: string;
   placeholder?: string;
   minHeight?: number;
@@ -106,6 +107,8 @@ MemoizedSendStopButton.displayName = 'MemoizedSendStopButton'; // Add display na
 
 // Main component remains largely the same, but uses the memoized buttons
 function ChatInputComponent({
+  chatId,
+  agentId,
   input,  
   setInput,
   status,
@@ -139,6 +142,9 @@ function ChatInputComponent({
   }, [textareaRef]); // Added textareaRef dependency
 
   const handleInternalSubmit = useCallback(() => {
+
+    window.history.replaceState({}, '', `/${agentId}/${chatId}`);
+
     // Read value from ref inside the handler
     if (inputRef.current.trim()) {
       handleSubmit();

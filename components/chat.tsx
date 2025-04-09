@@ -11,12 +11,13 @@ import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
 
 interface ChatProps {
+  chatId: string;
   agent: Agent & { modelName: string };
   knowledgeItems: Knowledge[]; // Add knowledgeItems prop
   // selectedModelId and setSelectedModelId are managed internally, not passed as props
 }
 
-export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destructure knowledgeItems
+export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // Destructure knowledgeItems
   // State for the selected model, initialized with the agent's primary model
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
 
@@ -28,7 +29,6 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
 
 
   const {
-    id,
     messages, 
     setMessages,
     handleSubmit, 
@@ -39,7 +39,9 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
     stop,
     reload
   } = useChat({
+    id: chatId,
     body: {
+      chatId: chatId,
       systemPrompt: agent.systemPrompt,
       model: selectedModelId // Use the state variable for the model
     }
@@ -59,7 +61,7 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
         {messages.length > 0 ? (
           <>
             <Messages
-              chatId={id}
+              chatId={chatId}
               status={status}
               messages={messagesProp}
               setMessages={setMessages}
@@ -68,6 +70,8 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
               isArtifactVisible={false}
             />
             <ChatInput 
+              chatId={chatId}
+              agentId={agent.id}
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
@@ -81,6 +85,8 @@ export default function Chat({ agent, knowledgeItems }: ChatProps) { // Destruct
             <Greeting />
             
             <ChatInput 
+              agentId={agent.id}
+              chatId={chatId}
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
