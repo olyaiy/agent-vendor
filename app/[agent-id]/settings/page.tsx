@@ -1,10 +1,9 @@
-import { selectAgentById } from "@/db/repository/agent-repository";
+import { selectAgentById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository";
 import { getAllModels } from "@/db/actions/agent-actions"; // Import action to get models
 import { parseAgentSlug } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import { EditAgentForm } from "./edit-agent-form"; // Import the new form component
-// import { auth } from "@/lib/auth"; // Removed unused import
-import { Model } from "@/db/schema/agent"; // Import Model type
+import { Knowledge, Model } from "@/db/schema/agent"; // Import Model type
 
 export default async function Page({
     params,
@@ -13,9 +12,10 @@ export default async function Page({
 }) {
     const { "agent-id": agentIdParam } = await params;
     const { agentId } = parseAgentSlug(agentIdParam);
-    const [agent, modelsResult] = await Promise.all([
+    const [agent, modelsResult, knowledgeResult] = await Promise.all([
         selectAgentById(agentId),
         getAllModels(),
+        selectKnowledgeByAgentId(agentId) // Add knowledge fetch to parallel promise
         // auth() // Removed session fetching as it's unused
     ]);
 
@@ -40,11 +40,22 @@ export default async function Page({
         description: model.description
     }));
 
+    const knowledge = knowledgeResult.map(knowledge => ({
+        id: knowledge.id,
+        title: knowledge.title,
+        content: knowledge.content,
+        sourceUrl: knowledge.sourceUrl
+    }));
+
     return (
         <div className="container mx-auto px-4 py-8">
             {/* Optional: Add a header or breadcrumbs */}
             <h1 className="text-2xl font-semibold mb-6">Agent Settings</h1>
-            <EditAgentForm agent={agent} models={models} />
+            <EditAgentForm 
+                agent={agent} 
+                models={models}
+                knowledge={knowledge as Knowledge[]} // Pass knowledge to form
+            />
         </div>
     );
 }

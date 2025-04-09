@@ -12,13 +12,19 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { updateAgentAction } from "@/db/actions/agent-actions"; // Updated import
+import {
+  updateAgentAction,
+  addKnowledgeItemAction,    // Added
+  updateKnowledgeItemAction, // Added
+  deleteKnowledgeItemAction  // Added
+} from "@/db/actions/agent-actions";
 import { generateAgentSlug } from "@/lib/utils";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons'; // Added ChatBubbleIcon
 import { VisibilitySelector } from "@/app/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
 import { FormSection } from "@/app/components/form-section";
-import { Agent } from "@/db/schema/agent"; // Import Agent type
+import { KnowledgeSection } from "@/app/components/knowledge-section"; // Added
+import { Agent, Knowledge } from "@/db/schema/agent"; // Import Agent type
 
 export interface ModelInfo {
   id: string;
@@ -29,17 +35,20 @@ export interface ModelInfo {
 interface EditAgentFormProps {
   agent: Agent; // Accept agent data
   models: ModelInfo[];
+  knowledge: Knowledge[]; // Keep existing knowledge prop
 }
 
-export function EditAgentForm({ agent, models }: EditAgentFormProps) {
+export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: EditAgentFormProps) { // Renamed prop for clarity
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isKnowledgeSubmitting, startKnowledgeTransition] = useTransition(); // Separate transition for knowledge actions
 
   // Form state initialized with agent data
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload and use setThumbnailUrl
+  // Form state
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload
   const [primaryModelId, setPrimaryModelId] = useState<string>(agent.primaryModelId);
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
+  const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge); // State for knowledge items
 
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
@@ -97,6 +106,71 @@ export function EditAgentForm({ agent, models }: EditAgentFormProps) {
         toast.error("Failed to update agent. Please try again.");
         console.error(error);
       }
+    });
+  };
+
+  // --- Knowledge Handlers ---
+  const handleAddItem = async (item: { title: string; content: string; sourceUrl?: string }): Promise<Knowledge> => {
+    return new Promise((resolve, reject) => {
+      startKnowledgeTransition(async () => {
+        try {
+          const result = await addKnowledgeItemAction({ ...item, agentId: agent.id });
+          if (result.success && result.data) {
+            setKnowledgeItems(prev => [...prev, result.data!]);
+            resolve(result.data); // Resolve with the new item
+          } else {
+            throw new Error(result.error || "Failed to add knowledge item");
+          }
+        } catch (error) {
+          console.error("Error adding knowledge item:", error);
+          toast.error("Failed to add knowledge item.");
+          reject(error); // Reject the promise on error
+        }
+      });
+    });
+  };
+
+  const handleUpdateItem = async (item: { id: string; title?: string; content?: string; sourceUrl?: string }): Promise<Knowledge> => {
+     return new Promise((resolve, reject) => {
+      startKnowledgeTransition(async () => {
+        try {
+          const result = await updateKnowledgeItemAction(item.id, {
+            title: item.title,
+            content: item.content,
+            sourceUrl: item.sourceUrl
+          });
+          if (result.success && result.data) {
+            setKnowledgeItems(prev => prev.map(k => k.id === item.id ? result.data! : k));
+            resolve(result.data); // Resolve with the updated item
+          } else {
+            throw new Error(result.error || "Failed to update knowledge item");
+          }
+        } catch (error) {
+          console.error("Error updating knowledge item:", error);
+          toast.error("Failed to update knowledge item.");
+          reject(error); // Reject the promise on error
+        }
+      });
+    });
+  };
+
+  const handleDeleteItem = async (id: string): Promise<{ success: boolean }> => {
+    return new Promise((resolve, reject) => {
+      startKnowledgeTransition(async () => {
+        try {
+          const result = await deleteKnowledgeItemAction(id);
+          if (result.success) {
+            setKnowledgeItems(prev => prev.filter(k => k.id !== id));
+            resolve({ success: true }); // Resolve on success
+          } else {
+            throw new Error(result.error || "Failed to delete knowledge item");
+          }
+        } catch (error) {
+          console.error("Error deleting knowledge item:", error);
+          toast.error("Failed to delete knowledge item.");
+          reject(error); // Reject the promise on error
+        }
+      });
     });
   };
 
@@ -311,6 +385,26 @@ export function EditAgentForm({ agent, models }: EditAgentFormProps) {
             </div>
           </div>
         </FormSection>
+
+        <Separator />
+
+        {/* Knowledge Section */}
+        {/* Pass state and handlers to KnowledgeSection */}
+        <KnowledgeSection
+          knowledgeItems={knowledgeItems}
+          agentId={agent.id}
+          onAddItem={handleAddItem}
+          onUpdateItem={handleUpdateItem}
+          onDeleteItem={handleDeleteItem}
+        />
+        {/* Add a subtle loading indicator for knowledge actions */}
+        {isKnowledgeSubmitting && (
+          <div className="flex justify-center items-center text-sm text-muted-foreground gap-2 py-2">
+            <Loader2 className="size-4 animate-spin" />
+            <span>Updating knowledge...</span>
+          </div>
+        )}
+
       </div>
 
       {/* Footer Actions */}
