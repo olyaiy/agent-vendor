@@ -1,6 +1,6 @@
 'use server'
 
-import { insertAgent, selectRecentAgents } from "@/db/repository/agent-repository";
+import { insertAgent, selectRecentAgents, selectAllModels } from "@/db/repository/agent-repository";
 
 /**
  * Server action to create a new agent
@@ -42,4 +42,19 @@ export async function getRecentAgents() {
     console.error("Failed to fetch agents:", error);
     return { success: false, error: (error as Error).message };
   }
-} 
+}
+
+/**
+ * Server action to fetch all available models
+ * This enables secure data fetching from client components
+ * @returns Promise with success status and model list or error
+ */
+export async function getAllModels() {
+  try {
+    const modelList = await selectAllModels();
+    return { success: true, data: modelList };
+  } catch (error) {
+    console.error("Failed to fetch models:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
