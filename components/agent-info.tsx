@@ -15,8 +15,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectGroup,
-  SelectLabel
 } from "@/components/ui/select"
 import {
   Dialog,
@@ -38,7 +36,7 @@ import { AgentImage } from "@/components/agent-image"
 import { ModelSelect } from '@/components/model-select'
 
 interface AgentInfoProps {
-  agent: Agent;
+  agent: Agent & { modelName?: string };
   isOwner: boolean; // Add isOwner prop
   knowledgeItems: Knowledge[]; // Add knowledgeItems prop
 }
@@ -53,6 +51,12 @@ export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { 
   // Debugging logs for isOwner
   console.log("AgentInfo - Agent Creator ID:", agent.creatorId);
   console.log("AgentInfo - Received isOwner prop:", isOwner);
+  
+  // Add console logs for agent model data
+  console.log("AgentInfo - Agent Model:", agent);
+  console.log("AgentInfo - Primary Model ID:", agent.primaryModelId);
+  console.log("AgentInfo - Model Name:", agent.modelName);
+  
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isToolsOpen, setIsToolsOpen] = useState(false)
   const [isBehaviourOpen, setIsBehaviourOpen] = useState(true)
@@ -264,7 +268,7 @@ export function AgentInfo({ agent, isOwner, knowledgeItems }: AgentInfoProps) { 
             {/* Model Selection */}
             <div className="space-y-2">
               <label className="text-xs text-muted-foreground">AI Model</label>
-              <ModelSelect defaultValue="gpt-4" />
+              <ModelSelect defaultValue={agent.modelName || agent.primaryModelId} />
             </div>
 
             {/* Temperature */}
