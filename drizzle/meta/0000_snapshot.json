@@ -1,5 +1,5 @@
 {
-  "id": "f6ceec8c-6744-4ba3-bc40-64426c61d16d",
+  "id": "5ff61d6b-dc87-43d7-8a39-73536e7ace99",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -594,7 +594,7 @@
         },
         "agentId": {
           "name": "agentId",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -730,7 +730,7 @@
         },
         "model_id": {
           "name": "model_id",
-          "type": "uuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }

@@ -51,7 +51,7 @@ export const chat = pgTable('Chat', {
 // --------------------------------------------------
 export const message = pgTable("Message", {
     // Use UUID v7 for better performance - time-ordered for efficient indexing
-    id: uuid('id').primaryKey().notNull().defaultRandom(),
+    id: uuid('id').primaryKey().defaultRandom(),
     chatId: uuid('chatId')  // Links to either Chat or GroupChat
       .notNull()
       .references(() => chat.id, { onDelete: 'cascade' }),

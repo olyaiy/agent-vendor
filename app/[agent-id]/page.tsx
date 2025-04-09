@@ -1,6 +1,6 @@
 import Chat from "@/components/chat";
 import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository"; // Added selectKnowledgeByAgentId
-import { generateUUID, parseAgentSlug } from "@/lib/utils";
+import {generateUUID, parseAgentSlug } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
 

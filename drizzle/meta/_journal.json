@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1744229666465,
-      "tag": "0000_sleepy_wolf_cub",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1744229699228,
-      "tag": "0001_unusual_gertrude_yorkes",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1744229754743,
-      "tag": "0002_tranquil_misty_knight",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1744234052074,
-      "tag": "0003_cuddly_marvex",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1744234249818,
-      "tag": "0004_hesitant_moira_mactaggert",
+      "when": 1744239933630,
+      "tag": "0000_keen_next_avengers",
       "breakpoints": true
     }
   ]

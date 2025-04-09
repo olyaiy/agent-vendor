@@ -1,1 +1,0 @@
-ALTER TABLE "Chat" ALTER COLUMN "agentId" SET DATA TYPE text;

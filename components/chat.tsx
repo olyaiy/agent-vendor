@@ -11,6 +11,7 @@ import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent'; // Import Knowledge type
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
+import { generateUUID } from '@/lib/utils';
 
 interface ChatProps {
   chatId: string;
@@ -85,7 +86,9 @@ export default function Chat({ agent, knowledgeItems, chatId }: ChatProps) { // 
       chatId: chatId,
       systemPrompt: agent.systemPrompt,
       model: selectedModelId // Use the state variable for the model
-    }
+    },
+    generateId: generateUUID,
+    sendExtraMessageFields: true, 
   })
 
   

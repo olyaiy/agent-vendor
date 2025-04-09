@@ -1,1 +1,0 @@
-ALTER TABLE "Message" ALTER COLUMN "model_id" SET DATA TYPE text;
