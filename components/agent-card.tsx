@@ -13,6 +13,7 @@ import { DotsHorizontalIcon } from "@radix-ui/react-icons";
 import { GearIcon,  ChatBubbleIcon } from "@radix-ui/react-icons";
 import { DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import { AgentImage } from "@/components/agent-image";
+import { generateAgentSlug } from "@/lib/utils";
 
 interface AgentCardProps {
   agent: Pick<Agent, 'id' | 'name' | 'description' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId'>;
@@ -21,7 +22,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, className = "" }: AgentCardProps) {
   return (
-    <Link href={`/agent/${agent.id}`} className="block">
+    <Link href={`/${generateAgentSlug(agent.name, agent.id)}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
         <div className="relative aspect-square overflow-hidden rounded-lg">
           <AgentImage 
