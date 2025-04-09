@@ -530,7 +530,7 @@ export function KnowledgeEditor({
                   </AlertDialogContent>
                 </AlertDialog>
 
-                {/* Edit Dialog Trigger & Content */}
+                {/* Edit Dialog Trigger & Content - Wrapping entire card content */}
                 <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => {
                   if (!open) {
                     resetForm();
@@ -539,7 +539,7 @@ export function KnowledgeEditor({
                 }}>
                   <DialogTrigger asChild>
                     <div 
-                      className="cursor-pointer space-y-2"
+                      className="cursor-pointer h-full w-full space-y-2"
                       onClick={() => handleEditClick(item)}
                     >
                       <div className="flex items-center gap-2">
@@ -554,6 +554,14 @@ export function KnowledgeEditor({
                       <div className="text-xs text-muted-foreground mt-2 line-clamp-3">
                         {truncateContent(item.content)}
                       </div>
+                      
+                      {/* Word count badge added here */}
+                      <Badge 
+                        variant="outline" 
+                        className="absolute bottom-2 right-2 text-xs"
+                      >
+                        {getContentStats(item.content).words.toLocaleString()} words
+                      </Badge>
                     </div>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[550px]">
@@ -622,18 +630,6 @@ export function KnowledgeEditor({
                     </form>
                   </DialogContent>
                 </Dialog>
-
-                {/* Footer with Stats */}
-                <div className="mt-4 pt-2 border-t flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground">
-                    {getContentStats(item.content).words.toLocaleString()} words
-                  </div>
-                  {item.updatedAt && (
-                    <div className="text-xs text-muted-foreground">
-                      {formatDate(item.updatedAt)}
-                    </div>
-                  )}
-                </div>
               </div>
             ))}
 
