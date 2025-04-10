@@ -3,6 +3,8 @@ import React, { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from '../ui/code-block';
+import rehypeRaw from 'rehype-raw';
+import { toHtml } from 'hast-util-to-html';
 
 
 const components: Partial<Components> = {
@@ -21,12 +23,10 @@ const components: Partial<Components> = {
       </ol>
     );
   },
-  li: ({ children, ...props }) => {
-    return (
-      <li className="py-1" {...props}>
-        {children}
-      </li>
-    );
+  li: ({ node, ...props }) => {
+    const html = node?.children ? toHtml(node.children) : '';
+    const { children, ...rest } = props;
+    return <li className="py-1" dangerouslySetInnerHTML={{ __html: html }} {...rest} />;
   },
   ul: ({ children, ...props }) => {
     return (
@@ -115,29 +115,37 @@ const components: Partial<Components> = {
       {children}
     </tr>
   ),
-  th: ({ children, ...props }) => (
-    <th
-      className="h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0"
-      {...props}
-    >
-      {children}
-    </th>
-  ),
-  td: ({ children, ...props }) => (
-    <td
-      className="p-4 align-middle [&:has([role=checkbox])]:pr-0"
-      {...props}
-    >
-      {children}
-    </td>
-  ),
+  th: ({ node, ...props }) => {
+    const { children, ...rest } = props;
+    return (
+      <th
+        className="h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0"
+        dangerouslySetInnerHTML={{ __html: node?.children ? toHtml(node.children) : '' }}
+        {...rest}
+      />
+    );
+  },
+  td: ({ node, ...props }) => {
+    const { children, ...rest } = props;
+    return (
+      <td
+        className="p-4 align-middle [&:has([role=checkbox])]:pr-0"
+        dangerouslySetInnerHTML={{ __html: node?.children ? toHtml(node.children) : '' }}
+        {...rest}
+      />
+    );
+  },
 };
 
 const remarkPlugins = [remarkGfm];
 
 const NonMemoizedMarkdown = ({ children }: { children: string }) => {
   return (
-    <ReactMarkdown remarkPlugins={remarkPlugins} components={components}>
+    <ReactMarkdown
+      remarkPlugins={remarkPlugins}
+      rehypePlugins={[rehypeRaw]}
+      components={components}
+    >
       {children}
     </ReactMarkdown>
   );
