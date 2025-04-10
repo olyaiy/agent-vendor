@@ -23,8 +23,9 @@ const components: Partial<Components> = {
       </ol>
     );
   },
-  li: ({ node, ...rest }) => {
+  li: ({ node, ...props }) => {
     const html = node?.children ? toHtml(node.children) : '';
+    const { children: _, ...rest } = props;
     return <li className="py-1" dangerouslySetInnerHTML={{ __html: html }} {...rest} />;
   },
   ul: ({ children, ...props }) => {
@@ -114,7 +115,8 @@ const components: Partial<Components> = {
       {children}
     </tr>
   ),
-  th: ({ node, ...rest }) => {
+  th: ({ node, ...props }) => {
+    const { children: _, ...rest } = props;
     return (
       <th
         className="h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0"
@@ -123,7 +125,8 @@ const components: Partial<Components> = {
       />
     );
   },
-  td: ({ node, ...rest }) => {
+  td: ({ node, ...props }) => {
+    const { children: _, ...rest } = props;
     return (
       <td
         className="p-4 align-middle [&:has([role=checkbox])]:pr-0"
