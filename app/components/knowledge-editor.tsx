@@ -183,14 +183,14 @@ export function KnowledgeEditor({
   };
 
   // Format date for display
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  // const formatDate = (date: Date | null) => {
+  //   if (!date) return '';
+  //   return new Date(date).toLocaleDateString('en-US', {
+  //     month: 'short',
+  //     day: 'numeric',
+  //     year: 'numeric'
+  //   });
+  // };
 
   // --- File Handling ---
 

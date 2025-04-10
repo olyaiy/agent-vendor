@@ -79,8 +79,9 @@ export interface ChatModel {
   name: string;
   description: string;
   provider: string;
-  supportsReasoning?: boolean; // Add this field to indicate reasoning support
-  defaultReasoningConfig?: Record<string, any>; // Add default reasoning configuration
+  supportsReasoning?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  defaultReasoningConfig?: Record<string, any>;
 }
 
 // Helper function to get the AI SDK model instance by its ID string
