@@ -6,7 +6,7 @@ import {
 import { memo, useState } from 'react';
 import { CopyButton } from '../ui/copy-button';
 import { Button } from '../ui/button';
-import { RefreshCw, Trash2 } from 'lucide-react';
+import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { deleteMessageAction } from '@/db/actions/chat-actions';
 
@@ -19,17 +19,20 @@ export function PureMessageActions({
   isLoading,
   reload,
   setMessages,
+  setMode,
+  isReadonly,
 }: {
   chatId: string;
   message: Message;
   isLoading: boolean;
   setMessages: UseChatHelpers['setMessages'];
   reload?: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
+  setMode?: (mode: 'view' | 'edit') => void;
+  isReadonly?: boolean;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   if (isLoading) return null;
-  if (message.role === 'user') return null;
 
   const textFromParts = message.parts
     ?.filter((part) => part.type === 'text')
@@ -72,13 +75,32 @@ export function PureMessageActions({
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-row gap-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
+        {message.role === 'user' && setMode && !isReadonly && (
+          <Tooltip>
+            <TooltipTrigger asChild className="cursor-pointer">
+              <Button
+                data-testid="message-edit-button"
+                variant="ghost"
+                size="icon"
+                className="size-6"
+                onClick={() => setMode('edit')}
+                aria-label="Edit message"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Edit message</TooltipContent>
+          </Tooltip>
+        )}
+        
         {textFromParts && (
           <CopyButton
             content={textFromParts}
             copyMessage="Copied to clipboard!"
           />
         )}
-        {reload && (
+        
+        {reload && message.role === 'assistant' && (
           <Tooltip>
             <TooltipTrigger asChild className="cursor-pointer">
               <Button

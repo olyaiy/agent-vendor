@@ -1,6 +1,6 @@
 import { db } from '../index';
 import { chat, type Chat, message, type DBMessage } from '../schema/chat';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and, inArray, gte } from 'drizzle-orm';
 
 /**
  * Retrieves a chat by its ID
@@ -95,3 +95,46 @@ export async function deleteMessageById(messageId: string) {
     .where(eq(message.id, messageId));
 }
 
+
+export async function getMessageById({ id }: { id: string }) {
+    try {
+      return await db.select().from(message).where(eq(message.id, id));
+    } catch (error) {
+      console.error('Failed to get message by id from database');
+      throw error;
+    }
+  }
+
+
+  export async function deleteMessagesByChatIdAfterTimestamp({
+    chatId,
+    timestamp,
+  }: {
+    chatId: string;
+    timestamp: Date;
+  }) {
+    try {
+      const messagesToDelete = await db
+        .select({ id: message.id })
+        .from(message)
+        .where(
+          and(eq(message.chatId, chatId), gte(message.createdAt, timestamp)),
+        );
+  
+      const messageIds = messagesToDelete.map((message) => message.id);
+  
+      if (messageIds.length > 0) {
+
+        return await db
+          .delete(message)
+          .where(
+            and(eq(message.chatId, chatId), inArray(message.id, messageIds)),
+          );
+      }
+    } catch (error) {
+      console.error(
+        'Failed to delete messages by id after timestamp from database',
+      );
+      throw error;
+    }
+  }

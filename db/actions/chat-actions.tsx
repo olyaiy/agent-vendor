@@ -4,7 +4,7 @@ import { generateText } from "ai";
 import { myProvider } from "@/lib/models";
 import { Message } from "ai";
 import { auth } from '@/lib/auth';
-import { deleteMessageById } from '../repository/chat-repository';
+import { deleteMessageById, deleteMessagesByChatIdAfterTimestamp, getMessageById } from '../repository/chat-repository';
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
@@ -65,3 +65,13 @@ export async function deleteMessageAction(messageId: string) {
   }
 }
 
+
+
+export async function deleteTrailingMessages({ id }: { id: string }) {
+    const [message] = await getMessageById({ id });
+  
+    await deleteMessagesByChatIdAfterTimestamp({
+      chatId: message.chatId,
+      timestamp: message.createdAt,
+    });
+  }

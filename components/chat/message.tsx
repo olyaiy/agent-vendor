@@ -5,17 +5,12 @@ import type { UIMessage } from 'ai';
 import { memo, useEffect, useState } from 'react';
 
 // import { DocumentToolCall, DocumentToolResult } from './document';
-import { PencilEditIcon, SparklesIcon } from '../utils/icons';
+import { SparklesIcon } from '../utils/icons';
 // import { Markdown } from './markdown';
-// import { MessageActions } from './message-actions';
 // import { PreviewAttachment } from './preview-attachment';
 import equal from 'fast-deep-equal';
 
-
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-// import { MessageEditor } from './message-editor';
 // import { DocumentPreview } from './document-preview';
 
 import { UseChatHelpers } from '@ai-sdk/react';
@@ -23,6 +18,7 @@ import { MessageReasoning } from './message-reasoning';
 import { MessageActions } from './message-actions';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { MessageEditor } from '../message-editor';
 
 const PurePreviewMessage = ({
   chatId,
@@ -100,24 +96,6 @@ const PurePreviewMessage = ({
               if (mode === 'view') {
                 return (
                   <div key={key} className="flex flex-row gap-2 items-start">
-                    {message.role === 'user' && !isReadonly && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            data-testid="message-edit-button"
-                            variant="ghost"
-                            className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100"
-                            onClick={() => {
-                              setMode('edit');
-                            }}
-                          >
-                            <PencilEditIcon />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit message</TooltipContent>
-                      </Tooltip>
-                    )}
-
                     <div
                       data-testid="message-content"
                       className={cn('flex flex-col gap-4', {
@@ -139,13 +117,13 @@ const PurePreviewMessage = ({
                   <div key={key} className="flex flex-row gap-2 items-start">
                     <div className="size-8" />
 
-                    {/* <MessageEditor
+                    <MessageEditor
                       key={message.id}
                       message={message}
                       setMode={setMode}
                       setMessages={setMessages}
                       reload={reload}
-                    /> */}
+                    />
                   </div>
                 );
               }
@@ -230,6 +208,8 @@ const PurePreviewMessage = ({
               isLoading={isLoading}
               reload={reload}
               setMessages={setMessages}
+              setMode={setMode}
+              isReadonly={isReadonly}
             />
           )}
         </div>
