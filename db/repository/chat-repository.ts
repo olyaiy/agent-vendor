@@ -1,6 +1,6 @@
 import { db } from '../index';
 import { chat, type Chat, message, type DBMessage } from '../schema/chat';
-import { eq, asc, and, inArray, gte } from 'drizzle-orm';
+import { eq, asc, and, inArray, gte, desc } from 'drizzle-orm';
 
 /**
  * Retrieves a chat by its ID
@@ -138,3 +138,33 @@ export async function getMessageById({ id }: { id: string }) {
       throw error;
     }
   }
+
+/**
+ * Retrieves the most recent chat conversations for a user.
+ * @param userId - The ID of the user.
+ * @param limit - The maximum number of chats to retrieve (default: 20).
+ * @returns Array of chat objects containing id and title.
+ * @throws Error if database operation fails
+ */
+export async function getUserRecentChats({
+  userId,
+  limit = 20,
+}: {
+  userId: string;
+  limit?: number;
+}): Promise<Pick<Chat, 'id' | 'title'>[]> {
+  try {
+    return await db
+      .select({
+        id: chat.id,
+        title: chat.title,
+      })
+      .from(chat)
+      .where(eq(chat.userId, userId))
+      .orderBy(desc(chat.createdAt))
+      .limit(limit);
+  } catch (error) {
+    console.error('Failed to get recent chats for user from database', error);
+    throw error;
+  }
+}

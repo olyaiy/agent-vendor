@@ -4,7 +4,7 @@ import { generateText } from "ai";
 import { myProvider } from "@/lib/models";
 import { Message } from "ai";
 import { auth } from '@/lib/auth';
-import { deleteMessageById, deleteMessagesByChatIdAfterTimestamp, getMessageById } from '../repository/chat-repository';
+import { deleteMessageById, deleteMessagesByChatIdAfterTimestamp, getMessageById, getUserRecentChats } from '../repository/chat-repository';
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
@@ -65,8 +65,6 @@ export async function deleteMessageAction(messageId: string) {
   }
 }
 
-
-
 export async function deleteTrailingMessages({ id }: { id: string }) {
     const [message] = await getMessageById({ id });
   
@@ -75,3 +73,31 @@ export async function deleteTrailingMessages({ id }: { id: string }) {
       timestamp: message.createdAt,
     });
   }
+
+export async function getUserRecentChatsAction(limit?: number) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    const recentChats = await getUserRecentChats({
+      userId: session.user.id,
+      limit: limit,
+    });
+
+    return {
+      success: true,
+      data: recentChats,
+    };
+  } catch (error) {
+    console.error('Failed to get recent chats:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to get recent chats',
+    };
+  }
+}

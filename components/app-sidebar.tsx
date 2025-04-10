@@ -1,6 +1,6 @@
 "use client"
 
-import { History, Users, LifeBuoy, Send, Info } from "lucide-react"
+import { Users, LifeBuoy, Send, Info } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -21,6 +21,7 @@ import { NavUser } from "./nav-user"
 import { NavSecondary } from "./nav-secondary"
 import { NewChatButton } from "./new-chat-button"
 import Link from "next/link"
+import { HistoryMenu } from "./history-menu"
 
 // Mock conversation history
 const historyItems = [
@@ -69,6 +70,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {/* New Chat Button with Command+K/Ctrl+K shortcut */}
               <NewChatButton />
+              <HistoryMenu items={historyItems} />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -77,26 +79,6 @@ export function AppSidebar() {
           {/* <SidebarGroupLabel>Navigation</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* History with submenu */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="History">
-                  <Link href="/history">
-                    <History size={18} />
-                    <span>History</span>
-                  </Link>
-                </SidebarMenuButton>
-                <SidebarMenuSub>
-                  {historyItems.map((item) => (
-                    <SidebarMenuSubItem key={item.title}>
-                      <SidebarMenuSubButton asChild>
-                        <Link href={item.url} className="flex items-center justify-start">
-                          <span className="text-xs truncate">{item.title}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </SidebarMenuItem>
               
               {/* Agents with submenu */}
               <SidebarMenuItem>
