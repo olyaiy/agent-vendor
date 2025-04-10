@@ -13,6 +13,7 @@ import { deleteMessageAction } from '@/db/actions/chat-actions';
 import { cn } from '@/lib/utils';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { toast } from 'sonner';
+import markdownToTxt from 'markdown-to-txt';
 
 export function PureMessageActions({
   message,
@@ -36,7 +37,7 @@ export function PureMessageActions({
 
   const textFromParts = message.parts
     ?.filter((part) => part.type === 'text')
-    .map((part) => part.text)
+    .map((part) => markdownToTxt(part.text))
     .join('\n')
     .trim();
 
