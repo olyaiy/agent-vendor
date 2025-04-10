@@ -19,6 +19,8 @@ interface HistoryDisplayItem {
   url: string;
 }
 
+
+
 // This component will now handle fetching its own data
 export function HistoryMenu() {
   // State to hold the fetched history items
@@ -36,7 +38,7 @@ export function HistoryMenu() {
           const formattedItems = result.data.map(chat => ({
             id: chat.id,
             title: chat.title,
-            url: `/chat/${chat.id}` // Construct the URL
+            url: `/${chat.agentId}/${chat.id}` // Construct the URL
           }));
           setHistoryItems(formattedItems);
         } else {
@@ -54,6 +56,10 @@ export function HistoryMenu() {
   }, []); // Empty dependency array ensures this runs once on mount
 
 
+
+  console.log("historyItems", historyItems);
+
+  
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild tooltip="History">

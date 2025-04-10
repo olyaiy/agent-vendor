@@ -90,6 +90,7 @@ export default function Chat({
     id: chatId,
     body: {
       chatId: chatId,
+      agentId: agent.id,
       systemPrompt: agent.systemPrompt,
       model: selectedModelId // Use the state variable for the model
     },

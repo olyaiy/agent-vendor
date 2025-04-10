@@ -16,7 +16,7 @@ export async function getChatById(chatId: string): Promise<Chat | undefined> {
   return result;
 }
 
-type NewChat = Pick<Chat, 'id' | 'userId' | 'title'>;
+type NewChat = Pick<Chat, 'id' | 'userId' | 'title' | 'agentId'>;
 
 /**
  * Creates a new chat conversation
@@ -31,7 +31,8 @@ export async function createChat(newChat: NewChat): Promise<Chat[]> {
       userId: newChat.userId,
       title: newChat.title,
       createdAt: new Date(), // Explicitly set creation date
-      visibility: 'private' // Default visibility as per schema
+      visibility: 'private', // Default visibility as per schema
+      agentId: newChat.agentId
     })
     .returning();
     
@@ -143,7 +144,7 @@ export async function getMessageById({ id }: { id: string }) {
  * Retrieves the most recent chat conversations for a user.
  * @param userId - The ID of the user.
  * @param limit - The maximum number of chats to retrieve (default: 20).
- * @returns Array of chat objects containing id and title.
+ * @returns Array of chat objects containing id, title, and agentId.
  * @throws Error if database operation fails
  */
 export async function getUserRecentChats({
@@ -152,12 +153,13 @@ export async function getUserRecentChats({
 }: {
   userId: string;
   limit?: number;
-}): Promise<Pick<Chat, 'id' | 'title'>[]> {
+}): Promise<Pick<Chat, 'id' | 'title' | 'agentId'>[]> {
   try {
     return await db
       .select({
         id: chat.id,
         title: chat.title,
+        agentId: chat.agentId,
       })
       .from(chat)
       .where(eq(chat.userId, userId))

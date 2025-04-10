@@ -33,7 +33,8 @@ export async function POST(req: Request) {
     chatId,
     model: modelId, 
     messages, 
-    systemPrompt 
+    systemPrompt,
+    agentId
   } = await req.json();
 
 
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
       try {
         console.time('Background chat placeholder creation');
         // 1. Create chat with placeholder title immediately
-        await createChat({ id: chatId, userId: session.user.id, title: "New Chat" });
+        await createChat({ id: chatId, userId: session.user.id, title: "New Chat" , agentId: agentId});
         console.timeEnd('Background chat placeholder creation');
 
         console.time('Background title generation and update');
