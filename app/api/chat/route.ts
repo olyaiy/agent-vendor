@@ -36,11 +36,6 @@ export async function POST(req: Request) {
     systemPrompt 
   } = await req.json();
 
-  console.log('the request body is --------------------------------');
-  console.log(chatId);
-  console.log(modelId);
-  console.log(messages);
-  console.log(systemPrompt);
 
 
 
@@ -51,10 +46,6 @@ export async function POST(req: Request) {
     return new Response('No user message found', { status: 400 });
   }
 
-
-
-  console.log('chatId is');
-  console.log(chatId);
 
 
   /* ---- GET CHAT BY ID OR CREATE NEW CHAT ---- */
@@ -70,7 +61,6 @@ export async function POST(req: Request) {
         // 1. Create chat with placeholder title immediately
         await createChat({ id: chatId, userId: session.user.id, title: "New Chat" });
         console.timeEnd('Background chat placeholder creation');
-        console.log(`Background chat placeholder created: ${chatId}`);
 
         console.time('Background title generation and update');
         // 2. Generate the actual title
@@ -80,7 +70,6 @@ export async function POST(req: Request) {
         // 3. Update the chat with the generated title
         await updateChatTitle(chatId, generatedTitle);
         console.timeEnd('Background title generation and update');
-        console.log(`Background chat title updated for: ${chatId}`);
 
       } catch (error) {
         console.error(`Error in background chat creation/update for ${chatId}:`, error);
@@ -98,8 +87,7 @@ export async function POST(req: Request) {
   console.timeEnd('Chat creation check'); // End timer for the main path check
 
 
-  console.log('USER MESSAGE ID IS');
-  console.log(userMessage.id);
+
   /* ---- SAVE USER MESSAGE ---- */
   console.time('Message saving');
   await saveMessages({
@@ -153,10 +141,7 @@ export async function POST(req: Request) {
           });
 
 
-          console.log('assistant message is');
-          console.log(assistantMessage);
-          console.log('assistant id is');
-          console.log(assistantId);
+   
 
           await saveMessages({
             messages: [
