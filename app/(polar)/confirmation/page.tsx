@@ -1,7 +1,7 @@
 // src/app/(polar)/confirmation/page.tsx
 
 interface PageProps {
-  params: Record<string, never>;
+  params: Promise<Record<string, never>>;
   searchParams: Promise<{ checkoutId?: string }>;
 }
 
