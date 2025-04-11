@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useRef } from 'react' // Import useState, useEffect, useRef
+import React, { useState } from 'react' // Remove unused useEffect, useRef
 import { useChat } from '@ai-sdk/react';
 // Remove unused DbChat import
 import { ChatInput } from './ui/chat-input';
@@ -11,8 +11,8 @@ import type { Agent, Knowledge } from '@/db/schema/agent'; // Import Knowledge t
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
-import { getChatTitleAction } from '@/db/actions/chat-actions'; // Import the new action
-import { useSWRConfig } from 'swr'; // Import useSWRConfig
+// Remove getChatTitleAction and useSWRConfig imports as they are now handled by the hook
+import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; // Import the custom hook
 
 interface ChatProps {
   chatId: string;
@@ -33,14 +33,8 @@ export default function Chat({
 }: ChatProps) { // Destructure knowledgeItems
   // State for the selected model, initialized with the agent's primary model
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
-  // State for the chat title
-  const [displayTitle, setDisplayTitle] = useState<string | null | undefined>(initialTitle);
-  // Ref to store the retry timeout ID
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Get the mutate function from SWR config
-  const { mutate } = useSWRConfig();
-  // Define the SWR key (consistent with HistoryMenu)
-  const SWR_KEY_RECENT_CHATS = 'userRecentChats';
+  // Use the custom hook to manage title state and update logic
+  const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
 
   // Try using useSession hook from authClient
@@ -71,82 +65,11 @@ export default function Chat({
     initialMessages,
     generateId: generateUUID,
     sendExtraMessageFields: true,
-    onFinish: async () => {
-      // Clear any existing retry timeout before starting a new fetch sequence
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-        retryTimeoutRef.current = null;
-      }
-
-      // Fetch the updated title when AI finishes
-      if (chatId) {
-        try {
-          const updatedTitle = await getChatTitleAction(chatId);
-          
-          if (updatedTitle === 'New Conversation') {
-            // If title is still the default, set a timer to retry
-            // First retry attempt after 3 seconds
-            console.log('Title is "New Conversation", scheduling first retry (3s)...');
-            retryTimeoutRef.current = setTimeout(async () => {
-              try {
-                console.log('Executing first retry fetch...');
-                const firstRetryTitle = await getChatTitleAction(chatId);
-                console.log('First retry fetch result:', firstRetryTitle);
-
-                if (firstRetryTitle === 'New Conversation') {
-                  // If still "New Conversation", schedule second retry after 5 seconds
-                  console.log('Title still "New Conversation", scheduling second retry (5s)...');
-                  retryTimeoutRef.current = setTimeout(async () => {
-                    try {
-                      console.log('Executing second retry fetch...');
-                      const secondRetryTitle = await getChatTitleAction(chatId);
-                      console.log('Second retry fetch result:', secondRetryTitle);
-                      setDisplayTitle(secondRetryTitle); // Update with the final result
-                      // Trigger SWR mutation for history menu
-                      if (secondRetryTitle !== 'New Conversation') {
-                        mutate(SWR_KEY_RECENT_CHATS);
-                      }
-                    } catch (secondRetryError) {
-                      console.error("Failed to fetch updated chat title on second retry:", secondRetryError);
-                    } finally {
-                      retryTimeoutRef.current = null; // Clear ref after second retry execution
-                    }
-                  }, 3000); // Wait 3 seconds for the second retry
-                } else {
-                  // If first retry was successful, update title
-                  setDisplayTitle(firstRetryTitle);
-                  // Trigger SWR mutation for history menu
-                  mutate(SWR_KEY_RECENT_CHATS);
-                  retryTimeoutRef.current = null; // Clear ref as retry sequence is complete
-                }
-              } catch (firstRetryError) {
-                console.error("Failed to fetch updated chat title on first retry:", firstRetryError);
-                // Clear ref even if first retry fails
-                retryTimeoutRef.current = null; 
-              }
-            }, 3000); // Wait 2 seconds for the first retry
-          } else {
-            // If initial title is valid, update immediately
-            setDisplayTitle(updatedTitle);
-            // Trigger SWR mutation for history menu
-            mutate(SWR_KEY_RECENT_CHATS);
-          }
-        } catch (error) {
-          console.error("Failed to fetch updated chat title:", error);
-          // Optionally handle the error, e.g., show a toast notification
-        }
-      }
-    },
+    // Use the handler function from the custom hook
+    onFinish: handleChatFinish, 
   })
 
-  // Cleanup timeout on component unmount
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-    };
-  }, []); // Empty dependency array ensures this runs only on mount and unmount
+  // Remove the old useEffect for cleanup, as it's now handled within the hook
 
   // @ts-expect-error There's a version mismatch between UIMessage types
   const messagesProp: UIMessage[] = messages;
