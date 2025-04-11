@@ -16,6 +16,25 @@ export async function getChatById(chatId: string): Promise<Chat | undefined> {
   return result;
 }
 
+/**
+ * Retrieves the title and userId of a chat by its ID.
+ * Used for efficient fetching when only title and ownership check are needed.
+ * @param chatId - UUID of the chat to retrieve
+ * @returns Object containing title and userId, or undefined if not found
+ */
+export async function getChatTitleAndUserId(chatId: string): Promise<Pick<Chat, 'title' | 'userId'> | undefined> {
+  const [result] = await db
+    .select({
+      title: chat.title,
+      userId: chat.userId,
+    })
+    .from(chat)
+    .where(eq(chat.id, chatId));
+
+  return result;
+}
+
+
 type NewChat = Pick<Chat, 'id' | 'userId' | 'title' | 'agentId'>;
 
 /**

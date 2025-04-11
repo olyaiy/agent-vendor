@@ -2,7 +2,7 @@
 import React, { useState } from 'react' // Import useState
 import { useChat } from '@ai-sdk/react';
 import useSWR from 'swr'; // Import useSWR
-import type { Chat as DbChat } from '@/db/schema/chat'; // Import DB Chat type
+// Remove unused DbChat import
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
@@ -51,8 +51,8 @@ export default function Chat({
 
 
   
-  // Fetch chat data using SWR
-  const { data: chatData, error: chatError, mutate } = useSWR<DbChat | null>( // Allow null type, add mutate
+  // Fetch chat data using SWR - now only fetching title
+  const { data: chatData, error: chatError, mutate } = useSWR<{ title: string | null } | null>( // Expect only title object or null
     chatId ? `/api/chat/${chatId}` : null, // API endpoint URL, conditional on chatId
     fetcher,
     {

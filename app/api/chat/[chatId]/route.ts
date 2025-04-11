@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth'; // Use path alias
-import { getChatById } from '@/db/repository/chat-repository'; // Use path alias
+// Import the new function and remove the old one
+import { getChatTitleAndUserId } from '@/db/repository/chat-repository'; // Use path alias
 
 export async function GET(
   request: Request,
@@ -24,21 +25,23 @@ export async function GET(
   }
 
   try {
-    const chat = await getChatById(chatId);
+    // Use the new function to get only title and userId
+    const chatDetails = await getChatTitleAndUserId(chatId);
 
-    if (!chat) {
-      return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+    if (!chatDetails) {
+      // Return null instead of 404 to align with SWR fetcher expectation
+      return NextResponse.json(null, { status: 404 }); 
     }
 
-    // Check if the logged-in user owns the chat
-    if (chat.userId !== session.user.id) {
+    // Check if the logged-in user owns the chat using the fetched userId
+    if (chatDetails.userId !== session.user.id) {
       // Optionally allow access based on visibility, e.g., if chat.visibility === 'public'
       // For now, strict ownership check
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Return the chat details
-    return NextResponse.json(chat);
+    // Return only the title
+    return NextResponse.json({ title: chatDetails.title });
 
   } catch (error) {
     console.error('Error fetching chat:', error);
