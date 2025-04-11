@@ -25,7 +25,8 @@ const components: Partial<Components> = {
   },
   li: ({ node, ...props }) => {
     const html = node?.children ? toHtml(node.children) : '';
-    const { ...rest } = props;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { children, ...rest } = props;
     return <li className="py-1" dangerouslySetInnerHTML={{ __html: html }} {...rest} />;
   },
   ul: ({ children, ...props }) => {
@@ -116,7 +117,8 @@ const components: Partial<Components> = {
     </tr>
   ),
   th: ({ node, ...props }) => {
-    const { ...rest } = props;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { children, ...rest } = props;
     return (
       <th
         className="h-12 px-4 text-left align-middle font-medium [&:has([role=checkbox])]:pr-0"
@@ -126,7 +128,8 @@ const components: Partial<Components> = {
     );
   },
   td: ({ node, ...props }) => {
-    const { ...rest } = props;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { children, ...rest } = props;
     return (
       <td
         className="p-4 align-middle [&:has([role=checkbox])]:pr-0"
