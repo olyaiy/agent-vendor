@@ -2,7 +2,7 @@
 import { Product } from "@polar-sh/sdk/models/components/product.js";
 import Link from "next/link";
 import { useMemo } from "react";
-
+import { Check, ArrowRight } from "lucide-react";
 
 interface ProductCardProps {
     product: Product
@@ -26,21 +26,31 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     }, [firstPrice])
 
     return (
-        <div className="flex flex-col gap-y-24 justify-between p-12 rounded-3xl bg-neutral-950 h-full border border-neutral-900">
-            <div className="flex flex-col gap-y-8">
-            <h1 className="text-3xl">{product.name}</h1>
-            <p className="text-neutral-400">{product.description}</p>
-            <ul>
-                {product.benefits.map((benefit) => (
-                    <li key={benefit.id} className="flex flex-row gap-x-2 items-center">
-                        {benefit.description}
-                    </li>
-                ))}
-            </ul>
-           </div>
-            <div className="flex flex-row gap-x-4 justify-between items-center">
-                <Link className="h-8 flex flex-row items-center justify-center rounded-full bg-white text-black font-medium px-4" href={`/api/polar/checkout?productId=${product.id}`}>Buy</Link>
-                <span className="text-neutral-500">{price}</span>
+        <div className="group flex flex-col justify-between p-6 rounded-xl border border-neutral-800 bg-gradient-to-b from-neutral-900 to-neutral-950 h-full transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-neutral-900/20">
+            <div className="flex flex-col gap-y-6">
+                <h3 className="text-2xl font-medium tracking-tight text-white">{product.name}</h3>
+                <p className="text-neutral-400 text-sm leading-relaxed">{product.description}</p>
+                <ul className="space-y-3 mt-2">
+                    {product.benefits.map((benefit) => (
+                        <li key={benefit.id} className="flex items-start gap-x-3">
+                            <span className="flex-shrink-0 mt-1">
+                                <Check className="h-4 w-4 text-emerald-500" />
+                            </span>
+                            <span className="text-sm text-neutral-300">{benefit.description}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            
+            <div className="mt-8 flex items-center justify-between">
+                <span className="text-xl font-medium text-white">{price}</span>
+                <Link 
+                    href={`/api/polar/checkout?productId=${product.id}`}
+                    className="flex items-center gap-x-2 bg-white hover:bg-neutral-100 text-black font-medium rounded-full px-4 py-2 transition-all duration-200 hover:shadow-md group-hover:scale-105"
+                >
+                    Get Started
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
             </div>
         </div>
     )
