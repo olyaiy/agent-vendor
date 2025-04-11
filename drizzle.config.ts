@@ -5,7 +5,13 @@ config({ path: '.env.local' }); // Explicitly load .env.local
 
 export default defineConfig({
   out: './drizzle',
-  schema: ['./db/schema/auth-schema.ts', './db/schema/agent.ts', './db/schema/chat.ts'], // Point to specific schema files
+  schema: ['./db/schema/auth-schema.ts',
+     './db/schema/agent.ts', 
+     './db/schema/chat.ts',
+     './db/schema/transactions.ts',
+     './db/schema/user_credits.ts',
+     './db/schema/transactions.ts',
+     ], 
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.DATABASE_URL!,

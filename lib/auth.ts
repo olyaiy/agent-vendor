@@ -5,6 +5,7 @@ import { anonymous, username } from "better-auth/plugins";
 
 import { polar } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
+import { userCredits } from "@/db/schema/transactions"; // Import userCredits table
 
 
 const client = new Polar({
@@ -33,6 +34,25 @@ export const auth = betterAuth({
         clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
     }, 
   },
+  
+  // Add database hooks
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Create a user_credits record with $1 initial credit
+          await db.insert(userCredits).values({
+            userId: user.id,
+            creditBalance: "1.00000000", // $1 based on your schema precision
+            lifetimeCredits: "1.00000000"
+          });
+          
+          console.log(`Created initial credits for user: ${user.id}`);
+        },
+      },
+    },
+  },
+
   // plugins
   plugins: [
     username(),
