@@ -1,7 +1,7 @@
 // src/components/ProductCard.tsx
 import { Product } from "@polar-sh/sdk/models/components/product.js";
 import Link from "next/link";
-import { useMemo } from "react";
+// import { useMemo } from "react";
 import { Check, ArrowRight } from "lucide-react";
 
 interface ProductCardProps {
@@ -11,19 +11,19 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
     // Handling just a single price for now
     // Remember to handle multiple prices for products if you support monthly & yearly pricing plans
-    const firstPrice = product.prices[0]
+    // const firstPrice = product.prices[0]
 
-    const price = useMemo(() => {
-        switch(firstPrice.amountType) {
-            case 'fixed':
-                // The Polar API returns prices in cents - Convert to dollars for display
-                return `$${firstPrice.priceAmount / 100}`
-            case 'free':
-                return 'Free'
-            default:
-                return 'Pay what you want'
-        }
-    }, [firstPrice])
+    // const price = useMemo(() => {
+    //     switch(firstPrice.amountType) {
+    //         case 'fixed':
+    //             // The Polar API returns prices in cents - Convert to dollars for display
+    //             return `$${firstPrice.priceAmount / 100}`
+    //         case 'free':
+    //             return 'Free'
+    //         default:
+    //             return 'Pay what you want'
+    //     }
+    // }, [firstPrice])
 
     return (
         <div className="group flex flex-col justify-between p-6 rounded-xl border border-neutral-800 bg-gradient-to-b from-neutral-900 to-neutral-950 h-full transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-neutral-900/20">
@@ -43,7 +43,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
             
             <div className="mt-8 flex items-center justify-between">
-                <span className="text-xl font-medium text-white">{price}</span>
+                {/* <span className="text-xl lg: font-medium text-white">{price}</span> */}
                 <Link 
                     href={`/api/polar/checkout?productId=${product.id}`}
                     className="flex items-center gap-x-2 bg-white hover:bg-neutral-100 text-black font-medium rounded-full px-4 py-2 transition-all duration-200 hover:shadow-md group-hover:scale-105"
