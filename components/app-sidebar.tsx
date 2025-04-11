@@ -23,13 +23,6 @@ import { NewChatButton } from "./new-chat-button"
 import Link from "next/link"
 import { HistoryMenu } from "./history-menu"
 
-// Mock conversation history
-const historyItems = [
-  { title: "Project brainstorming session", url: "#", date: "2 hours ago" },
-  { title: "Customer support analysis", url: "#", date: "Yesterday" },
-  { title: "Content marketing ideas", url: "#", date: "3 days ago" },
-  { title: "Product roadmap planning", url: "#", date: "Last week" },
-]
 
 // Agent submenu items
 const agentItems = [
@@ -70,7 +63,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {/* New Chat Button with Command+K/Ctrl+K shortcut */}
               <NewChatButton />
-              <HistoryMenu items={historyItems} />
+              <HistoryMenu />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
