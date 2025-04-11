@@ -84,6 +84,233 @@ export interface ChatModel {
   defaultReasoningConfig?: Record<string, any>;
 }
 
+export interface ModelDetails {
+  inputCostPerMillion: number;
+  outputCostPerMillion: number;
+  contextWindow: number;
+}
+
+export const modelDetails: Record<string, ModelDetails> = {
+  // OpenAI Models
+  'gpt-4o': {
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 128_000,
+  },
+  'gpt-4o-mini': {
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.60,
+    contextWindow: 128_000,
+  },
+  'o1': {
+    inputCostPerMillion: 15.00,
+    outputCostPerMillion: 60.00,
+    contextWindow: 200_000,
+  },
+  'o3-mini': {
+    inputCostPerMillion: 1.10,
+    outputCostPerMillion: 4.40,
+    contextWindow: 200_000,
+  },
+  // GROQ Models with updated pricing
+  'gemma2-9b-it': {
+    inputCostPerMillion: 0.20,
+    outputCostPerMillion: 0.20,
+    contextWindow: 8_192,
+  },
+  'llama-3.3-70b-versatile': {
+    inputCostPerMillion: 0.59,
+    outputCostPerMillion: 0.79,
+    contextWindow: 128_000,
+  },
+  'llama-3.1-8b-instant': {
+    inputCostPerMillion: 0.05,
+    outputCostPerMillion: 0.08,
+    contextWindow: 8_192,
+  },
+  'llama-guard-3-8b': {
+    inputCostPerMillion: 0.20,
+    outputCostPerMillion: 0.20,
+    contextWindow: 8_192,
+  },
+  'llama3-70b-8192': {
+    inputCostPerMillion: 0.59,
+    outputCostPerMillion: 0.79,
+    contextWindow: 8_192,
+  },
+  'llama3-8b-8192': {
+    inputCostPerMillion: 0.05,
+    outputCostPerMillion: 0.08,
+    contextWindow: 8_192,
+  },
+  // Mistral Models
+  'mistral-large-latest': {
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 6.00,
+    contextWindow: 32_000, // Default value - update if you have specific context window info
+  },
+  'pixtral-large-latest': {
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 6.00,
+    contextWindow: 32_000, // Default value - update if you have specific context window info
+  },
+  'mistral-small-latest': {
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.30,
+    contextWindow: 32_000, // Default value - update if you have specific context window info
+  },
+  // ... other models can be added here ...
+  
+  // Anthropic Models
+  'claude-3-7-sonnet-20250219': {
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+  },
+  'claude-3-5-sonnet-20241022': { // Mirroring 3.7 Sonnet as requested
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+  },
+  'claude-3-5-haiku-20241022': {
+    inputCostPerMillion: 0.80,
+    outputCostPerMillion: 4.00,
+    contextWindow: 200_000,
+  },
+  // Perplexity Models
+  'sonar-pro': {
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: -1, // TODO: Add actual context window
+  },
+  'sonar': {
+    inputCostPerMillion: 1.00,
+    outputCostPerMillion: 1.00,
+    contextWindow: -1, // TODO: Add actual context window
+  },
+  // DeepSeek Models (cache miss pricing)
+  'deepseek-chat': {
+    inputCostPerMillion: 0.27,
+    outputCostPerMillion: 1.10,
+    contextWindow: 64_000,
+  },
+  'deepseek-reasoner': {
+    inputCostPerMillion: 0.55,
+    outputCostPerMillion: 2.19,
+    contextWindow: 64_000,
+  },
+  // Google Models
+  'gemini-2.0-flash-exp': {
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.40,
+    contextWindow: 1_048_576, // 1M tokens
+  },
+  'gemini-1.5-pro': {
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 2_000_000, // 2M tokens
+  },
+  'gemini-1.5-pro-latest': {
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 2_000_000,
+  },
+  'gemini-1.5-flash': {
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.60,
+    contextWindow: 1_048_576,
+  },
+  'gemini-1.5-flash-latest': {
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.60,
+    contextWindow: 1_048_576,
+  },
+  'gemini-1.5-flash-8b': {
+    inputCostPerMillion: 0.075,
+    outputCostPerMillion: 0.30,
+    contextWindow: 1_048_576,
+  },
+  'gemini-1.5-flash-8b-latest': {
+    inputCostPerMillion: 0.075,
+    outputCostPerMillion: 0.30,
+    contextWindow: 1_048_576,
+  },
+  // xAI Grok Models (text only)
+  'grok-2-1212': {
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 10.00,
+    contextWindow: 32_768,
+  },
+  'grok-2-latest': {
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 10.00,
+    contextWindow: 32_768,
+  },
+  'grok-3-beta': {
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 131_072,
+  },
+  'grok-3': {
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-latest': {
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-fast-beta': {
+    inputCostPerMillion: 5.00,
+    outputCostPerMillion: 25.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-fast': {
+    inputCostPerMillion: 5.00,
+    outputCostPerMillion: 25.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-fast-latest': {
+    inputCostPerMillion: 5.00,
+    outputCostPerMillion: 25.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini-beta': {
+    inputCostPerMillion: 0.30,
+    outputCostPerMillion: 0.50,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini': {
+    inputCostPerMillion: 0.30,
+    outputCostPerMillion: 0.50,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini-latest': {
+    inputCostPerMillion: 0.30,
+    outputCostPerMillion: 0.50,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini-fast-beta': {
+    inputCostPerMillion: 0.60,
+    outputCostPerMillion: 4.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini-fast': {
+    inputCostPerMillion: 0.60,
+    outputCostPerMillion: 4.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini-fast-latest': {
+    inputCostPerMillion: 0.60,
+    outputCostPerMillion: 4.00,
+    contextWindow: 131_072,
+  },
+};
+
+
+
+
 // Helper function to get the AI SDK model instance by its ID string
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getModelInstanceById(modelId: string): LanguageModel {
@@ -97,15 +324,15 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     // Perplexity
     'sonar-pro': perplexity('sonar-pro'),
     'sonar': perplexity('sonar'),
-    'sonar-reasoning-pro': perplexity('sonar-reasoning-pro'),
-    'r1-1776': perplexity('r1-1776'),
+    // 'sonar-reasoning-pro': perplexity('sonar-reasoning-pro'),
+    // 'r1-1776': perplexity('r1-1776'),
     // Mistral
     'pixtral-large-latest': mistral('pixtral-large-latest'),
     'mistral-small-latest': mistral('mistral-small-latest'),
     'mistral-large-latest': mistral('mistral-large-latest'),
     // Groq
     'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'),
-    'llama-3.1-8b-instant': groq('llama3-8b-8192'),
+    'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'),
     'gemma2-9b-it': groq('gemma2-9b-it'),
     'llama-guard-3-8b': groq('llama-guard-3-8b'),
     'llama3-70b-8192': groq('llama3-70b-8192'),
@@ -144,4 +371,19 @@ export function getModelInstanceById(modelId: string): LanguageModel {
   }
 
   return modelInstance;
+}
+
+export function getModelPricing(modelId: string): ModelDetails {
+  const details = modelDetails[modelId];
+  
+  if (!details) {
+    console.warn(`Model pricing not found for ID: ${modelId}. Using default model pricing.`);
+    return modelDetails[DEFAULT_CHAT_MODEL];
+  }
+
+  return {
+    inputCostPerMillion: details.inputCostPerMillion,
+    outputCostPerMillion: details.outputCostPerMillion,
+    contextWindow: details.contextWindow
+  };
 }
