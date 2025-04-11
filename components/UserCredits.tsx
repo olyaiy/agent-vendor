@@ -1,19 +1,27 @@
-import { AlertCircle, ArrowUpRight, CreditCard } from "lucide-react"
-import Link from "next/link"
+import { CreditCard } from "lucide-react"
 
 interface UserCreditsProps {
   availableBalance: number // In dollars
   totalSpent: number // In dollars
-  nextRefill?: Date
 }
 
 export function UserCredits({ 
   availableBalance = 500, 
-  totalSpent = 1200,
-  nextRefill
+  totalSpent = 1200
 }: UserCreditsProps) {
-  // Format as USD currency
+  // Format as USD currency with variable decimal places for small amounts
   const formatCurrency = (amount: number) => {
+    // For very small numbers or available balance, show more decimal places
+    if (amount > 0 && amount < 0.01) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 7,
+        maximumFractionDigits: 9
+      }).format(amount);
+    }
+    
+    // Standard formatting for normal amounts
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -22,9 +30,19 @@ export function UserCredits({
     }).format(amount);
   };
 
+  // Format specifically for available balance with higher precision
+  const formatAvailableBalance = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: amount < 1 ? 7 : 2,
+      maximumFractionDigits: amount < 1 ? 9 : 2
+    }).format(amount);
+  };
+
   return (
     <div className="rounded-xl border border-neutral-800 bg-gradient-to-b from-neutral-900/80 to-black p-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6">
         <div className="col-span-2">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -38,7 +56,7 @@ export function UserCredits({
           
           <div className="mt-4 flex items-center gap-3">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-semibold tracking-tight text-white">{formatCurrency(availableBalance)}</span>
+              <span className="text-3xl font-semibold tracking-tight text-white">{formatAvailableBalance(availableBalance)}</span>
               <span className="text-sm text-neutral-400">available</span>
             </div>
             <div className="h-4 w-px bg-neutral-800"></div>
@@ -47,32 +65,6 @@ export function UserCredits({
               <span className="text-sm text-neutral-500">spent to date</span>
             </div>
           </div>
-        </div>
-        
-        <div className="flex flex-col justify-center rounded-lg border border-neutral-800 bg-neutral-900/50 p-4">
-          {nextRefill ? (
-            <>
-              <span className="text-sm text-neutral-400">Next automatic payment</span>
-              <span className="text-lg font-medium text-white">
-                {nextRefill.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-              </span>
-            </>
-          ) : (
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-amber-500">No upcoming payments</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="flex flex-col justify-center">
-          <Link 
-            href="/buy-credits" 
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-800 bg-emerald-900/20 px-4 py-2.5 text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-900/30"
-          >
-            Add Funds
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
         </div>
       </div>
     </div>
