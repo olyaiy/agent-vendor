@@ -1,12 +1,13 @@
 import { appendResponseMessages, streamText } from 'ai';
 // Remove direct openai import, we'll get the model instance via the helper
 // import { openai } from "@ai-sdk/openai";
-import { getModelInstanceById } from '@/lib/models'; // Import the helper function
+import { getModelInstanceById, getModelPricing } from '@/lib/models'; // Import the helper function
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/repository/chat-repository'; // Import updateChatTitle
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
+import { recordTransaction } from '@/db/repository/transaction-repository';
 
 /**
  * Handles POST requests for chat conversations
@@ -132,7 +133,7 @@ export async function POST(req: Request) {
          * - Validates assistant message
          * - Persists user and assistant messages
          */
-        console.log('usage', usage);
+
 
         // --- Start: Save messages --- //
         if (session.user?.id) {
@@ -183,6 +184,27 @@ export async function POST(req: Request) {
                   model_id: "f86723da-2b45-4679-823d-24da0b474436"
                 },
               ],
+            });
+
+
+            const model_cost = getModelPricing(modelId);
+
+            console.log('model_cost', model_cost);
+            console.log('usage', usage);
+
+            const input_cost = usage.promptTokens * model_cost.inputCostPerMillion / 1000000;
+            const output_cost = usage.completionTokens * model_cost.outputCostPerMillion / 1000000  ;
+
+            console.log('input_cost', input_cost);
+            console.log('output_cost', output_cost);
+            
+            // Record transaction
+            await recordTransaction({
+              userId: session.user.id,
+              amount: (input_cost + output_cost).toString(),
+              messageId: assistantId,
+              type: "usage",
+              description: "Chat input cost"
             });
           } catch (error) {
             console.error('Failed to save chat', error);

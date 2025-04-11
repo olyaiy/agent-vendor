@@ -22,9 +22,15 @@ export async function chargeUser({
   messageId?: string;
   description?: string;
 }) {
-  // Validate input
+  console.log(`[Transaction] Charge initiated for user ${userId}, amount: ${amount}`);
+
   const validation = ChargeUserSchema.safeParse({ userId, amount, messageId, description });
   if (!validation.success) {
+    console.error('[Transaction] Validation failed:', {
+      userId,
+      error: validation.error.format(),
+      inputAmount: amount
+    });
     return { 
       success: false, 
       error: "Invalid input data", 
@@ -33,7 +39,6 @@ export async function chargeUser({
   }
 
   try {
-    // Record transaction and update credits atomically
     const transaction = await recordTransaction({
       userId,
       type: 'usage',
@@ -42,11 +47,18 @@ export async function chargeUser({
       description: validation.data.description
     });
 
+    console.log(`[Transaction] Recorded transaction ${transaction.id} for user ${userId}`);
+
     const updatedCredits = await updateUserCredits(
       userId,
       validation.data.amount,
       'usage'
     );
+
+    console.log(`[Transaction] Successfully charged user ${userId}. 
+      Amount: ${validation.data.amount}, 
+      New Balance: ${updatedCredits.creditBalance},
+      Transaction ID: ${transaction.id}`);
 
     return { 
       success: true, 
@@ -56,7 +68,12 @@ export async function chargeUser({
       }
     };
   } catch (error) {
-    console.error("Failed to charge user:", error);
+    console.error(`[Transaction] Charge failed for user ${userId}`, {
+      amount,
+      messageId,
+      error: error instanceof Error ? error.stack : 'Unknown error'
+    });
+    
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Unknown error occurred" 
