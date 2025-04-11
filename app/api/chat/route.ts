@@ -55,15 +55,15 @@ export async function POST(req: Request) {
   console.timeEnd('Chat lookup');
   console.time('Chat creation check'); // Renamed timer
   if (!chat) {
-    console.log('Chat not found, creating new chat');
+
     // --- Start: Fire-and-forget chat creation ---
     (async () => {
       try {
         console.time('Background chat placeholder creation');
         // 1. Create chat with placeholder title immediately
-        await createChat({ id: chatId, userId: session.user.id, title: "New Chat" , agentId: agentId});
+        await createChat({ id: chatId, userId: session.user.id, title: "New Conversation" , agentId: agentId});
         console.timeEnd('Background chat placeholder creation');
-        console.log('Chat created');
+
 
         console.time('Background title generation and update');
         // 2. Generate the actual title
@@ -71,12 +71,10 @@ export async function POST(req: Request) {
           message: userMessage,
         });
 
-        console.log('Generated title:', generatedTitle);
         // 3. Update the chat with the generated title
         await updateChatTitle(chatId, generatedTitle);
         console.timeEnd('Background title generation and update');
 
-        console.log('Chat updated with generated title');
 
       } catch (error) {
         console.error(`Error in background chat creation/update for ${chatId}:`, error);
@@ -183,7 +181,7 @@ export async function POST(req: Request) {
               },
             ],
           });
-          console.log('User message saved despite streaming error.');
+
         } catch (saveError) {
           console.error('Failed to save user message during streaming error:', saveError);
         }

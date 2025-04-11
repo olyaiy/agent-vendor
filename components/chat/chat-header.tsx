@@ -1,5 +1,5 @@
 'use client'
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 // Import useSidebar
 import { useSidebar } from '@/components/ui/sidebar';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb';
@@ -18,6 +18,51 @@ interface ChatHeaderProps {
   agentId?: string;
   chatTitle?: string | null; // Add chatTitle prop
 }
+
+// Animated title component
+const AnimatedTitle = ({ title }: { title: string }) => {
+  const [displayText, setDisplayText] = useState(title);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevTitleRef = useRef(title);
+  
+  useEffect(() => {
+    if (title === prevTitleRef.current) return;
+    
+    const animateText = async () => {
+      setIsAnimating(true);
+      
+      // Erase animation
+      const currentText = prevTitleRef.current;
+      for (let i = currentText.length; i >= 0; i--) {
+        setDisplayText(currentText.substring(0, i));
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
+      
+      // Type animation
+      for (let i = 0; i <= title.length; i++) {
+        setDisplayText(title.substring(0, i));
+        await new Promise(resolve => setTimeout(resolve, 40));
+      }
+      
+      prevTitleRef.current = title;
+      setIsAnimating(false);
+    };
+    
+    animateText();
+  }, [title]);
+  
+  return (
+    <motion.span
+      layout
+      className={cn(
+        "transition-all duration-300",
+        isAnimating && "after:inline-block after:w-1 after:h-4 after:bg-current after:align-text-bottom after:animate-[blink_1s_steps(1)_infinite]"
+      )}
+    >
+      {displayText}
+    </motion.span>
+  );
+};
 
 function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId, chatTitle }: ChatHeaderProps) { // Destructure chatTitle
   const [copied, setCopied] = useState(false);
@@ -78,8 +123,10 @@ function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId
             <BreadcrumbSeparator />
             <motion.div layout>
               <BreadcrumbItem>
-                {/* Display fetched title or fallback */}
-                <BreadcrumbPage>{chatTitle || 'New Conversation'}</BreadcrumbPage>
+                {/* Display animated title */}
+                <BreadcrumbPage>
+                  <AnimatedTitle title={chatTitle || 'New Conversation'} />
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </motion.div>
           </BreadcrumbList>
