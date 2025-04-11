@@ -29,22 +29,19 @@ export function useChatTitleUpdater(chatId: string, initialTitle: string | null 
         const updatedTitle = await getChatTitleAction(chatId);
 
         if (updatedTitle === 'New Conversation') {
-          // If title is still the default, set a timer to retry
-          console.log('Title is "New Conversation", scheduling first retry (3s)...');
+
           retryTimeoutRef.current = setTimeout(async () => {
             try {
-              console.log('Executing first retry fetch...');
+
               const firstRetryTitle = await getChatTitleAction(chatId);
-              console.log('First retry fetch result:', firstRetryTitle);
+
 
               if (firstRetryTitle === 'New Conversation') {
                 // If still "New Conversation", schedule second retry
-                console.log('Title still "New Conversation", scheduling second retry (5s)...');
+
                 retryTimeoutRef.current = setTimeout(async () => {
                   try {
-                    console.log('Executing second retry fetch...');
                     const secondRetryTitle = await getChatTitleAction(chatId);
-                    console.log('Second retry fetch result:', secondRetryTitle);
                     setDisplayTitle(secondRetryTitle); // Update with the final result
                     // Trigger SWR mutation only if title actually changed
                     if (secondRetryTitle !== 'New Conversation') {
@@ -91,7 +88,7 @@ export function useChatTitleUpdater(chatId: string, initialTitle: string | null 
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
         retryTimeoutRef.current = null; // Also clear the ref itself
-        console.log('Cleared chat title update retry timeout on unmount/chatId change.');
+
       }
     };
   }, [chatId]); // Rerun effect if chatId changes, ensuring cleanup for the old chatId
