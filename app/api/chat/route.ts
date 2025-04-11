@@ -94,28 +94,6 @@ export async function POST(req: Request) {
   console.timeEnd('Chat creation check'); // End timer for the main path check
 
 
-
-  /* ---- SAVE USER MESSAGE ---- */
-  console.time('Message saving');
-  await saveMessages({
-    messages: [
-      {
-        id: userMessage.id,
-        chatId: chatId,
-        role: 'user',
-        parts: userMessage.parts,
-        attachments: [],
-        createdAt: new Date(),
-        model_id: "f86723da-2b45-4679-823d-24da0b474436"
-      },
-    ],
-  });
-
-
-  console.timeEnd('Message saving');
-
-
-
   /* ---- GET MODEL INSTANCE ---- */
   console.time('Model instance retrieval');
   const modelInstance = getModelInstanceById(modelId);
@@ -150,9 +128,22 @@ export async function POST(req: Request) {
             responseMessages: response.messages,
           });
 
+          // Save user message first in onFinish
+          await saveMessages({
+            messages: [
+              {
+                id: userMessage.id,
+                chatId: chatId,
+                role: 'user',
+                parts: userMessage.parts,
+                attachments: [], // Assuming user messages don't have attachments here
+                createdAt: new Date(), // Or use userMessage timestamp if available
+                model_id: "f86723da-2b45-4679-823d-24da0b474436" // Or null/undefined if not applicable
+              },
+            ],
+          });
 
-   
-
+          // Then save assistant message
           await saveMessages({
             messages: [
               {
@@ -172,8 +163,29 @@ export async function POST(req: Request) {
         }
       }
     },
-    onError: (error) => {
+    onError: async (error) => { // Make onError async
       console.error('Error streaming text', error);
+      // Attempt to save user message even on error
+      if (session.user?.id) {
+        try {
+          await saveMessages({
+            messages: [
+              {
+                id: userMessage.id,
+                chatId: chatId,
+                role: 'user',
+                parts: userMessage.parts,
+                attachments: [],
+                createdAt: new Date(),
+                model_id: "f86723da-2b45-4679-823d-24da0b474436"
+              },
+            ],
+          });
+          console.log('User message saved despite streaming error.');
+        } catch (saveError) {
+          console.error('Failed to save user message during streaming error:', saveError);
+        }
+      }
     }
   });
   
