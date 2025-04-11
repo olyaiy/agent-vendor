@@ -41,9 +41,11 @@ export default function Chat({
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
   const user = session?.user; // Extract user from session
 
+  
   const isOwner = agent.creatorId === user?.id; // Calculate isOwner using user from session
 
 
+  // use the useChat hook to manage the chat state
   const {
     messages, 
     setMessages,
