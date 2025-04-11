@@ -1,6 +1,7 @@
 import { db } from '../index';
 import { transaction, userCredits, type Transaction, type UserCredits } from '../schema/transactions';
 import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 
 /**
@@ -66,4 +67,19 @@ export async function updateUserCredits(
 
     return credits;
   });
+}
+
+/**
+ * Retrieves user's current credit balance
+ * @param userId - User ID to fetch credits for
+ * @returns UserCredits object or undefined if not found
+ */
+export async function getUserCredits(userId: string): Promise<UserCredits | undefined> {
+  const result = await db
+    .select()
+    .from(userCredits)
+    .where(eq(userCredits.userId, userId))
+    .execute();
+
+  return result[0];
 } 

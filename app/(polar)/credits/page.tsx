@@ -3,11 +3,33 @@ import { Product } from "@polar-sh/sdk/models/components/product.js";
 import { api } from '../polar';
 import { UserCredits } from '@/components/UserCredits';
 import { Sparkles } from 'lucide-react';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import { getUserCredits } from '@/db/repository/transaction-repository';
+import { redirect } from 'next/navigation';
 
 export default async function Page() {
+  // Get user session
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  // Redirect if not authenticated
+  if (!session?.user?.id) {
+    redirect('/sign-in');
+  }
+
+  // Fetch user credits from database
+  const userCreditsData = await getUserCredits(session.user.id);
+  
+  // Convert string amounts to numbers for the component
+  const availableBalance = userCreditsData ? parseFloat(userCreditsData.creditBalance) : 0;
+  const lifetimeCredits = userCreditsData ? parseFloat(userCreditsData.lifetimeCredits) : 0;
+  const totalSpent = Math.max(0, lifetimeCredits - availableBalance);
+
   const { result } = await api.products.list({
     isArchived: false, // Only fetch products which are published
-  })
+  });
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
@@ -15,9 +37,9 @@ export default async function Page() {
         {/* User Credits Section */}
         <section>
           <UserCredits 
-            availableBalance={500} 
-            totalSpent={1200} 
-            nextRefill={new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)} // 15 days from now
+            availableBalance={availableBalance}
+            totalSpent={totalSpent}
+            nextRefill={undefined} // We don't have next refill data
           />
         </section>
 
