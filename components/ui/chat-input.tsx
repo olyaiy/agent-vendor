@@ -156,7 +156,7 @@ function ChatInputComponent({
       }, 0);
     }
   // Remove 'value' from dependencies, use stable 'onSubmit' and 'textareaRef'
-  }, [handleSubmit, textareaRef]);
+  }, [handleSubmit, textareaRef, agentId, chatId]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

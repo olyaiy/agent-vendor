@@ -312,7 +312,6 @@ export const modelDetails: Record<string, ModelDetails> = {
 
 
 // Helper function to get the AI SDK model instance by its ID string
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getModelInstanceById(modelId: string): LanguageModel {
   const modelMap: Record<string, LanguageModel> = {
     // OpenAI
