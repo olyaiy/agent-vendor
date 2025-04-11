@@ -1,6 +1,6 @@
 import { selectAgentById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository";
 import { getAllModels } from "@/db/actions/agent-actions"; // Import action to get models
-import { parseAgentSlug } from "@/lib/utils";
+
 import { notFound } from "next/navigation";
 import { EditAgentForm } from "./edit-agent-form"; // Import the new form component
 import { Knowledge, Model } from "@/db/schema/agent"; // Import Model type
@@ -10,8 +10,7 @@ export default async function Page({
 }: {
     params: Promise<{ "agent-id": string }>;
 }) {
-    const { "agent-id": agentIdParam } = await params;
-    const { agentId } = parseAgentSlug(agentIdParam);
+    const { "agent-id": agentId } = await params;
     const [agent, modelsResult, knowledgeResult] = await Promise.all([
         selectAgentById(agentId),
         getAllModels(),

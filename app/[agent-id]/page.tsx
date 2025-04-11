@@ -1,6 +1,6 @@
 import Chat from "@/components/chat";
 import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository"; // Added selectKnowledgeByAgentId
-import {generateUUID, parseAgentSlug } from "@/lib/utils";
+import {generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
 
@@ -12,8 +12,8 @@ export default async function Page({
 }) {
 
   // Get the agent id from the url
-  const { "agent-id": agentIdParam } = await params;
-  const { agentId } = parseAgentSlug(agentIdParam);
+  const { "agent-id": agentId } = await params;
+
 
   // Generate a random id for the chat
   const id = generateUUID();

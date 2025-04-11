@@ -18,7 +18,6 @@ import {
   updateKnowledgeItemAction, // Added
   deleteKnowledgeItemAction  // Added
 } from "@/db/actions/agent-actions";
-import { generateAgentSlug } from "@/lib/utils";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons'; // Added ChatBubbleIcon
 import { VisibilitySelector } from "@/app/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
@@ -413,7 +412,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push(`/${generateAgentSlug(agent.name, agent.id)}`)} // Navigate back to agent page
+            onClick={() => router.push(`/${agent.id}`)} // Navigate back to agent page
             className="w-28 cursor-pointer"
           >
             Cancel
@@ -421,7 +420,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
           <Button
             type="button"
             variant="secondary" // Use secondary variant
-            onClick={() => router.push(`/${generateAgentSlug(agent.name, agent.id)}`)} // Navigate to agent chat page
+            onClick={() => router.push(`/${agent.id}`)} // Navigate to agent chat page
             className="gap-2 cursor-pointer" // Add gap for icon
           >
             <ChatBubbleIcon className="size-4" />

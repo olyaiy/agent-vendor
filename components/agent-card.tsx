@@ -14,7 +14,7 @@ import { GearIcon, ChatBubbleIcon, EyeNoneIcon } from "@radix-ui/react-icons";
 import { DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import { AgentImage } from "@/components/agent-image";
 import { Badge } from "@/components/ui/badge";
-import { generateAgentSlug } from "@/lib/utils";
+
 
 interface AgentCardProps {
   agent: Pick<Agent, 'id' | 'name' | 'description' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId' | 'visibility'>;
@@ -23,7 +23,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, className = "" }: AgentCardProps) {
   return (
-    <Link href={`/${generateAgentSlug(agent.name, agent.id)}`} className="block">
+    <Link href={`/${agent.id}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
         <div className="relative aspect-square overflow-hidden rounded-lg">
           <AgentImage
@@ -52,7 +52,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
               <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DropdownMenuItem className="cursor-pointer" asChild>
                   <Link 
-                    href={`/${generateAgentSlug(agent.name, agent.id)}/settings`} 
+                    href={`/${agent.id}/settings`} 
                     className="flex items-center"
                     onClick={(e) => e.stopPropagation()}
                   >

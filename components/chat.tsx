@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react' // Remove unused useEffect, useRef
+import React, { useState, useEffect } from 'react' // Import useEffect
 import { useChat } from '@ai-sdk/react';
 // Remove unused DbChat import
 import { ChatInput } from './ui/chat-input';
@@ -36,6 +36,12 @@ export default function Chat({
   // Use the custom hook to manage title state and update logic
   const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
+  // Store the last visited agent ID in local storage
+  useEffect(() => {
+    if (agent?.id) {
+      localStorage.setItem('lastVisitedAgentId', agent.id);
+    }
+  }, [agent?.id]);
 
   // Try using useSession hook from authClient
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user

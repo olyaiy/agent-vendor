@@ -63,7 +63,7 @@ const PurePreviewMessage = ({
           </div>
         )} */}
 
-        <div className="flex flex-col gap-4 w-full items-end">
+        <div className="flex flex-col gap-4 w-full group-data-[role=user]/message:items-end">
           {message.experimental_attachments && (
             <div
               data-testid={`message-attachments`}

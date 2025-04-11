@@ -3,7 +3,7 @@ import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/reposit
 import { getChatById, getMessagesByChatId } from "@/db/repository/chat-repository";
 import { DBMessage } from "@/db/schema/chat";
 import { auth } from "@/lib/auth";
-import { parseAgentSlug } from "@/lib/utils";
+
 import { Attachment, UIMessage } from "ai";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -16,8 +16,8 @@ export default async function Page({
 }) {
 
   // Get the agent id and chat id from the url
-  const { "agent-id": agentIdParam, "chat-id": chatId } = await params;
-  const { agentId } = parseAgentSlug(agentIdParam);
+  const { "agent-id": agentId, "chat-id": chatId } = await params;
+
 
 
   // Fetch the chat from the database

@@ -9,20 +9,29 @@ import { useEffect, useRef, useState } from "react"
 
 const NewChatButton = () => {
   const router = useRouter()
-  const newChatPath = "/agent/new"
+  const defaultNewChatPath = "/agent/new"
+  const [targetPath, setTargetPath] = useState(defaultNewChatPath) // State for the target path
   const newChatButtonRef = useRef<HTMLAnchorElement>(null)
   const [isHovering, setIsHovering] = useState(false)
   const [isMac, setIsMac] = useState(false)
 
-  // Detect operating system on client side
+  // Detect operating system and set initial target path on client side
   useEffect(() => {
     setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform))
-  }, [])
 
-  // Prefetch the new chat route for instant navigation
+    // Read last visited agent ID from local storage
+    const lastVisitedAgentId = localStorage.getItem('lastVisitedAgentId');
+    if (lastVisitedAgentId) {
+      setTargetPath(`/${lastVisitedAgentId}`);
+    } else {
+      setTargetPath(defaultNewChatPath);
+    }
+  }, []) // Runs only once on mount
+
+  // Prefetch the target chat route for instant navigation
   useEffect(() => {
-    router.prefetch(newChatPath)
-  }, [router, newChatPath])
+    router.prefetch(targetPath)
+  }, [router, targetPath]) // Re-run if targetPath changes
 
   // Handle Command+K/Ctrl+K shortcut using react-hotkeys-hook
   useHotkeys("mod+k", (e) => {
@@ -35,10 +44,10 @@ const NewChatButton = () => {
       
       // Add a slight delay before navigation for better visual feedback
       setTimeout(() => {
-        router.push(newChatPath, { 
+        router.push(targetPath, { // Use targetPath
           scroll: false
         })
-        
+
         // Reset hover state after navigation
         setTimeout(() => {
           setIsHovering(false)
@@ -46,7 +55,7 @@ const NewChatButton = () => {
       }, 150)
     } else {
       // Fallback if ref isn't available
-      router.push(newChatPath, { scroll: false })
+      router.push(targetPath, { scroll: false }) // Use targetPath
     }
   })
 
@@ -56,9 +65,9 @@ const NewChatButton = () => {
   return (
     <SidebarMenuItem className="flex">
       <SidebarMenuButton asChild tooltip="New Chat">
-        <Link 
-          href={newChatPath}
-          prefetch
+        <Link
+          href={targetPath} // Use targetPath
+          prefetch={false} // Prefetching handled by useEffect
           ref={newChatButtonRef}
           className={`flex items-center gap-2 bg-input rounded-xl border-border border-2 py-4 flex-1 transition-all duration-150 ease-in-out ${isHovering ? hoverClass : ''}`}
           onMouseEnter={() => setIsHovering(true)}
@@ -85,4 +94,4 @@ const NewChatButton = () => {
   )
 }
 
-export { NewChatButton } 
+export { NewChatButton }
