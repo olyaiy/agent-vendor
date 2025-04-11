@@ -1,55 +1,72 @@
-'use client';
+"use client";
 
-import { useState, memo } from 'react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { BookOpen, ChevronRight } from 'lucide-react';
-import { Knowledge } from '@/db/schema/agent';
-import { KnowledgeItemDisplay } from './knowledge-item-display'; // Import the new component
+import React from "react";
+import { KnowledgeEditor } from "@/components/knowledge-editor"; // Adjusted import path
+import { AlertCircle } from "lucide-react";
+import { Label } from "@/components/ui/label"; // Adjusted import path
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Adjusted import path
+import { Knowledge } from "@/db/schema/agent"; // Import the actual schema type
+
+// Use the Knowledge type from the schema directly or extend it if needed
+// For now, let's assume the props will pass the Knowledge type directly
+// interface KnowledgeItem extends Knowledge {} // Example if extension is needed
 
 interface KnowledgeSectionProps {
-  knowledgeItems: Knowledge[];
+  knowledgeItems: Knowledge[]; // Use the schema type
+  agentId?: string; // Keep agentId if needed for context or future use
+  // Adjust prop function signatures to align with schema and planned actions
+  onAddItem: (item: { title: string; content: string; sourceUrl?: string }) => Promise<Knowledge>;
+  onUpdateItem: (item: { id: string; title?: string; content?: string; sourceUrl?: string }) => Promise<Knowledge>;
+  onDeleteItem: (id: string) => Promise<{ success: boolean }>; // Keep as is for now
 }
 
-function KnowledgeSectionComponent({ knowledgeItems }: KnowledgeSectionProps) {
-  const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false); // Default closed
-
+export function KnowledgeSection({
+  knowledgeItems,
+  agentId,
+  onAddItem,
+  onUpdateItem,
+  onDeleteItem
+}: KnowledgeSectionProps) {
   return (
-    <Collapsible
-      open={isKnowledgeOpen}
-      onOpenChange={setIsKnowledgeOpen}
-      className="group"
-    >
-      <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-md px-3 transition-colors cursor-pointer">
-        <div className="flex items-center gap-3">
-          <BookOpen className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Knowledge Base</span>
+    // Using the layout structure from edit-agent-form.tsx (FormSection pattern)
+    <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
+      <div className="md:col-span-4 space-y-4">
+        <div className="pb-2 border-b">
+          <h2 className="text-lg font-medium tracking-tight">Knowledge Base</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add knowledge items that your agent can reference during conversations.
+          </p>
         </div>
-        <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isKnowledgeOpen ? 'rotate-90' : ''}`} />
-      </CollapsibleTrigger>
-      <CollapsibleContent className="py-3 px-3">
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs text-muted-foreground">Reference materials the agent can access</p>
-          </div>
 
-          {/* Display actual knowledge items using KnowledgeItemDisplay */}
-          <div className="space-y-2">
-            {knowledgeItems.length > 0 ? (
-              knowledgeItems.map((item) => (
-                <KnowledgeItemDisplay key={item.id} item={item} />
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground italic">No knowledge items added yet.</p>
-            )}
+        <div className="space-y-3">
+          <div className="flex items-start gap-1.5">
+            <Label className="text-sm font-medium flex items-center gap-1.5">
+              Knowledge Items
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-[250px]">
+                  <p>Upload files (.txt, .pdf) or add text content for your agent to reference.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+          {/* You could add more descriptive text or links here if needed */}
         </div>
-      </CollapsibleContent>
-    </Collapsible>
+      </div>
+
+      <div className="md:col-span-8 space-y-6">
+        <KnowledgeEditor
+          knowledgeItems={knowledgeItems}
+          agentId={agentId}
+          onAddItem={onAddItem}
+          onUpdateItem={onUpdateItem}
+          onDeleteItem={onDeleteItem}
+        />
+      </div>
+    </section>
   );
 }
-
-export const KnowledgeSection = memo(KnowledgeSectionComponent);

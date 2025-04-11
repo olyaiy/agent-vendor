@@ -15,9 +15,9 @@ import { Separator } from "@/components/ui/separator";
 import { createAgent } from "@/db/actions/agent-actions";
 import { generateAgentSlug } from "@/lib/utils";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
-import { VisibilitySelector } from "@/app/components/visibility-selector";
+import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
-import { FormSection } from "@/app/components/form-section";
+import { FormSection } from "@/components/form-section";
 
 export interface ModelInfo {
   id: string;

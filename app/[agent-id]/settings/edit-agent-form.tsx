@@ -19,10 +19,10 @@ import {
   deleteKnowledgeItemAction  // Added
 } from "@/db/actions/agent-actions";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons'; // Added ChatBubbleIcon
-import { VisibilitySelector } from "@/app/components/visibility-selector";
+import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
-import { FormSection } from "@/app/components/form-section";
-import { KnowledgeSection } from "@/app/components/knowledge-section"; // Added
+import { FormSection } from "@/components/form-section";
+import { KnowledgeSection } from "@/components/knowledge-section"; // Added
 import { Agent, Knowledge } from "@/db/schema/agent"; // Import Agent type
 
 export interface ModelInfo {
