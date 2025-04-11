@@ -6,9 +6,9 @@ export const transaction = pgTable("transaction", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id),
+    .references(() => user.id, { onDelete: "no action" }),
   messageId: uuid("message_id")
-    .references(() => message.id),
+    .references(() => message.id, { onDelete: "no action" }),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   type: varchar("type", { enum: ["usage", "top_up"] }).notNull(),
   description: text("description"),
@@ -22,7 +22,7 @@ export const transaction = pgTable("transaction", {
 export const userCredits = pgTable("user_credits", {
   userId: text("user_id")
     .primaryKey()
-    .references(() => user.id),
+    .references(() => user.id, { onDelete: "no action" }),
   creditBalance: numeric("credit_balance", { precision: 20, scale: 8 }).notNull().default("0"),
   lifetimeCredits: numeric("lifetime_credits", { precision: 20, scale: 8 }).notNull().default("0")
 });
