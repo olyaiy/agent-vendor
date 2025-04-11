@@ -1,7 +1,6 @@
 'use client'
 import React, { useState } from 'react' // Import useState
 import { useChat } from '@ai-sdk/react';
-import useSWR from 'swr'; // Import useSWR
 // Remove unused DbChat import
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
@@ -12,64 +11,30 @@ import type { Agent, Knowledge } from '@/db/schema/agent'; // Import Knowledge t
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
+import { getChatTitleAction } from '@/db/actions/chat-actions'; // Import the new action
 
 interface ChatProps {
   chatId: string;
   agent: Agent & { modelName: string };
   initialMessages?: Array<UIMessage>;
+  initialTitle?: string | null; // Add initialTitle prop
   knowledgeItems: Knowledge[]; // Add knowledgeItems prop
   // selectedModelId and setSelectedModelId are managed internally, not passed as props
 }
 
-// Simple fetcher function for SWR
-const fetcher = (url: string) => fetch(url).then(res => {
-  if (!res.ok) {
-    // Specifically handle 404 Not Found by returning null
-    if (res.status === 404) {
-      return null; // Indicate resource not found yet, not an error
-    }
-    // For other errors, create and throw an error object
-    const error = new Error('An error occurred while fetching the data.');
-    // @ts-expect-error - Adding custom properties info/status to Error object
-    error.info = res.statusText;
-    // @ts-expect-error - Adding custom properties info/status to Error object
-    error.status = res.status;
-    throw error;
-  }
-  return res.json();
-});
 
-
-export default function Chat({ 
-  agent, 
-  knowledgeItems, 
-  chatId, 
-  initialMessages 
+export default function Chat({
+  agent,
+  knowledgeItems,
+  chatId,
+  initialMessages,
+  initialTitle // Destructure initialTitle
 }: ChatProps) { // Destructure knowledgeItems
   // State for the selected model, initialized with the agent's primary model
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
+  // State for the chat title
+  const [displayTitle, setDisplayTitle] = useState<string | null | undefined>(initialTitle);
 
-
-  
-  // Fetch chat data using SWR - now only fetching title
-  const { data: chatData, error: chatError, mutate } = useSWR<{ title: string | null } | null>( // Expect only title object or null
-    chatId ? `/api/chat/${chatId}` : null, // API endpoint URL, conditional on chatId
-    fetcher,
-    {
-      revalidateOnFocus: true, // Optional: Revalidate when window gets focus
-      onError: (err) => { // Log actual SWR errors
-        console.error("SWR Error fetching chat data:", err);
-      }
-    }
-  );
-
-  // Log chatError if it occurs (fixes linter warning)
-  if (chatError) {
-    console.error("Error loading chat data:", chatError);
-  }
-
-  // Determine the title to display
-  const displayTitle = chatData?.title;
 
   // Try using useSession hook from authClient
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
@@ -99,9 +64,17 @@ export default function Chat({
     initialMessages,
     generateId: generateUUID,
     sendExtraMessageFields: true,
-    onFinish: () => {
-      // Revalidate the chat data (e.g., to fetch updated title) when AI finishes
-      mutate(); 
+    onFinish: async () => {
+      // Fetch the updated title when AI finishes
+      if (chatId) {
+        try {
+          const updatedTitle = await getChatTitleAction(chatId);
+          setDisplayTitle(updatedTitle);
+        } catch (error) {
+          console.error("Failed to fetch updated chat title:", error);
+          // Optionally handle the error, e.g., show a toast notification
+        }
+      }
     },
   })
 

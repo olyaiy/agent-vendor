@@ -4,7 +4,13 @@ import { generateText } from "ai";
 import { myProvider } from "@/lib/models";
 import { Message } from "ai";
 import { auth } from '@/lib/auth';
-import { deleteMessageById, deleteMessagesByChatIdAfterTimestamp, getMessageById, getUserRecentChats } from '../repository/chat-repository';
+import { 
+  deleteMessageById, 
+  deleteMessagesByChatIdAfterTimestamp, 
+  getMessageById, 
+  getUserRecentChats,
+  getChatTitleAndUserId // Import the repository function
+} from '../repository/chat-repository';
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
@@ -62,6 +68,20 @@ export async function deleteMessageAction(messageId: string) {
       success: false, 
       message: error instanceof Error ? error.message : 'Failed to delete message' 
     };
+  }
+}
+
+export async function getChatTitleAction(chatId: string): Promise<string | null> {
+  try {
+    // No need to check session here, as title visibility isn't strictly tied to ownership
+    // If stricter access control is needed later, session check can be added.
+    const chatInfo = await getChatTitleAndUserId(chatId);
+    return chatInfo?.title ?? null; // Return title or null if chat not found
+  } catch (error) {
+    console.error('Failed to get chat title:', error);
+    // Depending on requirements, you might want to throw the error
+    // or return null/undefined to indicate failure. Returning null for now.
+    return null; 
   }
 }
 
