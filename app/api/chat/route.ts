@@ -110,6 +110,8 @@ export async function POST(req: Request) {
     
     /* ---- ON STREAM FINISH ---- */
     onFinish: async ({ response }) => {
+
+
       if (session.user?.id) {
         try {
           const assistantId = getTrailingMessageId({

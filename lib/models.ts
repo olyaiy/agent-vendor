@@ -37,7 +37,7 @@ export const myProvider = customProvider({
 
     // Groq Models
     'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'),
-    'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'),
+    'llama-3.1-8b-instant': groq('llama3-8b-8192'),
     'gemma2-9b-it': groq('gemma2-9b-it'),
     'llama-guard-3-8b': groq('llama-guard-3-8b'),
     'llama3-70b-8192': groq('llama3-70b-8192'),
@@ -105,7 +105,7 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'mistral-large-latest': mistral('mistral-large-latest'),
     // Groq
     'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'),
-    'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'),
+    'llama-3.1-8b-instant': groq('llama3-8b-8192'),
     'gemma2-9b-it': groq('gemma2-9b-it'),
     'llama-guard-3-8b': groq('llama-guard-3-8b'),
     'llama3-70b-8192': groq('llama3-70b-8192'),
