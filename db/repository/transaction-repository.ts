@@ -1,5 +1,6 @@
 import { db } from '../index';
 import { transaction, userCredits, type Transaction, type UserCredits } from '../schema/transactions';
+import { sql } from "drizzle-orm";
 
 
 /**
@@ -54,10 +55,10 @@ export async function updateUserCredits(
         target: userCredits.userId,
         set: {
           creditBalance: transactionType === 'top_up' 
-            ? `${userCredits.creditBalance} + ${amount}`
-            : `${userCredits.creditBalance} - ${amount}`,
+            ? sql`${userCredits.creditBalance} + ${amount}::numeric`
+            : sql`${userCredits.creditBalance} - ${amount}::numeric`,
           lifetimeCredits: transactionType === 'top_up'
-            ? `${userCredits.lifetimeCredits} + ${amount}`
+            ? sql`${userCredits.lifetimeCredits} + ${amount}::numeric`
             : userCredits.lifetimeCredits
         }
       })

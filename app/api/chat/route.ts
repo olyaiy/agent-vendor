@@ -7,7 +7,7 @@ import { auth } from '@/lib/auth';
 import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/repository/chat-repository'; // Import updateChatTitle
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
-import { recordTransaction } from '@/db/repository/transaction-repository';
+import { chargeUser } from '@/db/actions/transaction-actions';
 
 /**
  * Handles POST requests for chat conversations
@@ -198,12 +198,11 @@ export async function POST(req: Request) {
             console.log('input_cost', input_cost);
             console.log('output_cost', output_cost);
             
-            // Record transaction
-            await recordTransaction({
+            // Charge User for the message
+            await chargeUser({
               userId: session.user.id,
               amount: (input_cost + output_cost).toString(),
               messageId: assistantId,
-              type: "usage",
               description: "Chat input cost"
             });
           } catch (error) {
