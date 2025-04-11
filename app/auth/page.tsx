@@ -16,7 +16,7 @@ export default function AuthPage() {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <Button onClick={handleSignIn}>
+      <Button onClick={handleSignIn} className='cursor-pointer'>
         Sign in with Google
       </Button>
     </div>

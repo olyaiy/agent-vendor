@@ -55,6 +55,7 @@ export async function POST(req: Request) {
   console.timeEnd('Chat lookup');
   console.time('Chat creation check'); // Renamed timer
   if (!chat) {
+    console.log('Chat not found, creating new chat');
     // --- Start: Fire-and-forget chat creation ---
     (async () => {
       try {
@@ -62,15 +63,20 @@ export async function POST(req: Request) {
         // 1. Create chat with placeholder title immediately
         await createChat({ id: chatId, userId: session.user.id, title: "New Chat" , agentId: agentId});
         console.timeEnd('Background chat placeholder creation');
+        console.log('Chat created');
 
         console.time('Background title generation and update');
         // 2. Generate the actual title
         const generatedTitle = await generateTitleFromUserMessage({
           message: userMessage,
         });
+
+        console.log('Generated title:', generatedTitle);
         // 3. Update the chat with the generated title
         await updateChatTitle(chatId, generatedTitle);
         console.timeEnd('Background title generation and update');
+
+        console.log('Chat updated with generated title');
 
       } catch (error) {
         console.error(`Error in background chat creation/update for ${chatId}:`, error);
@@ -123,6 +129,8 @@ export async function POST(req: Request) {
     system: systemPrompt,
     messages,
     experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
+    
+    /* ---- ON STREAM FINISH ---- */
     onFinish: async ({ response }) => {
       if (session.user?.id) {
         try {
@@ -132,6 +140,7 @@ export async function POST(req: Request) {
             ),
           });
 
+          
           if (!assistantId) {
             throw new Error('No assistant message found!');
           }

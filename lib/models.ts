@@ -15,7 +15,7 @@ export const DEFAULT_CHAT_MODEL: string = 'gpt-4o';
 
 export const myProvider = customProvider({
   languageModels: {
-    'title-model': groq('llama-3.1-8b-instant'),
+    'title-model': openai('gpt-4o-mini'),
 
     // OpenAI Models
     'gpt-4o-mini': openai('gpt-4o-mini'),

@@ -49,8 +49,10 @@ export default function Chat({
   // State for the selected model, initialized with the agent's primary model
   const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
 
+
+  
   // Fetch chat data using SWR
-  const { data: chatData, error: chatError } = useSWR<DbChat | null>( // Allow null type
+  const { data: chatData, error: chatError, mutate } = useSWR<DbChat | null>( // Allow null type, add mutate
     chatId ? `/api/chat/${chatId}` : null, // API endpoint URL, conditional on chatId
     fetcher,
     {
@@ -96,7 +98,11 @@ export default function Chat({
     },
     initialMessages,
     generateId: generateUUID,
-    sendExtraMessageFields: true, 
+    sendExtraMessageFields: true,
+    onFinish: () => {
+      // Revalidate the chat data (e.g., to fetch updated title) when AI finishes
+      mutate(); 
+    },
   })
 
   
