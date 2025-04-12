@@ -39,7 +39,6 @@ export default async function Page() {
           <UserCredits 
             availableBalance={availableBalance}
             totalSpent={totalSpent}
-            nextRefill={undefined} // We don't have next refill data
           />
         </section>
 
