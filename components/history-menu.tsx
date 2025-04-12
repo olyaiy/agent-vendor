@@ -1,7 +1,7 @@
 "use client"
 
 import { History } from "lucide-react"
-import { usePathname } from "next/navigation" // Add this import for URL awareness
+import { usePathname, useRouter } from "next/navigation" // Add this import for URL awareness
 import Link from "next/link"
 import {
   SidebarMenuItem,
@@ -13,6 +13,7 @@ import {
 import { getUserRecentChatsAction } from "@/db/actions/chat-actions";
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion'; // Import AnimatePresence
+import { useState, useEffect } from 'react'; // Import useState for optimistic updates
 
 // Interface for the data structure expected by the component's rendering logic
 interface HistoryDisplayItem {
@@ -74,8 +75,37 @@ export function HistoryMenu() {
     }
   );
   
-  // Get the current pathname to determine active chat
+  // Get the current pathname and router
   const pathname = usePathname();
+  const router = useRouter();
+  
+  // State for optimistic UI updates
+  const [optimisticActiveUrl, setOptimisticActiveUrl] = useState<string | null>(null);
+  
+  // Synchronize optimistic state with actual pathname
+  useEffect(() => {
+    // When pathname changes, reset the optimistic state
+    setOptimisticActiveUrl(null);
+  }, [pathname]);
+  
+  // Handle click on history item for optimistic updates
+  const handleHistoryItemClick = (url: string, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default navigation
+    
+    // Set optimistic state immediately
+    setOptimisticActiveUrl(url);
+    
+    // Manually navigate using router
+    router.push(url);
+  };
+  
+  // Helper function to determine if an item is active
+  const isItemActive = (itemUrl: string) => {
+    if (optimisticActiveUrl) {
+      return optimisticActiveUrl === itemUrl;
+    }
+    return pathname === itemUrl;
+  };
   
   return (
     <SidebarMenuItem>
@@ -121,8 +151,8 @@ export function HistoryMenu() {
         )}
         <AnimatePresence mode="popLayout">
           {!isLoading && !error && historyItems && historyItems.map((item, index) => {
-            // Determine if this chat is active
-            const isActive = pathname === item.url;
+            // Determine if this chat is active using the helper function
+            const isActive = isItemActive(item.url);
             
             return (
             <motion.div
@@ -145,12 +175,13 @@ export function HistoryMenu() {
               <SidebarMenuSubItem>
                 {/* Apply active styling conditionally */}
                 <SidebarMenuSubButton asChild className={isActive ? 'bg-slate-800/50' : ''}>
-                  <Link
+                  <a
                     href={item.url}
                     className={`flex items-center justify-start ${isActive ? 'text-white font-medium' : ''}`}
+                    onClick={(e) => handleHistoryItemClick(item.url, e)}
                   >
                     <span className="text-xs truncate">{item.title}</span>
-                  </Link>
+                  </a>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             </motion.div>

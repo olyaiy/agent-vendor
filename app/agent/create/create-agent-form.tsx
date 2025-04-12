@@ -13,7 +13,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { createAgent } from "@/db/actions/agent-actions";
-import { generateAgentSlug } from "@/lib/utils";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
@@ -90,8 +89,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
           const newAgent = result.data[0];
           toast.success("Agent created successfully");
           // Generate slug and redirect to the new agent's page
-          const agentSlug = generateAgentSlug(newAgent.name, newAgent.id);
-          router.push(`/${agentSlug}`);
+          router.push(`/${newAgent.id}`);
         } else {
           throw new Error(result.error || "Failed to create agent");
         }

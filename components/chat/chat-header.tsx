@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import Link from 'next/link';
 // Import cn utility
-import { cn, generateAgentSlug } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 // Import motion from framer-motion
 import { motion } from 'framer-motion';
 
@@ -114,7 +114,7 @@ function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId
             <motion.div layout>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href={agentId ? `/${generateAgentSlug(agentName, agentId)}` : "/agent"}>
+                  <Link href={agentId ? `/${agentId}` : "/agent"}>
                     {agentName}
                   </Link>
                 </BreadcrumbLink>
