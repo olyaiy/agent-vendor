@@ -23,6 +23,7 @@
     "@ai-sdk/ui-utils": "^1.2.5",
     "@ai-sdk/xai": "^1.2.9",
     "@better-auth/cli": "^1.2.5",
+    "@imagekit/next": "^2.0.0",
     "@neondatabase/serverless": "^1.0.0",
     "@polar-sh/better-auth": "^0.0.10",
     "@polar-sh/nextjs": "^0.3.23",

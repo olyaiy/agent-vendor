@@ -44,6 +44,9 @@ importers:
       '@better-auth/cli':
         specifier: ^1.2.5
         version: 1.2.5(@babel/core@7.26.10)(@neondatabase/serverless@1.0.0)(@opentelemetry/api@1.9.0)(@types/pg@8.11.11)(@types/react@19.1.0)(kysely@0.27.6)(postgres@3.4.5)(react@19.1.0)(typescript@5.8.3)
+      '@imagekit/next':
+        specifier: ^2.0.0
+        version: 2.0.0(next@15.2.4(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       '@neondatabase/serverless':
         specifier: ^1.0.0
         version: 1.0.0
@@ -1253,6 +1256,14 @@ packages:
   '@humanwhocodes/retry@0.4.2':
     resolution: {integrity: sha512-xeO57FpIu4p1Ri3Jq/EXq4ClRm86dVF2z/+kvFnyqVYRavTZmaFaUBbWCOuuTh0o/g7DSsk6kc2vrS4Vl5oPOQ==}
     engines: {node: '>=18.18'}
+
+  '@imagekit/javascript@5.0.0':
+    resolution: {integrity: sha512-Q4qaVHBXrnNFJ6nw7dQTEeyIZzAbz68Z0Y27D4bkiaW3kjpPNoFJEl6XCIiOulBpkVDMteRzjGuKk5bQzgTRRg==}
+
+  '@imagekit/next@2.0.0':
+    resolution: {integrity: sha512-y4WlXBJPsp1xdXS53c9X+G160zeq/nlY8ZoX2rUrZgFPjb736SwvRX2vo/bCwP8D6T3ne6arNVLPLuFfHkpsJg==}
+    peerDependencies:
+      next: '>= 13'
 
   '@img/sharp-darwin-arm64@0.33.5':
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
@@ -5816,6 +5827,13 @@ snapshots:
   '@humanwhocodes/retry@0.3.1': {}
 
   '@humanwhocodes/retry@0.4.2': {}
+
+  '@imagekit/javascript@5.0.0': {}
+
+  '@imagekit/next@2.0.0(next@15.2.4(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))':
+    dependencies:
+      '@imagekit/javascript': 5.0.0
+      next: 15.2.4(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
   '@img/sharp-darwin-arm64@0.33.5':
     optionalDependencies:
