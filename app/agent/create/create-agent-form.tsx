@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Removed Select imports, will use ModelSelect
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ModelSelect } from "@/components/model-select"; // Import ModelSelect
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added Tabs
 import { Loader2  } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -588,23 +590,13 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
                   Required
                 </Badge>
               </div>
-              <div className="bg-secondary/50 border rounded-lg p-0.5">
-                <Select 
-                  value={primaryModelId} 
-                  onValueChange={setPrimaryModelId}
-                >
-                  <SelectTrigger className="h-11 bg-background border-0 focus-visible:ring-1 focus-visible:ring-offset-0">
-                    <SelectValue placeholder="Select an AI model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {models.map(model => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.model}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Replace standard Select with ModelSelect */}
+              <ModelSelect
+                models={models}
+                defaultValue={primaryModelId} // Use state value for default
+                onValueChange={setPrimaryModelId} // Use state setter for changes
+              />
+              {/* The trigger styling is now handled within ModelSelect */}
               <p className="text-xs text-muted-foreground">
                 Choose the model that best fits your agent&apos;s purpose. Different models have different capabilities.
               </p>
