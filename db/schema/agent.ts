@@ -14,7 +14,7 @@ export const agent = pgTable("agent", {
   visibility: text("visibility").default("public").notNull(),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
-  creatorId: text("creator_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  creatorId: text("creator_id").notNull().references(() => user.id, { onDelete: "no action" }),
 });
 
 export type Agent = typeof agent.$inferSelect;

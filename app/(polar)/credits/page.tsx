@@ -8,6 +8,10 @@ import { headers } from 'next/headers';
 import { getUserCredits } from '@/db/repository/transaction-repository';
 import { redirect } from 'next/navigation';
 
+
+
+
+
 export default async function Page() {
   // Get user session
   const session = await auth.api.getSession({
@@ -57,7 +61,11 @@ export default async function Page() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {result.items.map((product: Product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard 
+              key={product.id} 
+              product={product} 
+              customerId={session.user.id}
+              />
             ))}
           </div>
         </section>
