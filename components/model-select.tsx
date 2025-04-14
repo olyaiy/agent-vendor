@@ -19,6 +19,22 @@ import {
 import { modelDetails } from "@/lib/models"; // Import modelDetails
 import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo type
 import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
+import { Check, ChevronsUpDown } from "lucide-react"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 // Updated Props interface
 interface ModelSelectProps {
@@ -53,100 +69,120 @@ const getProviderFromModel = (modelId: string): string => {
 };
 
 export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelectProps) {
-  // Group models by provider
+  const [open, setOpen] = React.useState(false)
+  const [searchQuery, setSearchQuery] = React.useState("")
+  
+  // Flatten and filter models based on search query
+  const filteredModels = React.useMemo(() => {
+    const query = searchQuery.toLowerCase()
+    return models.filter(model => 
+      model.model.toLowerCase().includes(query)
+    )
+  }, [models, searchQuery])
+
+  // Group filtered models
   const groupedModels = React.useMemo(() => {
-    const groups: Record<string, ModelInfo[]> = {};
+    const groups: Record<string, ModelInfo[]> = {}
     
-    // Group models by provider
-    models.forEach(model => {
-      const provider = getProviderFromModel(model.model);
-      if (!groups[provider]) {
-        groups[provider] = [];
-      }
-      groups[provider].push(model);
-    });
-    
-    // Sort providers in a logical order
-    const sortedProviders = [
-      'OpenAI',
-      'Anthropic', 
-      'Google',
-      'Mistral',
-      'Groq',
-      'Perplexity',
-      'DeepSeek',
-      'xAI',
-      'Qwen',
-      'Other'
-    ].filter(provider => groups[provider]?.length > 0);
-    
-    return { groups, sortedProviders };
-  }, [models]);
+    filteredModels.forEach(model => {
+      const provider = getProviderFromModel(model.model)
+      groups[provider] = groups[provider] || []
+      groups[provider].push(model)
+    })
+
+    return Object.entries(groups).sort(([a], [b]) => 
+      a.localeCompare(b)
+    )
+  }, [filteredModels])
+
+  // Find selected model
+  const selectedModel = React.useMemo(() => 
+    models.find(model => model.id === defaultValue)?.model || "Select model...",
+  [models, defaultValue])
 
   return (
     <TooltipProvider>
-      <Select defaultValue={defaultValue} onValueChange={onValueChange}>
-        <SelectTrigger className="w-full bg-muted/30 border-0 focus:ring-1 focus:ring-ring">
-          <SelectValue placeholder="Select a model" />
-        </SelectTrigger>
-        <SelectContent className="max-h-[500px]">
-          {groupedModels.sortedProviders.map(provider => (
-            <SelectGroup key={provider}>
-              <SelectLabel className="px-2 py-1.5 text-xs font-medium flex items-center gap-2">
-                {/* Provider logo */}
-                <div className="relative w-5 h-5 flex-shrink-0">
-                  <Image
-                    src={providerLogos[provider].src}
-                    alt={providerLogos[provider].alt}
-                    width={providerLogos[provider].width}
-                    height={providerLogos[provider].height}
-                    className="object-contain"
-                  />
-                </div>
-                {provider}
-              </SelectLabel>
-              {groupedModels.groups[provider].map(model => {
-                // Fetch additional details from lib/models.ts
-                const details = modelDetails[model.model]; // Use model.model (ID string) as key
-                const contextWindow = details?.contextWindow;
-
-                return (
-                  <Tooltip key={model.id}> {/* Use DB UUID as key */}
-                    <TooltipTrigger asChild>
-                      <div> {/* Wrap SelectItem for TooltipTrigger */}
-                        <SelectItem
-                          value={model.id} // Use DB UUID as value
-                          className="py-1.5 pr-2 rounded-sm cursor-pointer hover:bg-muted/50 pl-8 relative"
-                        >
-                          {/* Display model ID string */}
-                          <span className="font-medium">{model.model}</span>
-                        </SelectItem>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[250px] p-3">
-                      <div className="space-y-2">
-                        {/* Display model ID string as name */}
-                        <p className="font-medium text-sm">{model.model}</p>
-                        {/* Display description from DB */}
-                        {model.description && (
-                           <p className="text-xs text-muted-foreground">{model.description}</p>
-                        )}
-                        {/* Display context window from lib/models.ts */}
-                        {contextWindow !== undefined && (
-                          <div className="mt-1">
-                            <span className="text-xs font-medium">Context:</span>
-                            <span className="text-xs ml-1">{formatContextWindow(contextWindow)}</span>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between bg-muted/30 border-0 focus:ring-1 focus:ring-ring"
+          >
+            {selectedModel}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command shouldFilter={false}>
+            <CommandInput 
+              placeholder="Search models..."
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+            />
+            <CommandList>
+              <CommandEmpty>No models found.</CommandEmpty>
+              {groupedModels.map(([provider, models]) => (
+                <CommandGroup key={provider} heading={
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium">
+                    <Image
+                      src={providerLogos[provider].src}
+                      alt={providerLogos[provider].alt}
+                      width={20}
+                      height={20}
+                      className="object-contain"
+                    />
+                    {provider}
+                  </div>
+                }>
+                  {models.map(model => {
+                    const details = modelDetails[model.model]
+                    return (
+                      <Tooltip key={model.id}>
+                        <TooltipTrigger asChild>
+                          <CommandItem
+                            value={model.model}
+                            onSelect={() => {
+                              onValueChange?.(model.id)
+                              setOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                defaultValue === model.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <span className="font-medium">{model.model}</span>
+                          </CommandItem>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[250px] p-3">
+                          <div className="space-y-2">
+                            {/* Display model ID string as name */}
+                            <p className="font-medium text-sm">{model.model}</p>
+                            {/* Display description from DB */}
+                            {model.description && (
+                               <p className="text-xs text-muted-foreground">{model.description}</p>
+                            )}
+                            {/* Display context window from lib/models.ts */}
+                            {details?.contextWindow !== undefined && (
+                              <div className="mt-1">
+                                <span className="text-xs font-medium">Context:</span>
+                                <span className="text-xs ml-1">{formatContextWindow(details.contextWindow)}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </SelectGroup>
-          ))}
-        </SelectContent>
-      </Select>
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
+                </CommandGroup>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </TooltipProvider>
-  );
+  )
 }
