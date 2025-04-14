@@ -6,6 +6,7 @@ import { AgentCard } from "@/components/agent-card";
 import HeaderPadding from "@/components/header-padding";
 import { Badge } from "@/components/ui/badge";
 import { AgentSearchInput } from "@/components/agent-search-input"; // Import the search input
+import { FilterBar } from "@/components/filter-bar";
 
 // Loading component for the agents data
 function AgentsLoading() {
@@ -111,7 +112,8 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <main className="container mx-auto py-8 px-4">
       <HeaderPadding />
-<AgentSearchInput /> {/* Render the search input */}
+    <AgentSearchInput /> {/* Render the search input */}
+    <FilterBar />
 
 {/* --- Base Models Section (Conditionally Rendered) --- */}
 {!searchQuery && ( // Only show if there's no active search query
@@ -214,6 +216,20 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
           </p>
         </Link>
       ))}
+
+
     </div>
+
+
+    
   );
 }
+
+
+
+
+
+
+
+
+

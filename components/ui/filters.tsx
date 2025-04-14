@@ -32,6 +32,7 @@ import {
   CircleDotDashed,
   CircleEllipsis,
   CircleX,
+  Code,
   SignalHigh,
   SignalLow,
   SignalMedium,
@@ -93,6 +94,7 @@ export enum FilterType {
   DUE_DATE = "Due date",
   CREATED_DATE = "Created date",
   UPDATED_DATE = "Updated date",
+  AGENT = "Agent",
 }
 
 export enum FilterOperator {
@@ -146,8 +148,21 @@ export enum DueDate {
   IN_3_MONTHS = "3 months from now",
 }
 
+export enum Agent {
+  OPENAI = "OpenAI",
+  ANTHROPIC = "Anthropic",
+  GOOGLE = "Google",
+  GROQ = "Groq",
+  MISTRAL = "Mistral",
+  DEEPSEEK = "DeepSeek",
+  PERPLEXITY = "Perplexity",
+  XAI = "xAI",
+  QWEN = "Qwen",
+  OTHER = "Other",
+}
+
 export type FilterOption = {
-  name: FilterType | Status | Assignee | Labels | Priority | DueDate;
+  name: FilterType | Status | Assignee | Labels | Priority | DueDate | Agent;
   icon: React.ReactNode | undefined;
   label?: string;
 };
@@ -162,7 +177,7 @@ export type Filter = {
 const FilterIcon = ({
   type,
 }: {
-  type: FilterType | Status | Assignee | Labels | Priority;
+  type: FilterType | Status | Assignee | Labels | Priority | Agent;
 }) => {
   switch (type) {
     case Assignee.ANDREW_LUO:
@@ -187,6 +202,8 @@ const FilterIcon = ({
       return <CalendarPlus className="size-3.5" />;
     case FilterType.UPDATED_DATE:
       return <CalendarSync className="size-3.5" />;
+    case FilterType.AGENT:
+      return <Code className="size-3.5" />;
     case Status.BACKLOG:
       return <CircleDashed className="size-3.5 text-muted-foreground" />;
     case Status.TODO:
@@ -215,6 +232,26 @@ const FilterIcon = ({
       return <div className="bg-amber-400 rounded-full size-2.5" />;
     case Labels.RELEASE:
       return <div className="bg-green-400 rounded-full size-2.5" />;
+    case Agent.OPENAI:
+      return <div className="bg-green-500 rounded-full size-2.5" />;
+    case Agent.ANTHROPIC:
+      return <div className="bg-violet-500 rounded-full size-2.5" />;
+    case Agent.GOOGLE:
+      return <div className="bg-blue-500 rounded-full size-2.5" />;
+    case Agent.GROQ:
+      return <div className="bg-pink-500 rounded-full size-2.5" />;
+    case Agent.MISTRAL:
+      return <div className="bg-indigo-500 rounded-full size-2.5" />;
+    case Agent.DEEPSEEK:
+      return <div className="bg-cyan-500 rounded-full size-2.5" />;
+    case Agent.PERPLEXITY:
+      return <div className="bg-purple-500 rounded-full size-2.5" />;
+    case Agent.XAI:
+      return <div className="bg-orange-500 rounded-full size-2.5" />;
+    case Agent.QWEN:
+      return <div className="bg-emerald-500 rounded-full size-2.5" />;
+    case Agent.OTHER:
+      return <div className="bg-gray-500 rounded-full size-2.5" />;
   }
 };
 
@@ -235,6 +272,10 @@ export const filterViewOptions: FilterOption[][] = [
     {
       name: FilterType.PRIORITY,
       icon: <FilterIcon type={FilterType.PRIORITY} />,
+    },
+    {
+      name: FilterType.AGENT,
+      icon: <FilterIcon type={FilterType.AGENT} />,
     },
   ],
   [
@@ -288,6 +329,13 @@ export const dateFilterOptions: FilterOption[] = Object.values(DueDate).map(
   })
 );
 
+export const agentFilterOptions: FilterOption[] = Object.values(Agent).map(
+  (agent) => ({
+    name: agent,
+    icon: <FilterIcon type={agent} />,
+  })
+);
+
 export const filterViewToFilterOptions: Record<FilterType, FilterOption[]> = {
   [FilterType.STATUS]: statusFilterOptions,
   [FilterType.ASSIGNEE]: assigneeFilterOptions,
@@ -296,6 +344,7 @@ export const filterViewToFilterOptions: Record<FilterType, FilterOption[]> = {
   [FilterType.DUE_DATE]: dateFilterOptions,
   [FilterType.CREATED_DATE]: dateFilterOptions,
   [FilterType.UPDATED_DATE]: dateFilterOptions,
+  [FilterType.AGENT]: agentFilterOptions,
 };
 
 const filterOperators = ({
@@ -309,6 +358,7 @@ const filterOperators = ({
     case FilterType.STATUS:
     case FilterType.ASSIGNEE:
     case FilterType.PRIORITY:
+    case FilterType.AGENT:
       if (Array.isArray(filterValues) && filterValues.length > 1) {
         return [FilterOperator.IS_ANY_OF, FilterOperator.IS_NOT];
       } else {
