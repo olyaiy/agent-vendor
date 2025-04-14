@@ -515,7 +515,7 @@ export function KnowledgeEditor({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-2 right-2 size-7 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white/80 backdrop-blur-sm z-10 rounded-full"
+                        className="absolute bottom-2 right-2 size-7 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-200 border border-transparent hover:border-red-200 hover:text-red-600 backdrop-blur-sm z-10 rounded-full"
                         onClick={(e) => {
                           e.stopPropagation();
                           setDeleteItemId(item.id);
@@ -563,15 +563,15 @@ export function KnowledgeEditor({
                           <>
                             {/* Third paper (deepest) */}
                             {stackDepth >= 3 && (
-                              <div className="absolute -bottom-1.5 -right-1.5 w-[96%] h-[96%] bg-slate-100 dark:bg-slate-100 rounded-md border border-slate-300 dark:border-slate-300 transform rotate-1"></div>
+                              <div className="absolute -bottom-1.5 -right-1.5 w-[96%] h-[96%] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-100 rounded-md border border-slate-300 dark:border-slate-300 transform rotate-1 shadow-sm"></div>
                             )}
                             {/* Second paper */}
                             {stackDepth >= 2 && (
-                              <div className="absolute -bottom-1 -right-1 w-[98%] h-[97%] bg-slate-50 dark:bg-slate-50 rounded-md border border-slate-200 dark:border-slate-200 transform rotate-0.5"></div>
+                              <div className="absolute -bottom-1 -right-1 w-[98%] h-[97%] bg-gradient-to-br from-white to-slate-50 dark:from-white dark:to-slate-50 rounded-md border border-slate-200 dark:border-slate-200 transform rotate-0.5 shadow-[0_0_2px_rgba(0,0,0,0.03)]"></div>
                             )}
                             {/* First paper (just behind main) */}
                             {stackDepth >= 1 && (
-                              <div className="absolute -bottom-0.5 -right-0.5 w-[99%] h-[98%] bg-white dark:bg-white rounded-md border border-slate-200 dark:border-slate-200"></div>
+                              <div className="absolute -bottom-0.5 -right-0.5 w-[99%] h-[98%] bg-white dark:bg-white rounded-md border border-slate-200 dark:border-slate-200 shadow-[0_0_1px_rgba(0,0,0,0.02)]"></div>
                             )}
                           </>
                         )}
@@ -581,19 +581,23 @@ export function KnowledgeEditor({
                           {/* Paper-like header with lines */}
                           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"></div>
                           
+                          {/* Paper corner fold effect */}
+                          <div className="absolute top-0 right-0 size-6 bg-gradient-to-br from-white via-white to-slate-100 dark:from-white dark:via-white dark:to-slate-100 rounded-bl-lg transform rotate-2 origin-top-right border-l border-b border-slate-200 dark:border-slate-200 shadow-[-1px_1px_2px_rgba(0,0,0,0.05)]"></div>
+                          <div className="absolute top-0 right-0 size-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-100 rounded-bl-sm transform rotate-2 origin-top-right"></div>
+                          
                           {/* Page numbering in top right */}
-                          <div className="absolute top-1.5 right-2.5">
+                          <div className="absolute top-1 left-2.5">
                             <span className="text-[10px] text-slate-500 dark:text-slate-500 font-mono">
                               {pageCount} page{pageCount > 1 ? 's' : ''}
                             </span>
                           </div>
                           
-                          <div className="pt-2.5">
+                          <div className="pt-4">
                             {/* Document Title and Icon */}
                             <div className="flex items-center gap-2.5 mb-3">
-                              <div className="bg-primary/10 rounded-full p-1.5">
+                              {/* <div className="bg-primary/10 rounded-full p-1.5">
                                 <File className="size-3.5 text-primary" />
-                              </div>
+                              </div> */}
                               <h3 className="font-medium text-sm truncate flex-1 text-black dark:text-black">{item.title}</h3>
                             </div>
 
@@ -706,8 +710,8 @@ export function KnowledgeEditor({
               onClick={handleDropzoneClick}
             >
               {/* Paper corner fold effect */}
-              <div className="absolute top-0 right-0 w-12 h-12 bg-white dark:bg-white rounded-bl-lg transform rotate-0 origin-top-right border-l border-b border-slate-200 dark:border-slate-200"></div>
-              <div className="absolute top-0 right-0 w-10 h-10 bg-slate-50 dark:bg-slate-50 rounded-bl-sm transform rotate-0 origin-top-right"></div>
+              <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-white via-white to-slate-100 dark:from-white dark:via-white dark:to-slate-100 rounded-bl-lg transform rotate-2 origin-top-right border-l border-b border-slate-200 dark:border-slate-200 shadow-[-1px_1px_2px_rgba(0,0,0,0.05)]"></div>
+              <div className="absolute top-0 right-0 w-10 h-10 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-100 rounded-bl-sm transform rotate-2 origin-top-right"></div>
               
               <div className="text-center">
                 <div className="bg-primary/10 rounded-full p-2.5 mx-auto mb-3 transition-transform group-hover:scale-110">
