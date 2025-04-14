@@ -66,10 +66,9 @@ export const myProvider = customProvider({
     'gemini-1.5-flash-latest': google('gemini-1.5-flash-latest'),
     'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
     'gemini-1.5-flash-8b-latest': google('gemini-1.5-flash-8b-latest'),
-
-    // xAI Grok Models
-    'grok-2-1212': xai('grok-2-1212'),
     'grok-2-latest': xai('grok-2-latest'),
+    'grok-3': xai('grok-3'),
+    'grok-3-mini': xai('grok-3-mini'),
   },
 
 });
@@ -283,67 +282,18 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 1_048_576,
   },
   // xAI Grok Models (text only)
-  'grok-2-1212': {
+  'grok-2-latest': {
     displayName: "Grok 2",
     description: "Powerful model with strong reasoning capabilities and a distinctive personality for engaging interactions.",
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 10.00,
     contextWindow: 32_768,
   },
-  'grok-2-latest': {
-    displayName: "Grok 2 Latest",
-    description: "Most recent version of xAI's second-generation model with improved performance and capabilities.",
-    inputCostPerMillion: 2.00,
-    outputCostPerMillion: 10.00,
-    contextWindow: 32_768,
-  },
-  'grok-3-beta': {
-    displayName: "Grok 3 Beta",
-    description: "Beta version of xAI's advanced model designed for coding, logical reasoning, and complex problem-solving.",
-    inputCostPerMillion: 3.00,
-    outputCostPerMillion: 15.00,
-    contextWindow: 131_072,
-  },
-  'grok-3': {
+  'grok-3-latest': {
     displayName: "Grok 3",
     description: "Advanced model specializing in code generation, debugging, and multi-step problem-solving with multiple operational modes.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-latest': {
-    displayName: "Grok 3 Latest",
-    description: "Latest version of xAI's flagship model with Think Mode and Big Brain Mode for enhanced reasoning and coding capabilities.",
-    inputCostPerMillion: 3.00,
-    outputCostPerMillion: 15.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-fast-beta': {
-    displayName: "Grok 3 Fast Beta",
-    description: "Beta version of xAI's speed-optimized variant of Grok 3 for faster response times on complex tasks.",
-    inputCostPerMillion: 5.00,
-    outputCostPerMillion: 25.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-fast': {
-    displayName: "Grok 3 Fast",
-    description: "Speed-optimized variant of Grok 3 delivering faster responses for time-sensitive applications requiring advanced reasoning.",
-    inputCostPerMillion: 5.00,
-    outputCostPerMillion: 25.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-fast-latest': {
-    displayName: "Grok 3 Fast Latest",
-    description: "Latest version of xAI's high-speed, high-performance model for demanding applications requiring quick responses.",
-    inputCostPerMillion: 5.00,
-    outputCostPerMillion: 25.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-mini-beta': {
-    displayName: "Grok 3 Mini Beta",
-    description: "Beta version of xAI's compact model designed for quick answers and everyday tasks at a lower price point.",
-    inputCostPerMillion: 0.30,
-    outputCostPerMillion: 0.50,
     contextWindow: 131_072,
   },
   'grok-3-mini': {
@@ -351,34 +301,6 @@ export const modelDetails: Record<string, ModelDetails> = {
     description: "Compact version of Grok 3 optimized for quick answers and everyday tasks while maintaining good performance.",
     inputCostPerMillion: 0.30,
     outputCostPerMillion: 0.50,
-    contextWindow: 131_072,
-  },
-  'grok-3-mini-latest': {
-    displayName: "Grok 3 Mini Latest",
-    description: "Latest version of xAI's compact model offering improved efficiency and performance for common tasks.",
-    inputCostPerMillion: 0.30,
-    outputCostPerMillion: 0.50,
-    contextWindow: 131_072,
-  },
-  'grok-3-mini-fast-beta': {
-    displayName: "Grok 3 Mini Fast Beta",
-    description: "Beta version of xAI's speed-optimized compact model for rapid responses on everyday tasks.",
-    inputCostPerMillion: 0.60,
-    outputCostPerMillion: 4.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-mini-fast': {
-    displayName: "Grok 3 Mini Fast",
-    description: "Speed-optimized compact model delivering faster responses for time-sensitive everyday applications.",
-    inputCostPerMillion: 0.60,
-    outputCostPerMillion: 4.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-mini-fast-latest': {
-    displayName: "Grok 3 Mini Fast Latest",
-    description: "Latest version of xAI's high-speed compact model balancing performance, speed, and cost-effectiveness.",
-    inputCostPerMillion: 0.60,
-    outputCostPerMillion: 4.00,
     contextWindow: 131_072,
   },
 };
@@ -431,8 +353,9 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
     'gemini-1.5-flash-8b-latest': google('gemini-1.5-flash-8b-latest'),
     // xAI Grok
-    'grok-2-1212': xai('grok-2-1212'),
     'grok-2-latest': xai('grok-2-latest'),
+    'grok-3': xai('grok-3'),
+    'grok-3-mini': xai('grok-3-mini'),
     // Add other models from myProvider if necessary
   };
 
