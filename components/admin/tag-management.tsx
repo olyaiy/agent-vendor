@@ -9,14 +9,8 @@ import {
 import type { Tag } from '@/db/schema/agent'; // Import Tag type
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Badge } from "@/components/ui/badge"; // Use Badge for tag display
+// Removed Table imports
 import {
   Dialog,
   DialogContent,
@@ -140,52 +134,45 @@ export default function TagManagement({ initialTags }: TagManagementProps) {
         </Button>
       </div>
 
-      {/* Tags Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Tag Name</TableHead>
-              <TableHead className="text-right w-[120px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tags.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="h-24 text-center">
-                  No tags found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              tags.map((tag) => (
-                <TableRow key={tag.id}>
-                  <TableCell className="font-medium">{tag.name}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openEditDialog(tag)}
-                      disabled={isPending}
-                      aria-label={`Edit tag ${tag.name}`}
-                    >
-                      <PencilEditIcon size={16} className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => openDeleteConfirm(tag)}
-                      disabled={isPending}
-                      aria-label={`Delete tag ${tag.name}`}
-                    >
-                      <TrashIcon size={16} className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+      {/* Tags Grid */}
+      <div className="rounded-md border p-4 min-h-[100px]">
+        {tags.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">No tags found.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {tags.map((tag) => (
+              <Badge
+                key={tag.id}
+                variant="secondary"
+                className="flex items-center justify-between p-2 pl-3 text-sm"
+              >
+                <span className="truncate mr-2" title={tag.name}>{tag.name}</span>
+                <div className="flex items-center shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                    onClick={() => openEditDialog(tag)}
+                    disabled={isPending}
+                    aria-label={`Edit tag ${tag.name}`}
+                  >
+                    <PencilEditIcon size={14} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive/70 hover:text-destructive"
+                    onClick={() => openDeleteConfirm(tag)}
+                    disabled={isPending}
+                    aria-label={`Delete tag ${tag.name}`}
+                  >
+                    <TrashIcon size={14} />
+                  </Button>
+                </div>
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Edit Tag Dialog */}

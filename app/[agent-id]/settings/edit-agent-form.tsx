@@ -281,6 +281,37 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
               />
             </div>
 
+            {/* Tags Section - Moved here right after agent name */}
+            <div className="space-y-4">
+                <div className="flex items-start gap-1.5 mb-1.5">
+                    <Label htmlFor="tags" className="text-sm font-medium flex items-center gap-1.5">
+                        Tags
+                    </Label>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-[250px]">
+                                <p>Categorize your agent with relevant tags to improve discoverability.</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </div>
+                <MultipleSelector
+                    value={selectedTags}
+                    onChange={setSelectedTags}
+                    defaultOptions={allTags} // Provide all tags as options
+                    placeholder="Select tags..."
+                    emptyIndicator={
+                        <p className="text-center text-sm leading-10 text-muted-foreground">
+                            No tags found. Create tags in the Admin panel.
+                        </p>
+                    }
+                    // Optional: Add maxSelected or other props if needed
+                />
+            </div>
+
             <div className="space-y-4">
               <div className="flex items-start gap-1.5 mb-1.5">
                 <Label htmlFor="description" className="text-sm font-medium flex items-center gap-1.5">
@@ -312,37 +343,6 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
             />
           </div>
         </section>
-
-        {/* Tags Section */}
-        <div className="space-y-4">
-            <div className="flex items-start gap-1.5 mb-1.5">
-                <Label htmlFor="tags" className="text-sm font-medium flex items-center gap-1.5">
-                    Tags
-                </Label>
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-[250px]">
-                            <p>Categorize your agent with relevant tags to improve discoverability.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            </div>
-            <MultipleSelector
-                value={selectedTags}
-                onChange={setSelectedTags}
-                defaultOptions={allTags} // Provide all tags as options
-                placeholder="Select tags..."
-                emptyIndicator={
-                    <p className="text-center text-sm leading-10 text-muted-foreground">
-                        No tags found. Create tags in the Admin panel.
-                    </p>
-                }
-                // Optional: Add maxSelected or other props if needed
-            />
-        </div>
 
         <Separator />
 
