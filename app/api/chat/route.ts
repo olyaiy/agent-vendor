@@ -1,4 +1,4 @@
-import { appendResponseMessages, streamText } from 'ai';
+import { appendResponseMessages, smoothStream, streamText } from 'ai';
 // Remove direct openai import, we'll get the model instance via the helper
 // import { openai } from "@ai-sdk/openai";
 import { getModelInstanceById, getModelPricing } from '@/lib/models'; // Import the helper function
@@ -125,6 +125,12 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
+
+      experimental_transform: smoothStream({
+        // delayInMs: 20, // optional: defaults to 10ms
+        // chunking: 'line', // optional: defaults to 'word'
+      }),
+    
       
 
       onFinish: async ({ response, usage } ) => {
