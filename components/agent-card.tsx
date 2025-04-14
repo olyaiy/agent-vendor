@@ -88,17 +88,19 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
         </div>
 
         <div className="p-4">
-          <h3 className="text-lg font-medium line-clamp-1 mb-1">{agent.name}</h3>
+          <h3 className="text-lg font-semibold line-clamp-2 mb-2 text-foreground/90 hover:text-primary transition-colors duration-200">
+            {agent.name}
+          </h3>
           {agent.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-sm text-muted-foreground/80 line-clamp-2 mb-3 hover:text-muted-foreground/90 transition-colors duration-200">
               {agent.description}
             </p>
           )}
           {/* Render Tags */}
           {agent.tags && agent.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {agent.tags.map((tag) => (
-                <Badge key={tag.id} variant="secondary" className="text-xs">
+                <Badge key={tag.id} variant="outline" className="text-xs font-medium text-muted-foreground/80 hover:text-muted-foreground/90 transition-colors duration-200">
                   {tag.name}
                 </Badge>
               ))}
