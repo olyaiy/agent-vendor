@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
-import { anonymous, username } from "better-auth/plugins";
+import { admin, anonymous, username } from "better-auth/plugins";
 
 import { polar } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
@@ -58,6 +58,7 @@ export const auth = betterAuth({
   plugins: [
     username(),
     anonymous(),
+    admin(),
     polar({
       client,
       // Enable automatic Polar Customer creation on signup

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core"; // Added integer for banExpires
 			
 export const user = pgTable("user", {
 					id: text("id").primaryKey(),
@@ -10,7 +10,13 @@ export const user = pgTable("user", {
  updatedAt: timestamp('updated_at').notNull(),
  username: text('username').unique(),
  displayUsername: text('display_username'),
- isAnonymous: boolean('is_anonymous')
+ isAnonymous: boolean('is_anonymous'),
+ // --- Admin Plugin Fields ---
+ role: text('role').default('user'), // Default role is 'user'
+ banned: boolean('banned').default(false),
+ banReason: text('ban_reason'),
+ banExpires: integer('ban_expires'), // Using integer for Unix timestamp
+ // -------------------------
 				});
 
 export const session = pgTable("session", {
@@ -21,7 +27,10 @@ export const session = pgTable("session", {
  updatedAt: timestamp('updated_at').notNull(),
  ipAddress: text('ip_address'),
  userAgent: text('user_agent'),
- userId: text('user_id').notNull().references(()=> user.id, { onDelete: 'cascade' })
+ userId: text('user_id').notNull().references(()=> user.id, { onDelete: 'cascade' }),
+ // --- Admin Plugin Field ---
+ impersonatedBy: text('impersonated_by') // Stores admin user ID if impersonating
+ // ------------------------
 				});
 
 export const account = pgTable("account", {

@@ -15,6 +15,13 @@
       "when": 1744407459383,
       "tag": "0001_small_captain_flint",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744595674066,
+      "tag": "0002_optimal_terrax",
+      "breakpoints": true
     }
   ]
 }
