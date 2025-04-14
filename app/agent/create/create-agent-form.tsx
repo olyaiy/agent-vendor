@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useTransition } from "react";
+import React, { useState, useRef, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import MultipleSelector, { Option } from "@/components/ui/multiselect"; // Import MultipleSelector and Option type
-import { createAgent, updateAgentTagsAction } from "@/db/actions/agent-actions"; // Import actions
+import {
+  createAgent,
+  updateAgentTagsAction,
+  uploadAgentImageAction, // Added
+  // removeAgentImageAction, // Add if implementing remove before save
+} from "@/db/actions/agent-actions"; // Import actions
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
@@ -37,15 +42,23 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
   const [isPending, startTransition] = useTransition();
   
   // Form state
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null); // TODO: Implement image upload
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // Added avatarUrl state // TODO: Implement image upload
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null); // Holds preview URL
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // Holds preview URL
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null); // Holds the actual file
+  const [avatarFile, setAvatarFile] = useState<File | null>(null); // Holds the actual file
   const [primaryModelId, setPrimaryModelId] = useState<string>("");
   const [visibility, setVisibility] = useState<"public" | "private" | "link">("public");
   const [selectedTags, setSelectedTags] = useState<Option[]>([]); // State for selected tags
   const [imageType, setImageType] = useState<'thumbnail' | 'avatar'>('thumbnail'); // State for tabs
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false); // Loading state for upload button
+  const [isRemovingThumbnail, setIsRemovingThumbnail] = useState(false); // Loading state for remove button (client-side)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false); // Loading state for upload button
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false); // Loading state for remove button (client-side)
   
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   
   // Adjust system prompt height
   const adjustSystemPromptHeight = () => {
@@ -55,6 +68,21 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   };
+
+  // Cleanup object URLs on unmount or when file changes
+  useEffect(() => {
+    // This effect handles cleanup of the temporary blob URLs
+    const thumbUrl = thumbnailUrl;
+    const avUrl = avatarUrl;
+    return () => {
+      if (thumbUrl && thumbUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(thumbUrl);
+      }
+      if (avUrl && avUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(avUrl);
+      }
+    };
+  }, [thumbnailUrl, avatarUrl]); // Rerun only if the URLs themselves change
 
   // Form submission handler
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,53 +102,203 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
     }
 
     startTransition(async () => {
+      let newAgentId: string | null = null;
       try {
-        // Create agent data object based on schema requirements
+        // 1. Create agent data object (without image URLs initially)
         const newAgentData = {
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
           systemPrompt: (formData.get("systemPrompt") as string) || null,
-          thumbnailUrl: thumbnailUrl, // Use state value
+          thumbnailUrl: null, // Set to null initially, will be updated after upload
           visibility: visibility,
           primaryModelId: primaryModelId,
           creatorId: userId,
           welcomeMessage: null,
-          avatarUrl: avatarUrl // Use state value
+          avatarUrl: null, // Set to null initially
         };
 
-        // Use the server action to create the agent
+        // 2. Use the server action to create the agent
         const agentCreateResult = await createAgent(newAgentData);
-        
-        if (agentCreateResult.success && agentCreateResult.data && agentCreateResult.data[0]) {
-          const newAgent = agentCreateResult.data[0];
-          toast.success("Agent created successfully. Assigning tags...");
 
-          // If tags were selected, try to assign them
-          if (selectedTags.length > 0) {
-            const tagUpdateResult = await updateAgentTagsAction(newAgent.id, selectedTags.map(tag => tag.value));
-            if (!tagUpdateResult.success) {
-              // Agent created, but tags failed. Inform user but still redirect.
-              toast.warning(`Agent created, but failed to assign tags: ${tagUpdateResult.error}. You can add them later in settings.`);
-            } else {
-              toast.success("Tags assigned successfully.");
-            }
-          }
-
-          // Redirect to the new agent's page regardless of tag success
-          router.push(`/${newAgent.id}`);
-
-        } else {
-          // Agent creation failed
+        if (!agentCreateResult.success || !agentCreateResult.data || !agentCreateResult.data[0]) {
           throw new Error(agentCreateResult.error || "Failed to create agent");
         }
+
+        const newAgent = agentCreateResult.data[0];
+        newAgentId = newAgent.id; // Store the ID for potential image upload
+        toast.success("Agent created successfully. Processing image and tags...");
+
+        // 3. Prepare image upload and tag update promises
+        const uploadPromises: Promise<unknown>[] = [];
+
+        // Add thumbnail upload promise if a file is selected
+        if (thumbnailFile) {
+          const imageFormData = new FormData();
+          imageFormData.append("file", thumbnailFile);
+          setIsUploadingThumbnail(true); // Set loading state for button feedback
+          uploadPromises.push(
+            uploadAgentImageAction(newAgentId, imageFormData, 'thumbnail')
+              .finally(() => setIsUploadingThumbnail(false)) // Reset loading state
+          );
+        }
+
+        // Add avatar upload promise if a file is selected
+        if (avatarFile) {
+          const imageFormData = new FormData();
+          imageFormData.append("file", avatarFile);
+          setIsUploadingAvatar(true); // Set loading state for button feedback
+          uploadPromises.push(
+            uploadAgentImageAction(newAgentId, imageFormData, 'avatar')
+              .finally(() => setIsUploadingAvatar(false)) // Reset loading state
+          );
+        }
+
+        // Add tag update promise if tags are selected
+        if (selectedTags.length > 0) {
+          uploadPromises.push(
+            updateAgentTagsAction(newAgentId, selectedTags.map(tag => tag.value))
+          );
+        }
+
+        // 4. Execute image uploads and tag updates concurrently
+        if (uploadPromises.length > 0) {
+          const results = await Promise.allSettled(uploadPromises);
+
+          // 5. Process results and show appropriate toasts
+          let imageSuccess = true;
+          let tagSuccess = true;
+          let imageErrorMsg = "";
+          let tagErrorMsg = "";
+
+          results.forEach((result, index) => {
+            // Determine if the promise was for an image or tags based on order/content
+            const isTagPromise = index === uploadPromises.length - 1 && selectedTags.length > 0 && (!thumbnailFile && !avatarFile || index > 0); // Heuristic: last promise if tags exist
+
+            if (result.status === 'rejected') {
+              const error = result.reason as Error;
+              if (isTagPromise) {
+                tagSuccess = false;
+                tagErrorMsg = error.message || "Failed to update tags";
+              } else {
+                imageSuccess = false;
+                imageErrorMsg = error.message || "Failed to upload image";
+              }
+            } else if (result.status === 'fulfilled') {
+              const actionResult = result.value as { success: boolean; error?: string; url?: string };
+              if (!actionResult.success) {
+                 if (isTagPromise) {
+                    tagSuccess = false;
+                    tagErrorMsg = actionResult.error || "Failed to update tags";
+                 } else {
+                    imageSuccess = false;
+                    imageErrorMsg = actionResult.error || "Failed to upload image";
+                 }
+              }
+            }
+          });
+
+          // Show combined toast messages
+          if (imageSuccess && tagSuccess) {
+            toast.success("Image and tags processed successfully.");
+          } else {
+            const warnings = [];
+            if (!imageSuccess) warnings.push(`Image upload failed: ${imageErrorMsg}`);
+            if (!tagSuccess) warnings.push(`Tag assignment failed: ${tagErrorMsg}`);
+            toast.warning(`Agent created, but: ${warnings.join('. ')}. You can manage these in settings.`);
+          }
+        } else {
+          toast.info("No image or tags to process."); // Or just let the initial success message stand
+        }
+
+        // 6. Redirect to the new agent's page regardless of image/tag success
+        router.push(`/${newAgentId}`);
+
       } catch (error) {
+        // Catch errors from agent creation or unexpected issues
         toast.error(`Failed to create agent: ${(error as Error).message}`);
-        console.error(error);
+        console.error("Agent creation process error:", error);
+        // Reset loading states if an error occurred before upload started
+        setIsUploadingThumbnail(false);
+        setIsUploadingAvatar(false);
       }
     });
   };
 
-  // TODO: Implement actual image upload functionality using the setThumbnailUrl state setter.
+  // --- Image Handlers ---
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    imgType: 'thumbnail' | 'avatar'
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Client-side validation
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error("Invalid file type. Only JPG, PNG, and WEBP are allowed.");
+      event.target.value = ''; // Reset input
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File size exceeds the limit of ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
+       event.target.value = ''; // Reset input
+      return;
+    }
+
+    // Revoke previous object URL if exists
+    if (imgType === 'thumbnail' && thumbnailUrl && thumbnailUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(thumbnailUrl);
+    }
+    if (imgType === 'avatar' && avatarUrl && avatarUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(avatarUrl);
+    }
+
+    // Create a preview URL
+    const previewUrl = URL.createObjectURL(file);
+
+    if (imgType === 'thumbnail') {
+      setThumbnailFile(file);
+      setThumbnailUrl(previewUrl);
+      // Clear avatar if setting thumbnail
+      setAvatarFile(null);
+      if (avatarUrl && avatarUrl.startsWith('blob:')) URL.revokeObjectURL(avatarUrl);
+      setAvatarUrl(null);
+    } else {
+      setAvatarFile(file);
+      setAvatarUrl(previewUrl);
+      // Clear thumbnail if setting avatar
+      setThumbnailFile(null);
+      if (thumbnailUrl && thumbnailUrl.startsWith('blob:')) URL.revokeObjectURL(thumbnailUrl);
+      setThumbnailUrl(null);
+    }
+     event.target.value = ''; // Reset input value after processing
+  };
+
+  const handleRemoveImage = (imgType: 'thumbnail' | 'avatar') => {
+    // Simulate removing state for button feedback (client-side only before save)
+    const setLoading = imgType === 'thumbnail' ? setIsRemovingThumbnail : setIsRemovingAvatar;
+    setLoading(true);
+
+    if (imgType === 'thumbnail') {
+      if (thumbnailUrl && thumbnailUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(thumbnailUrl);
+      }
+      setThumbnailFile(null);
+      setThumbnailUrl(null);
+    } else {
+       if (avatarUrl && avatarUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+      setAvatarFile(null);
+      setAvatarUrl(null);
+    }
+    // Reset loading state after a short delay to show spinner
+    setTimeout(() => setLoading(false), 300);
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
       {/* Main Form Container */}
@@ -136,73 +314,148 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
             </div>
             
             <div className="space-y-3">
-              {/* TODO: Add onClick handler to trigger file input/upload modal, potentially on the Tabs container or individual items */}
+               {/* Hidden file inputs */}
+               <input
+                  type="file"
+                  ref={thumbnailInputRef}
+                  onChange={(e) => handleFileChange(e, 'thumbnail')}
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                />
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  onChange={(e) => handleFileChange(e, 'avatar')}
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                />
               <Tabs value={imageType} onValueChange={(value: string) => setImageType(value as 'thumbnail' | 'avatar')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 h-9 mb-2">
                   <TabsTrigger value="thumbnail" className="text-xs h-7">Thumbnail</TabsTrigger>
                   <TabsTrigger value="avatar" className="text-xs h-7">Avatar</TabsTrigger>
                 </TabsList>
                 <TabsContent value="thumbnail">
-                  <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
+                  <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30" onClick={() => !thumbnailUrl && thumbnailInputRef.current?.click()}>
                     <AgentImage
-                      thumbnailUrl={thumbnailUrl} // Use state value
+                      thumbnailUrl={thumbnailUrl} // Use state value (preview URL)
                       // Use a placeholder ID for gradient generation when no image is set.
-                      // The actual agentId isn't available until after creation.
-                      agentId="new-agent-placeholder"
+                      agentId="new-agent-placeholder" // Agent ID not available yet
                     />
-                    {/* Add upload hint if needed */}
-                    {!thumbnailUrl && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        <p className="mt-1 text-xs text-white font-medium">Set Thumbnail</p>
+                    {/* Add upload hint */}
+                    {!thumbnailUrl && !isUploadingThumbnail && ( // Hide hint during upload simulation
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <p className="mt-1 text-xs text-white font-medium">Set Thumbnail</p>
+                         <p className="text-xs text-white/80">Click to upload</p>
                       </div>
+                    )}
+                    {/* Show loader during simulated upload */}
+                    {isUploadingThumbnail && (
+                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                         <Loader2 className="size-6 animate-spin text-white" />
+                       </div>
                     )}
                   </div>
                   {/* Buttons for Thumbnail */}
                   <div className="mt-2 flex flex-col gap-2">
                     {thumbnailUrl ? (
                       <div className="flex gap-2">
-                        <Button type="button" variant="destructive" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => handleRemoveImage('thumbnail')}
+                          disabled={isRemovingThumbnail || isUploadingThumbnail} // Disable during simulated actions
+                        >
+                          {isRemovingThumbnail ? <Loader2 className="size-3 animate-spin" /> : null}
                           Remove Thumbnail
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => thumbnailInputRef.current?.click()}
+                          disabled={isUploadingThumbnail || isRemovingThumbnail} // Disable during simulated actions
+                        >
+                           {/* No loader here, handled by overlay */}
                           Change Thumbnail
                         </Button>
                       </div>
                     ) : (
-                      <Button type="button" variant="outline" size="sm" className="w-full text-xs h-7">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-7 gap-1"
+                        onClick={() => thumbnailInputRef.current?.click()}
+                        disabled={isUploadingThumbnail || isRemovingThumbnail} // Disable during simulated actions
+                      >
+                        {/* No loader here, handled by overlay */}
                         Upload New Thumbnail
                       </Button>
                     )}
                   </div>
                 </TabsContent>
                 <TabsContent value="avatar">
-                  <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
+                  <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30" onClick={() => !avatarUrl && avatarInputRef.current?.click()}>
                     {/* Display AgentAvatar centered */}
                     <AgentAvatar
-                      avatarUrl={avatarUrl} // Use state value
-                      agentId="new-agent-placeholder" // Use placeholder ID
+                      avatarUrl={avatarUrl} // Use state value (preview URL)
+                      agentId="new-agent-placeholder" // Agent ID not available yet
                       size={100} // Example size, adjust as needed
                     />
-                    {/* Add upload hint if needed */}
-                    {!avatarUrl && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    {/* Add upload hint */}
+                     {!avatarUrl && !isUploadingAvatar && ( // Hide hint during upload simulation
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity">
                         <p className="mt-1 text-xs text-white font-medium">Set Avatar</p>
+                        <p className="text-xs text-white/80">Click to upload</p>
                       </div>
+                    )}
+                     {/* Show loader during simulated upload */}
+                     {isUploadingAvatar && (
+                       <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                         <Loader2 className="size-6 animate-spin text-white" />
+                       </div>
                     )}
                   </div>
                   {/* Buttons for Avatar */}
                   <div className="mt-2 flex flex-col gap-2">
                     {avatarUrl ? (
                       <div className="flex gap-2">
-                        <Button type="button" variant="destructive" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => handleRemoveImage('avatar')}
+                          disabled={isRemovingAvatar || isUploadingAvatar} // Disable during simulated actions
+                        >
+                          {isRemovingAvatar ? <Loader2 className="size-3 animate-spin" /> : null}
                           Remove Avatar
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => avatarInputRef.current?.click()}
+                          disabled={isUploadingAvatar || isRemovingAvatar} // Disable during simulated actions
+                        >
+                          {/* No loader here, handled by overlay */}
                           Change Avatar
                         </Button>
                       </div>
                     ) : (
-                      <Button type="button" variant="outline" size="sm" className="w-full text-xs h-7">
+                       <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-7 gap-1"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={isUploadingAvatar || isRemovingAvatar} // Disable during simulated actions
+                      >
+                        {/* No loader here, handled by overlay */}
                         Upload New Avatar
                       </Button>
                     )}
