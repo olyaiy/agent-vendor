@@ -14,6 +14,7 @@ import { getUserRecentChatsAction } from "@/db/actions/chat-actions";
 import useSWR from 'swr';
 import { motion, AnimatePresence } from 'framer-motion'; // Import AnimatePresence
 import { useState, useEffect } from 'react'; // Import useState for optimistic updates
+import { authClient } from '@/lib/auth-client'; // Import authClient
 
 // Interface for the data structure expected by the component's rendering logic
 interface HistoryDisplayItem {
@@ -65,9 +66,13 @@ const listItemVariants = {
 
 // This component will now handle fetching its own data using SWR
 export function HistoryMenu() {
-  // Use SWR to fetch and manage history items
-  const { data: historyItems, error, isLoading } = useSWR<HistoryDisplayItem[]>(
-    SWR_KEY_RECENT_CHATS,
+  // Get session state
+  const { data: session, isPending: sessionPending } = authClient.useSession(); // Use isPending
+
+  // Use SWR to fetch and manage history items, conditional on session
+  const { data: historyItems, error, isLoading: historyLoading } = useSWR<HistoryDisplayItem[]>(
+    // Only fetch if session exists and is loaded
+    !sessionPending && session ? SWR_KEY_RECENT_CHATS : null, // Use sessionPending
     fetcher,
     {
       revalidateOnFocus: true,
@@ -106,7 +111,7 @@ export function HistoryMenu() {
     }
     return pathname === itemUrl;
   };
-  
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild tooltip="History">
@@ -116,18 +121,47 @@ export function HistoryMenu() {
         </Link>
       </SidebarMenuButton>
       <SidebarMenuSub>
-        {isLoading && (
+        {/* Session Loading State */}
+        {sessionPending && ( // Use sessionPending
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
             <SidebarMenuSubItem>
-              <span className="text-xs p-2">Loading...</span>
+              <span className="text-xs p-2">Loading session...</span>
             </SidebarMenuSubItem>
           </motion.div>
         )}
-        {error && (
+
+        {/* Logged Out State */}
+        {!sessionPending && !session && ( // Use sessionPending
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <SidebarMenuSubItem>
+              <span className="text-xs p-2">Sign in to view history.</span>
+            </SidebarMenuSubItem>
+          </motion.div>
+        )}
+
+        {/* Logged In State - History Loading */}
+        {!sessionPending && session && historyLoading && ( // Use sessionPending
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <SidebarMenuSubItem>
+              <span className="text-xs p-2">Loading history...</span>
+            </SidebarMenuSubItem>
+          </motion.div>
+        )}
+
+        {/* Logged In State - History Error */}
+        {!sessionPending && session && error && ( // Use sessionPending
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -138,7 +172,9 @@ export function HistoryMenu() {
             </SidebarMenuSubItem>
           </motion.div>
         )}
-        {!isLoading && !error && (!historyItems || historyItems.length === 0) && (
+
+        {/* Logged In State - No History */}
+        {!sessionPending && session && !historyLoading && !error && (!historyItems || historyItems.length === 0) && ( // Use sessionPending
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -149,11 +185,13 @@ export function HistoryMenu() {
             </SidebarMenuSubItem>
           </motion.div>
         )}
+
+        {/* Logged In State - History Items */}
         <AnimatePresence mode="popLayout">
-          {!isLoading && !error && historyItems && historyItems.map((item, index) => {
+          {!sessionPending && session && !historyLoading && !error && historyItems && historyItems.map((item, index) => { // Use sessionPending
             // Determine if this chat is active using the helper function
             const isActive = isItemActive(item.url);
-            
+
             return (
             <motion.div
               key={item.id}
