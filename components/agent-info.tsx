@@ -82,7 +82,7 @@ interface KnowledgeSectionProps {
 }
 
 function KnowledgeSectionComponent({ knowledgeItems }: KnowledgeSectionProps) {
-  const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false); // Default closed
+  const [isKnowledgeOpen, setIsKnowledgeOpen] = useState(false);
 
   return (
     <Collapsible
@@ -90,7 +90,7 @@ function KnowledgeSectionComponent({ knowledgeItems }: KnowledgeSectionProps) {
       onOpenChange={setIsKnowledgeOpen}
       className="group"
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-md px-3 transition-colors cursor-pointer">
+      <CollapsibleTrigger className="flex items-center justify-between w-full py-3 group-hover:bg-muted/30 rounded-lg px-3 transition-all duration-200 ease-in-out cursor-pointer hover:scale-[1.01] transform">
         <div className="flex items-center gap-3">
           <BookOpen className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Knowledge Base</span>
@@ -102,8 +102,6 @@ function KnowledgeSectionComponent({ knowledgeItems }: KnowledgeSectionProps) {
           <div>
             <p className="text-xs text-muted-foreground">Reference materials the agent can access</p>
           </div>
-
-          {/* Display actual knowledge items using KnowledgeItemDisplay */}
           <div className="space-y-2">
             {knowledgeItems.length > 0 ? (
               knowledgeItems.map((item) => (

@@ -31,7 +31,8 @@ export async function generateTitleFromUserMessage({
       prompt: JSON.stringify(message).slice(0, 2000),
     });
   
-    return title;
+    const cleanedTitle = title.replace(/"/g, ''); // Remove double quotes
+    return cleanedTitle;
   }
 
 export async function deleteMessageAction(messageId: string) {
