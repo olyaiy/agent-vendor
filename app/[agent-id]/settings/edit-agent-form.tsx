@@ -19,7 +19,9 @@ import {
   addKnowledgeItemAction,
   updateKnowledgeItemAction,
   deleteKnowledgeItemAction,
-  updateAgentTagsAction // Import the new action
+  updateAgentTagsAction, // Import the new action
+  uploadAgentImageAction, // Added
+  removeAgentImageAction, // Added
 } from "@/db/actions/agent-actions";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
@@ -58,9 +60,16 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
   const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge);
   const [selectedTags, setSelectedTags] = useState<Option[]>(currentTags); // State for selected tags
   const [imageType, setImageType] = useState<'thumbnail' | 'avatar'>('thumbnail'); // State for tabs
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [isRemovingThumbnail, setIsRemovingThumbnail] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+
 
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Adjust system prompt height
   const adjustSystemPromptHeight = () => {
@@ -220,7 +229,82 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
     });
   };
 
-  // TODO: Implement actual image upload functionality using the setThumbnailUrl state setter.
+
+  // --- Image Handlers ---
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    imageType: 'thumbnail' | 'avatar'
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Client-side validation
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error("Invalid file type. Only JPG, PNG, and WEBP are allowed.");
+      event.target.value = ''; // Reset input
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File size exceeds the limit of ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
+       event.target.value = ''; // Reset input
+      return;
+    }
+
+    const setLoading = imageType === 'thumbnail' ? setIsUploadingThumbnail : setIsUploadingAvatar;
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const result = await uploadAgentImageAction(agent.id, formData, imageType);
+      if (result.success && result.url) {
+        if (imageType === 'thumbnail') {
+          setThumbnailUrl(result.url);
+        } else {
+          setAvatarUrl(result.url);
+        }
+        toast.success(`${imageType === 'thumbnail' ? 'Thumbnail' : 'Avatar'} uploaded successfully.`);
+      } else {
+        throw new Error(result.error || `Failed to upload ${imageType}`);
+      }
+    } catch (error) {
+      console.error(`Error uploading ${imageType}:`, error);
+      toast.error(`Failed to upload ${imageType}: ${(error as Error).message}`);
+    } finally {
+      setLoading(false);
+      event.target.value = ''; // Reset input value regardless of success/failure
+    }
+  };
+
+  const handleRemoveImage = async (imageType: 'thumbnail' | 'avatar') => {
+    const setLoading = imageType === 'thumbnail' ? setIsRemovingThumbnail : setIsRemovingAvatar;
+    setLoading(true);
+
+    try {
+      const result = await removeAgentImageAction(agent.id, imageType);
+      if (result.success) {
+        if (imageType === 'thumbnail') {
+          setThumbnailUrl(null);
+        } else {
+          setAvatarUrl(null);
+        }
+        toast.success(`${imageType === 'thumbnail' ? 'Thumbnail' : 'Avatar'} removed successfully.`);
+      } else {
+        throw new Error(result.error || `Failed to remove ${imageType}`);
+      }
+    } catch (error) {
+      console.error(`Error removing ${imageType}:`, error);
+      toast.error(`Failed to remove ${imageType}: ${(error as Error).message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto ">
       {/* Main Form Container */}
@@ -236,7 +320,21 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
             </div>
 
             <div className="space-y-3">
-              {/* TODO: Add onClick handler to trigger file input/upload modal, potentially on the Tabs container or individual items */}
+              {/* Hidden file inputs */}
+               <input
+                  type="file"
+                  ref={thumbnailInputRef}
+                  onChange={(e) => handleFileChange(e, 'thumbnail')}
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                />
+                <input
+                  type="file"
+                  ref={avatarInputRef}
+                  onChange={(e) => handleFileChange(e, 'avatar')}
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                />
               <Tabs value={imageType} onValueChange={(value: string) => setImageType(value as 'thumbnail' | 'avatar')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 h-9 mb-2">
                   <TabsTrigger value="thumbnail" className="text-xs h-7">Thumbnail</TabsTrigger>
@@ -254,15 +352,39 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                   <div className="mt-2 flex flex-col gap-2">
                     {thumbnailUrl ? (
                       <div className="flex gap-2">
-                        <Button type="button" variant="destructive" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => handleRemoveImage('thumbnail')}
+                          disabled={isRemovingThumbnail || isUploadingThumbnail}
+                        >
+                          {isRemovingThumbnail ? <Loader2 className="size-3 animate-spin" /> : null}
                           Remove Thumbnail
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => thumbnailInputRef.current?.click()}
+                          disabled={isUploadingThumbnail || isRemovingThumbnail}
+                        >
+                           {isUploadingThumbnail ? <Loader2 className="size-3 animate-spin" /> : null}
                           Change Thumbnail
                         </Button>
                       </div>
                     ) : (
-                      <Button type="button" variant="outline" size="sm" className="w-full text-xs h-7">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-7 gap-1"
+                        onClick={() => thumbnailInputRef.current?.click()}
+                        disabled={isUploadingThumbnail || isRemovingThumbnail}
+                      >
+                        {isUploadingThumbnail ? <Loader2 className="size-3 animate-spin" /> : null}
                         Upload New Thumbnail
                       </Button>
                     )}
@@ -282,15 +404,39 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                    <div className="mt-2 flex flex-col gap-2">
                     {avatarUrl ? (
                       <div className="flex gap-2">
-                        <Button type="button" variant="destructive" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => handleRemoveImage('avatar')}
+                          disabled={isRemovingAvatar || isUploadingAvatar}
+                        >
+                          {isRemovingAvatar ? <Loader2 className="size-3 animate-spin" /> : null}
                           Remove Avatar
                         </Button>
-                        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs h-7 gap-1"
+                          onClick={() => avatarInputRef.current?.click()}
+                          disabled={isUploadingAvatar || isRemovingAvatar}
+                        >
+                          {isUploadingAvatar ? <Loader2 className="size-3 animate-spin" /> : null}
                           Change Avatar
                         </Button>
                       </div>
                     ) : (
-                      <Button type="button" variant="outline" size="sm" className="w-full text-xs h-7">
+                       <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-7 gap-1"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={isUploadingAvatar || isRemovingAvatar}
+                      >
+                        {isUploadingAvatar ? <Loader2 className="size-3 animate-spin" /> : null}
                         Upload New Avatar
                       </Button>
                     )}

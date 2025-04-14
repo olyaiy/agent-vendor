@@ -5,7 +5,20 @@ const nextConfig: NextConfig = {
   // compiler: {
   //   removeConsole: true,
   // },
-  
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.r2.dev', // Changed to wildcard to cover all R2 subdomains
+        pathname: '/agents/**',
+      },
+      // Add other hostnames here if needed, e.g., for user avatars from Google
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

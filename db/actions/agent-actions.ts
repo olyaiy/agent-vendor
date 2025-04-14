@@ -20,6 +20,8 @@ import {
 import { Agent } from "@/db/schema/agent"; // Removed unused Tag type
 import { z } from "zod"; // Added for input validation
 import { revalidatePath } from "next/cache"; // For potential cache invalidation
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { selectAgentById } from "@/db/repository/agent-repository"; // Added for remove action
 
 /**
  * Server action to create a new agent
@@ -450,5 +452,175 @@ export async function updateAgentTagsAction(agentId: string, newTagIds: string[]
   } catch (error) {
     console.error("Failed to update agent tags:", error);
     return { success: false, error: (error as Error).message };
+  }
+}
+
+
+// ========================================
+// Agent Image Actions
+// ========================================
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const s3Client = new S3Client({
+  region: "auto",
+  endpoint: process.env.R2_ENDPOINT!,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY!,
+    secretAccessKey: process.env.R2_SECRET_KEY!,
+  },
+});
+
+/**
+ * Server action to upload an agent image (thumbnail or avatar) to R2.
+ * @param agentId - The ID of the agent.
+ * @param formData - FormData containing the image file under the key 'file'.
+ * @param imageType - 'thumbnail' or 'avatar'.
+ * @returns Promise with success status and the public URL or error.
+ */
+export async function uploadAgentImageAction(
+  agentId: string,
+  formData: FormData,
+  imageType: 'thumbnail' | 'avatar'
+) {
+  try {
+    const file = formData.get("file") as File | null;
+
+    if (!file) {
+      return { success: false, error: "No file provided." };
+    }
+
+    // Validate file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return { success: false, error: "Invalid file type. Only JPG, PNG, and WEBP are allowed." };
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      return { success: false, error: `File size exceeds the limit of ${MAX_FILE_SIZE / 1024 / 1024}MB.` };
+    }
+
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    const key = `agents/${agentId}/${imageType}-${Date.now()}.${file.name.split('.').pop()}`;
+    const bucketName = process.env.R2_BUCKET_NAME!;
+    const publicUrlBase = process.env.R2_PUBLIC_URL_BASE!;
+
+    if (!bucketName || !publicUrlBase || !process.env.R2_ENDPOINT || !process.env.R2_ACCESS_KEY || !process.env.R2_SECRET_KEY) {
+        console.error("R2 environment variables are not fully configured.");
+        return { success: false, error: "Server configuration error for file uploads." };
+    }
+
+    // Upload to R2
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: file.type,
+        ACL: 'public-read', // Ensure object is publicly readable
+      })
+    );
+
+    const publicUrl = `${publicUrlBase}/${key}`; // Public URL path doesn't include bucket name for r2.dev
+
+    // Update database
+    const updateData = imageType === 'thumbnail'
+      ? { thumbnailUrl: publicUrl }
+      : { avatarUrl: publicUrl };
+
+    const updateResult = await updateAgentRepo(agentId, updateData);
+
+    if (updateResult.length === 0) {
+      // Attempt to delete the uploaded file if DB update fails
+      try {
+        await s3Client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: key }));
+      } catch (deleteError) {
+        console.error(`Failed to clean up R2 object ${key} after DB update failure:`, deleteError);
+      }
+      return { success: false, error: "Failed to update agent record with new image URL." };
+    }
+
+    revalidatePath(`/agent/${agentId}/settings`);
+    return { success: true, url: publicUrl };
+
+  } catch (error) {
+    console.error("Failed to upload agent image:", error);
+    return { success: false, error: `An unexpected error occurred during upload: ${(error as Error).message}` };
+  }
+}
+
+
+/**
+ * Server action to remove an agent image (thumbnail or avatar).
+ * Deletes the file from R2 and sets the corresponding URL field in the DB to null.
+ * @param agentId - The ID of the agent.
+ * @param imageType - 'thumbnail' or 'avatar'.
+ * @returns Promise with success status or error.
+ */
+export async function removeAgentImageAction(
+  agentId: string,
+  imageType: 'thumbnail' | 'avatar'
+) {
+  try {
+    const agentData = await selectAgentById(agentId);
+    if (!agentData) {
+      return { success: false, error: "Agent not found." };
+    }
+
+    const currentUrl = imageType === 'thumbnail' ? agentData.thumbnailUrl : agentData.avatarUrl;
+    const bucketName = process.env.R2_BUCKET_NAME!;
+    const publicUrlBase = process.env.R2_PUBLIC_URL_BASE!;
+
+     if (!bucketName || !publicUrlBase || !process.env.R2_ENDPOINT || !process.env.R2_ACCESS_KEY || !process.env.R2_SECRET_KEY) {
+        console.error("R2 environment variables are not fully configured for removal.");
+        // Proceed to clear DB link even if R2 config is missing
+    }
+
+    // Attempt to delete from R2 if URL exists and config is present
+    if (currentUrl && bucketName && publicUrlBase && currentUrl.startsWith(publicUrlBase)) {
+      // Key parsing: URL is <publicUrlBase>/<key>
+      const expectedPrefix = `${publicUrlBase}/`;
+      if (!currentUrl.startsWith(expectedPrefix)) {
+          console.warn(`URL ${currentUrl} does not match expected prefix ${expectedPrefix}. Skipping R2 delete.`);
+          // Proceed to clear DB link anyway
+      } else {
+          const key = currentUrl.substring(expectedPrefix.length);
+          try {
+            await s3Client.send(
+              new DeleteObjectCommand({
+                Bucket: bucketName, // Still need bucket name for the API command
+                Key: key,
+              })
+            );
+            console.log(`Successfully deleted R2 object: ${key}`);
+          } catch (deleteError) {
+            // Log the error but proceed to update the DB
+            console.error(`Failed to delete R2 object ${key}:`, deleteError);
+            // Optionally return a specific warning, but success should indicate DB update attempt
+          }
+      }
+    }
+
+    // Update database to remove the link, regardless of R2 deletion success
+    const updateData = imageType === 'thumbnail'
+      ? { thumbnailUrl: null }
+      : { avatarUrl: null };
+
+    const updateResult = await updateAgentRepo(agentId, updateData);
+
+    if (updateResult.length === 0) {
+      // This is less critical than upload failure, but still indicates an issue
+      console.warn(`Agent record for ${agentId} not found or failed to update during image removal.`);
+      // Return success as the primary goal (removing link) might eventually sync,
+      // or return false if strict consistency is required. Let's return success for now.
+    }
+
+    revalidatePath(`/agent/${agentId}/settings`);
+    return { success: true };
+
+  } catch (error) {
+    console.error(`Failed to remove agent ${imageType}:`, error);
+    return { success: false, error: `An unexpected error occurred during removal: ${(error as Error).message}` };
   }
 }
