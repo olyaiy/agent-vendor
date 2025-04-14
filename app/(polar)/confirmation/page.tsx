@@ -9,7 +9,7 @@ const AnimatedSuccessContent = dynamic(() => import('@/components/confirmation/a
   loading: () => <SuccessContentSkeleton />
 });
 
-const AnimatedErrorContent = dynamic(() => import('@/components/confirmation/animated-error-content'), {
+const AnimatedErrorContent = dynamic(() => import('../../../components/confirmation/animated-error-content'), {
   ssr: true,
   loading: () => <ErrorContentSkeleton />
 });
@@ -17,18 +17,6 @@ const AnimatedErrorContent = dynamic(() => import('@/components/confirmation/ani
 interface PageProps {
   params: Record<string, never>;
   searchParams: { checkoutId?: string }; // searchParams are already resolved in RSC
-}
-
-// Helper function to format cents to currency string (e.g., 1000 -> $10.00)
-function formatCentsToCurrency(cents: number | null | undefined, currencyCode: string = 'USD'): string {
-  if (cents === null || cents === undefined) {
-    return 'N/A';
-  }
-  const amount = cents / 100;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currencyCode,
-  }).format(amount);
 }
 
 // Fallback skeletons
@@ -101,7 +89,6 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
         </div>
         
         <AnimatedErrorContent
-          errorTitle="Missing Information"
           errorMessage="The checkout ID required to display your confirmation is missing. Please try again or contact our support team for assistance."
           checkoutId={null}
         />
@@ -158,7 +145,6 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
         </div>
         
         <AnimatedErrorContent
-          errorTitle="Error Loading Confirmation"
           errorMessage={`There was an issue fetching the details for checkout ID: ${checkoutId}. Please check the ID or contact support if the problem persists.`}
           checkoutId={checkoutId}
         />
