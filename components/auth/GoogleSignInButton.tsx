@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react'; // Import useState
 import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react'; // Import a loading icon
 
 // SVG component for the Google Icon
 const GoogleIcon = () => (
@@ -14,20 +16,33 @@ const GoogleIcon = () => (
 );
 
 export default function GoogleSignInButton() {
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
+
   const handleSignIn = async () => {
+    setIsLoading(true); // Set loading true
     try {
       // The signIn function from better-auth handles the redirect
       await signIn();
     } catch (error) {
       console.error('Sign in failed:', error);
       // Optionally, display an error message to the user
+    } finally {
+      setIsLoading(false); // Set loading false regardless of success/error
     }
   };
 
   return (
-    <Button onClick={handleSignIn} className='cursor-pointer flex items-center hover:bg-gray-100 transition-colors'>
-      <GoogleIcon />
-      Sign in with Google
+    <Button
+      onClick={handleSignIn}
+      className='cursor-pointer flex items-center hover:bg-gray-100 transition-colors'
+      disabled={isLoading} // Disable button when loading
+    >
+      {isLoading ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> // Show spinner when loading
+      ) : (
+        <GoogleIcon /> // Show Google icon when not loading
+      )}
+      {isLoading ? 'Signing in...' : 'Sign in with Google'} {/* Change text when loading */}
     </Button>
   );
 }

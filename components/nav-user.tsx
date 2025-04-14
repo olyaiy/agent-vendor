@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useRouter } from "next/navigation" // Import useRouter
 import {
   BadgeCheck,
@@ -31,8 +30,7 @@ import {
 } from "@/components/ui/sidebar"
 import { authClient } from "@/lib/auth-client" // Import authClient
 import { Skeleton } from "@/components/ui/skeleton" // Import Skeleton
-import { Button } from "@/components/ui/button"
-
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton" // Import the Google Sign In button
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { data: session, isPending } = authClient.useSession()
@@ -75,11 +73,8 @@ export function NavUser() {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <Button asChild variant="outline" className="w-full justify-start">
-            <Link href="/auth">
-              Sign In
-            </Link>
-          </Button>
+          {/* Replace the generic button with the Google Sign In button */}
+          <GoogleSignInButton />
         </SidebarMenuItem>
       </SidebarMenu>
     )
