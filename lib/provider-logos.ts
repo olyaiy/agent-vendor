@@ -32,7 +32,7 @@ export const providerLogos: Record<string, ProviderLogo> = {
     height: 20
   },
   'xAI': {
-    src: '/providers/xai-logo.svg',
+    src: '/providers/xai-logo.png',
     alt: 'xAI Logo',
     width: 20,
     height: 20

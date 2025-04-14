@@ -1,24 +1,5 @@
 import * as React from "react";
 import Image from "next/image";
-// import { InfoIcon } from "lucide-react"; // Removed unused import
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { modelDetails } from "@/lib/models"; // Import modelDetails
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo type
-import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
 import { Check, ChevronsUpDown } from "lucide-react"
 import {
   Popover,
@@ -35,6 +16,15 @@ import {
 } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { modelDetails } from "@/lib/models"; // Import modelDetails
+import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo type
+import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
 
 // Updated Props interface
 interface ModelSelectProps {
@@ -95,10 +85,17 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
     )
   }, [filteredModels])
 
-  // Find selected model
-  const selectedModel = React.useMemo(() => 
-    models.find(model => model.id === defaultValue)?.model || "Select model...",
-  [models, defaultValue])
+  // Find selected model and provider
+  const selectedModelInfo = React.useMemo(() => {
+    const model = models.find(model => model.id === defaultValue);
+    if (!model) return { model: "Select model...", provider: null };
+    
+    const provider = getProviderFromModel(model.model);
+    return {
+      model: model.model,
+      provider
+    };
+  }, [models, defaultValue]);
 
   return (
     <TooltipProvider>
@@ -110,7 +107,20 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
             aria-expanded={open}
             className="w-full justify-between bg-muted/30 border-0 focus:ring-1 focus:ring-ring"
           >
-            {selectedModel}
+            <div className="flex items-center gap-2">
+              {selectedModelInfo.provider && (
+                <div className="relative w-4 h-4 flex-shrink-0">
+                  <Image
+                    src={providerLogos[selectedModelInfo.provider].src}
+                    alt={providerLogos[selectedModelInfo.provider].alt}
+                    width={16}
+                    height={16}
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              <span className="truncate">{selectedModelInfo.model}</span>
+            </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
