@@ -15,8 +15,8 @@ const AnimatedErrorContent = dynamic(() => import('../../../components/confirmat
 });
 
 interface PageProps {
-  params: Record<string, never>;
-  searchParams: { checkoutId?: string }; // searchParams are already resolved in RSC
+  params: Promise<Record<string, string | string[] | undefined>>; // params are async in Next.js 15+
+  searchParams: Promise<{ checkoutId?: string }>; // searchParams are async in Next.js 15+
 }
 
 // Fallback skeletons
