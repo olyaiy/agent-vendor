@@ -17,6 +17,7 @@ import {
   removeTagFromAgent as removeTagFromAgentRepo,
   selectTagsByAgentId,
   selectTopTags, // Added
+  selectAgentsByTagId, // Added for base models
 } from "@/db/repository/agent-repository";
 import { Agent } from "@/db/schema/agent"; // Removed unused Tag type
 import { z } from "zod"; // Added for input validation
@@ -176,6 +177,22 @@ export async function getRecentAgents(tagName?: string) {
     return { success: true, data: agents };
   } catch (error) {
     console.error("Failed to fetch agents:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to fetch the 6 base model agents by their specific tag ID.
+ * @returns Promise with success status and agent list (id, name, thumbnailUrl) or error
+ */
+export async function getBaseModelAgentsAction() {
+  const baseModelTagId = "575527b1-803a-4c96-8a4a-58ca997f08bd";
+  const limit = 6;
+  try {
+    const agents = await selectAgentsByTagId(baseModelTagId, limit);
+    return { success: true, data: agents };
+  } catch (error) {
+    console.error("Failed to fetch base model agents:", error);
     return { success: false, error: (error as Error).message };
   }
 }

@@ -363,6 +363,30 @@ export async function selectAgentIdsByTagId(tagId: string): Promise<string[]> {
     return results.map(r => r.agentId);
 }
 
+/**
+ * Selects agents associated with a specific tag ID, returning limited fields.
+ * @param tagId - The ID of the tag.
+ * @param limit - The maximum number of agents to return.
+ * @returns An array of agent objects with id, name, and thumbnailUrl.
+ */
+export async function selectAgentsByTagId(tagId: string, limit: number): Promise<Array<{
+    id: string;
+    name: string;
+    thumbnailUrl: string | null;
+}>> {
+    return await db
+        .select({
+            id: agent.id,
+            name: agent.name,
+            thumbnailUrl: agent.thumbnailUrl
+        })
+        .from(agent)
+        .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
+        .where(eq(agentTags.tagId, tagId))
+        .orderBy(asc(agent.name)) // Or maybe orderBy(agent.createdAt)? Let's stick with name for now.
+        .limit(limit);
+}
+
 // Example: If you needed full agent details by tag
 // export async function selectAgentsByTagId(tagId: string): Promise<Agent[]> {
 //     return await db
