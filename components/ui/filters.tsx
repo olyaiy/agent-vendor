@@ -25,25 +25,16 @@ import {
   CalendarPlus,
   CalendarSync,
   Check,
-  Circle,
-  CircleAlert,
-  CircleCheck,
-  CircleDashed,
-  CircleDotDashed,
-  CircleEllipsis,
-  CircleX,
   Code,
-  SignalHigh,
-  SignalLow,
-  SignalMedium,
+  LayoutPanelLeft,
+  Sparkles,
   Tag,
-  UserCircle,
   X,
 } from "lucide-react";
 import { Dispatch, SetStateAction, useRef, useState, useEffect } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "motion/react";
+import { modelDetails } from "@/lib/models";
 
 interface AnimateChangeInHeightProps {
   children: React.ReactNode;
@@ -87,14 +78,12 @@ export const AnimateChangeInHeight: React.FC<AnimateChangeInHeightProps> = ({
 };
 
 export enum FilterType {
-  STATUS = "Status",
-  ASSIGNEE = "Assignee",
   LABELS = "Labels",
-  PRIORITY = "Priority",
   DUE_DATE = "Due date",
   CREATED_DATE = "Created date",
   UPDATED_DATE = "Updated date",
   AGENT = "Agent",
+  MODEL = "Model",
 }
 
 export enum FilterOperator {
@@ -111,32 +100,11 @@ export enum FilterOperator {
   AFTER = "after",
 }
 
-export enum Status {
-  BACKLOG = "Backlog",
-  TODO = "Todo",
-  IN_PROGRESS = "In Progress",
-  IN_REVIEW = "In Review",
-  DONE = "Done",
-  CANCELLED = "Cancelled",
-}
-
-export enum Assignee {
-  ANDREW_LUO = "Andrew Luo",
-  NO_ASSIGNEE = "No assignee",
-}
-
 export enum Labels {
   BUG = "Bug",
   FEATURE = "Feature",
   HOTFIX = "Hotfix",
   RELEASE = "Release",
-}
-
-export enum Priority {
-  URGENT = "Urgent",
-  HIGH = "High",
-  MEDIUM = "Medium",
-  LOW = "Low",
 }
 
 export enum DueDate {
@@ -161,8 +129,30 @@ export enum Agent {
   OTHER = "Other",
 }
 
+export const Model = {
+  GPT_4O: "gpt-4o",
+  GPT_4O_MINI: "gpt-4o-mini",
+  O1: "o1",
+  O3_MINI: "o3-mini",
+  CLAUDE_3_7_SONNET: "claude-3-7-sonnet-20250219",
+  CLAUDE_3_5_SONNET: "claude-3-5-sonnet-20241022",
+  CLAUDE_3_5_HAIKU: "claude-3-5-haiku-20241022",
+  GEMINI_2_5_PRO: "gemini-2.5-pro-exp-03-25",
+  GEMINI_2_0_FLASH: "gemini-2.0-flash-exp",
+  GEMINI_1_5_PRO: "gemini-1.5-pro",
+  MISTRAL_LARGE: "mistral-large-latest",
+  PIXTRAL_LARGE: "pixtral-large-latest",
+  MISTRAL_SMALL: "mistral-small-latest",
+  LLAMA_3_70B: "llama3-70b-8192",
+  LLAMA_3_8B: "llama3-8b-8192",
+  GEMMA2_9B: "gemma2-9b-it",
+  DEEPSEEK_CHAT: "deepseek-chat",
+  SONAR_PRO: "sonar-pro",
+  GROK_3: "grok-3",
+};
+
 export type FilterOption = {
-  name: FilterType | Status | Assignee | Labels | Priority | DueDate | Agent;
+  name: FilterType | Labels | DueDate | Agent | string;
   icon: React.ReactNode | undefined;
   label?: string;
 };
@@ -177,25 +167,11 @@ export type Filter = {
 const FilterIcon = ({
   type,
 }: {
-  type: FilterType | Status | Assignee | Labels | Priority | Agent;
+  type: FilterType | Labels | Agent | string;
 }) => {
   switch (type) {
-    case Assignee.ANDREW_LUO:
-      return (
-        <Avatar className="size-3.5 rounded-full text-[9px] text-white">
-          <AvatarFallback className="bg-orange-300">AL</AvatarFallback>
-        </Avatar>
-      );
-    case Assignee.NO_ASSIGNEE:
-      return <UserCircle className="size-3.5" />;
-    case FilterType.STATUS:
-      return <CircleDashed className="size-3.5" />;
-    case FilterType.ASSIGNEE:
-      return <UserCircle className="size-3.5" />;
     case FilterType.LABELS:
       return <Tag className="size-3.5" />;
-    case FilterType.PRIORITY:
-      return <SignalHigh className="size-3.5" />;
     case FilterType.DUE_DATE:
       return <Calendar className="size-3.5" />;
     case FilterType.CREATED_DATE:
@@ -204,26 +180,8 @@ const FilterIcon = ({
       return <CalendarSync className="size-3.5" />;
     case FilterType.AGENT:
       return <Code className="size-3.5" />;
-    case Status.BACKLOG:
-      return <CircleDashed className="size-3.5 text-muted-foreground" />;
-    case Status.TODO:
-      return <Circle className="size-3.5 text-primary" />;
-    case Status.IN_PROGRESS:
-      return <CircleDotDashed className="size-3.5 text-yellow-400" />;
-    case Status.IN_REVIEW:
-      return <CircleEllipsis className="size-3.5 text-green-400" />;
-    case Status.DONE:
-      return <CircleCheck className="size-3.5 text-blue-400" />;
-    case Status.CANCELLED:
-      return <CircleX className="size-3.5 text-muted-foreground" />;
-    case Priority.URGENT:
-      return <CircleAlert className="size-3.5" />;
-    case Priority.HIGH:
-      return <SignalHigh className="size-3.5" />;
-    case Priority.MEDIUM:
-      return <SignalMedium className="size-3.5" />;
-    case Priority.LOW:
-      return <SignalLow className="size-3.5" />;
+    case FilterType.MODEL:
+      return <Sparkles className="size-3.5" />;
     case Labels.BUG:
       return <div className="bg-red-400 rounded-full size-2.5" />;
     case Labels.FEATURE:
@@ -252,30 +210,24 @@ const FilterIcon = ({
       return <div className="bg-emerald-500 rounded-full size-2.5" />;
     case Agent.OTHER:
       return <div className="bg-gray-500 rounded-full size-2.5" />;
+    default:
+      return <LayoutPanelLeft className="size-3.5 text-muted-foreground" />;
   }
 };
 
 export const filterViewOptions: FilterOption[][] = [
   [
     {
-      name: FilterType.STATUS,
-      icon: <FilterIcon type={FilterType.STATUS} />,
-    },
-    {
-      name: FilterType.ASSIGNEE,
-      icon: <FilterIcon type={FilterType.ASSIGNEE} />,
-    },
-    {
       name: FilterType.LABELS,
       icon: <FilterIcon type={FilterType.LABELS} />,
     },
     {
-      name: FilterType.PRIORITY,
-      icon: <FilterIcon type={FilterType.PRIORITY} />,
-    },
-    {
       name: FilterType.AGENT,
       icon: <FilterIcon type={FilterType.AGENT} />,
+    },
+    {
+      name: FilterType.MODEL,
+      icon: <FilterIcon type={FilterType.MODEL} />,
     },
   ],
   [
@@ -294,33 +246,12 @@ export const filterViewOptions: FilterOption[][] = [
   ],
 ];
 
-export const statusFilterOptions: FilterOption[] = Object.values(Status).map(
-  (status) => ({
-    name: status,
-    icon: <FilterIcon type={status} />,
-  })
-);
-
-export const assigneeFilterOptions: FilterOption[] = Object.values(
-  Assignee
-).map((assignee) => ({
-  name: assignee,
-  icon: <FilterIcon type={assignee} />,
-}));
-
 export const labelFilterOptions: FilterOption[] = Object.values(Labels).map(
   (label) => ({
     name: label,
     icon: <FilterIcon type={label} />,
   })
 );
-
-export const priorityFilterOptions: FilterOption[] = Object.values(
-  Priority
-).map((priority) => ({
-  name: priority,
-  icon: <FilterIcon type={priority} />,
-}));
 
 export const dateFilterOptions: FilterOption[] = Object.values(DueDate).map(
   (date) => ({
@@ -336,15 +267,21 @@ export const agentFilterOptions: FilterOption[] = Object.values(Agent).map(
   })
 );
 
+export const modelFilterOptions: FilterOption[] = Object.entries(modelDetails).map(
+  ([modelId, details]) => ({
+    name: modelId,
+    icon: <FilterIcon type={modelId} />,
+    label: details.displayName,
+  })
+);
+
 export const filterViewToFilterOptions: Record<FilterType, FilterOption[]> = {
-  [FilterType.STATUS]: statusFilterOptions,
-  [FilterType.ASSIGNEE]: assigneeFilterOptions,
   [FilterType.LABELS]: labelFilterOptions,
-  [FilterType.PRIORITY]: priorityFilterOptions,
   [FilterType.DUE_DATE]: dateFilterOptions,
   [FilterType.CREATED_DATE]: dateFilterOptions,
   [FilterType.UPDATED_DATE]: dateFilterOptions,
   [FilterType.AGENT]: agentFilterOptions,
+  [FilterType.MODEL]: modelFilterOptions,
 };
 
 const filterOperators = ({
@@ -355,10 +292,8 @@ const filterOperators = ({
   filterValues: string[];
 }) => {
   switch (filterType) {
-    case FilterType.STATUS:
-    case FilterType.ASSIGNEE:
-    case FilterType.PRIORITY:
     case FilterType.AGENT:
+    case FilterType.MODEL:
       if (Array.isArray(filterValues) && filterValues.length > 1) {
         return [FilterOperator.IS_ANY_OF, FilterOperator.IS_NOT];
       } else {
@@ -451,7 +386,7 @@ const FilterValueCombobox = ({
   text-muted-foreground hover:text-primary shrink-0"
       >
         <div className="flex gap-1.5 items-center">
-          {filterType !== FilterType.PRIORITY && (
+          {filterType !== FilterType.MODEL && (
             <div
               className={cn(
                 "flex items-center flex-row",
