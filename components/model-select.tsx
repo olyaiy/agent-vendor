@@ -93,25 +93,41 @@ const MemoizedModelItem = React.memo(
                 isSelected ? "opacity-100" : "opacity-0"
               )}
             />
-            <span className="font-medium">{model.model}</span>
+            {/* Display Name in the list */}
+            <span className="font-medium ">{details?.displayName || model.model}</span>
           </CommandItem>
         </TooltipPrimitive.Trigger>
-        <TooltipContent side="right" className="max-w-[250px] p-3">
-          <div className="space-y-2">
-            <p className="font-medium text-sm">{model.model}</p>
-            {model.description && (
-              <p className="text-xs text-muted-foreground">
-                {model.description}
+        {/* Updated Tooltip Content */}
+        <TooltipContent side="right" className="max-w-[300px] p-3 shadow-lg rounded-md bg-background border">
+          <div className="space-y-1.5">
+            {/* Display Name (Bold) */}
+            <p className="font-semibold text-sm text-primary">{details?.displayName || model.model}</p>
+            {/* Model ID (Smaller, muted) */}
+            <p className="text-xs text-muted-foreground font-mono">{model.model}</p>
+            {/* Description */}
+            {details?.description && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {details.description}
               </p>
             )}
+            {/* Context Window */}
             {details?.contextWindow !== undefined && (
-              <div className="mt-1">
-                <span className="text-xs font-medium">Context:</span>
-                <span className="text-xs ml-1">
+              <div className="mt-2 pt-1 border-t border-border/50">
+                <span className="text-xs font-medium text-foreground/80">Context:</span>
+                <span className="text-xs ml-1.5 text-muted-foreground">
                   {formatContextWindow(details.contextWindow)}
                 </span>
               </div>
             )}
+             {/* Pricing Info (Example - can be added if needed) */}
+             {details?.inputCostPerMillion !== undefined && details?.outputCostPerMillion !== undefined && (
+              <div className="mt-1 pt-1 border-t border-border/50">
+                 <span className="text-xs font-medium text-foreground/80">Pricing (per 1M):</span>
+                 <span className="text-xs ml-1.5 text-muted-foreground">
+                   ${details.inputCostPerMillion.toFixed(2)} In / ${details.outputCostPerMillion.toFixed(2)} Out
+                 </span>
+               </div>
+             )}
           </div>
         </TooltipContent>
       </TooltipPrimitive.Root>
@@ -150,12 +166,14 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
 
   // Find selected model and provider
   const selectedModelInfo = React.useMemo(() => {
-    const model = models.find(model => model.id === defaultValue);
-    if (!model) return { model: "Select model...", provider: null };
-    
+    const model = models.find(m => m.id === defaultValue);
+    if (!model) return { model: "Select model...", displayName: "Select model...", provider: null };
+
+    const details = modelDetails[model.model];
     const provider = getProviderFromModel(model.model);
     return {
-      model: model.model,
+      model: model.model, // Keep raw model ID if needed elsewhere
+      displayName: details?.displayName || model.model, // Use displayName for display
       provider
     };
   }, [models, defaultValue]);
@@ -200,7 +218,8 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
                   />
                 </div>
               )}
-              <span className="truncate">{selectedModelInfo.model}</span>
+              {/* Display Name in the trigger */}
+              <span className="truncate">{selectedModelInfo.displayName}</span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
