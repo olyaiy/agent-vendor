@@ -159,7 +159,6 @@ export const modelDetails: Record<string, ModelDetails> = {
     outputCostPerMillion: 0.30,
     contextWindow: 32_000, // Default value - update if you have specific context window info
   },
-  // ... other models can be added here ...
   
   // Anthropic Models
   'claude-3-7-sonnet-20250219': {

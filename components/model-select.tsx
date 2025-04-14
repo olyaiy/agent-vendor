@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip"; // Import Radix primitives
 import Image from "next/image";
 import { Check, ChevronsUpDown } from "lucide-react"
 import {
@@ -17,10 +18,8 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+  TooltipProvider, // Keep provider for delayDuration setup
+  TooltipContent, // Keep styled content
 } from "@/components/ui/tooltip";
 import { modelDetails } from "@/lib/models"; // Import modelDetails
 import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo type
@@ -58,9 +57,73 @@ const getProviderFromModel = (modelId: string): string => {
   return 'Other';
 };
 
+// Define the memoized item component outside ModelSelect
+interface MemoizedModelItemProps {
+  model: ModelInfo;
+  details: typeof modelDetails[string] | undefined;
+  isHovered: boolean;
+  isSelected: boolean;
+  onHover: (id: string) => void;
+  onLeave: () => void;
+  onSelect: (id: string) => void;
+}
+
+const MemoizedModelItem = React.memo(
+  ({
+    model,
+    details,
+    isHovered,
+    isSelected,
+    onHover,
+    onLeave,
+    onSelect,
+  }: MemoizedModelItemProps) => {
+    return (
+      <TooltipPrimitive.Root key={model.id} open={isHovered}>
+        <TooltipPrimitive.Trigger asChild>
+          <CommandItem
+            value={model.model}
+            onSelect={() => onSelect(model.id)}
+            onMouseEnter={() => onHover(model.id)}
+            onMouseLeave={onLeave}
+          >
+            <Check
+              className={cn(
+                "mr-2 h-4 w-4",
+                isSelected ? "opacity-100" : "opacity-0"
+              )}
+            />
+            <span className="font-medium">{model.model}</span>
+          </CommandItem>
+        </TooltipPrimitive.Trigger>
+        <TooltipContent side="right" className="max-w-[250px] p-3">
+          <div className="space-y-2">
+            <p className="font-medium text-sm">{model.model}</p>
+            {model.description && (
+              <p className="text-xs text-muted-foreground">
+                {model.description}
+              </p>
+            )}
+            {details?.contextWindow !== undefined && (
+              <div className="mt-1">
+                <span className="text-xs font-medium">Context:</span>
+                <span className="text-xs ml-1">
+                  {formatContextWindow(details.contextWindow)}
+                </span>
+              </div>
+            )}
+          </div>
+        </TooltipContent>
+      </TooltipPrimitive.Root>
+    );
+  }
+);
+MemoizedModelItem.displayName = "MemoizedModelItem"; // Add display name for DevTools
+
 export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelectProps) {
   const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [hoveredModelId, setHoveredModelId] = React.useState<string | null>(null); // Add state for hovered item
   
   // Flatten and filter models based on search query
   const filteredModels = React.useMemo(() => {
@@ -96,10 +159,28 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
       provider
     };
   }, [models, defaultValue]);
+  // Memoize handlers
+  const handleMouseEnter = React.useCallback((id: string) => {
+    setHoveredModelId(id);
+  }, []); // No dependencies needed
+
+  const handleMouseLeave = React.useCallback(() => {
+    setHoveredModelId(null);
+  }, []); // No dependencies needed
+
+  const handleSelect = React.useCallback((id: string) => {
+      onValueChange?.(id);
+      setOpen(false);
+      setHoveredModelId(null); // Close tooltip on select
+    },
+    [onValueChange] // Dependency: onValueChange might change
+  );
+
 
   return (
-    <TooltipProvider>
       <Popover open={open} onOpenChange={setOpen}>
+
+        {/* Model Selector Trigger */}
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -124,18 +205,36 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
+
+        {/* Model Selector Content */}
         <PopoverContent className="w-full p-0">
+
+           {/* Search Box */}
           <Command shouldFilter={false}>
+
+            {/* Search Input */}
             <CommandInput 
               placeholder="Search models..."
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
-            <CommandList>
-              <CommandEmpty>No models found.</CommandEmpty>
+
+            {/* Wrap CommandList in a single TooltipProvider */}
+            <TooltipProvider>
+              <CommandList>
+
+
+              {/* No models found */}
+              <CommandEmpty>
+                No models found.
+              </CommandEmpty>
+
+
+              {/* Grouped Models */}
               {groupedModels.map(([provider, models]) => (
                 <CommandGroup key={provider} heading={
-                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium">
+                  // Provider Logo and Name
+                  <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-medium cursor-pointer">
                     <Image
                       src={providerLogos[provider].src}
                       alt={providerLogos[provider].alt}
@@ -146,53 +245,34 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
                     {provider}
                   </div>
                 }>
-                  {models.map(model => {
-                    const details = modelDetails[model.model]
+
+                  {/* Model List By Provider*/}
+                  {models.map((model) => {
+                    const details = modelDetails[model.model];
+                    const isSelected = defaultValue === model.id;
+                    const isHovered = hoveredModelId === model.id;
+
                     return (
-                      <Tooltip key={model.id}>
-                        <TooltipTrigger asChild>
-                          <CommandItem
-                            value={model.model}
-                            onSelect={() => {
-                              onValueChange?.(model.id)
-                              setOpen(false)
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                defaultValue === model.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            <span className="font-medium">{model.model}</span>
-                          </CommandItem>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-[250px] p-3">
-                          <div className="space-y-2">
-                            {/* Display model ID string as name */}
-                            <p className="font-medium text-sm">{model.model}</p>
-                            {/* Display description from DB */}
-                            {model.description && (
-                               <p className="text-xs text-muted-foreground">{model.description}</p>
-                            )}
-                            {/* Display context window from lib/models.ts */}
-                            {details?.contextWindow !== undefined && (
-                              <div className="mt-1">
-                                <span className="text-xs font-medium">Context:</span>
-                                <span className="text-xs ml-1">{formatContextWindow(details.contextWindow)}</span>
-                              </div>
-                            )}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    )
+                      <MemoizedModelItem
+                        key={model.id} // Key must be on the outer element in map
+                        model={model}
+                        details={details}
+                        isHovered={isHovered}
+                        isSelected={isSelected}
+                        onHover={handleMouseEnter}
+                        onLeave={handleMouseLeave}
+                        onSelect={handleSelect}
+                      />
+                    );
                   })}
                 </CommandGroup>
               ))}
-            </CommandList>
+              </CommandList>
+            </TooltipProvider>
           </Command>
+
+          
         </PopoverContent>
       </Popover>
-    </TooltipProvider>
   )
 }
