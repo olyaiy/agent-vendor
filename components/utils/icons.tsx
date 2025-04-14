@@ -419,7 +419,7 @@ export const MenuIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const PencilEditIcon = ({ size = 16 }: { size?: number }) => {
+export const PencilEditIcon = ({ size = 16, className, ...props }: { size?: number } & React.ComponentProps<'svg'>) => {
   return (
     <svg
       height={size}
@@ -427,6 +427,8 @@ export const PencilEditIcon = ({ size = 16 }: { size?: number }) => {
       viewBox="0 0 16 16"
       width={size}
       style={{ color: 'currentcolor' }}
+      className={cn(className)} // Apply className here
+      {...props}
     >
       <path
         fillRule="evenodd"
@@ -498,7 +500,7 @@ export const MoreIcon = ({ size = 16 }: { size?: number }) => {
   );
 };
 
-export const TrashIcon = ({ size = 16 }: { size?: number }) => {
+export const TrashIcon = ({ size = 16, className, ...props }: { size?: number } & React.ComponentProps<'svg'>) => {
   return (
     <svg
       height={size}
@@ -506,6 +508,8 @@ export const TrashIcon = ({ size = 16 }: { size?: number }) => {
       viewBox="0 0 16 16"
       width={size}
       style={{ color: 'currentcolor' }}
+      className={cn(className)} // Apply className here
+      {...props}
     >
       <path
         fillRule="evenodd"
@@ -767,13 +771,15 @@ export const SidebarLeftIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
-export const PlusIcon = ({ size = 16 }: { size?: number }) => (
+export const PlusIcon = ({ size = 16, className, ...props }: { size?: number } & React.ComponentProps<'svg'>) => (
   <svg
     height={size}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
     width={size}
     style={{ color: 'currentcolor' }}
+    className={cn(className)} // Apply className here
+    {...props}
   >
     <path
       fillRule="evenodd"

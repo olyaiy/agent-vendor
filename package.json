@@ -48,6 +48,7 @@
     "better-auth": "^1.2.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "components": "link:@polar-sh/sdk/models/components",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",

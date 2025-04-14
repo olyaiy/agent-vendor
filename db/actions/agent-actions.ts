@@ -8,9 +8,18 @@ import {
   insertKnowledge, // Added
   updateKnowledge, // Added
   deleteKnowledge, // Added
+  // Tag repository functions
+  insertTag,
+  selectAllTags,
+  updateTag as updateTagRepo,
+  deleteTag as deleteTagRepo,
+  addTagToAgent as addTagToAgentRepo,
+  removeTagFromAgent as removeTagFromAgentRepo,
+  selectTagsByAgentId,
 } from "@/db/repository/agent-repository";
-import { Agent } from "@/db/schema/agent"; // Added Knowledge type
+import { Agent } from "@/db/schema/agent"; // Removed unused Tag type
 import { z } from "zod"; // Added for input validation
+import { revalidatePath } from "next/cache"; // For potential cache invalidation
 
 /**
  * Server action to create a new agent
@@ -198,6 +207,248 @@ export async function updateAgentAction(agentId: string, data: Partial<Omit<Agen
     return { success: true, data: result[0] }; // Return the first updated agent
   } catch (error) {
     console.error("Failed to update agent:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+
+// ========================================
+// Tag Actions
+// ========================================
+
+// Schema for validating new tag data
+const NewTagSchema = z.object({
+  name: z.string().min(1, "Tag name cannot be empty.").max(50, "Tag name too long"), // Added max length
+});
+
+/**
+ * Server action to create a new tag.
+ * @param data - Object containing the tag name.
+ * @returns Promise with success status and created tag data or error.
+ */
+export async function createTagAction(data: { name: string }) {
+  const validation = NewTagSchema.safeParse(data);
+  if (!validation.success) {
+    return { success: false, error: "Invalid input data", details: validation.error.errors };
+  }
+
+  try {
+    // Optional: Check if tag with the same name already exists
+    // const existing = await selectTagByName(validation.data.name);
+    // if (existing) {
+    //   return { success: false, error: `Tag "${validation.data.name}" already exists.` };
+    // }
+
+    const result = await insertTag(validation.data);
+    revalidatePath('/admin'); // Revalidate admin page to show new tag
+    return { success: true, data: result[0] };
+  } catch (error) {
+    console.error("Failed to create tag:", error);
+    // Handle potential unique constraint errors if not checking existence above
+    if (error instanceof Error && error.message.includes('unique constraint')) {
+        return { success: false, error: `Tag "${data.name}" already exists.` };
+    }
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to fetch all tags.
+ * @returns Promise with success status and list of tags or error.
+ */
+export async function getAllTagsAction() {
+  try {
+    const tags = await selectAllTags();
+    return { success: true, data: tags };
+  } catch (error) {
+    console.error("Failed to fetch tags:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+// Schema for validating tag updates
+const UpdateTagSchema = z.object({
+  name: z.string().min(1, "Tag name cannot be empty.").max(50, "Tag name too long"),
+});
+
+/**
+ * Server action to update an existing tag.
+ * @param tagId - The ID of the tag to update.
+ * @param data - Object containing the new tag name.
+ * @returns Promise with success status and updated tag data or error.
+ */
+export async function updateTagAction(tagId: string, data: { name: string }) {
+  // Basic ID validation
+  if (!tagId || typeof tagId !== 'string') {
+     return { success: false, error: "Invalid tag ID provided." };
+  }
+
+  const validation = UpdateTagSchema.safeParse(data);
+  if (!validation.success) {
+    return { success: false, error: "Invalid input data", details: validation.error.errors };
+  }
+
+  try {
+    const result = await updateTagRepo(tagId, validation.data);
+    if (result.length === 0) {
+      return { success: false, error: "Tag not found or update failed" };
+    }
+    revalidatePath('/admin'); // Revalidate admin page
+    return { success: true, data: result[0] };
+  } catch (error) {
+    console.error("Failed to update tag:", error);
+     // Handle potential unique constraint errors
+     if (error instanceof Error && error.message.includes('unique constraint')) {
+        return { success: false, error: `Another tag with the name "${data.name}" already exists.` };
+    }
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to delete a tag.
+ * @param tagId - The ID of the tag to delete.
+ * @returns Promise with success status or error.
+ */
+export async function deleteTagAction(tagId: string) {
+  // Basic ID validation
+  if (!tagId || typeof tagId !== 'string') {
+     return { success: false, error: "Invalid tag ID provided." };
+  }
+
+  try {
+    await deleteTagRepo(tagId);
+    revalidatePath('/admin'); // Revalidate admin page
+    // Also consider revalidating agent pages if tags are displayed there
+    // revalidatePath('/agent/[agent-id]', 'layout');
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete tag:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+// ========================================
+// Agent-Tag Relationship Actions
+// ========================================
+
+// Schema for validating agent-tag operations
+const AgentTagSchema = z.object({
+  agentId: z.string().uuid("Invalid Agent ID format."),
+  tagId: z.string().uuid("Invalid Tag ID format."),
+});
+
+/**
+ * Server action to add a tag to an agent.
+ * @param data - Object containing agentId and tagId.
+ * @returns Promise with success status or error.
+ */
+export async function addTagToAgentAction(data: { agentId: string; tagId: string }) {
+  const validation = AgentTagSchema.safeParse(data);
+  if (!validation.success) {
+    return { success: false, error: "Invalid input data", details: validation.error.errors };
+  }
+
+  try {
+    await addTagToAgentRepo(validation.data.agentId, validation.data.tagId);
+    // Revalidate agent page where tags might be displayed
+    revalidatePath(`/agent/${validation.data.agentId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to add tag to agent:", error);
+    // Handle potential primary key violation if the relationship already exists
+     if (error instanceof Error && error.message.includes('duplicate key value violates unique constraint')) {
+        // Don't necessarily treat this as an error, the tag is already assigned
+        return { success: true, message: "Tag already assigned to this agent." };
+    }
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to remove a tag from an agent.
+ * @param data - Object containing agentId and tagId.
+ * @returns Promise with success status or error.
+ */
+export async function removeTagFromAgentAction(data: { agentId: string; tagId: string }) {
+  const validation = AgentTagSchema.safeParse(data);
+  if (!validation.success) {
+    return { success: false, error: "Invalid input data", details: validation.error.errors };
+  }
+
+  try {
+    await removeTagFromAgentRepo(validation.data.agentId, validation.data.tagId);
+    // Revalidate agent page
+    revalidatePath(`/agent/${validation.data.agentId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to remove tag from agent:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to get all tags for a specific agent.
+ * @param agentId - The ID of the agent.
+ * @returns Promise with success status and list of tags or error.
+ */
+export async function getTagsForAgentAction(agentId: string) {
+   // Basic ID validation
+  if (!agentId || typeof agentId !== 'string' /*|| !isUUID(agentId)*/) {
+     return { success: false, error: "Invalid agent ID provided." };
+  }
+
+  try {
+    const tags = await selectTagsByAgentId(agentId);
+    return { success: true, data: tags };
+  } catch (error) {
+    console.error("Failed to fetch tags for agent:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to update the tags associated with an agent.
+ * It adds new tags and removes tags that are no longer selected.
+ * @param agentId - The ID of the agent.
+ * @param newTagIds - An array of tag IDs that should be associated with the agent.
+ * @returns Promise with success status or error.
+ */
+export async function updateAgentTagsAction(agentId: string, newTagIds: string[]) {
+  // Basic validation
+  if (!agentId || typeof agentId !== 'string') {
+    return { success: false, error: "Invalid agent ID provided." };
+  }
+  if (!Array.isArray(newTagIds)) {
+    return { success: false, error: "Invalid tag IDs provided." };
+  }
+
+  try {
+    // Get current tags for the agent
+    const currentTagsResult = await getTagsForAgentAction(agentId);
+    if (!currentTagsResult.success) {
+      throw new Error("Failed to fetch current tags for agent.");
+    }
+    const currentTagIds = currentTagsResult.data?.map(tag => tag.id) || [];
+
+    // Determine tags to add and remove
+    const tagsToAdd = newTagIds.filter(id => !currentTagIds.includes(id));
+    const tagsToRemove = currentTagIds.filter(id => !newTagIds.includes(id));
+
+    // Perform database operations (ideally within a transaction, but Drizzle might handle atomicity)
+    // TODO: Consider wrapping in db.transaction if complex operations arise later
+    const addPromises = tagsToAdd.map(tagId => addTagToAgentRepo(agentId, tagId));
+    const removePromises = tagsToRemove.map(tagId => removeTagFromAgentRepo(agentId, tagId));
+
+    await Promise.all([...addPromises, ...removePromises]);
+
+    // Revalidate the agent page
+    revalidatePath(`/agent/${agentId}`);
+    revalidatePath(`/agent/${agentId}/settings`); // Also revalidate settings
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update agent tags:", error);
     return { success: false, error: (error as Error).message };
   }
 }

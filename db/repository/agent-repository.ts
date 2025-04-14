@@ -1,7 +1,6 @@
 import { db } from '../index';
-import { agent, Agent, models, Model } from '../schema/agent';
-import { eq, desc } from 'drizzle-orm';
-import { knowledge, Knowledge } from '../schema/agent';
+import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag } from '../schema/agent'; // Added tags, Tag, agentTags, AgentTag
+import { eq, desc, and, asc } from 'drizzle-orm'; // Corrected and_, Added asc
 
 // Define the type for the data needed to insert an agent
 // Excludes fields that have default values or are generated (id, createdAt, updatedAt)
@@ -18,6 +17,10 @@ type NewKnowledge = Omit<Knowledge, 'id' | 'createdAt' | 'updatedAt'>;
  * Allows partial updates of writable fields
  */
 type UpdateKnowledge = Partial<NewKnowledge>;
+
+// Define types for Tag operations
+type NewTag = Omit<Tag, 'id' | 'createdAt' | 'updatedAt'>;
+type UpdateTag = Partial<NewTag>;
 
 /**
  * Inserts a new agent into the database.
@@ -194,3 +197,168 @@ export async function selectKnowledgeByAgentId(agentId: string): Promise<Knowled
     .where(eq(knowledge.agentId, agentId))
     .orderBy(desc(knowledge.createdAt));
 }
+
+
+// ========================================
+// Tag Repository Functions
+// ========================================
+
+/**
+ * Inserts a new tag into the database.
+ * @param newTagData - The data for the new tag (name).
+ * @returns The newly inserted tag record.
+ */
+export async function insertTag(newTagData: NewTag): Promise<Tag[]> {
+  return await db
+    .insert(tags)
+    .values(newTagData)
+    .returning();
+}
+
+/**
+ * Selects a tag by its ID.
+ * @param tagId - The ID of the tag to select.
+ * @returns The tag record if found, otherwise undefined.
+ */
+export async function selectTagById(tagId: string): Promise<Tag | undefined> {
+  const result = await db
+    .select()
+    .from(tags)
+    .where(eq(tags.id, tagId))
+    .limit(1);
+  return result[0];
+}
+
+/**
+ * Selects a tag by its name (case-insensitive).
+ * @param tagName - The name of the tag to select.
+ * @returns The tag record if found, otherwise undefined.
+ */
+export async function selectTagByName(tagName: string): Promise<Tag | undefined> {
+    // Consider adding index on lower(name) for performance if needed
+    const result = await db
+        .select()
+        .from(tags)
+        .where(eq(tags.name, tagName)) // Drizzle might handle case-insensitivity depending on DB collation, or use lower()
+        .limit(1);
+    return result[0];
+}
+
+
+/**
+ * Selects all tags from the database, ordered by name.
+ * @returns Array of all tag records.
+ */
+export async function selectAllTags(): Promise<Tag[]> {
+  return await db
+    .select()
+    .from(tags)
+    .orderBy(asc(tags.name));
+}
+
+/**
+ * Updates an existing tag in the database.
+ * @param tagId - The ID of the tag to update.
+ * @param updateData - An object containing the fields to update (currently only name).
+ * @returns The updated tag record.
+ */
+export async function updateTag(tagId: string, updateData: UpdateTag): Promise<Tag[]> {
+  return await db
+    .update(tags)
+    .set({ ...updateData, updatedAt: new Date() }) // Ensure updatedAt is updated
+    .where(eq(tags.id, tagId))
+    .returning();
+}
+
+/**
+ * Deletes a tag from the database.
+ * Note: This will also delete related entries in agent_tags due to cascade constraint.
+ * @param tagId - The ID of the tag to delete.
+ * @returns A promise that resolves when the deletion is complete.
+ */
+export async function deleteTag(tagId: string): Promise<void> {
+  await db.delete(tags).where(eq(tags.id, tagId));
+}
+
+
+// ========================================
+// Agent-Tag Relationship Functions
+// ========================================
+
+/**
+ * Adds a tag to an agent by creating an entry in the agent_tags join table.
+ * @param agentId - The ID of the agent.
+ * @param tagId - The ID of the tag.
+ * @returns The newly created agent_tags record.
+ */
+export async function addTagToAgent(agentId: string, tagId: string): Promise<AgentTag[]> {
+    // Optional: Check if agent and tag exist before inserting
+    // Optional: Check if relationship already exists to avoid errors or handle gracefully
+    return await db
+        .insert(agentTags)
+        .values({ agentId, tagId, assignedAt: new Date() }) // assignedAt has default, but setting explicitly is fine
+        .returning();
+}
+
+/**
+ * Removes a tag from an agent by deleting the entry from the agent_tags join table.
+ * @param agentId - The ID of the agent.
+ * @param tagId - The ID of the tag.
+ * @returns A promise that resolves when the deletion is complete.
+ */
+export async function removeTagFromAgent(agentId: string, tagId: string): Promise<void> {
+    await db
+        .delete(agentTags)
+        .where(and( // Corrected and_ to and
+            eq(agentTags.agentId, agentId),
+            eq(agentTags.tagId, tagId)
+        ));
+}
+
+/**
+ * Selects all tags associated with a specific agent.
+ * @param agentId - The ID of the agent.
+ * @returns An array of tag records associated with the agent.
+ */
+export async function selectTagsByAgentId(agentId: string): Promise<Tag[]> {
+    return await db
+        .select({
+            id: tags.id,
+            name: tags.name,
+            createdAt: tags.createdAt,
+            updatedAt: tags.updatedAt
+        })
+        .from(tags)
+        .innerJoin(agentTags, eq(tags.id, agentTags.tagId))
+        .where(eq(agentTags.agentId, agentId))
+        .orderBy(asc(tags.name));
+}
+
+/**
+ * Selects all agents associated with a specific tag.
+ * (Returns only agent IDs for potential efficiency, adjust if full agent data needed)
+ * @param tagId - The ID of the tag.
+ * @returns An array of agent IDs associated with the tag.
+ */
+export async function selectAgentIdsByTagId(tagId: string): Promise<string[]> {
+    const results = await db
+        .select({
+            agentId: agent.id
+        })
+        .from(agent)
+        .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
+        .where(eq(agentTags.tagId, tagId))
+        .orderBy(asc(agent.name)); // Order by agent name or ID
+
+    return results.map(r => r.agentId);
+}
+
+// Example: If you needed full agent details by tag
+// export async function selectAgentsByTagId(tagId: string): Promise<Agent[]> {
+//     return await db
+//         .select() // Select all columns from agent table
+//         .from(agent)
+//         .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
+//         .where(eq(agentTags.tagId, tagId))
+//         .orderBy(asc(agent.name));
+// }

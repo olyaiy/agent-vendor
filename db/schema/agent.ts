@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { user } from "./auth-schema";
 
@@ -41,3 +41,34 @@ export const knowledge = pgTable("knowledge", {
 });
 
 export type Knowledge = typeof knowledge.$inferSelect;
+
+// --- New Tag Schema ---
+
+export const tags = pgTable("tags", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
+  updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
+}, (table) => {
+  return {
+    // Add a unique index to the tag name for faster lookups and to enforce uniqueness
+    nameIdx: uniqueIndex("tag_name_idx").on(table.name),
+  };
+});
+
+export type Tag = typeof tags.$inferSelect;
+
+// --- New Agent-Tag Join Table Schema ---
+
+export const agentTags = pgTable("agent_tags", {
+  agentId: text("agent_id").notNull().references(() => agent.id, { onDelete: "cascade" }),
+  tagId: text("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }), // Cascade delete if tag is removed
+  assignedAt: timestamp("assigned_at", { mode: 'date' }).default(sql`now()`).notNull(), // Optional: track when tag was assigned
+}, (table) => {
+  return {
+    // Define a composite primary key for the combination of agentId and tagId
+    pk: primaryKey({ columns: [table.agentId, table.tagId] }),
+  };
+});
+
+export type AgentTag = typeof agentTags.$inferSelect;

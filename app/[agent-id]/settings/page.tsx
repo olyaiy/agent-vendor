@@ -1,9 +1,9 @@
 import { selectAgentById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository";
-import { getAllModels } from "@/db/actions/agent-actions"; // Import action to get models
-
+import { getAllModels, getAllTagsAction, getTagsForAgentAction } from "@/db/actions/agent-actions"; // Import actions
+import { Tag } from "@/db/schema/agent"; // Import Tag type
 import { notFound } from "next/navigation";
 import { EditAgentForm } from "./edit-agent-form"; // Import the new form component
-import { Knowledge, Model } from "@/db/schema/agent"; // Import Model type
+import { Knowledge, Model } from "@/db/schema/agent"; // Import types
 
 export default async function Page({
     params,
@@ -11,11 +11,12 @@ export default async function Page({
     params: Promise<{ "agent-id": string }>;
 }) {
     const { "agent-id": agentId } = await params;
-    const [agent, modelsResult, knowledgeResult] = await Promise.all([
+    const [agent, modelsResult, knowledgeResult, allTagsResult, agentTagsResult] = await Promise.all([
         selectAgentById(agentId),
         getAllModels(),
-        selectKnowledgeByAgentId(agentId) // Add knowledge fetch to parallel promise
-        // auth() // Removed session fetching as it's unused
+        selectKnowledgeByAgentId(agentId),
+        getAllTagsAction(), // Fetch all available tags
+        getTagsForAgentAction(agentId) // Fetch tags for this specific agent
     ]);
 
     if (!agent) {
@@ -32,6 +33,15 @@ export default async function Page({
         // Render the form without models or show an error state
         return <div>Error loading agent settings. Could not fetch AI models.</div>;
     }
+    if (!allTagsResult.success || !allTagsResult.data) {
+        console.error("Failed to fetch all tags:", allTagsResult.error);
+        return <div>Error loading agent settings. Could not fetch tags.</div>;
+    }
+
+    if (!agentTagsResult.success || !agentTagsResult.data) {
+        console.error("Failed to fetch agent tags:", agentTagsResult.error);
+        return <div>Error loading agent settings. Could not fetch agent&apos;s current tags.</div>;
+    }
 
     const models = modelsResult.data.map((model: Model) => ({
         id: model.id,
@@ -46,6 +56,17 @@ export default async function Page({
         sourceUrl: knowledge.sourceUrl
     }));
 
+    // Format tags for the multiselect component
+    const allTagsOptions = allTagsResult.data.map((tag: Tag) => ({
+        value: tag.id,
+        label: tag.name,
+    }));
+
+    const currentAgentTags = agentTagsResult.data.map((tag: Tag) => ({
+        value: tag.id,
+        label: tag.name,
+    }));
+
     return (
         <div className="container mx-auto px-4 py-8 ">
             {/* Optional: Add a header or breadcrumbs */}
@@ -53,7 +74,9 @@ export default async function Page({
             <EditAgentForm 
                 agent={agent} 
                 models={models}
-                knowledge={knowledge as Knowledge[]} // Pass knowledge to form
+                knowledge={knowledge as Knowledge[]}
+                allTags={allTagsOptions} // Pass all available tags
+                currentTags={currentAgentTags} // Pass currently selected tags
             />
         </div>
     );

@@ -1,5 +1,7 @@
 import { fetchUsers, type ListUsersResponse } from './admin-actions';
-import UserTable from './user-table'; 
+import { getAllTagsAction } from '@/db/actions/agent-actions'; // Import tag action
+import UserTable from './user-table';
+import TagManagement from '@/components/admin/tag-management'; // Import the new component
 import {
   Card,
   CardContent,
@@ -29,14 +31,14 @@ function UnauthorizedAccess() { // This component might not be reached if auth c
 }
 
 // Define a simple component for error loading data
-function LoadingError() {
+function LoadingError({ resourceName = 'data' }: { resourceName?: string }) {
      return (
         <div className="container mx-auto p-4 md:p-6 lg:p-8">
             <Card className="border-destructive">
                 <CardHeader>
-                    <CardTitle className="text-destructive">Error Loading Users</CardTitle>
+                    <CardTitle className="text-destructive">Error Loading {resourceName}</CardTitle>
                     <CardDescription>
-                        Could not fetch user data at this time. Please try refreshing the page or contact support if the problem persists.
+                        Could not fetch {resourceName} at this time. Please try refreshing the page or contact support if the problem persists.
                     </CardDescription>
                 </CardHeader>
             </Card>
@@ -52,23 +54,45 @@ export default async function AdminPage() {
   // If `fetchUsers` throws an 'Unauthorized' error, the LoadingError component will be shown below.
 
   // Fetch initial users data using the server action
+  // Fetch initial data using server actions
   let initialUsersData: ListUsersResponse | null = null;
-  let fetchError = false;
+  let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
+  let fetchUsersError = false;
+  let fetchTagsError = false;
+
   try {
-    // Fetch a reasonable number for the initial load, e.g., 25
-     initialUsersData = await fetchUsers({ limit: 25 });
-   } catch (error: unknown) { // Catch unknown type
-     console.error("Failed to load users for admin page:", error);
-     // Check if the error is the specific Unauthorized error from the action
-     if (error instanceof Error && error.message.startsWith('Unauthorized')) {
-         return <UnauthorizedAccess />; // Render specific component for auth error
-     }
-     fetchError = true; // Set flag for generic fetch error
-   }
+    // Fetch users
+    initialUsersData = await fetchUsers({ limit: 25 });
+  } catch (error: unknown) {
+    console.error("Failed to load users for admin page:", error);
+    if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+      return <UnauthorizedAccess />;
+    }
+    fetchUsersError = true;
+  }
+
+  try {
+    // Fetch tags
+    initialTagsData = await getAllTagsAction();
+    if (!initialTagsData.success) {
+        console.error("Failed to load tags:", initialTagsData.error);
+        fetchTagsError = true;
+    }
+  } catch (error: unknown) {
+    console.error("Failed to load tags for admin page:", error);
+    // Assuming unauthorized error is handled within the action or caught above
+    fetchTagsError = true;
+  }
 
    // Render LoadingError only for non-auth fetch errors
-   if (fetchError || !initialUsersData) {
-       return <LoadingError />;
+  // Render error if any fetch failed (prioritize user fetch error message)
+  if (fetchUsersError || !initialUsersData) {
+    return <LoadingError resourceName="Users" />;
+  }
+  if (fetchTagsError || !initialTagsData?.success) {
+    // Tags are secondary, maybe show the page with a tag loading error?
+    // For now, let's show a generic error, but you could adapt this.
+    return <LoadingError resourceName="Tags" />;
   }
 
   return (
@@ -89,8 +113,21 @@ export default async function AdminPage() {
         </CardContent>
       </Card>
 
+      {/* Tag Management Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tag Management</CardTitle>
+          <CardDescription>
+            Create, edit, and delete agent tags used for categorization.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Pass fetched tags to the client component */}
+          <TagManagement initialTags={initialTagsData.data || []} />
+        </CardContent>
+      </Card>
+
       {/* Add more admin sections/cards here later */}
-      {/* e.g., System Stats, Configuration, etc. */}
 
     </div>
   );

@@ -12,18 +12,20 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import MultipleSelector, { Option } from "@/components/ui/multiselect"; // Import MultipleSelector and Option type
 import {
   updateAgentAction,
-  addKnowledgeItemAction,    // Added
-  updateKnowledgeItemAction, // Added
-  deleteKnowledgeItemAction  // Added
+  addKnowledgeItemAction,
+  updateKnowledgeItemAction,
+  deleteKnowledgeItemAction,
+  updateAgentTagsAction // Import the new action
 } from "@/db/actions/agent-actions";
-import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons'; // Added ChatBubbleIcon
+import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
 import { FormSection } from "@/components/form-section";
 import { KnowledgeSection } from "@/components/knowledge-section"; // Added
-import { Agent, Knowledge } from "@/db/schema/agent"; // Import Agent type
+import { Agent, Knowledge } from "@/db/schema/agent"; // Import types
 
 export interface ModelInfo {
   id: string;
@@ -34,10 +36,12 @@ export interface ModelInfo {
 interface EditAgentFormProps {
   agent: Agent; // Accept agent data
   models: ModelInfo[];
-  knowledge: Knowledge[]; // Keep existing knowledge prop
+  knowledge: Knowledge[];
+  allTags: Option[]; // Add prop for all available tags
+  currentTags: Option[]; // Add prop for currently selected tags
 }
 
-export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: EditAgentFormProps) { // Renamed prop for clarity
+export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allTags, currentTags }: EditAgentFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isKnowledgeSubmitting, startKnowledgeTransition] = useTransition(); // Separate transition for knowledge actions
@@ -47,7 +51,8 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
   const [thumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload
   const [primaryModelId, setPrimaryModelId] = useState<string>(agent.primaryModelId);
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
-  const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge); // State for knowledge items
+  const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge);
+  const [selectedTags, setSelectedTags] = useState<Option[]>(currentTags); // State for selected tags
 
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
@@ -78,32 +83,68 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
     }
 
     startTransition(async () => {
+      let agentUpdateSuccess = false;
+      let tagUpdateSuccess = false;
+
       try {
-        // Create agent update data object
+        // --- Prepare Agent Data ---
         const updatedAgentData = {
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
           systemPrompt: (formData.get("systemPrompt") as string) || null,
-          thumbnailUrl: thumbnailUrl, // Use state value
-          visibility: visibility, // Use state value
-          primaryModelId: primaryModelId, // Use state value
-          // avatarUrl and welcomeMessage could be added here if editable
+          thumbnailUrl: thumbnailUrl,
+          visibility: visibility,
+          primaryModelId: primaryModelId,
         };
 
-        // Use the server action to update the agent
-        const result = await updateAgentAction(agent.id, updatedAgentData);
+        // --- Prepare Tag Data ---
+        const tagIdsToUpdate = selectedTags.map(tag => tag.value);
 
-        if (result.success && result.data) {
-          toast.success("Agent updated successfully");
-          // Optionally, refresh data or navigate
-          // router.refresh(); // Refresh server components on the page
-          // Consider if navigation is needed, maybe stay on settings?
+        // --- Execute Updates Concurrently ---
+        const [agentUpdateResult, tagUpdateResult] = await Promise.all([
+          updateAgentAction(agent.id, updatedAgentData),
+          updateAgentTagsAction(agent.id, tagIdsToUpdate)
+        ]);
+
+        // --- Handle Results ---
+        if (agentUpdateResult.success) {
+          agentUpdateSuccess = true;
         } else {
-          throw new Error(result.error || "Failed to update agent");
+          console.error("Agent update failed:", agentUpdateResult.error);
+          // Throw or handle specific agent update error if needed immediately
         }
+
+        if (tagUpdateResult.success) {
+          tagUpdateSuccess = true;
+        } else {
+          console.error("Tag update failed:", tagUpdateResult.error);
+          // Handle tag update error - maybe just log or show a specific warning
+        }
+
+        // --- Show Toasts Based on Success ---
+        if (agentUpdateSuccess && tagUpdateSuccess) {
+          toast.success("Agent and tags updated successfully.");
+        } else if (agentUpdateSuccess) {
+          toast.warning("Agent details saved, but failed to update tags. Please try saving again.");
+        } else if (tagUpdateSuccess) {
+          // This case is less likely if agent update fails first, but handle it
+          toast.warning("Agent tags updated, but failed to save other agent details.");
+        } else {
+          // Both failed
+          toast.error("Failed to update agent details and tags.");
+          // Optionally throw an error here if you want the catch block to handle it
+          // throw new Error("Agent and tag updates failed.");
+        }
+
+        // Refresh data if at least one update was successful
+        if (agentUpdateSuccess || tagUpdateSuccess) {
+          router.refresh();
+        }
+
       } catch (error) {
-        toast.error("Failed to update agent. Please try again.");
-        console.error(error);
+        // Catch errors from Promise.all or explicitly thrown errors
+        toast.error(`An unexpected error occurred: ${(error as Error).message}`);
+        console.error("Agent update process failed:", error);
       }
     });
   };
@@ -271,6 +312,37 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge }: Ed
             />
           </div>
         </section>
+
+        {/* Tags Section */}
+        <div className="space-y-4">
+            <div className="flex items-start gap-1.5 mb-1.5">
+                <Label htmlFor="tags" className="text-sm font-medium flex items-center gap-1.5">
+                    Tags
+                </Label>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[250px]">
+                            <p>Categorize your agent with relevant tags to improve discoverability.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+            <MultipleSelector
+                value={selectedTags}
+                onChange={setSelectedTags}
+                defaultOptions={allTags} // Provide all tags as options
+                placeholder="Select tags..."
+                emptyIndicator={
+                    <p className="text-center text-sm leading-10 text-muted-foreground">
+                        No tags found. Create tags in the Admin panel.
+                    </p>
+                }
+                // Optional: Add maxSelected or other props if needed
+            />
+        </div>
 
         <Separator />
 
