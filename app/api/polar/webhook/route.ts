@@ -39,7 +39,8 @@ export const POST = Webhooks({
               const userId = order.customer?.externalId;
               if (userId && order.totalAmount !== undefined && order.totalAmount !== null) {
                   try {
-                      const amountString = (order.totalAmount / 100).toString();
+                    const amount = order.totalAmount - 0.40;
+                      const amountString = (amount / 100).toString();
                       
                       console.log(`Attempting to update credits for user ${userId} with amount ${amountString}`);
                       await updateUserCredits(userId, amountString, 'top_up');

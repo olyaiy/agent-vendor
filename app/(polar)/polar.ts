@@ -3,5 +3,7 @@ import { Polar } from '@polar-sh/sdk'
 
 export const api = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server: 'sandbox', // Use this option if you're using the sandbox environment - else use 'production' or omit the parameter
+  // Conditionally set server based on NODE_ENV
+  // Defaults to production if server is omitted or undefined
+  ...(process.env.NODE_ENV === 'development' && { server: 'sandbox' }),
 })
