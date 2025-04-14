@@ -36,6 +36,9 @@ function BaseModelsLoading() {
   );
 }
 
+// Define the ID for the base model tag
+const BASE_MODEL_TAG_ID = "575527b1-803a-4c96-8a4a-58ca997f08bd";
+
 // This component handles streaming agents one by one, optionally filtered by tag
 async function AgentsList({ tag }: { tag?: string }) { // Added tag prop
   const result = await getRecentAgents(tag); // Pass tag to action
@@ -45,18 +48,33 @@ async function AgentsList({ tag }: { tag?: string }) { // Added tag prop
   }
   
   const agents = result.data || [];
-  
-  if (agents.length === 0 && tag) {
+
+  // Filter out base models only when 'All' tags are selected
+  const filteredAgents = tag === undefined
+    ? agents.filter(agent =>
+        // Assuming agent object has a 'tags' array property (e.g., from a join in getRecentAgents)
+        // If this assumption is wrong, getRecentAgents in agent-actions.ts needs modification.
+        !agent.tags?.some(t => t.id === BASE_MODEL_TAG_ID)
+      )
+    : agents; // If a specific tag is selected, show all agents with that tag
+
+  // Use filteredAgents for checks and rendering
+  if (filteredAgents.length === 0 && tag) {
     return <p className="text-gray-500">No agents found with the tag &quot;{tag}&quot;.</p>;
   }
-  if (agents.length === 0) {
-    return <p className="text-gray-500">No recent agents found.</p>;
+  if (filteredAgents.length === 0) {
+    // Adjust message slightly if 'All' was selected but only base models were filtered out
+    const message = tag === undefined
+      ? "No other recent agents found."
+      : "No recent agents found.";
+    return <p className="text-gray-500">{message}</p>;
   }
   
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {agents.map((agent) => (
+      {filteredAgents.map((agent) => ( // Use filteredAgents
         <Suspense key={agent.id} fallback={<AgentItemLoading />}>
+          {/* Assuming AgentCard can handle the agent object potentially including tags */}
           <AgentCard agent={{...agent, visibility: 'public'}} />
         </Suspense>
       ))}
@@ -87,7 +105,7 @@ export default async function Home({ searchParams }: PageProps) {
       <HeaderPadding />
 
       {/* --- Base Models Section --- */}
-      <h2 className="text-2xl font-semibold mb-3">Featured Base Models</h2>
+      <h2 className="text-2xl font-semibold mb-3">⚡ Base Models</h2>
       <Suspense fallback={<BaseModelsLoading />}>
         <BaseModelAgentsRow promise={baseModelsResultPromise} />
       </Suspense>
@@ -177,7 +195,7 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
               </div>
             )}
           </div>
-          <p className="text-xs text-center mt-1 font-medium text-gray-700 group-hover:text-blue-600 transition-colors truncate w-full px-1">
+          <p className="text-xs text-center mt-1 font-medium  group-hover:text-orange-300 transition-colors truncate w-full px-1">
             {agent.name}
           </p>
         </Link>

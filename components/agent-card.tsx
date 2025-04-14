@@ -15,9 +15,16 @@ import { DrawingPinFilledIcon } from "@radix-ui/react-icons";
 import { AgentImage } from "@/components/agent-image";
 import { Badge } from "@/components/ui/badge";
 
+// Define the structure for a tag as returned by the query
+type AgentTagInfo = { id: string; name: string };
+
+// Define the expected agent structure including tags for this component
+type AgentWithTags = Pick<Agent, 'id' | 'name' | 'description' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId' | 'visibility'> & {
+  tags?: AgentTagInfo[]; // Tags are optional as not all contexts might provide them
+};
 
 interface AgentCardProps {
-  agent: Pick<Agent, 'id' | 'name' | 'description' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId' | 'visibility'>;
+  agent: AgentWithTags;
   className?: string;
 }
 
@@ -25,7 +32,12 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
   return (
     <Link href={`/${agent.id}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
-        <div className="relative aspect-square overflow-hidden rounded-lg">
+        
+   
+
+        <div className="relative aspect-square overflow-hidden rounded-lg group-hover:border-1 group-hover:border-blue-500">
+  
+         {/* Agent Image */}
           <AgentImage
             thumbnailUrl={agent.thumbnailUrl}
             agentId={agent.id}
@@ -71,6 +83,8 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
+
         </div>
 
         <div className="p-4">
@@ -79,6 +93,16 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
             <p className="text-sm text-muted-foreground line-clamp-2">
               {agent.description}
             </p>
+          )}
+          {/* Render Tags */}
+          {agent.tags && agent.tags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {agent.tags.map((tag) => (
+                <Badge key={tag.id} variant="secondary" className="text-xs">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
       </div>

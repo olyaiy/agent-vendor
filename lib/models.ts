@@ -47,7 +47,8 @@ export const myProvider = customProvider({
     'qwen-qwq-32b': groq('qwen-qwq-32b'),
     'mistral-saba-24b': groq('mistral-saba-24b'),
     'qwen-2.5-32b': groq('qwen-2.5-32b'),
-
+    'llama-4-scout-17b-16e': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
+    'llama-4-maverick-17b-128e': groq('meta-llama/llama-4-maverick-17b-128e'),
 
     // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
@@ -313,6 +314,20 @@ export const modelDetails: Record<string, ModelDetails> = {
     outputCostPerMillion: 0.50,
     contextWindow: 131_072,
   },
+  'llama-4-scout-17b-16e': {
+    displayName: "Llama 4 Scout",
+    description: "Meta's multimodal MoE model with 10M token context window, 16 experts, and strong multilingual capabilities for long-context tasks at budget-friendly pricing.",
+    inputCostPerMillion: 0.11,
+    outputCostPerMillion: 0.34,
+    contextWindow: 10_000_000,
+  },
+  'llama-4-maverick-17b-128e': {
+    displayName: "Llama 4 Maverick",
+    description: "High-performance 128-expert MoE model optimized for vision-language tasks and complex reasoning, outperforming larger models in coding and multimodal benchmarks.",
+    inputCostPerMillion: 0.20,
+    outputCostPerMillion: 0.60,
+    contextWindow: 1_000_000,
+  },
 };
 
 
@@ -347,6 +362,8 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'qwen-qwq-32b': groq('qwen-qwq-32b'),
     'mistral-saba-24b': groq('mistral-saba-24b'),
     'qwen-2.5-32b': groq('qwen-2.5-32b'),
+    'llama-4-scout-17b-16e': groq('llama-4-scout-17b-16e'),
+    'llama-4-maverick-17b-128e': groq('llama-4-maverick-17b-128e'),
     // DeepSeek
     'deepseek-chat': deepseek('deepseek-chat'),
     'deepseek-reasoner': deepseek('deepseek-reasoner'),

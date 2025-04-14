@@ -1,6 +1,6 @@
 import { db } from '../index';
 import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag } from '../schema/agent'; // Added tags, Tag, agentTags, AgentTag
-import { eq, desc, and, asc } from 'drizzle-orm'; // Corrected and_, Added asc
+import { eq, desc, and, asc, sql } from 'drizzle-orm'; // Corrected and_, Added asc, sql
 
 // Define the type for the data needed to insert an agent
 // Excludes fields that have default values or are generated (id, createdAt, updatedAt)
@@ -85,6 +85,10 @@ export async function selectAllModels(): Promise<Model[]> {
  * Selects the most recent 20 agents from the database
  * @returns Array of agent records ordered by creation date
  */
+// Define the structure for a tag within the agent result
+type AgentTagInfo = { id: string; name: string };
+
+// Update the return type to include an array of tags
 export async function selectRecentAgents(tagName?: string): Promise<Array<{
   id: string;
   name: string;
@@ -92,7 +96,11 @@ export async function selectRecentAgents(tagName?: string): Promise<Array<{
   thumbnailUrl: string | null;
   avatarUrl: string | null;
   creatorId: string;
+  tags: AgentTagInfo[]; // Added tags array
 }>> {
+  // Use sql template literal for JSON aggregation
+  const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+
   let query = db
     .select({
       id: agent.id,
@@ -100,19 +108,38 @@ export async function selectRecentAgents(tagName?: string): Promise<Array<{
       description: agent.description,
       thumbnailUrl: agent.thumbnailUrl,
       avatarUrl: agent.avatarUrl,
-      creatorId: agent.creatorId
+      creatorId: agent.creatorId,
+      tags: tagsAgg // Select the aggregated tags
     })
     .from(agent)
-    .$dynamic(); // Use $dynamic to build the query conditionally
+    // Left join to include agents even if they have no tags
+    .leftJoin(agentTags, eq(agent.id, agentTags.agentId))
+    .leftJoin(tags, eq(agentTags.tagId, tags.id))
+    .$dynamic();
 
   if (tagName) {
     query = query
-      .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
-      .innerJoin(tags, eq(agentTags.tagId, tags.id))
+      // The joins are already present, just add the where clause
+      // Note: This where clause is applied *before* aggregation.
+      // If an agent has multiple tags, and only one matches `tagName`,
+      // the agent will still be returned, but the `tags` array might contain only the matching tag
+      // depending on the exact DB behavior. This seems acceptable for the current use case.
+      // A more complex query would be needed if we *only* wanted agents where *at least one* tag matches,
+      // while still returning *all* tags for that agent.
       .where(eq(tags.name, tagName));
   }
 
   return await query
+    // Group by agent fields to allow aggregation of tags
+    .groupBy(
+      agent.id,
+      agent.name,
+      agent.description,
+      agent.thumbnailUrl,
+      agent.avatarUrl,
+      agent.creatorId,
+      agent.createdAt // Need to include orderBy column in groupBy
+    )
     .orderBy(desc(agent.createdAt))
     .limit(20);
 }

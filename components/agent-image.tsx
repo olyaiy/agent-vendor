@@ -7,9 +7,10 @@ import { SparklesIcon } from "@/components/utils/icons";
 interface AgentImageProps {
   thumbnailUrl?: string | null;
   agentId: string;
+  className?: string;
 }
 
-export function AgentImage({ thumbnailUrl, agentId }: AgentImageProps) {
+export function AgentImage({ thumbnailUrl, agentId, className }: AgentImageProps) {
   const [gradientStyle, setGradientStyle] = useState<React.CSSProperties>({});
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export function AgentImage({ thumbnailUrl, agentId }: AgentImageProps) {
       alt="Agent thumbnail"
       fill
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      className="object-cover transition-transform duration-500 group-hover:scale-110"
+      className={`object-cover transition-transform duration-500 group-hover:scale-110 ${className} overflow-hidden rounded-lg`}
     />
   ) : (
     <div
