@@ -25,7 +25,7 @@ export default function GoogleSignInButton() {
   };
 
   return (
-    <Button onClick={handleSignIn} className='cursor-pointer flex items-center'>
+    <Button onClick={handleSignIn} className='cursor-pointer flex items-center hover:bg-gray-100 transition-colors'>
       <GoogleIcon />
       Sign in with Google
     </Button>
