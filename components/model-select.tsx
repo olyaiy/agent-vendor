@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 // import { InfoIcon } from "lucide-react"; // Removed unused import
 import {
   Select,
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { modelDetails } from "@/lib/models"; // Import modelDetails
 import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo type
+import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
 
 // Updated Props interface
 interface ModelSelectProps {
@@ -90,7 +92,19 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
         <SelectContent className="max-h-[500px]">
           {groupedModels.sortedProviders.map(provider => (
             <SelectGroup key={provider}>
-              <SelectLabel className="px-2 py-1.5 text-xs font-medium">{provider}</SelectLabel>
+              <SelectLabel className="px-2 py-1.5 text-xs font-medium flex items-center gap-2">
+                {/* Provider logo */}
+                <div className="relative w-5 h-5 flex-shrink-0">
+                  <Image
+                    src={providerLogos[provider].src}
+                    alt={providerLogos[provider].alt}
+                    width={providerLogos[provider].width}
+                    height={providerLogos[provider].height}
+                    className="object-contain"
+                  />
+                </div>
+                {provider}
+              </SelectLabel>
               {groupedModels.groups[provider].map(model => {
                 // Fetch additional details from lib/models.ts
                 const details = modelDetails[model.model]; // Use model.model (ID string) as key
