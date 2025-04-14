@@ -20,12 +20,15 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ModelSelect } from '@/components/model-select';
 
+import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
+
 interface SettingsSectionProps {
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
+  models: ModelInfo[]; // Add models prop
 }
 
-function SettingsSectionComponent({ selectedModelId, setSelectedModelId }: SettingsSectionProps) {
+function SettingsSectionComponent({ selectedModelId, setSelectedModelId, models }: SettingsSectionProps) { // Add models to destructuring
   const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Default closed
 
   return (
@@ -48,6 +51,7 @@ function SettingsSectionComponent({ selectedModelId, setSelectedModelId }: Setti
         <div className="space-y-2">
           <label className="text-xs text-muted-foreground">AI Model</label>
           <ModelSelect
+            models={models} // Pass models prop
             defaultValue={selectedModelId} // Use prop for default value
             onValueChange={setSelectedModelId} // Use prop for change handler
           />

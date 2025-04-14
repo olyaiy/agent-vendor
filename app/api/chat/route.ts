@@ -134,6 +134,8 @@ export async function POST(req: Request) {
          * - Persists user and assistant messages
          */
 
+        console.log('model is', modelInstance, 'modelId is', modelId);
+
 
         // --- Start: Save messages --- //
         if (session.user?.id) {

@@ -1,5 +1,5 @@
 import Chat from "@/components/chat";
-import { selectAgentWithModelById, selectKnowledgeByAgentId } from "@/db/repository/agent-repository"; // Added selectKnowledgeByAgentId
+import { selectAgentWithModelById, selectKnowledgeByAgentId, selectAllModels } from "@/db/repository/agent-repository"; // Added selectAllModels
 import {generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
@@ -19,9 +19,11 @@ export default async function Page({
   const id = generateUUID();
 
   // Fetch agent and knowledge items in parallel for efficiency
-  const [agent, knowledgeItems] = await Promise.all([
+  // Fetch agent, knowledge items, and all models in parallel
+  const [agent, knowledgeItems, models] = await Promise.all([
     selectAgentWithModelById(agentId),
-    selectKnowledgeByAgentId(agentId) // Fetch knowledge items
+    selectKnowledgeByAgentId(agentId), // Fetch knowledge items
+    selectAllModels() // Fetch all models
   ]);
 
   if (!agent) {
@@ -31,10 +33,11 @@ export default async function Page({
   // Ownership check happens in the client component (Chat)
 
   return (
-    <Chat 
-    agent={agent} 
-    knowledgeItems={knowledgeItems} 
-    chatId={id}
-    /> // Pass agent and knowledgeItems
+    <Chat
+      agent={agent}
+      knowledgeItems={knowledgeItems}
+      models={models} // Pass models list
+      chatId={id}
+    />
   );
 }

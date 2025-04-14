@@ -7,7 +7,8 @@ import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
-import type { Agent, Knowledge } from '@/db/schema/agent'; // Import Knowledge type
+import type { Agent, Knowledge } from '@/db/schema/agent'; // Removed unused Model type import
+import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
@@ -18,21 +19,24 @@ interface ChatProps {
   chatId: string;
   agent: Agent & { modelName: string };
   initialMessages?: Array<UIMessage>;
-  initialTitle?: string | null; // Add initialTitle prop
-  knowledgeItems: Knowledge[]; // Add knowledgeItems prop
-  // selectedModelId and setSelectedModelId are managed internally, not passed as props
+  initialTitle?: string | null;
+  knowledgeItems: Knowledge[];
+  models: ModelInfo[]; // Add models prop
+  // selectedModelId and setSelectedModelId are managed internally
 }
 
 
 export default function Chat({
   agent,
   knowledgeItems,
+  models, // Destructure models
   chatId,
   initialMessages,
-  initialTitle // Destructure initialTitle
-}: ChatProps) { // Destructure knowledgeItems
+  initialTitle
+}: ChatProps) {
   // State for the selected model, initialized with the agent's primary model
-  const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelName);
+  // State for the selected model, initialized with the agent's primary model DB UUID
+  const [selectedModelId, setSelectedModelId] = useState<string>(agent.primaryModelId);
   // Use the custom hook to manage title state and update logic
   const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
@@ -68,7 +72,8 @@ export default function Chat({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      model: selectedModelId // Use the state variable for the model
+      // Find the model string name corresponding to the selected UUID
+      model: models.find(m => m.id === selectedModelId)?.model || agent.modelName // Fallback just in case
     },
     initialMessages,
     generateId: generateUUID,
@@ -141,6 +146,7 @@ export default function Chat({
           agent={agent}
           isOwner={isOwner}
           knowledgeItems={knowledgeItems}
+          models={models} // Pass models down
           selectedModelId={selectedModelId}
           setSelectedModelId={setSelectedModelId}
         />

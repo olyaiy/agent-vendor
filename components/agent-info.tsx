@@ -3,6 +3,7 @@
 
 import { memo } from 'react'; // Removed useState and other unused imports
 import { Agent, Knowledge } from '@/db/schema/agent';
+import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
 
 // Import new sub-components
 import { AgentHeader } from './agent-header';
@@ -30,10 +31,11 @@ interface AgentInfoProps {
   knowledgeItems: Knowledge[];
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
+  models: ModelInfo[]; // Add models prop
 }
 
 // The main component now delegates rendering to sub-components
-function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId }: AgentInfoProps) {
+function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId, models }: AgentInfoProps) { // Add models
 
   // Removed all useState hooks for collapsible sections
 
@@ -55,6 +57,7 @@ function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, s
 
         {/* Render Settings Section */}
         <SettingsSection
+          models={models} // Pass models prop down
           selectedModelId={selectedModelId}
           setSelectedModelId={setSelectedModelId}
         />
