@@ -85,7 +85,7 @@ export async function selectAllModels(): Promise<Model[]> {
  * Selects the most recent 20 agents from the database
  * @returns Array of agent records ordered by creation date
  */
-export async function selectRecentAgents(): Promise<Array<{
+export async function selectRecentAgents(tagName?: string): Promise<Array<{
   id: string;
   name: string;
   description: string | null;
@@ -93,7 +93,7 @@ export async function selectRecentAgents(): Promise<Array<{
   avatarUrl: string | null;
   creatorId: string;
 }>> {
-  return await db
+  let query = db
     .select({
       id: agent.id,
       name: agent.name,
@@ -103,6 +103,16 @@ export async function selectRecentAgents(): Promise<Array<{
       creatorId: agent.creatorId
     })
     .from(agent)
+    .$dynamic(); // Use $dynamic to build the query conditionally
+
+  if (tagName) {
+    query = query
+      .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
+      .innerJoin(tags, eq(agentTags.tagId, tags.id))
+      .where(eq(tags.name, tagName));
+  }
+
+  return await query
     .orderBy(desc(agent.createdAt))
     .limit(20);
 }
@@ -362,3 +372,16 @@ export async function selectAgentIdsByTagId(tagId: string): Promise<string[]> {
 //         .where(eq(agentTags.tagId, tagId))
 //         .orderBy(asc(agent.name));
 // }
+
+/**
+ * Selects the top N tags ordered alphabetically by name.
+ * @param limit - The maximum number of tags to return.
+ * @returns An array of tag records.
+ */
+export async function selectTopTags(limit: number): Promise<Tag[]> {
+  return await db
+    .select()
+    .from(tags)
+    .orderBy(asc(tags.name))
+    .limit(limit);
+}

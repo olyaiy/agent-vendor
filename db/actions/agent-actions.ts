@@ -16,6 +16,7 @@ import {
   addTagToAgent as addTagToAgentRepo,
   removeTagFromAgent as removeTagFromAgentRepo,
   selectTagsByAgentId,
+  selectTopTags, // Added
 } from "@/db/repository/agent-repository";
 import { Agent } from "@/db/schema/agent"; // Removed unused Tag type
 import { z } from "zod"; // Added for input validation
@@ -166,11 +167,12 @@ export async function deleteKnowledgeItemAction(knowledgeId: string) {
 /**
  * Server action to fetch the most recent 20 agents
  * This enables secure data fetching from client components
+ * @param tagName - Optional tag name to filter agents by.
  * @returns Promise with success status and agent list or error
  */
-export async function getRecentAgents() {
+export async function getRecentAgents(tagName?: string) {
   try {
-    const agents = await selectRecentAgents();
+    const agents = await selectRecentAgents(tagName); // Pass tagName
     return { success: true, data: agents };
   } catch (error) {
     console.error("Failed to fetch agents:", error);
@@ -451,6 +453,25 @@ export async function updateAgentTagsAction(agentId: string, newTagIds: string[]
     return { success: true };
   } catch (error) {
     console.error("Failed to update agent tags:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Server action to fetch the top N tags ordered alphabetically.
+ * @param limit - The maximum number of tags to fetch.
+ * @returns Promise with success status and list of tags or error.
+ */
+export async function getTopTagsAction(limit: number) {
+  try {
+    // Basic validation for limit
+    if (typeof limit !== 'number' || limit <= 0) {
+      return { success: false, error: "Invalid limit provided." };
+    }
+    const tags = await selectTopTags(limit);
+    return { success: true, data: tags };
+  } catch (error) {
+    console.error("Failed to fetch top tags:", error);
     return { success: false, error: (error as Error).message };
   }
 }
