@@ -11,6 +11,7 @@ import { google } from '@ai-sdk/google';
 import { LanguageModel } from 'ai'; // Import LanguageModel type
 import { xai } from '@ai-sdk/xai';
 
+
 export const DEFAULT_CHAT_MODEL: string = 'gpt-4o';
 
 export const myProvider = customProvider({
@@ -59,6 +60,7 @@ export const myProvider = customProvider({
 
     
     // Google Models
+    'gemini-2.5-pro-exp-03-25': google('gemini-2.5-pro-exp-03-25'),
     'gemini-2.0-flash-exp': google('gemini-2.0-flash-exp'),
     'gemini-1.5-pro': google('gemini-1.5-pro'),
     'gemini-1.5-pro-latest': google('gemini-1.5-pro-latest'),
@@ -232,6 +234,13 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 64_000,
   },
   // Google Models
+  'gemini-2.5-pro-exp-03-25': {
+    displayName: "Gemini 2.5 Pro Exp",
+    description: "Google's experimental multimodal model featuring advanced reasoning, native audio/video processing, and an extensive 1M token context window for handling complex, long-form tasks.",
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 1_048_576,
+  },
   'gemini-2.0-flash-exp': {
     displayName: "Gemini 2.0 Flash",
     description: "Fast model with enhanced performance, multimodal capabilities, and native support for generating images and text-to-speech audio.",
@@ -288,8 +297,9 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 10.00,
     contextWindow: 32_768,
+    
   },
-  'grok-3-latest': {
+  'grok-3': {
     displayName: "Grok 3",
     description: "Advanced model specializing in code generation, debugging, and multi-step problem-solving with multiple operational modes.",
     inputCostPerMillion: 3.00,
@@ -345,6 +355,7 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'claude-3-5-haiku-20241022': anthropic('claude-3-5-haiku-20241022'),
     'claude-3-7-sonnet-20250219': anthropic('claude-3-7-sonnet-20250219'),
     // Google
+    'gemini-2.5-pro-exp-03-25': google('gemini-2.5-pro-exp-03-25'),
     'gemini-2.0-flash-exp': google('gemini-2.0-flash-exp'),
     'gemini-1.5-pro': google('gemini-1.5-pro'),
     'gemini-1.5-pro-latest': google('gemini-1.5-pro-latest'),

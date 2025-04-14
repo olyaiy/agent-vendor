@@ -200,11 +200,18 @@ export async function POST(req: Request) {
             console.log('model_cost', model_cost);
             console.log('usage', usage);
 
-            const input_cost = usage.promptTokens * model_cost.inputCostPerMillion / 1000000;
-            const output_cost = usage.completionTokens * model_cost.outputCostPerMillion / 1000000  ;
+            if (Number.isNaN(usage.promptTokens) || Number.isNaN(usage.completionTokens)) {
+              console.log('usage is NaN');
+            }
+
+            let input_cost = usage.promptTokens * model_cost.inputCostPerMillion / 1000000;
+            let output_cost = usage.completionTokens * model_cost.outputCostPerMillion / 1000000;
 
             console.log('input_cost', input_cost);
             console.log('output_cost', output_cost);
+
+            input_cost = input_cost ? input_cost : 0;
+            output_cost = output_cost ? output_cost : 0;
             
             // Charge User for the message
             await chargeUser({
