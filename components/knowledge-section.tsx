@@ -30,35 +30,34 @@ export function KnowledgeSection({
   return (
     // Using the layout structure from edit-agent-form.tsx (FormSection pattern)
     <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
-      <div className="md:col-span-4 space-y-4">
-        <div className="pb-2 border-b">
-          <h2 className="text-lg font-medium tracking-tight">Knowledge Base</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="md:col-span-4 space-y-6">
+        <div className="border-b border-border/50 pb-4">
+          <h2 className="text-xl font-medium tracking-tight">Knowledge Base</h2>
+          <p className="text-sm text-muted-foreground/90 mt-2 leading-relaxed">
             Add knowledge items that your agent can reference during conversations.
           </p>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-start gap-1.5">
-            <Label className="text-sm font-medium flex items-center gap-1.5">
+        <div className="space-y-4">
+          <div className="flex items-start gap-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
               Knowledge Items
             </Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <AlertCircle className="size-3.5 text-muted-foreground mt-0.5" />
+                  <AlertCircle className="size-3.5 text-muted-foreground/70" />
                 </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-[250px]">
-                  <p>Upload files (.txt, .pdf) or add text content for your agent to reference.</p>
+                <TooltipContent side="right" className="max-w-[250px] p-4 rounded-xl">
+                  <p className="text-sm leading-relaxed">Upload files (.txt, .pdf) or add text content for your agent to reference.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-          {/* You could add more descriptive text or links here if needed */}
         </div>
       </div>
 
-      <div className="md:col-span-8 space-y-6">
+      <div className="md:col-span-8 space-y-8">
         <KnowledgeEditor
           knowledgeItems={knowledgeItems}
           agentId={agentId}
