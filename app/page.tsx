@@ -26,7 +26,7 @@ function AgentItemLoading() {
 function BaseModelsLoading() {
   return (
     <div className="flex flex-row gap-4 overflow-x-auto py-2">
-      {Array.from({ length: 6 }).map((_, index) => (
+      {Array.from({ length: 7 }).map((_, index) => (
         <div key={index} className="flex flex-col items-center flex-shrink-0 w-24 animate-pulse">
           <div className="w-24 h-24 bg-gray-200 rounded-md mb-1"></div>
           <div className="h-3 bg-gray-200 rounded w-16"></div>
@@ -179,7 +179,7 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
     <div className="flex flex-row gap-4 overflow-x-auto pb-4 mb-6 border-b"> {/* Added padding and border */}
       {agents.map((agent) => (
         <Link href={`/${agent.id}`} key={agent.id} className="flex flex-col items-center flex-shrink-0 w-24 group">
-          <div className="w-24 h-24 relative rounded-md overflow-hidden border group-hover:border-blue-500 transition-colors">
+          <div className="w-24 h-24 relative rounded-md overflow-hidden border group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800">
             {agent.thumbnailUrl ? (
               <Image
                 src={agent.thumbnailUrl}

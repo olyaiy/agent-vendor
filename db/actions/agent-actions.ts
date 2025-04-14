@@ -187,7 +187,7 @@ export async function getRecentAgents(tagName?: string) {
  */
 export async function getBaseModelAgentsAction() {
   const baseModelTagId = "575527b1-803a-4c96-8a4a-58ca997f08bd";
-  const limit = 6;
+  const limit = 10;
   try {
     const agents = await selectAgentsByTagId(baseModelTagId, limit);
     return { success: true, data: agents };

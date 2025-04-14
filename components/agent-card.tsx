@@ -35,7 +35,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
         
    
 
-        <div className="relative aspect-square overflow-hidden rounded-lg group-hover:border-1 group-hover:border-blue-500">
+      <div className="relative aspect-square overflow-hidden rounded-lg group-hover:border-1  border-1 border-amber-500/15 group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800"> 
   
          {/* Agent Image */}
           <AgentImage
