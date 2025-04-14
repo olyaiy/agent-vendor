@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added Tabs
 import { Loader2  } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +18,8 @@ import { createAgent, updateAgentTagsAction } from "@/db/actions/agent-actions";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
+import { AgentAvatar } from "@/components/agent-avatar"; // Added AgentAvatar
 import { FormSection } from "@/components/form-section";
-
 export interface ModelInfo {
   id: string;
   model: string;
@@ -36,10 +37,12 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
   const [isPending, startTransition] = useTransition();
   
   // Form state
-  const [thumbnailUrl] = useState<string | null>(null); // TODO: Implement image upload and use setThumbnailUrl
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null); // TODO: Implement image upload
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // Added avatarUrl state // TODO: Implement image upload
   const [primaryModelId, setPrimaryModelId] = useState<string>("");
   const [visibility, setVisibility] = useState<"public" | "private" | "link">("public");
   const [selectedTags, setSelectedTags] = useState<Option[]>([]); // State for selected tags
+  const [imageType, setImageType] = useState<'thumbnail' | 'avatar'>('thumbnail'); // State for tabs
   
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
@@ -77,12 +80,12 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
           systemPrompt: (formData.get("systemPrompt") as string) || null,
-          thumbnailUrl: thumbnailUrl,
+          thumbnailUrl: thumbnailUrl, // Use state value
           visibility: visibility,
           primaryModelId: primaryModelId,
           creatorId: userId,
           welcomeMessage: null,
-          avatarUrl: null
+          avatarUrl: avatarUrl // Use state value
         };
 
         // Use the server action to create the agent
@@ -133,23 +136,45 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
             </div>
             
             <div className="space-y-3">
-              {/* Container for AgentImage, styled to indicate clickability for upload */}
-              {/* TODO: Add onClick handler here to trigger file input/upload modal */}
-              <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
-                <AgentImage
-                  thumbnailUrl={thumbnailUrl}
-                  // Use a placeholder ID for gradient generation when no image is set.
-                  // The actual agentId isn't available until after creation.
-                  agentId="new-agent-placeholder"
-                />
-                {/* Optional: Add an overlay hint on hover to guide the user */}
-                 {!thumbnailUrl && (
-                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                     <p className="mt-1 text-xs text-white font-medium">Set Image</p>
-                   </div>
-                 )}
-              </div>
-              
+              {/* TODO: Add onClick handler to trigger file input/upload modal, potentially on the Tabs container or individual items */}
+              <Tabs value={imageType} onValueChange={(value: string) => setImageType(value as 'thumbnail' | 'avatar')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-9 mb-2">
+                  <TabsTrigger value="thumbnail" className="text-xs h-7">Thumbnail</TabsTrigger>
+                  <TabsTrigger value="avatar" className="text-xs h-7">Avatar</TabsTrigger>
+                </TabsList>
+                <TabsContent value="thumbnail">
+                  <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
+                    <AgentImage
+                      thumbnailUrl={thumbnailUrl} // Use state value
+                      // Use a placeholder ID for gradient generation when no image is set.
+                      // The actual agentId isn't available until after creation.
+                      agentId="new-agent-placeholder"
+                    />
+                    {/* Add upload hint if needed */}
+                    {!thumbnailUrl && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <p className="mt-1 text-xs text-white font-medium">Set Thumbnail</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                <TabsContent value="avatar">
+                  <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
+                    {/* Display AgentAvatar centered */}
+                    <AgentAvatar
+                      avatarUrl={avatarUrl} // Use state value
+                      agentId="new-agent-placeholder" // Use placeholder ID
+                      size={100} // Example size, adjust as needed
+                    />
+                    {/* Add upload hint if needed */}
+                    {!avatarUrl && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <p className="mt-1 text-xs text-white font-medium">Set Avatar</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
           
