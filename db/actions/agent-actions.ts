@@ -171,9 +171,52 @@ export async function deleteKnowledgeItemAction(knowledgeId: string) {
  * @param tagName - Optional tag name to filter agents by.
  * @returns Promise with success status and agent list or error
  */
-export async function getRecentAgents(tagName?: string) {
+// Define the expected agent type returned by selectRecentAgents, including createdAt
+type AgentWithTagsAndDate = {
+  id: string;
+  name: string;
+  description: string | null;
+  thumbnailUrl: string | null;
+  avatarUrl: string | null;
+  creatorId: string;
+  tags: { id: string; name: string }[];
+  createdAt: Date;
+};
+
+export async function getRecentAgents(tagName?: string, searchQuery?: string) {
   try {
-    const agents = await selectRecentAgents(tagName); // Pass tagName
+    const agents: AgentWithTagsAndDate[] = await selectRecentAgents(tagName, searchQuery); // Pass tagName and searchQuery
+
+    // If searchQuery is provided, sort the results in JavaScript
+    if (searchQuery && agents.length > 0) {
+      const queryLower = searchQuery.toLowerCase();
+
+      const getRank = (agent: AgentWithTagsAndDate): number => {
+        if (agent.name.toLowerCase().includes(queryLower)) {
+          return 1; // Name match
+        }
+        if (agent.tags.some(tag => tag.name.toLowerCase().includes(queryLower))) {
+          return 2; // Tag match
+        }
+        if (agent.description?.toLowerCase().includes(queryLower)) {
+          return 3; // Description match
+        }
+        return 4; // Should not happen if WHERE clause works, but acts as fallback
+      };
+
+      agents.sort((a, b) => {
+        const rankA = getRank(a);
+        const rankB = getRank(b);
+
+        if (rankA !== rankB) {
+          return rankA - rankB; // Sort by rank ascending
+        }
+
+        // If ranks are the same, sort by creation date descending
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
+    }
+
     return { success: true, data: agents };
   } catch (error) {
     console.error("Failed to fetch agents:", error);

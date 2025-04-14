@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import Image from "next/image"; // Added for agent thumbnails
-import { getRecentAgents, getTopTagsAction, getBaseModelAgentsAction } from "@/db/actions/agent-actions"; // Added getBaseModelAgentsAction
+import Image from "next/image";
+import { getRecentAgents, getTopTagsAction, getBaseModelAgentsAction } from "@/db/actions/agent-actions";
 import { AgentCard } from "@/components/agent-card";
 import HeaderPadding from "@/components/header-padding";
 import { Badge } from "@/components/ui/badge";
+import { AgentSearchInput } from "@/components/agent-search-input"; // Import the search input
 
 // Loading component for the agents data
 function AgentsLoading() {
@@ -40,34 +41,40 @@ function BaseModelsLoading() {
 const BASE_MODEL_TAG_ID = "575527b1-803a-4c96-8a4a-58ca997f08bd";
 
 // This component handles streaming agents one by one, optionally filtered by tag
-async function AgentsList({ tag }: { tag?: string }) { // Added tag prop
-  const result = await getRecentAgents(tag); // Pass tag to action
-  
+// Update AgentsList to accept and use searchQuery
+async function AgentsList({ tag, searchQuery }: { tag?: string, searchQuery?: string }) {
+  const result = await getRecentAgents(tag, searchQuery); // Pass tag and searchQuery to action
+
   if (!result.success) {
     return <p className="text-red-500">Error loading agents: {result.error}</p>;
   }
   
   const agents = result.data || [];
 
-  // Filter out base models only when 'All' tags are selected
-  const filteredAgents = tag === undefined
+  // Filter out base models only for the default view (no tag selected AND no search query)
+  const filteredAgents = (tag === undefined && searchQuery === undefined)
     ? agents.filter(agent =>
-        // Assuming agent object has a 'tags' array property (e.g., from a join in getRecentAgents)
-        // If this assumption is wrong, getRecentAgents in agent-actions.ts needs modification.
+        // Check if the agent has the base model tag
         !agent.tags?.some(t => t.id === BASE_MODEL_TAG_ID)
       )
-    : agents; // If a specific tag is selected, show all agents with that tag
+    : agents; // Otherwise (tag selected OR search active), show all fetched agents
 
   // Use filteredAgents for checks and rendering
-  if (filteredAgents.length === 0 && tag) {
-    return <p className="text-gray-500">No agents found with the tag &quot;{tag}&quot;.</p>;
-  }
+  // Updated "No agents found" messages
   if (filteredAgents.length === 0) {
-    // Adjust message slightly if 'All' was selected but only base models were filtered out
-    const message = tag === undefined
-      ? "No other recent agents found."
-      : "No recent agents found.";
-    return <p className="text-gray-500">{message}</p>;
+    if (searchQuery && tag) {
+      return <p className="text-gray-500">No agents found matching &quot;{searchQuery}&quot; with the tag &quot;{tag}&quot;.</p>;
+    } else if (searchQuery) {
+      return <p className="text-gray-500">No agents found matching &quot;{searchQuery}&quot;.</p>;
+    } else if (tag) {
+      return <p className="text-gray-500">No agents found with the tag &quot;{tag}&quot;.</p>;
+    } else {
+      // Base case: No tag, no search, but base models might have been filtered out
+      const message = agents.length > 0 && filteredAgents.length === 0
+        ? "No other recent agents found (excluding base models)."
+        : "No recent agents found.";
+      return <p className="text-gray-500">{message}</p>;
+    }
   }
   
   return (
@@ -91,6 +98,7 @@ export default async function Home({ searchParams }: PageProps) {
   // Await the searchParams promise
   const params = await searchParams;
   const selectedTag = typeof params?.tag === 'string' ? params.tag : undefined;
+  const searchQuery = typeof params?.search === 'string' ? params.search : undefined; // Read search query
 
   // Fetch top tags
   const tagsResult = await getTopTagsAction(5); // Fetch top 5 tags for filtering
@@ -103,12 +111,18 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <main className="container mx-auto py-8 px-4">
       <HeaderPadding />
+<AgentSearchInput /> {/* Render the search input */}
 
-      {/* --- Base Models Section --- */}
-      <h2 className="text-2xl font-semibold mb-3">⚡ Base Models</h2>
-      <Suspense fallback={<BaseModelsLoading />}>
-        <BaseModelAgentsRow promise={baseModelsResultPromise} />
-      </Suspense>
+{/* --- Base Models Section (Conditionally Rendered) --- */}
+{!searchQuery && ( // Only show if there's no active search query
+  <>
+    <h2 className="text-2xl font-semibold mb-3 mt-6">⚡ Base Models</h2> {/* Added margin-top */}
+    <Suspense fallback={<BaseModelsLoading />}>
+      <BaseModelAgentsRow promise={baseModelsResultPromise} />
+    </Suspense>
+  </>
+)}
+{/* --- End Base Models Section --- */}
       {/* --- End Base Models Section --- */}
 
       <h1 className="text-3xl font-bold mb-4 mt-8">Explore Agents</h1> {/* Changed heading and added margin */}
@@ -139,7 +153,7 @@ export default async function Home({ searchParams }: PageProps) {
       {/* Wrap the main agent list data fetching component in Suspense */}
       <Suspense fallback={<AgentsLoading />}>
         {/* Pass the selected tag to AgentsList */}
-        <AgentsList tag={selectedTag} />
+        <AgentsList tag={selectedTag} searchQuery={searchQuery} /> {/* Pass searchQuery */}
       </Suspense>
     </main>
   );
