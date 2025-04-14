@@ -86,6 +86,7 @@ const MemoizedModelItem = React.memo(
             onSelect={() => onSelect(model.id)}
             onMouseEnter={() => onHover(model.id)}
             onMouseLeave={onLeave}
+            className="cursor-pointer"
           >
             <Check
               className={cn(
