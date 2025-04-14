@@ -43,21 +43,21 @@ export const providerLogos: Record<string, ProviderLogo> = {
     width: 20,
     height: 20
   },
-  // Default fallback for providers without logos
+  // Updated with actual logo paths
   'Mistral': {
-    src: '/providers/placeholder-logo.svg', // Using a placeholder since no logo path provided
+    src: '/providers/mistral-logo.svg',
     alt: 'Mistral Logo',
     width: 20,
     height: 20
   },
   'Perplexity': {
-    src: '/providers/placeholder-logo.svg', // Using a placeholder since no logo path provided
+    src: '/providers/perplexity-logo.svg',
     alt: 'Perplexity Logo',
     width: 20,
     height: 20
   },
   'Qwen': {
-    src: '/providers/placeholder-logo.svg', // Using a placeholder since no logo path provided
+    src: '/providers/qwen-logo.svg', // Using a placeholder since no logo path provided
     alt: 'Qwen Logo',
     width: 20,
     height: 20
