@@ -250,6 +250,23 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                     />
                     {/* Add upload hint if needed */}
                   </div>
+                  {/* Buttons for Thumbnail */}
+                  <div className="mt-2 flex flex-col gap-2">
+                    {thumbnailUrl ? (
+                      <div className="flex gap-2">
+                        <Button type="button" variant="destructive" size="sm" className="flex-1 text-xs h-7">
+                          Remove Thumbnail
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7">
+                          Change Thumbnail
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="outline" size="sm" className="w-full text-xs h-7">
+                        Upload New Thumbnail
+                      </Button>
+                    )}
+                  </div>
                 </TabsContent>
                 <TabsContent value="avatar">
                   <div className="relative size-full aspect-square rounded-lg border border-dashed border-muted-foreground/50 flex items-center justify-center overflow-hidden group cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
@@ -260,6 +277,23 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                       size={100} // Example size, adjust as needed
                     />
                     {/* Add upload hint if needed */}
+                  </div>
+                   {/* Buttons for Avatar */}
+                   <div className="mt-2 flex flex-col gap-2">
+                    {avatarUrl ? (
+                      <div className="flex gap-2">
+                        <Button type="button" variant="destructive" size="sm" className="flex-1 text-xs h-7">
+                          Remove Avatar
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" className="flex-1 text-xs h-7">
+                          Change Avatar
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="outline" size="sm" className="w-full text-xs h-7">
+                        Upload New Avatar
+                      </Button>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>
