@@ -1,7 +1,8 @@
 import { auth } from "@/lib/auth";
 import { CreateAgentForm, ModelInfo } from "./create-agent-form";
 import { headers } from "next/headers";
-import { getAllModels } from "@/db/actions/agent-actions"; // Import the server action
+import { getAllModels, getAllTagsAction } from "@/db/actions/agent-actions"; // Import server actions
+import { Tag } from "@/db/schema/agent"; // Import Tag type
 
 // Models data
 // Removed mockModels definition
@@ -17,27 +18,34 @@ export default async function CreateAgentPage() {
     return <div>Not authenticated</div>
   }
   
-    // Fetch models efficiently on the server
-    let availableModels: ModelInfo[] = [];
-    try {
-      const modelsResult = await getAllModels();
-      if (modelsResult.success && modelsResult.data) {
-        // Map the fetched data to the expected ModelInfo structure if necessary
-        // Assuming the fetched data structure matches ModelInfo for now
-        availableModels = modelsResult.data.map(model => ({
-          id: model.id,
-          model: model.model, // Ensure field names match ModelInfo
-          description: model.description ?? null // Handle potential null description
-        }));
+  // Fetch models and tags efficiently on the server
+  const [modelsResult, tagsResult] = await Promise.all([
+    getAllModels(),
+    getAllTagsAction()
+  ]);
 
-      } else {
-        console.error("Failed to fetch models:", modelsResult.error);
-        // Keep availableModels as []
-      }
-    } catch (error) {
-       console.error("Error fetching models:", error);
-       // Keep availableModels as []
-    }
+  let availableModels: ModelInfo[] = [];
+  if (modelsResult.success && modelsResult.data) {
+    availableModels = modelsResult.data.map(model => ({
+      id: model.id,
+      model: model.model,
+      description: model.description ?? null
+    }));
+  } else {
+    console.error("Failed to fetch models:", modelsResult.error);
+    // Consider showing an error message to the user
+  }
+
+  let availableTags: { value: string; label: string }[] = [];
+  if (tagsResult.success && tagsResult.data) {
+    availableTags = tagsResult.data.map((tag: Tag) => ({
+      value: tag.id,
+      label: tag.name,
+    }));
+  } else {
+    console.error("Failed to fetch tags:", tagsResult.error);
+    // Consider showing an error message or allowing creation without tags
+  }
   
   
     return (
@@ -50,7 +58,7 @@ export default async function CreateAgentPage() {
         </div>
         
         {/* Pass the fetched models (or empty array) to the client component */}
-        <CreateAgentForm userId={session.user.id} models={availableModels} />
+        <CreateAgentForm userId={session.user.id} models={availableModels} allTags={availableTags} />
     </div>
   );
 }

@@ -12,7 +12,8 @@ import { Loader2  } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { createAgent } from "@/db/actions/agent-actions";
+import MultipleSelector, { Option } from "@/components/ui/multiselect"; // Import MultipleSelector and Option type
+import { createAgent, updateAgentTagsAction } from "@/db/actions/agent-actions"; // Import actions
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
@@ -27,9 +28,10 @@ export interface ModelInfo {
 interface CreateAgentFormProps {
   userId: string | undefined;
   models: ModelInfo[];
+  allTags: Option[]; // Add prop for all available tags
 }
 
-export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
+export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
@@ -37,6 +39,7 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
   const [thumbnailUrl] = useState<string | null>(null); // TODO: Implement image upload and use setThumbnailUrl
   const [primaryModelId, setPrimaryModelId] = useState<string>("");
   const [visibility, setVisibility] = useState<"public" | "private" | "link">("public");
+  const [selectedTags, setSelectedTags] = useState<Option[]>([]); // State for selected tags
   
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
@@ -83,18 +86,32 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
         };
 
         // Use the server action to create the agent
-        const result = await createAgent(newAgentData);
+        const agentCreateResult = await createAgent(newAgentData);
         
-        if (result.success && result.data && result.data[0]) {
-          const newAgent = result.data[0];
-          toast.success("Agent created successfully");
-          // Generate slug and redirect to the new agent's page
+        if (agentCreateResult.success && agentCreateResult.data && agentCreateResult.data[0]) {
+          const newAgent = agentCreateResult.data[0];
+          toast.success("Agent created successfully. Assigning tags...");
+
+          // If tags were selected, try to assign them
+          if (selectedTags.length > 0) {
+            const tagUpdateResult = await updateAgentTagsAction(newAgent.id, selectedTags.map(tag => tag.value));
+            if (!tagUpdateResult.success) {
+              // Agent created, but tags failed. Inform user but still redirect.
+              toast.warning(`Agent created, but failed to assign tags: ${tagUpdateResult.error}. You can add them later in settings.`);
+            } else {
+              toast.success("Tags assigned successfully.");
+            }
+          }
+
+          // Redirect to the new agent's page regardless of tag success
           router.push(`/${newAgent.id}`);
+
         } else {
-          throw new Error(result.error || "Failed to create agent");
+          // Agent creation failed
+          throw new Error(agentCreateResult.error || "Failed to create agent");
         }
       } catch (error) {
-        toast.error("Failed to create agent. Please try again.");
+        toast.error(`Failed to create agent: ${(error as Error).message}`);
         console.error(error);
       }
     });
@@ -198,7 +215,37 @@ export function CreateAgentForm({ userId, models }: CreateAgentFormProps) {
             />
           </div>
         </section>
-        
+
+        {/* Tags Section */}
+        <div className="space-y-4">
+            <div className="flex items-start gap-1.5 mb-1.5">
+                <Label htmlFor="tags" className="text-sm font-medium flex items-center gap-1.5">
+                    Tags
+                </Label>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <InfoCircledIcon className="size-3.5 text-muted-foreground mt-0.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-[250px]">
+                            <p>Categorize your agent with relevant tags to improve discoverability.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+            <MultipleSelector
+                value={selectedTags}
+                onChange={setSelectedTags}
+                defaultOptions={allTags} // Provide all tags fetched from server
+                placeholder="Select tags..."
+                emptyIndicator={
+                    <p className="text-center text-sm leading-10 text-muted-foreground">
+                        No tags found. Create tags in the Admin panel.
+                    </p>
+                }
+            />
+        </div>
+
         <Separator />
         
         {/* AI Model Section */}
