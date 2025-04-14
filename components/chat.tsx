@@ -17,7 +17,7 @@ import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; // Import 
 
 interface ChatProps {
   chatId: string;
-  agent: Agent & { modelName: string };
+  agent: Agent & { modelName: string; tags: Array<{ id: string; name: string }> };
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];

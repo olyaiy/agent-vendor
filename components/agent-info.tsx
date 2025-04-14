@@ -26,7 +26,7 @@ import { KnowledgeItemDisplay } from './knowledge-item-display'; // Import the n
 
 
 interface AgentInfoProps {
-  agent: Agent & { modelName?: string };
+  agent: Agent & { modelName?: string; tags: Array<{ id: string; name: string }> };
   isOwner: boolean;
   knowledgeItems: Knowledge[];
   selectedModelId: string;

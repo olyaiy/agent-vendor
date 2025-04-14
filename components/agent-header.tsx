@@ -8,7 +8,8 @@ import { AgentImage } from '@/components/agent-image';
 import { Agent } from '@/db/schema/agent';
 
 interface AgentHeaderProps {
-  agent: Agent;
+  // Update agent type to include tags
+  agent: Agent & { tags?: Array<{ id: string; name: string }> };
   isOwner: boolean;
 }
 
@@ -46,16 +47,16 @@ function AgentHeaderComponent({ agent, isOwner }: AgentHeaderProps) {
         </p>
       </div>
 
-      {/* Categories Section */}
-      <div className="flex flex-wrap gap-1.5 mt-2">
-        {/* TODO: Make categories dynamic if needed */}
-        <Badge variant="outline" className="text-xs font-normal">Code</Badge>
-        <Badge variant="outline" className="text-xs font-normal">Web</Badge>
-        <Badge variant="outline" className="text-xs font-normal">Data</Badge>
-        <Badge variant="outline" className="text-xs font-normal">Security</Badge>
-        <Badge variant="outline" className="text-xs font-normal">AI</Badge>
-        <Badge variant="outline" className="text-xs font-normal">Mobile</Badge>
-      </div>
+      {/* Dynamic Tags Section */}
+      {agent.tags && agent.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {agent.tags.map((tag) => (
+            <Badge key={tag.id} variant="outline" className="text-xs font-normal">
+              {tag.name}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       <Separator className="my-4" />
     </>

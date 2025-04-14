@@ -190,9 +190,16 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
  * @param agentId - UUID of the agent to retrieve
  * @returns Combined agent and model data or undefined if not found
  */
-export async function selectAgentWithModelById(agentId: string): Promise<(Agent & { modelName: string }) | undefined> {
+// AgentTagInfo is already defined above
+
+// Update the return type to include tags
+export async function selectAgentWithModelById(agentId: string): Promise<(Agent & { modelName: string; tags: AgentTagInfo[] }) | undefined> {
+  // Use sql template literal for JSON aggregation
+  const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+
   const result = await db
     .select({
+      // Select all agent fields explicitly
       id: agent.id,
       name: agent.name,
       description: agent.description,
@@ -205,13 +212,36 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
       createdAt: agent.createdAt,
       updatedAt: agent.updatedAt,
       creatorId: agent.creatorId,
-      modelName: models.model
+      // Select the model name
+      modelName: models.model,
+      // Select the aggregated tags
+      tags: tagsAgg
     })
     .from(agent)
+    // Join with models table
     .innerJoin(models, eq(agent.primaryModelId, models.id))
+    // Left join with tags tables to include agents without tags
+    .leftJoin(agentTags, eq(agent.id, agentTags.agentId))
+    .leftJoin(tags, eq(agentTags.tagId, tags.id))
     .where(eq(agent.id, agentId))
-    .limit(1);
-    
+    // Group by agent and model fields to allow tag aggregation
+    .groupBy(
+      agent.id,
+      agent.name,
+      agent.description,
+      agent.thumbnailUrl,
+      agent.avatarUrl,
+      agent.systemPrompt,
+      agent.welcomeMessage,
+      agent.primaryModelId,
+      agent.visibility,
+      agent.createdAt,
+      agent.updatedAt,
+      agent.creatorId,
+      models.model // Include modelName in groupBy
+    )
+    .limit(1); // Limit to one result
+
   return result[0];
 }
 

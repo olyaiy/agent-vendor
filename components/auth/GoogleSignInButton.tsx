@@ -15,7 +15,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export default function GoogleSignInButton() {
+export default function GoogleSignInButton({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   const handleSignIn = async () => {
@@ -32,6 +32,7 @@ export default function GoogleSignInButton() {
   };
 
   return (
+    <div className={className}>
     <Button
       onClick={handleSignIn}
       className='cursor-pointer flex items-center hover:bg-gray-100 transition-colors'
@@ -44,5 +45,6 @@ export default function GoogleSignInButton() {
       )}
       {isLoading ? 'Signing in...' : 'Sign in with Google'} {/* Change text when loading */}
     </Button>
+    </div>
   );
 }
