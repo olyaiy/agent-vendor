@@ -99,36 +99,70 @@ const MemoizedModelItem = React.memo(
           </CommandItem>
         </TooltipPrimitive.Trigger>
         {/* Updated Tooltip Content */}
-        <TooltipContent side="right" className="max-w-[300px] p-3 shadow-lg rounded-md bg-background border">
-          <div className="space-y-1.5">
-            {/* Display Name (Bold) */}
-            <p className="font-semibold text-sm text-primary">{details?.displayName || model.model}</p>
-            {/* Model ID (Smaller, muted) */}
-            <p className="text-xs text-muted-foreground font-mono">{model.model}</p>
-            {/* Description */}
-            {details?.description && (
-              <p className="text-xs text-muted-foreground mt-2">
-                {details.description}
+        <TooltipContent 
+          side="right" 
+          className="max-w-[320px] p-0 shadow-xl rounded-lg bg-background border overflow-hidden"
+          sideOffset={5}
+          avoidCollisions
+        >
+          <div>
+            {/* Header with provider logo */}
+            <div className="p-3 pb-2 border-b border-border/30 flex items-center gap-2">
+              {/* Provider Logo */}
+              <div className="relative w-5 h-5 flex-shrink-0">
+                <Image
+                  src={providerLogos[getProviderFromModel(model.model)]?.src || providerLogos['Other'].src}
+                  alt={getProviderFromModel(model.model)}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+              </div>
+              {/* Display Name (Bold) */}
+              <p className="font-semibold text-sm text-primary flex-1 truncate">
+                {details?.displayName || model.model}
               </p>
-            )}
-            {/* Context Window */}
-            {details?.contextWindow !== undefined && (
-              <div className="mt-2 pt-1 border-t border-border/50">
-                <span className="text-xs font-medium text-foreground/80">Context:</span>
-                <span className="text-xs ml-1.5 text-muted-foreground">
-                  {formatContextWindow(details.contextWindow)}
+            </div>
+            
+            {/* Content Area */}
+            <div className="p-3 pt-2 space-y-2">
+              {/* Model ID (Smaller, muted) */}
+              <div className="flex items-center">
+                <span className="text-xs text-muted-foreground font-mono px-1.5 py-0.5 bg-muted/50 rounded-sm">
+                  {model.model}
                 </span>
               </div>
-            )}
-             {/* Pricing Info (Example - can be added if needed) */}
-             {details?.inputCostPerMillion !== undefined && details?.outputCostPerMillion !== undefined && (
-              <div className="mt-1 pt-1 border-t border-border/50">
-                 <span className="text-xs font-medium text-foreground/80">Pricing (per 1M):</span>
-                 <span className="text-xs ml-1.5 text-muted-foreground">
-                   ${details.inputCostPerMillion.toFixed(2)} In / ${details.outputCostPerMillion.toFixed(2)} Out
-                 </span>
-               </div>
-             )}
+              
+              {/* Description */}
+              {details?.description && (
+                <p className="text-xs leading-relaxed text-foreground/90 mt-1">
+                  {details.description}
+                </p>
+              )}
+              
+              {/* Stats Section */}
+              <div className="mt-3 space-y-2.5 flex flex-col">
+                {/* Context Window */}
+                {details?.contextWindow !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Context Window</span>
+                    <span className="px-2 py-0.5 bg-primary/90 text-primary-foreground rounded-full text-xs font-medium">
+                      {formatContextWindow(details.contextWindow)}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Pricing Info */}
+                {details?.inputCostPerMillion !== undefined && details?.outputCostPerMillion !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">Pricing</span>
+                    <span className="px-2 py-0.5 bg-primary/90 text-primary-foreground rounded-full text-xs font-medium whitespace-nowrap">
+                      ${details.inputCostPerMillion.toFixed(2)} in / ${details.outputCostPerMillion.toFixed(2)} out
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </TooltipContent>
       </TooltipPrimitive.Root>

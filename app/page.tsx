@@ -49,13 +49,15 @@ async function AgentsList({ tag }: { tag?: string }) { // Added tag prop
   );
 }
 
-// Define PageProps type to include searchParams
+// Update PageProps type to use Promise for searchParams
 type PageProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default async function Home({ searchParams }: PageProps) { // Add searchParams prop
-  const selectedTag = typeof searchParams?.tag === 'string' ? searchParams.tag : undefined;
+export default async function Home({ searchParams }: PageProps) {
+  // Await the searchParams promise
+  const params = await searchParams;
+  const selectedTag = typeof params?.tag === 'string' ? params.tag : undefined;
 
   // Fetch top tags
   const tagsResult = await getTopTagsAction(5);
