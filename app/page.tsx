@@ -113,7 +113,7 @@ export default async function Home({ searchParams }: PageProps) {
     <main className="container mx-auto py-8 px-4">
       <HeaderPadding />
     <AgentSearchInput /> {/* Render the search input */}
-    <FilterBar />
+    {/* <FilterBar /> */}
 
 {/* --- Base Models Section (Conditionally Rendered) --- */}
 {!searchQuery && ( // Only show if there's no active search query
