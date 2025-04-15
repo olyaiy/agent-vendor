@@ -40,14 +40,14 @@ export default function GoogleSignInButton({ className }: { className?: string }
         className="relative w-full h-12 font-medium bg-white hover:bg-white/90 text-gray-800 border-0 shadow-sm hover:shadow transition-all duration-200 overflow-hidden group"
         disabled={isLoading} // Disable button when loading
       >
-        <div className="absolute left-0 top-0 bottom-0 w-12 bg-white flex items-center justify-center border-r border-gray-100 group-hover:bg-gray-50">
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-white flex items-center justify-center border-r border-gray-100 group-hover:bg-white/90">
           {isLoading ? (
             <Loader2 className="h-5 w-5 animate-spin text-gray-500" /> // Show spinner when loading
           ) : (
             <GoogleIcon /> // Show Google icon when not loading
           )}
         </div>
-        <span className="ml-6">
+        <span className="ml-6 group-hover:text-gray-800">
           {isLoading ? 'Signing in...' : 'Sign in with Google'} {/* Change text when loading */}
         </span>
       </Button>

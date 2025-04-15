@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 export default function AuthPage() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-black to-gray-900/95">
+    <div className="relative flex h-full items-center justify-center overflow-hidden bg-gradient-to-b from-black to-gray-900/95">
       {/* Enhanced glow effects */}
       <div className="absolute top-1/4 -left-40 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-1/4 -right-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl"></div>
