@@ -27,25 +27,25 @@ import { HistoryMenu } from "./history-menu"
 // Agent submenu items
 const agentItems = [
   { title: "Create", url: "/agent/create" },
-  { title: "Browse", url: "/agents/browse" },
-  { title: "My Agents", url: "/agents/my-agents" },
+  // { title: "Browse", url: "/agents/browse" },
+  // { title: "My Agents", url: "/agents/my-agents" },
 ]
 
 // NavSecondary items
 const navSecondary = [
   {
     title: "Support",
-    url: "#",
+    url: "/support",
     icon: LifeBuoy,
   },
   {
     title: "Contact",
-    url: "#",
+    url: "/contact",
     icon: Send,
   },
   {
     title: "About",
-    url: "#",
+    url: "/about",
     icon: Info,
   }
 ]

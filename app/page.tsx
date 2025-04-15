@@ -6,7 +6,7 @@ import { AgentCard } from "@/components/agent-card";
 import HeaderPadding from "@/components/header-padding";
 import { Badge } from "@/components/ui/badge";
 import { AgentSearchInput } from "@/components/agent-search-input"; // Import the search input
-import { FilterBar } from "@/components/filter-bar";
+// import { FilterBar } from "@/components/filter-bar";
 
 // Loading component for the agents data
 function AgentsLoading() {
