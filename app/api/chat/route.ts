@@ -213,10 +213,16 @@ export async function POST(req: Request) {
             input_cost = input_cost ? input_cost : 0;
             output_cost = output_cost ? output_cost : 0;
             
+            const totalCost = input_cost + output_cost;
+            
+            // Round the cost to 8 decimal places to match DB precision and validation
+            const roundedCost = parseFloat(totalCost.toFixed(8));
+            const amountString = roundedCost.toString();
+
             // Charge User for the message
             await chargeUser({
               userId: session.user.id,
-              amount: (input_cost + output_cost).toString(),
+              amount: amountString, // Use the rounded string
               messageId: assistantId,
               description: "Chat input cost"
             });
