@@ -48,7 +48,7 @@ export const auth = betterAuth({
             lifetimeCredits: "1.00000000"
           });
           
-          console.log(`Created initial credits for user: ${user.id}`);
+
         },
       },
     },

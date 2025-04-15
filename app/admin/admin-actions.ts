@@ -35,7 +35,6 @@ export async function fetchUsers(
   let session;
   try {
       session = await auth.api.getSession({ headers: await headers() });
-      console.log("Fetched session in fetchUsers:", JSON.stringify(session, null, 2)); // Log the session prettified
   } catch (sessionError) {
       console.error("Error fetching session in fetchUsers:", sessionError);
       throw new Error("Failed to verify session."); // Fail if session can't be fetched
@@ -49,7 +48,6 @@ export async function fetchUsers(
 
   // Perform the admin check using the fetched session
   const isAdmin = session.user.role?.includes('admin');
-  console.log(`Is user admin? ${isAdmin}. Role: ${session.user.role}, UserID: ${session.user.id}`); // Log admin status and ID
 
   if (!isAdmin) {
      console.warn(`Unauthorized attempt to list users by user ID: ${session.user.id}`);
@@ -59,14 +57,12 @@ export async function fetchUsers(
 
 
   try {
-    console.log("Calling auth.api.listUsers with query:", JSON.stringify(query, null, 2)); // Log the input query prettified
     const apiInput = {
          query: query || {},
          headers: await headers() // <<< Pass headers here
     };
     const result = await auth.api.listUsers(apiInput);
     // Avoid logging potentially large user list in production, maybe just log count or total
-    console.log(`Received result from auth.api.listUsers: ${result?.users?.length} users, total ${result?.total}`);
 
     // Adjust check: Ensure users array exists
     if (result && Array.isArray(result.users)) {

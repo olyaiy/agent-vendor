@@ -58,9 +58,10 @@ function PureMessages({
       messages[messages.length - 1].role === 'user'
     ) {
       // Always scroll to bottom when user adds a new message
+      // console.log('[Messages] New user message detected. Forcing scroll to bottom.');
       scrollToBottom();
     }
-    
+
     // Update ref with current messages
     prevMessagesRef.current = messages;
   }, [messages, scrollToBottom]);
@@ -95,15 +96,15 @@ function PureMessages({
           </div>
         )}
 
-
-
-      {status === 'streaming' && isNotAtBottomDebounced && (
+{
+      // status === 'streaming' &&
+       isNotAtBottomDebounced && (
         <div
-          className="fixed bottom-24 right-8 z-10"
+          className="fixed bottom-40 right-[26%]   z-10"
         >
           <Button
             onClick={scrollToBottom}
-            className="rounded-full p-2 shadow-md backdrop-blur-sm"
+            className="rounded-full p-2 shadow-md backdrop-blur-sm opacity-90"
             size="icon"
             variant="secondary"
           >
@@ -111,6 +112,10 @@ function PureMessages({
           </Button>
         </div>
       )}
+
+
+
+      
 
       <div className="shrink-0 min-w-[24px] min-h-[24px]" />
     </div>

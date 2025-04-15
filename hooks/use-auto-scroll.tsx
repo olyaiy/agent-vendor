@@ -49,11 +49,12 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
         });
       }
 
+      // console.log('[useAutoScroll] scrollToBottom called. Resetting state.', { instant, smooth });
       setScrollState({
         isAtBottom: true,
-        autoScrollEnabled: true,
+        autoScrollEnabled: true, // Explicitly re-enable on programmatic scroll to bottom
       });
-      userHasScrolled.current = false;
+      userHasScrolled.current = false; // Reset user scroll flag
     },
     [smooth]
   );
@@ -63,11 +64,20 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
 
     const atBottom = checkIsAtBottom(scrollRef.current);
 
-    setScrollState((prev) => ({
-      isAtBottom: atBottom,
-      // Re-enable auto-scroll if at the bottom
-      autoScrollEnabled: atBottom ? true : prev.autoScrollEnabled,
-    }));
+    // console.log('[useAutoScroll] handleScroll triggered.', { atBottom });
+    setScrollState((prev) => {
+      // If the user was previously not at the bottom and now is,
+      // or if they were at the bottom and now aren't, update autoScrollEnabled.
+      // This prevents disabling auto-scroll during programmatic scrolls that might temporarily leave the bottom.
+      const shouldUpdateAutoScroll = prev.isAtBottom !== atBottom;
+
+      const newState = {
+        isAtBottom: atBottom,
+        autoScrollEnabled: shouldUpdateAutoScroll ? atBottom : prev.autoScrollEnabled,
+      };
+      // console.log('[useAutoScroll] handleScroll state update:', { prev, newState });
+      return newState;
+    });
   }, [checkIsAtBottom]);
 
   useEffect(() => {
@@ -86,10 +96,15 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
     const hasNewContent = currentHeight !== lastContentHeight.current;
 
     if (hasNewContent) {
+      // console.log('[useAutoScroll] Content changed.', { currentHeight, lastContentHeight: lastContentHeight.current, autoScrollEnabled: scrollState.autoScrollEnabled });
       if (scrollState.autoScrollEnabled) {
+        // console.log('[useAutoScroll] Auto-scrolling due to new content.');
         requestAnimationFrame(() => {
+          // Use instant scroll only for the very first load
           scrollToBottom(lastContentHeight.current === 0);
         });
+      } else {
+        // console.log('[useAutoScroll] New content, but auto-scroll is disabled.');
       }
       lastContentHeight.current = currentHeight;
     }
@@ -99,9 +114,14 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
     const element = scrollRef.current;
     if (!element) return;
 
-    const resizeObserver = new ResizeObserver(() => {
+    const resizeObserver = new ResizeObserver((/* entries */) => {
+      // const entry = entries[0];
+      // console.log('[useAutoScroll] ResizeObserver triggered.', { newHeight: entry?.contentRect?.height, autoScrollEnabled: scrollState.autoScrollEnabled });
       if (scrollState.autoScrollEnabled) {
-        scrollToBottom(true);
+        // console.log('[useAutoScroll] Auto-scrolling due to resize.');
+        scrollToBottom(true); // Instant scroll on resize
+      } else {
+        // console.log('[useAutoScroll] Resized, but auto-scroll is disabled.');
       }
     });
 
@@ -116,11 +136,15 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
 
     // Only disable if not at bottom
     if (!atBottom) {
-      userHasScrolled.current = true;
-      setScrollState((prev) => ({
-        ...prev,
-        autoScrollEnabled: false,
-      }));
+      // console.log('[useAutoScroll] disableAutoScroll called while not at bottom.');
+      userHasScrolled.current = true; // Mark that user initiated scroll
+      setScrollState((prev) => {
+        const newState = { ...prev, autoScrollEnabled: false };
+        // console.log('[useAutoScroll] disableAutoScroll state update:', { prev, newState });
+        return newState;
+      });
+    } else {
+      // console.log('[useAutoScroll] disableAutoScroll called while at bottom - doing nothing.');
     }
   }, [checkIsAtBottom]);
 

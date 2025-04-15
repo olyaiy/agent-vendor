@@ -674,7 +674,7 @@ export async function removeAgentImageAction(
                 Key: key,
               })
             );
-            console.log(`Successfully deleted R2 object: ${key}`);
+
           } catch (deleteError) {
             // Log the error but proceed to update the DB
             console.error(`Failed to delete R2 object ${key}:`, deleteError);
