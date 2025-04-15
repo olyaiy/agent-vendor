@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatDistanceToNow } from 'date-fns'; // For user-friendly date formatting
 import type { Chat } from '@/db/schema/chat'; // Import base Chat type if needed
 
@@ -29,8 +28,6 @@ export function ChatListItem({ chat }: ChatListItemProps) {
     addSuffix: true,
   });
 
-  // Determine the link destination - assuming /chat/[id] structure
-  // If you have agent-specific chats, you might use /agent/[agentId]/chat/[id]
   // Determine the link destination using agentId and chatId
   // Handle cases where agentId might be null (though ideally it shouldn't be for a chat)
   const chatLink = chat.agentId ? `/${chat.agentId}/${chat.id}` : '#'; // Fallback link if no agentId
@@ -52,12 +49,12 @@ export function ChatListItem({ chat }: ChatListItemProps) {
     }
   }
 
-  // Conditionally wrap with Link component
-  const cardContent = (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg truncate">{chat.title || 'Untitled Chat'}</CardTitle>
-        <CardDescription className="flex flex-col space-y-1">
+  // Row content instead of card
+  const rowContent = (
+    <div className="w-full px-4 py-3 border-b hover:bg-muted/50 transition-colors">
+      <div className="flex flex-col">
+        <h3 className="font-medium text-lg truncate">{chat.title || 'Untitled Chat'}</h3>
+        <div className="flex flex-col space-y-1">
           {/* Display last message preview */}
           {lastMessagePreview && (
             <span className="text-sm text-muted-foreground truncate">
@@ -66,23 +63,22 @@ export function ChatListItem({ chat }: ChatListItemProps) {
           )}
           {/* Display formatted date */}
           <span className="text-xs text-muted-foreground/80">{formattedDate}</span>
-        </CardDescription>
-      </CardHeader>
-      {/* No CardContent needed for now */}
-    </Card>
+        </div>
+      </div>
+    </div>
   );
 
   if (chat.agentId) {
     return (
-      <Link href={chatLink} className="block hover:bg-muted/50 rounded-lg transition-colors">
-        {cardContent}
+      <Link href={chatLink} className="block">
+        {rowContent}
       </Link>
     );
   } else {
     // Render without Link if no agentId
     return (
-      <div className="block rounded-lg cursor-default">
-        {cardContent}
+      <div className="block cursor-default">
+        {rowContent}
       </div>
     );
   }

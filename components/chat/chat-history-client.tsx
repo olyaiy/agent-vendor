@@ -129,28 +129,8 @@ export function ChatHistoryClient({
         className="max-w-lg"
       />
 
-      {/* Chat List Area */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-        {(isLoading || isPending) ? (
-          // Loading Skeleton
-          [...Array(pageSize)].map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-lg" />
-          ))
-        ) : chats.length > 0 ? (
-          // Chat List
-          chats.map((chat) => (
-            <ChatListItem key={chat.id} chat={chat} />
-          ))
-        ) : (
-          // No Results
-          <div className="text-center text-muted-foreground pt-10">
-            No chat history found{searchInputValue ? ` matching "${searchInputValue}"` : ''}.
-          </div>
-        )}
-      </div>
-
-      {/* Pagination Controls */}
-      {totalCount > 0 && !isLoading && !isPending && (
+       {/* Pagination Controls */}
+       {totalCount > 0 && !isLoading && !isPending && (
          <div className="flex justify-center items-center space-x-2 pt-4">
             <Button
                 variant="outline"
@@ -171,6 +151,51 @@ export function ChatHistoryClient({
             </Button>
          </div>
       )}
+
+      {/* Chat List Area */}
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+        {(isLoading || isPending) ? (
+          // Loading Skeleton
+          [...Array(pageSize)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))
+        ) : chats.length > 0 ? (
+          // Chat List
+          chats.map((chat) => (
+            <ChatListItem key={chat.id} chat={chat} />
+          ))
+        ) : (
+          // No Results
+          <div className="text-center text-muted-foreground pt-10">
+            No chat history found{searchInputValue ? ` matching "${searchInputValue}"` : ''}.
+          </div>
+        )}
+      </div>
+
+       {/* Pagination Controls */}
+       {totalCount > 0 && !isLoading && !isPending && (
+         <div className="flex justify-center items-center space-x-2 pt-4">
+            <Button
+                variant="outline"
+                onClick={handlePreviousPage}
+                disabled={currentPage <= 1}
+            >
+                Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+            </span>
+            <Button
+                variant="outline"
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages}
+            >
+                Next
+            </Button>
+         </div>
+      )}
+
+     
     </div>
   );
 }

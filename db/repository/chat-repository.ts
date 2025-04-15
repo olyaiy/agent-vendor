@@ -237,7 +237,7 @@ export async function getUserChatsPaginated({
             // Use raw SQL to check within the JSON array parts
             sql`exists (
               select 1
-              from jsonb_array_elements(${message.parts}) as p
+              from json_array_elements(${message.parts}) as p
               where p->>'type' = 'text' and p->>'text' ilike ${searchPattern}
             )`
           )
