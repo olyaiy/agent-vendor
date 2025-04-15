@@ -8,7 +8,7 @@ export const transaction = pgTable("transaction", {
     .notNull()
     .references(() => user.id, { onDelete: "no action" }),
   messageId: uuid("message_id")
-    .references(() => message.id, { onDelete: "no action" }),
+    .references(() => message.id, { onDelete: "set null" }),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   type: varchar("type", { enum: ["usage", "top_up"] }).notNull(),
   description: text("description"),

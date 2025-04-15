@@ -6,6 +6,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Textarea } from './ui/textarea';
 import { deleteTrailingMessages } from '@/db/actions/chat-actions';
 import { UseChatHelpers } from '@ai-sdk/react';
+import { Loader2 } from 'lucide-react';
 
 export type MessageEditorProps = {
   message: Message;
@@ -44,19 +45,21 @@ export function MessageEditor({
   };
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-5 w-full">
       <Textarea
         data-testid="message-editor"
         ref={textareaRef}
-        className="bg-transparent outline-none overflow-hidden resize-none !text-base rounded-xl w-full"
+        className="bg-background border-border rounded-xl p-4 shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all duration-300 ease-in-out !text-base min-h-[120px] resize-none"
         value={draftContent}
         onChange={handleInput}
+        placeholder="Edit your message..."
       />
 
-      <div className="flex flex-row gap-2 justify-end">
+      <div className="flex flex-row gap-4 justify-end">
         <Button
-          variant="outline"
-          className="h-fit py-2 px-3"
+          variant="ghost"
+          size="sm"
+          className="h-9 px-5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 ease-in-out"
           onClick={() => {
             setMode('view');
           }}
@@ -66,8 +69,9 @@ export function MessageEditor({
         <Button
           data-testid="message-editor-send-button"
           variant="default"
-          className="h-fit py-2 px-3"
-          disabled={isSubmitting}
+          size="sm"
+          className="h-9 px-5 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 ease-in-out relative"
+          disabled={isSubmitting || !draftContent.trim()}
           onClick={async () => {
             setIsSubmitting(true);
 
@@ -96,7 +100,14 @@ export function MessageEditor({
             reload();
           }}
         >
-          {isSubmitting ? 'Sending...' : 'Send'}
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Sending
+            </span>
+          ) : (
+            'Send'
+          )}
         </Button>
       </div>
     </div>
