@@ -46,20 +46,21 @@ export function MessageEditor({
 
   return (
     <div className="flex flex-col gap-5 w-full">
-      <Textarea
-        data-testid="message-editor"
-        ref={textareaRef}
-        className="bg-background border-border rounded-xl p-4 shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/30 transition-all duration-300 ease-in-out !text-base min-h-[120px] resize-none"
-        value={draftContent}
-        onChange={handleInput}
-        placeholder="Edit your message..."
-      />
+      <div className="border-2 border-border rounded-md shadow-md">
+        <Textarea
+          data-testid="message-editor"
+          ref={textareaRef}
+          className="bg-background/80 rounded-md p-4 border-none focus:ring-1 focus:ring-primary transition-all duration-300 ease-in-out !text-base min-h-[140px] resize-none"
+          value={draftContent}
+          onChange={handleInput}
+          placeholder="Edit your message..."
+        />
+      </div>
 
       <div className="flex flex-row gap-4 justify-end">
         <Button
-          variant="ghost"
-          size="sm"
-          className="h-9 px-5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 ease-in-out"
+          variant="outline"
+          className="h-10 px-6 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-100 transition-colors duration-200 ease-in-out"
           onClick={() => {
             setMode('view');
           }}
@@ -69,8 +70,7 @@ export function MessageEditor({
         <Button
           data-testid="message-editor-send-button"
           variant="default"
-          size="sm"
-          className="h-9 px-5 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 ease-in-out relative"
+          className="h-10 px-6 rounded-md text-sm font-medium bg-primary shadow-sm hover:bg-primary/90 hover:shadow-md text-primary-foreground transition-all duration-200 ease-in-out"
           disabled={isSubmitting || !draftContent.trim()}
           onClick={async () => {
             setIsSubmitting(true);
