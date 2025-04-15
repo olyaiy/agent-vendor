@@ -9,12 +9,14 @@ import {
   deleteMessagesByChatIdAfterTimestamp, 
   getMessageById, 
   getUserRecentChats,
-  getChatTitleAndUserId // Import the repository function
+  getChatTitleAndUserId, // Import the repository function
+  getUserChatsPaginated // Import the new repository function
 } from '../repository/chat-repository';
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
 import { message, chat } from '../schema/chat';
+import { z } from 'zod'; // Import zod for input validation
 
 export async function generateTitleFromUserMessage({
     message,
@@ -119,6 +121,59 @@ export async function getUserRecentChatsAction(limit?: number) {
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get recent chats',
+    };
+  }
+}
+
+// Schema for validating input to getUserChatsAction
+const GetUserChatsSchema = z.object({
+  searchQuery: z.string().nullable().optional(), // Allow null or string
+  page: z.number().int().positive().default(1), // Ensure page is a positive integer, default 1
+});
+
+/**
+ * Server action to retrieve paginated and searchable chat history for the logged-in user.
+ * @param params - Object containing optional searchQuery and page number.
+ * @returns Promise with success status and data ({ chats, totalCount }) or error message.
+ */
+export async function getUserChatsAction(params: {
+  searchQuery?: string | null;
+  page?: number;
+}) {
+  try {
+    // Validate input using Zod schema
+    const validation = GetUserChatsSchema.safeParse(params);
+    if (!validation.success) {
+      return { success: false, message: "Invalid input parameters.", details: validation.error.flatten() };
+    }
+
+    const { searchQuery, page } = validation.data;
+    const pageSize = 10; // As defined in the plan
+
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    const result = await getUserChatsPaginated({
+      userId: session.user.id,
+      searchQuery: searchQuery ?? null, // Pass null if undefined
+      page: page,
+      pageSize: pageSize,
+    });
+
+    return {
+      success: true,
+      data: result, // Contains { chats, totalCount }
+    };
+  } catch (error) {
+    console.error('Failed to get user chats:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to retrieve chat history',
     };
   }
 }

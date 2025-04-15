@@ -106,7 +106,7 @@ export function MessageEditor({
               Sending
             </span>
           ) : (
-            'Send'
+            'Re-Send'
           )}
         </Button>
       </div>
