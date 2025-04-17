@@ -1,6 +1,6 @@
 "use client"
 
-import { Users, LifeBuoy, Info } from "lucide-react"
+import { Users, LifeBuoy, Info, HelpCircle } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -22,7 +22,6 @@ import { NavSecondary } from "./nav-secondary"
 import { NewChatButton } from "./new-chat-button"
 import Link from "next/link"
 import { HistoryMenu } from "./history-menu"
-import { QuestionMarkCircledIcon } from "@radix-ui/react-icons"
 
 
 // Agent submenu items
@@ -42,7 +41,7 @@ const navSecondary = [
   {
     title: "FAQ",
     url: "/faq",
-    icon: QuestionMarkCircledIcon,
+    icon: HelpCircle,
   },
   // {
   //   title: "Contact",
