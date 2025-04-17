@@ -60,7 +60,7 @@ export default function TagManagement({ initialTags }: TagManagementProps) {
         toast.success(`Tag "${result.data.name}" created successfully.`);
         newTagInputRef.current?.focus(); // Keep focus for adding more
       } else {
-        toast.error(result.error || 'Failed to create tag.');
+        toast.error(!result.success && result.error ? result.error : 'Failed to create tag.');
       }
     });
   };
@@ -91,7 +91,7 @@ export default function TagManagement({ initialTags }: TagManagementProps) {
         setEditingTag(null);
         toast.success(`Tag updated to "${result.data.name}".`);
       } else {
-        toast.error(result.error || 'Failed to update tag.');
+        toast.error(!result.success && result.error ? result.error : 'Failed to update tag.');
       }
     });
   };
@@ -110,7 +110,7 @@ export default function TagManagement({ initialTags }: TagManagementProps) {
         setTagToDelete(null);
         toast.success(`Tag "${tagToDelete.name}" deleted.`);
       } else {
-        toast.error(result.error || 'Failed to delete tag.');
+        toast.error(!result.success && result.error ? result.error : 'Failed to delete tag.');
         setTagToDelete(null); // Close confirm dialog even on error
       }
     });
