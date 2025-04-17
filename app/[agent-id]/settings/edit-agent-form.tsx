@@ -176,7 +176,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
             setKnowledgeItems(prev => [...prev, result.data!]);
             resolve(result.data); // Resolve with the new item
           } else {
-            throw new Error(result.error || "Failed to add knowledge item");
+            throw new Error(!result.success && result.error ? result.error : "Failed to add knowledge item");
           }
         } catch (error) {
           console.error("Error adding knowledge item:", error);
@@ -200,7 +200,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
             setKnowledgeItems(prev => prev.map(k => k.id === item.id ? result.data! : k));
             resolve(result.data); // Resolve with the updated item
           } else {
-            throw new Error(result.error || "Failed to update knowledge item");
+            throw new Error(!result.success && result.error ? result.error : "Failed to update knowledge item");
           }
         } catch (error) {
           console.error("Error updating knowledge item:", error);
@@ -271,7 +271,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
         }
         toast.success(`${imageType === 'thumbnail' ? 'Thumbnail' : 'Avatar'} uploaded successfully.`);
       } else {
-        throw new Error(result.error || `Failed to upload ${imageType}`);
+        throw new Error(!result.success && result.error ? result.error : `Failed to upload ${imageType}`);
       }
     } catch (error) {
       console.error(`Error uploading ${imageType}:`, error);
