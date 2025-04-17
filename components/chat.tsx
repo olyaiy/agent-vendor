@@ -80,6 +80,9 @@ export default function Chat({
     sendExtraMessageFields: true,
     // Use the handler function from the custom hook
     onFinish: handleChatFinish, 
+    onError: (error) => {
+      console.log('Error from useChat:', error);
+    }
   })
 
   // Remove the old useEffect for cleanup, as it's now handled within the hook
