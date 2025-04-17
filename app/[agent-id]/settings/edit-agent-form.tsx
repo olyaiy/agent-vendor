@@ -263,11 +263,11 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
 
     try {
       const result = await uploadAgentImageAction(agent.id, formData, imageType);
-      if (result.success && result.url) {
+      if (result.success && result.data.url) {
         if (imageType === 'thumbnail') {
-          setThumbnailUrl(result.url);
+          setThumbnailUrl(result.data.url);
         } else {
-          setAvatarUrl(result.url);
+          setAvatarUrl(result.data.url);
         }
         toast.success(`${imageType === 'thumbnail' ? 'Thumbnail' : 'Avatar'} uploaded successfully.`);
       } else {

@@ -29,6 +29,7 @@ export async function POST(req: Request) {
     console.timeEnd('Session retrieval');
 
     if (!session || !session.user || !session.user.id) {
+      console.log('Unauthorized!--------------------------------');
       return new Response('Unauthorized', { status: 401 });
     }
 
