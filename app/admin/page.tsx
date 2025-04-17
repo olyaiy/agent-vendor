@@ -1,7 +1,8 @@
 import { fetchUsers, type ListUsersResponse } from './admin-actions';
-import { getAllTagsAction } from '@/db/actions/agent-actions'; // Import tag action
+import { getAllTagsAction, getAllModels } from '@/db/actions/agent-actions'; // Import tag and model actions
 import UserTable from './user-table';
-import TagManagement from '@/components/admin/tag-management'; // Import the new component
+import TagManagement from '@/components/admin/tag-management'; // Import Tag component
+import ModelManagement from '@/components/admin/model-management'; // Import Model component
 import {
   Card,
   CardContent,
@@ -53,52 +54,76 @@ export default async function AdminPage() {
   // The authorization *should* be enforced within the `fetchUsers` server action.
   // If `fetchUsers` throws an 'Unauthorized' error, the LoadingError component will be shown below.
 
-  // Fetch initial users data using the server action
   // Fetch initial data using server actions
   let initialUsersData: ListUsersResponse | null = null;
   let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
+  let initialModelsData: Awaited<ReturnType<typeof getAllModels>> | null = null; // Added for models
   let fetchUsersError = false;
   let fetchTagsError = false;
+  let fetchModelsError = false; // Added for models
 
-  try {
-    // Fetch users
-    initialUsersData = await fetchUsers({ limit: 25 });
-  } catch (error: unknown) {
-    console.error("Failed to load users for admin page:", error);
-    if (error instanceof Error && error.message.startsWith('Unauthorized')) {
-      return <UnauthorizedAccess />;
-    }
-    fetchUsersError = true;
+  // Use Promise.allSettled for concurrent fetching and individual error handling
+  const results = await Promise.allSettled([
+      fetchUsers({ limit: 25 }),
+      getAllTagsAction(),
+      getAllModels() // Fetch models concurrently
+  ]);
+
+  // Process Users result
+  if (results[0].status === 'fulfilled') {
+      initialUsersData = results[0].value;
+  } else {
+      console.error("Failed to load users for admin page:", results[0].reason);
+      if (results[0].reason instanceof Error && results[0].reason.message.startsWith('Unauthorized')) {
+          return <UnauthorizedAccess />;
+      }
+      fetchUsersError = true;
   }
 
-  try {
-    // Fetch tags
-    initialTagsData = await getAllTagsAction();
-    if (!initialTagsData.success) {
-        console.error("Failed to load tags:", initialTagsData.error);
-        fetchTagsError = true;
-    }
-  } catch (error: unknown) {
-    console.error("Failed to load tags for admin page:", error);
-    // Assuming unauthorized error is handled within the action or caught above
-    fetchTagsError = true;
+  // Process Tags result
+  if (results[1].status === 'fulfilled') {
+      initialTagsData = results[1].value;
+      if (!initialTagsData.success) {
+          console.error("Failed to load tags:", initialTagsData.error);
+          fetchTagsError = true;
+      }
+  } else {
+      console.error("Failed to load tags for admin page:", results[1].reason);
+      fetchTagsError = true;
   }
+
+  // Process Models result
+  if (results[2].status === 'fulfilled') {
+      initialModelsData = results[2].value;
+      if (!initialModelsData.success) {
+          console.error("Failed to load models:", initialModelsData.error);
+          fetchModelsError = true;
+      }
+  } else {
+      console.error("Failed to load models for admin page:", results[2].reason);
+      fetchModelsError = true;
+  }
+
 
    // Render LoadingError only for non-auth fetch errors
   // Render error if any fetch failed (prioritize user fetch error message)
   if (fetchUsersError || !initialUsersData) {
     return <LoadingError resourceName="Users" />;
   }
+  // Check for tag and model errors - allow page load but show error in component?
+  // For now, block page load if critical data fails
   if (fetchTagsError || !initialTagsData?.success) {
-    // Tags are secondary, maybe show the page with a tag loading error?
-    // For now, let's show a generic error, but you could adapt this.
     return <LoadingError resourceName="Tags" />;
+  }
+  if (fetchModelsError || !initialModelsData?.success) {
+    return <LoadingError resourceName="Models" />;
   }
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
+      {/* User Management Section */}
       <Card>
         <CardHeader>
           <CardTitle>User Management</CardTitle>
@@ -107,8 +132,6 @@ export default async function AdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Pass fetched data to the client component for rendering the table */}
-          {/* We will create UserTable next */}
           <UserTable initialData={initialUsersData} />
         </CardContent>
       </Card>
@@ -122,8 +145,21 @@ export default async function AdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Pass fetched tags to the client component */}
           <TagManagement initialTags={initialTagsData.data || []} />
+        </CardContent>
+      </Card>
+
+      {/* Model Management Section (New) */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Model Management</CardTitle>
+          <CardDescription>
+            Create, edit, and delete language models available for agents.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Pass fetched models to the client component */}
+          <ModelManagement initialModels={initialModelsData.data || []} />
         </CardContent>
       </Card>
 

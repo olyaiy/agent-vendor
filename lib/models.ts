@@ -24,6 +24,8 @@ export const myProvider = customProvider({
     'o1-mini': openai('o1-mini'), 
     'o1': openai('o1'),
     'o3-mini': openai('o3-mini'),
+    'o3': openai('o3'),
+    'o4-mini': openai('o4-mini'),
 
     // Perplexity Models
     'sonar-pro': perplexity('sonar-pro'),
@@ -115,6 +117,20 @@ export const modelDetails: Record<string, ModelDetails> = {
     displayName: "O3 Mini",
     description: "Compact version of OpenAI's advanced O-series models offering good performance for everyday tasks at a more accessible price point.",
     inputCostPerMillion: 1.10,
+    outputCostPerMillion: 4.40,
+    contextWindow: 200_000,
+  },
+  'o3': {
+    displayName: "O3",
+    description: "OpenAI's most powerful reasoning model with leading performance on coding, math, science, and vision tasks",
+    inputCostPerMillion: 10.00,
+    outputCostPerMillion: 40.00,
+    contextWindow: 200_000,
+  },
+  'o4-mini': {
+    displayName: "O4 Mini",
+    description: "Faster, cost-efficient reasoning model delivering strong performance on math, coding and vision tasks",
+    inputCostPerMillion: 1.100,
     outputCostPerMillion: 4.40,
     contextWindow: 200_000,
   },
@@ -344,6 +360,8 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'o1-mini': openai('o1-mini'),
     'o1': openai('o1'),
     'o3-mini': openai('o3-mini'),
+    'o3': openai('o3'),
+    'o4-mini': openai('o4-mini'),
     // Perplexity
     'sonar-pro': perplexity('sonar-pro'),
     'sonar': perplexity('sonar'),

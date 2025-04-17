@@ -10,7 +10,7 @@ export const agent = pgTable("agent", {
   avatarUrl: text("avatar_url"),
   systemPrompt: text("system_prompt"),
   welcomeMessage: text("welcome_message"),
-  primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "cascade" }),
+  primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "no action" }), // Corrected onDelete
   visibility: text("visibility").default("public").notNull(),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
@@ -26,6 +26,11 @@ export const models = pgTable("models", {
   description: text("description"),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
+}, (table) => { // Corrected: Index definition as the third argument
+  return {
+    // Add a unique index to the model name
+    modelNameIdx: uniqueIndex("model_name_idx").on(table.model),
+  };
 });
 
 export type Model = typeof models.$inferSelect;

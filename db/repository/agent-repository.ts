@@ -1,7 +1,8 @@
 // Added searchQuery parameter and imported `or`, `ilike`
 import { db } from '../index';
 import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag } from '../schema/agent';
-import { eq, desc, and, asc, sql, or, ilike } from 'drizzle-orm'; // Removed unused alias import
+import { eq, desc, and, asc, sql, or, ilike, count } from 'drizzle-orm'; // Removed unused alias import, Added count
+
 // Define the type for the data needed to insert an agent
 // Excludes fields that have default values or are generated (id, createdAt, updatedAt)
 type NewAgent = Omit<Agent, 'id' | 'createdAt' | 'updatedAt'>;
@@ -21,6 +22,11 @@ type UpdateKnowledge = Partial<NewKnowledge>;
 // Define types for Tag operations
 type NewTag = Omit<Tag, 'id' | 'createdAt' | 'updatedAt'>;
 type UpdateTag = Partial<NewTag>;
+
+// Define types for Model operations
+type NewModel = Omit<Model, 'id' | 'createdAt' | 'updatedAt'>;
+type UpdateModel = Partial<NewModel>;
+
 
 /**
  * Inserts a new agent into the database.
@@ -78,8 +84,88 @@ export async function deleteAgent(agentId: string): Promise<void> {
  * @returns Array of all model records.
  */
 export async function selectAllModels(): Promise<Model[]> {
-  return await db.select().from(models);
+  return await db.select().from(models).orderBy(asc(models.model)); // Added ordering
 }
+
+// ========================================
+// Model Repository Functions
+// ========================================
+
+/**
+ * Selects a model by its name (case-sensitive due to unique index).
+ * @param modelName - The name of the model to select.
+ * @returns The model record if found, otherwise undefined.
+ */
+export async function selectModelByName(modelName: string): Promise<Model | undefined> {
+    const result = await db
+        .select()
+        .from(models)
+        .where(eq(models.model, modelName))
+        .limit(1);
+    return result[0];
+}
+
+/**
+ * Inserts a new model into the database.
+ * @param newModelData - The data for the new model (model name, description).
+ * @returns The newly inserted model record.
+ */
+export async function insertModel(newModelData: NewModel): Promise<Model[]> {
+  return await db
+    .insert(models)
+    .values(newModelData)
+    .returning();
+}
+
+/**
+ * Updates an existing model in the database.
+ * @param modelId - The ID of the model to update.
+ * @param updateData - An object containing the fields to update (model name, description).
+ * @returns The updated model record.
+ */
+export async function updateModel(modelId: string, updateData: UpdateModel): Promise<Model[]> {
+  return await db
+    .update(models)
+    .set({ ...updateData, updatedAt: new Date() }) // Ensure updatedAt is updated
+    .where(eq(models.id, modelId))
+    .returning();
+}
+
+/**
+ * Checks if any agents are currently using the specified model.
+ * @param modelId - The ID of the model to check.
+ * @returns True if the model is in use, false otherwise.
+ */
+export async function isModelInUse(modelId: string): Promise<boolean> {
+    const result = await db
+        .select({ value: count() })
+        .from(agent)
+        .where(eq(agent.primaryModelId, modelId))
+        .limit(1); // Optimization: We only need to know if count > 0
+
+    return result[0]?.value > 0;
+}
+
+
+/**
+ * Deletes a model from the database *only if* it's not currently used by any agents.
+ * Throws an error if the model is in use.
+ * @param modelId - The ID of the model to delete.
+ * @returns A promise that resolves when the deletion is complete.
+ * @throws Error if the model is in use by agents.
+ */
+export async function deleteModel(modelId: string): Promise<void> {
+  const inUse = await isModelInUse(modelId);
+  if (inUse) {
+    throw new Error("Model is currently in use by one or more agents and cannot be deleted.");
+  }
+  await db.delete(models).where(eq(models.id, modelId));
+}
+
+
+// ========================================
+// Agent Search & Listing Functions
+// ========================================
 
 /**
  * Selects the most recent 20 agents from the database
@@ -244,6 +330,10 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
 
   return result[0];
 }
+
+// ========================================
+// Knowledge Repository Functions
+// ========================================
 
 /**
  * Creates a new knowledge base entry
