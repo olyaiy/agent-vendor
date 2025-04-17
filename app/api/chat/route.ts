@@ -265,5 +265,7 @@ export async function POST(req: Request) {
     
 
   console.timeEnd('Text streaming');
-  return result.toDataStreamResponse();
+  return result.toDataStreamResponse({
+    sendReasoning: true,
+  });
 }
