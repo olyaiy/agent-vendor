@@ -6,10 +6,10 @@ import { ChatHistoryClient } from '@/components/chat/chat-history-client';
 
 // Define the expected shape of searchParams
 interface HistoryPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     query?: string;
     page?: string;
-  };
+  }>;
 }
 
 // Define a loading component
@@ -30,8 +30,9 @@ function HistoryLoadingSkeleton() {
 
 export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   // Parse search params, providing defaults
-  const query = searchParams?.query ?? null;
-  const page = parseInt(searchParams?.page ?? '1', 10);
+  const resolvedParams = await searchParams || {};
+  const query = resolvedParams.query ?? null;
+  const page = parseInt(resolvedParams.page ?? '1', 10);
 
   // Fetch initial data using the server action
   // Note: Error handling within the action returns { success: false, message: ... }
