@@ -8,16 +8,6 @@ import {
 } from '@/components/ui/collapsible';
 import { Settings, ChevronRight } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { ModelSelect } from '@/components/model-select';
 
 import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
@@ -73,87 +63,68 @@ function SettingsSectionComponent({ selectedModelId, setSelectedModelId, models 
           <p className="text-xs text-muted-foreground mt-1">Creativity vs precision</p>
         </div>
 
-        {/* Max Tokens */}
+        {/* topP */}
         <div className="space-y-2">
           <div className="flex justify-between">
-            <label className="text-xs text-muted-foreground">Max Tokens</label>
-            <span className="text-xs text-muted-foreground">4000</span> {/* Static display value */}
+            <label className="text-xs text-muted-foreground">topP</label>
+            <span className="text-xs text-muted-foreground">1</span> {/* Static display value */}
           </div>
           <Slider
-            defaultValue={[4000]}
-            max={8000}
-            step={100}
+            defaultValue={[1]}
+            max={1}
+            min={0}
+            step={0.01}
             className="w-full"
-            // Consider adding onValueChange prop if needed later
           />
-          <p className="text-xs text-muted-foreground mt-1">Maximum output length</p>
+          <p className="text-xs text-muted-foreground mt-1">Nucleus sampling. Only tokens with the top probability mass are considered.</p>
         </div>
 
-        {/* Context Length */}
+        {/* topK */}
         <div className="space-y-2">
           <div className="flex justify-between">
-            <label className="text-xs text-muted-foreground">Context Length</label>
-            <span className="text-xs text-muted-foreground">16K</span> {/* Static display value */}
+            <label className="text-xs text-muted-foreground">topK</label>
+            <span className="text-xs text-muted-foreground">0</span> {/* Static display value */}
           </div>
-          <Select defaultValue="16k"> {/* Consider adding onValueChange prop if needed later */}
-            <SelectTrigger className="w-full bg-muted/30 border-0 focus:ring-1 focus:ring-ring">
-              <SelectValue placeholder="Select context length" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="8k">8K tokens</SelectItem>
-              <SelectItem value="16k">16K tokens</SelectItem>
-              <SelectItem value="32k">32K tokens</SelectItem>
-              <SelectItem value="64k">64K tokens</SelectItem>
-              <SelectItem value="128k">128K tokens</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-1">Memory capacity for conversation</p>
+          <Slider
+            defaultValue={[0]}
+            max={100}
+            min={0}
+            step={1}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Only sample from the top K options for each token. Advanced use only.</p>
         </div>
 
-        {/* Advanced Options */}
-        <div className="space-y-3 pt-2">
-          <h3 className="text-xs font-medium">Advanced Options</h3>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="streaming" className="text-sm">Response Streaming</Label>
-              <p className="text-xs text-muted-foreground">Display responses as they&#39;re generated</p>
-            </div>
-            <Switch id="streaming" defaultChecked /> {/* Consider adding onCheckedChange prop if needed later */}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="tool-use" className="text-sm">Tool Use</Label>
-              <p className="text-xs text-muted-foreground">Allow agent to use external tools</p>
-            </div>
-            <Switch id="tool-use" defaultChecked /> {/* Consider adding onCheckedChange prop if needed later */}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="web-access" className="text-sm">Web Access</Label>
-              <p className="text-xs text-muted-foreground">Enable browsing capabilities</p>
-            </div>
-            <Switch id="web-access" defaultChecked /> {/* Consider adding onCheckedChange prop if needed later */}
-          </div>
-        </div>
-
-        {/* API Settings */}
+        {/* presencePenalty */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <label className="text-xs text-muted-foreground">API Key</label>
-            <Badge variant="outline" className="text-xs font-normal">Connected</Badge> {/* Static display */}
+          <div className="flex justify-between">
+            <label className="text-xs text-muted-foreground">presencePenalty</label>
+            <span className="text-xs text-muted-foreground">0</span> {/* Static display value */}
           </div>
-          <Select defaultValue="default"> {/* Consider adding onValueChange prop if needed later */}
-            <SelectTrigger className="w-full bg-muted/30 border-0 focus:ring-1 focus:ring-ring">
-              <SelectValue placeholder="Select API source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Use default key</SelectItem>
-              <SelectItem value="custom">Use custom key</SelectItem>
-            </SelectContent>
-          </Select>
+          <Slider
+            defaultValue={[0]}
+            max={2}
+            min={-2}
+            step={0.01}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Affects the likelihood to repeat information already in the prompt.</p>
+        </div>
+
+        {/* frequencyPenalty */}
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <label className="text-xs text-muted-foreground">frequencyPenalty</label>
+            <span className="text-xs text-muted-foreground">0</span> {/* Static display value */}
+          </div>
+          <Slider
+            defaultValue={[0]}
+            max={2}
+            min={-2}
+            step={0.01}
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Affects the likelihood to repeatedly use the same words or phrases.</p>
         </div>
       </CollapsibleContent>
     </Collapsible>
