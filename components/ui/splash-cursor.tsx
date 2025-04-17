@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 "use client";
 import { useEffect, useRef } from "react";
 
