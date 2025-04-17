@@ -1,6 +1,6 @@
 "use client"
 
-import { Users, LifeBuoy, Send, Info } from "lucide-react"
+import { Users, LifeBuoy, Info } from "lucide-react"
 import {
     Sidebar,
     SidebarContent,
@@ -44,11 +44,11 @@ const navSecondary = [
     url: "/faq",
     icon: QuestionMarkCircledIcon,
   },
-  {
-    title: "Contact",
-    url: "/contact",
-    icon: Send,
-  },
+  // {
+  //   title: "Contact",
+  //   url: "/contact",
+  //   icon: Send,
+  // },
   {
     title: "About",
     url: "/about",
