@@ -32,7 +32,7 @@ export default async function CreateAgentPage() {
       description: model.description ?? null
     }));
   } else {
-    console.error("Failed to fetch models:", modelsResult.error);
+    console.error("Failed to fetch models");
     // Consider showing an error message to the user
   }
 
@@ -43,7 +43,7 @@ export default async function CreateAgentPage() {
       label: tag.name,
     }));
   } else {
-    console.error("Failed to fetch tags:", tagsResult.error);
+    console.error("Failed to fetch tags");
     // Consider showing an error message or allowing creation without tags
   }
   
