@@ -82,6 +82,18 @@ export default function Chat({
     onFinish: handleChatFinish, 
     onError: (error) => {
       console.log('Error from useChat:', error);
+      // Check if the error indicates unauthorized access (401)
+      if (error && error.message && (error.message.includes('Unauthorized') || error.message.includes('401'))) {
+        // Append a specific message to the chat history
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            id: generateUUID(), // Use the imported UUID generator
+            role: 'assistant',
+            content: 'Please sign in to chat!',
+          },
+        ]);
+      }
     }
   })
 

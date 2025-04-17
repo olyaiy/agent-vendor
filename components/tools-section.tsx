@@ -26,9 +26,13 @@ function ToolsSectionComponent() { // Removed props
         </div>
         <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isToolsOpen ? 'rotate-90' : ''}`} />
       </CollapsibleTrigger>
-      <CollapsibleContent className="py-3 px-3">
-        {/* Static content for now, can be made dynamic later if needed */}
-        <div className="grid grid-cols-1 gap-1.5">
+      <CollapsibleContent className="py-3 px-3 relative"> {/* Added relative positioning */}
+        {/* Static content replaced with overlay */}
+        <div className="absolute inset-0 bg-background/20 backdrop-blur-sm flex items-center justify-center rounded-md z-10"> {/* Overlay div */}
+          <span className="text-sm text-muted-foreground italic">Tool usage coming soon!</span>
+        </div>
+        {/* Original content (can be kept underneath or removed) */}
+        <div className="grid grid-cols-1 gap-1.5 opacity-20 pointer-events-none"> {/* Added opacity and disabled pointer events */}
           <div className="flex items-center gap-2.5 py-2">
             <div className="w-1 h-4 bg-amber-500/80 rounded-full"></div>
             <span className="text-sm">Code Editor</span>
