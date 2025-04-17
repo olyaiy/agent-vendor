@@ -21,6 +21,9 @@ export const myProvider = customProvider({
     // OpenAI Models
     'gpt-4o-mini': openai('gpt-4o-mini'),
     'gpt-4o': openai('gpt-4o'),
+    'gpt-4.1': openai('gpt-4.1'),
+    'gpt-4.1-mini': openai('gpt-4.1-mini'),
+    'gpt-4.1-nano': openai('gpt-4.1-nano'),
     'o1-mini': openai('o1-mini'), 
     'o1': openai('o1'),
     'o3-mini': openai('o3-mini'),
@@ -346,6 +349,27 @@ export const modelDetails: Record<string, ModelDetails> = {
     outputCostPerMillion: 0.60,
     contextWindow: 1_000_000,
   },
+  'gpt-4.1': {
+    displayName: "GPT-4.1",
+    description: "OpenAI's smartest model for complex tasks, offering state-of-the-art performance across all domains",
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 8.00,
+    contextWindow: 200_000,
+  },
+  'gpt-4.1-mini': {
+    displayName: "GPT-4.1 Mini",
+    description: "Affordable model balancing speed and intelligence for general purpose applications",
+    inputCostPerMillion: 0.40,
+    outputCostPerMillion: 1.60,
+    contextWindow: 200_000,
+  },
+  'gpt-4.1-nano': {
+    displayName: "GPT-4.1 Nano",
+    description: "Fastest, most cost-effective model optimized for low-latency tasks and high-volume applications",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.40,
+    contextWindow: 128_000,
+  },
 };
 
 
@@ -357,6 +381,9 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     // OpenAI
     'gpt-4o-mini': openai('gpt-4o-mini'),
     'gpt-4o': openai('gpt-4o'),
+    'gpt-4.1': openai('gpt-4.1'),
+    'gpt-4.1-mini': openai('gpt-4.1-mini'),
+    'gpt-4.1-nano': openai('gpt-4.1-nano'),
     'o1-mini': openai('o1-mini'),
     'o1': openai('o1'),
     'o3-mini': openai('o3-mini'),
