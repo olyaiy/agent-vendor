@@ -60,7 +60,7 @@ export default function LinkedAccounts({ accounts }: LinkedAccountsProps) {
                 <CardDescription>Manage connections to third-party services.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                 <Alert variant="warning">
+                 <Alert variant="default">
                     <AlertTitle>Warning</AlertTitle>
                     <AlertDescription>
                         Ensure you have another login method (like a verified email and password, if password login is enabled) before unlinking your only sign-in provider.
