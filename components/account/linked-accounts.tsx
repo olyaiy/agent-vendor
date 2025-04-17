@@ -36,15 +36,9 @@ export default function LinkedAccounts({ accounts }: LinkedAccountsProps) {
         // (e.g., a verified email + password set up, or another OAuth provider).
         // Unlinking the only login method will lock the user out.
         // The current `unlinkProvider` action is just a placeholder.
-        toast.warning("Unlinking is currently disabled. Feature requires careful implementation to prevent account lockout.", { duration: 5000 });
-        return; // Remove this return when implemented
-
-        /* // --- Implementation Example (Requires Server Action Update) ---
         setPendingAccountId(accountId);
         startTransition(async () => {
-            // Pass the providerId or accountId as needed by the server action
-            const result = await unlinkProvider(providerId); // Or pass accountId if needed
-
+            const result = await unlinkProvider(providerId);
             if (result.success) {
                 toast.success(result.message || `${capitalize(providerId)} account unlinked.`);
                 // Parent page revalidates and refetches
@@ -53,7 +47,6 @@ export default function LinkedAccounts({ accounts }: LinkedAccountsProps) {
             }
             setPendingAccountId(null);
         });
-        */
     };
 
     if (!accounts || accounts.length === 0) {
