@@ -28,18 +28,16 @@ export default async function Page({
     // if (!session?.user || session.user.id !== agent.creatorId) { ... }
 
     if (!modelsResult.success || !modelsResult.data) {
-        // Handle error fetching models, maybe show a message
-        console.error("Failed to fetch models:", modelsResult.error);
-        // Render the form without models or show an error state
+        console.error("Failed to fetch models");
         return <div>Error loading agent settings. Could not fetch AI models.</div>;
     }
     if (!allTagsResult.success || !allTagsResult.data) {
-        console.error("Failed to fetch all tags:", allTagsResult.error);
+        console.error("Failed to fetch all tags");
         return <div>Error loading agent settings. Could not fetch tags.</div>;
     }
 
     if (!agentTagsResult.success || !agentTagsResult.data) {
-        console.error("Failed to fetch agent tags:", agentTagsResult.error);
+        console.error("Failed to fetch agent tags");
         return <div>Error loading agent settings. Could not fetch agent&apos;s current tags.</div>;
     }
 
