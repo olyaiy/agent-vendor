@@ -12,6 +12,7 @@ import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton'; // Import the sign-in button
 // Remove getChatTitleAction and useSWRConfig imports as they are now handled by the hook
 import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; // Import the custom hook
 
@@ -88,10 +89,16 @@ export default function Chat({
         setMessages((currentMessages) => [
           ...currentMessages,
           {
-            id: generateUUID(), // Use the imported UUID generator
+            id: generateUUID(),
             role: 'assistant',
-            content: 'Please sign in to chat!',
-          },
+            // Instead of content, use the 'ui' field for custom rendering
+            ui: (
+              <div className="p-4 bg-red-100 border border-red-300 rounded-md text-red-800">
+                <p className="mb-2">Please sign in to chat!</p>
+                <GoogleSignInButton className="w-full" />
+              </div>
+            )
+          }
         ]);
       }
     }

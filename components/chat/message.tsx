@@ -80,127 +80,99 @@ const PurePreviewMessage = ({
             </div>
           )}
 
-          {message.parts?.map((part, index) => {
-            const { type } = part;
-            const key = `message-${message.id}-part-${index}`;
+          {/* Check if there's a custom UI element first */}
+          {message.ui ? (
+            <div data-testid="message-ui-content">{message.ui}</div>
+          ) : (
+            // Otherwise, render parts as usual
+            message.parts?.map((part, index) => { // Map callback starts here
+              const { type } = part;
+              const key = `message-${message.id}-part-${index}`;
 
-            if (type === 'reasoning') {
-              return (
-                <MessageReasoning
-                  key={key}
-                  isLoading={isLoading}
-                  reasoning={part.reasoning}
-                />
-              );
-            }
-
-            if (type === 'text') {
-              if (mode === 'view') {
+              if (type === 'reasoning') {
                 return (
-                  <div key={key} className="flex flex-row gap-2 items-start">
+                  <MessageReasoning
+                    key={key}
+                    isLoading={isLoading}
+                    reasoning={part.reasoning}
+                  />
+                );
+              }
+
+              if (type === 'text') {
+                if (mode === 'view') {
+                  return (
+                    <div key={key} className="flex flex-row gap-2 items-start">
+                      <div
+                        data-testid="message-content"
+                        className={cn('flex flex-col gap-4', {
+                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                            message.role === 'user',
+                        })}
+                      >
+                        <Markdown key={`${message.id}-${index}`}>
+                          {part.text}
+                        </Markdown>
+                        {/* {part.text} */}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (mode === 'edit') {
+                  return (
+                    <div key={key} className="flex flex-row gap-2 items-start">
+                      <div className="size-8" />
+
+                      <MessageEditor
+                        key={message.id}
+                        message={message}
+                        setMode={setMode}
+                        setMessages={setMessages}
+                        reload={reload}
+                      />
+                    </div>
+                  );
+                }
+              }
+
+              if (type === 'tool-invocation') {
+                const { toolInvocation } = part;
+                const { toolName, toolCallId, state } = toolInvocation;
+
+                if (state === 'call') {
+                  const { args } = toolInvocation;
+
+                  return (
                     <div
-                      data-testid="message-content"
-                      className={cn('flex flex-col gap-4', {
-                        'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                          message.role === 'user',
+                      key={toolCallId}
+                      className={cn({
+                        skeleton: ['getWeather'].includes(toolName),
                       })}
                     >
-                      <Markdown key={`${message.id}-${index}`}>
-                        {part.text}
-                      </Markdown>
-                      {/* {part.text} */}
+                      {/* ... (tool call rendering) ... */}
+                      <h1>Tool Invocation</h1>
+                      <pre>{JSON.stringify(args, null, 2)}</pre>
                     </div>
-                  </div>
-                );
+                  );
+                }
+
+                if (state === 'result') {
+                  const { result } = toolInvocation;
+
+                  return (
+                    <div key={toolCallId}>
+                      {/* ... (tool result rendering) ... */}
+                      <h1>Tool Result {JSON.stringify(result, null, 2)}</h1>
+                    </div>
+                  );
+                }
               }
-
-              if (mode === 'edit') {
-                return (
-                  <div key={key} className="flex flex-row gap-2 items-start">
-                    <div className="size-8" />
-
-                    <MessageEditor
-                      key={message.id}
-                      message={message}
-                      setMode={setMode}
-                      setMessages={setMessages}
-                      reload={reload}
-                    />
-                  </div>
-                );
-              }
-            }
-
-            if (type === 'tool-invocation') {
-              const { toolInvocation } = part;
-              const { toolName, toolCallId, state } = toolInvocation;
-
-              if (state === 'call') {
-                const { args } = toolInvocation;
-
-                return (
-                  <div
-                    key={toolCallId}
-                    className={cn({
-                      skeleton: ['getWeather'].includes(toolName),
-                    })}
-                  >
-                    {/* {toolName === 'getWeather' ? (
-                      <Weather />
-                    ) : toolName === 'createDocument' ? (
-                      <DocumentPreview isReadonly={isReadonly} args={args} />
-                    ) : toolName === 'updateDocument' ? (
-                      <DocumentToolCall
-                        type="update"
-                        args={args}
-                        isReadonly={isReadonly}
-                      />
-                    ) : toolName === 'requestSuggestions' ? (
-                      <DocumentToolCall
-                        type="request-suggestions"
-                        args={args}
-                        isReadonly={isReadonly}
-                      />
-                    ) : null} */}
-                    <h1>Tool Invocation</h1>
-                    <pre>{JSON.stringify(args, null, 2)}</pre>
-                  </div>
-                );
-              }
-
-              if (state === 'result') {
-                const { result } = toolInvocation;
-
-                return (
-                  <div key={toolCallId}>
-                    {/* {toolName === 'getWeather' ? (
-                      <Weather weatherAtLocation={result} />
-                    ) : toolName === 'createDocument' ? (
-                      <DocumentPreview
-                        isReadonly={isReadonly}
-                        result={result}
-                      />
-                    ) : toolName === 'updateDocument' ? (
-                      <DocumentToolResult
-                        type="update"
-                        result={result}
-                        isReadonly={isReadonly}
-                      />
-                    ) : toolName === 'requestSuggestions' ? (
-                      <DocumentToolResult
-                        type="request-suggestions"
-                        result={result}
-                        isReadonly={isReadonly}
-                      />
-                    ) : (
-                      <pre>{JSON.stringify(result, null, 2)}</pre>
-                    )} */}
-                    <h1>Tool Result {JSON.stringify(result, null, 2)}</h1>
-                  </div>
-                );
-              }
-            }
-          })}
+              // Add a fallback return for the map function
+              return null;
+            }) // End of map callback
+          ) // End of ternary false case
+          }
 
           {!isReadonly && (
             <MessageActions
