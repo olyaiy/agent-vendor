@@ -126,13 +126,12 @@ export async function POST(req: Request) {
       model: modelInstance,
       system: systemPrompt,
       messages,
-      tools: toolRegistry, // Pass the imported tool registry
+      // Tool Call Set Up
+      tools: toolRegistry, 
       maxSteps: 5,
+      toolCallStreaming: true,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
-      experimental_transform: smoothStream({
-        delayInMs: 20, // optional: defaults to 10ms
-        // chunking: 'line', // optional: defaults to 'word'
-      }),
+      experimental_transform: smoothStream({ delayInMs: 20 }),
     
       
 
