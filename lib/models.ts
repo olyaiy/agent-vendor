@@ -16,7 +16,7 @@ export const DEFAULT_CHAT_MODEL: string = 'gpt-4o';
 
 export const myProvider = customProvider({
   languageModels: {
-    'title-model': groq('gpt-4.1-nano'),
+    'title-model': google('gemini-1.5-flash-8b'),
 
     // OpenAI Models
     'gpt-4o-mini': openai('gpt-4o-mini'),
@@ -74,6 +74,9 @@ export const myProvider = customProvider({
     'gemini-1.5-flash-latest': google('gemini-1.5-flash-latest'),
     'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
     'gemini-1.5-flash-8b-latest': google('gemini-1.5-flash-8b-latest'),
+
+
+    // xAI Grok Models 
     'grok-2-latest': xai('grok-2-latest'),
     'grok-3': xai('grok-3'),
     'grok-3-mini': xai('grok-3-mini'),
