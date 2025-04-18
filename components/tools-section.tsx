@@ -28,7 +28,7 @@ function ToolsSectionComponent() { // Removed props
       </CollapsibleTrigger>
       <CollapsibleContent className="py-3 px-3 relative"> {/* Added relative positioning */}
         {/* Static content replaced with overlay */}
-        <div className="absolute inset-0 bg-background/20 backdrop-blur-sm flex items-center justify-center rounded-md z-10"> {/* Overlay div */}
+        <div className="absolute inset-0 bg-background/20  flex items-center justify-center rounded-md z-10"> {/* Overlay div */}
           <span className="text-sm text-muted-foreground italic">Tool usage coming soon!</span>
         </div>
         {/* Original content (can be kept underneath or removed) */}
