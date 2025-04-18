@@ -1,4 +1,5 @@
 import { getTemperatureTool } from './get-temperature';
+import { webSearchTool } from './web-search'; // Import the new tool
 
 /**
  * A central registry for all available AI tools.
@@ -7,6 +8,7 @@ import { getTemperatureTool } from './get-temperature';
  */
 export const toolRegistry = {
   getTemperature: getTemperatureTool,
+  webSearch: webSearchTool, // Register the new tool
   // Add other tools here as they are created
   // e.g., anotherTool: anotherToolDefinition,
 };
