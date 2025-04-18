@@ -127,6 +127,7 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages,
       tools: toolRegistry, // Pass the imported tool registry
+      maxSteps: 5,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
       experimental_transform: smoothStream({
         delayInMs: 20, // optional: defaults to 10ms
