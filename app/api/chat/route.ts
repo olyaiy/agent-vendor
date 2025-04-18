@@ -8,6 +8,7 @@ import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/rep
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { chargeUser } from '@/db/actions/transaction-actions';
+import { toolRegistry } from '@/tools/registry'; // Import the tool registry
 
 /**
  * Handles POST requests for chat conversations
@@ -125,6 +126,7 @@ export async function POST(req: Request) {
       model: modelInstance,
       system: systemPrompt,
       messages,
+      tools: toolRegistry, // Pass the imported tool registry
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
       experimental_transform: smoothStream({
         delayInMs: 20, // optional: defaults to 10ms

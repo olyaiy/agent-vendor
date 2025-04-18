@@ -8,6 +8,7 @@ import { memo, useEffect, useState } from 'react';
 import { SparklesIcon } from '../utils/icons';
 import { Markdown } from './markdown';
 // import { PreviewAttachment } from './preview-attachment';
+import { ToolMessage } from './tool-message';
 import equal from 'fast-deep-equal';
 
 import { cn } from '@/lib/utils';
@@ -138,35 +139,9 @@ const PurePreviewMessage = ({
 
               if (type === 'tool-invocation') {
                 const { toolInvocation } = part;
-                const { toolName, toolCallId, state } = toolInvocation;
-
-                if (state === 'call') {
-                  const { args } = toolInvocation;
-
-                  return (
-                    <div
-                      key={toolCallId}
-                      className={cn({
-                        skeleton: ['getWeather'].includes(toolName),
-                      })}
-                    >
-                      {/* ... (tool call rendering) ... */}
-                      <h1>Tool Invocation</h1>
-                      <pre>{JSON.stringify(args, null, 2)}</pre>
-                    </div>
-                  );
-                }
-
-                if (state === 'result') {
-                  const { result } = toolInvocation;
-
-                  return (
-                    <div key={toolCallId}>
-                      {/* ... (tool result rendering) ... */}
-                      <h1>Tool Result {JSON.stringify(result, null, 2)}</h1>
-                    </div>
-                  );
-                }
+                const { toolCallId } = toolInvocation;
+                // Use the new ToolMessage component
+                return <ToolMessage key={toolCallId} toolInvocation={toolInvocation} />;
               }
               // Add a fallback return for the map function
               return null;

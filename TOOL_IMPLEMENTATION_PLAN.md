@@ -30,11 +30,11 @@
         *   Create using Drizzle ORM.
         *   Columns:
             *   `id`: `text().primaryKey().default(sql\`gen_random_uuid()\`)`
-            *   `name`: `text().notNull()` (Consider uniqueness constraint: unique globally or per user?)
+            *   `name`: `text().notNull()` (Consider uniqueness constraint: unique globally 
+             *   `displayName`: `text()`
             *   `description`: `text()`
             *   `creatorId`: `text().references(() => user.id, { onDelete: "set null" })`
-            *   `visibility`: `text().default("private").notNull()` (e.g., 'private', 'public')
-            *   `type`: `pgEnum('tool_type', ['prebuilt', 'sequence', 'api']).notNull()`
+            *   `type`: `pgEnum('tool_type', ['basetool', 'sequence', 'api']).notNull()`
             *   `definition`: `jsonb("definition")` (NULL for prebuilt initially)
             *   `inputSchema`: `jsonb("input_schema")` (Stores Zod/JSON schema for tool inputs, useful for sequences/API)
             *   `createdAt`: `timestamp().default(sql\`now()\`).notNull()`
