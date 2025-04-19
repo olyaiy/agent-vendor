@@ -1,13 +1,11 @@
 'use client'
 import React, { useState, useEffect } from 'react' // Import useEffect
 import { useChat } from '@ai-sdk/react';
-import { useIsMobile } from '@/hooks/use-mobile';
 // Remove unused DbChat import
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
-import { MobileAgentHeader } from './chat/MobileAgentHeader';
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent'; // Removed unused Model type import
 import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
@@ -43,7 +41,6 @@ export default function Chat({
   // Use the custom hook to manage title state and update logic
   const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
-  const isMobile = useIsMobile();
   // Store the last visited agent ID in local storage
   useEffect(() => {
     if (agent?.id) {
@@ -115,18 +112,14 @@ export default function Chat({
   return (
     <div className="grid grid-cols-12 min-w-0 h-full">
       {/* Main Chat Column */}
-      <div className="flex flex-col min-w-0 h-full col-span-12 md:col-span-9 overflow-y-scroll">
+      <div className="flex flex-col min-w-0 h-full col-span-9 overflow-y-scroll">
         {/* Pass the fetched title to ChatHeader */}
-        {isMobile ? (
-            <MobileAgentHeader agent={agent} hasMessages={messages.length > 0} />
-          ) : (
-            <ChatHeader
-              hasMessages={messages.length > 0}
-              agentName={agent.name}
-              agentId={agent.id}
-              chatTitle={displayTitle} // Pass the title here
-            />
-          )}
+        <ChatHeader
+          hasMessages={messages.length > 0}
+          agentName={agent.name}
+          agentId={agent.id}
+          chatTitle={displayTitle} // Pass the title here
+        />
         {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>
@@ -169,7 +162,7 @@ export default function Chat({
       </div>
 
       {/* Sidebar Agent Details Column */}
-      <div className="hidden md:block col-span-3 h-full max-h-full overflow-y-scroll sticky top-0 right-0">
+      <div className="col-span-3 h-full max-h-full overflow-y-scroll sticky top-0 right-0">
         {/* Pass isOwner, knowledgeItems, selectedModelId, and setSelectedModelId down to AgentInfo */}
         <AgentInfo
           agent={agent}
