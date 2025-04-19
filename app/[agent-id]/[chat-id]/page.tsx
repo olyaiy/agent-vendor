@@ -1,4 +1,5 @@
 import Chat from "@/components/chat";
+import ChatMobile from "@/components/chat-mobile";
 import { selectAgentWithModelById, selectKnowledgeByAgentId, selectAllModels } from "@/db/repository/agent-repository"; // Added selectAllModels
 import { getChatById, getMessagesByChatId } from "@/db/repository/chat-repository";
 import { DBMessage } from "@/db/schema/chat";
@@ -92,13 +93,26 @@ export default async function Page({
 
 
 
-  return (
-    <Chat
-      initialMessages={convertToUIMessages(messagesFromDb)}
-      agent={agent}
-      knowledgeItems={knowledgeItems}
-      models={models} // Pass models list
-      chatId={chatId}
-    />
-  );
+ // Ownership check happens in the client component (Chat)
+
+ const ua = (await headers()).get("user-agent") ?? "";
+ const isMobile = /Mobile|Android|iP(hone|od|ad)|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+
+ return isMobile ? (
+   <div className="h-screen pb-12 w-screen">
+   <ChatMobile
+     agent={agent}
+     knowledgeItems={knowledgeItems}
+     models={models}
+     chatId={chatId}
+     />
+   </div>
+ ) : (
+   <Chat
+     agent={agent}
+     knowledgeItems={knowledgeItems}
+     models={models} // Pass models list
+     chatId={chatId}
+   />
+ );
 }

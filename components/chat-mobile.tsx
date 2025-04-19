@@ -118,7 +118,7 @@ export default function ChatMobile({
       </div>
 
       {/* Chat Input Area - fixed at the bottom */}
-      <div className="mt-auto p-2 border-t border-border"> {/* Added padding and border */}
+      <div className="mt-auto "> 
         <ChatInput
           chatId={chatId}
           agentId={agent.id}
@@ -127,6 +127,7 @@ export default function ChatMobile({
           handleSubmit={handleSubmit}
           status={status}
           stop={stop}
+          className=" px-2 pb-6 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
           // Pass messages length to potentially adjust input style if needed
           hasMessages={messages.length > 0}
         />
