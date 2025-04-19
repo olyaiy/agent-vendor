@@ -2,11 +2,26 @@
 
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { Plus, SearchIcon } from "lucide-react";
+import { 
+  Plus, 
+  SearchIcon, 
+  Home, 
+  MessageSquare, 
+  PlusCircle, 
+  Settings 
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function Header() {
-  const { state } = useSidebar();
+  const { 
+    state, 
+    isMobile,
+  } = useSidebar();
+  
+  const pathname = usePathname();
 
   const buttonVariants = {
     initial: { 
@@ -32,12 +47,24 @@ export function Header() {
     }
   };
 
-  return (
+  const router = useRouter();
+  const defaultNewChatPath = "/agent/new";
+  const [chatTargetPath, setChatTargetPath] = useState(defaultNewChatPath);
+
+  useEffect(() => {
+    const lastVisitedAgentId = typeof window !== "undefined" ? localStorage.getItem('lastVisitedAgentId') : null;
+    if (lastVisitedAgentId) {
+      setChatTargetPath(`/${lastVisitedAgentId}`);
+    } else {
+      setChatTargetPath(defaultNewChatPath);
+    }
+  }, []);
+
+  return !isMobile ? (
     <div
       className={cn(
         "fixed top-4 left-4 z-10 transition-colors duration-150 rounded-md border border-sidebar flex items-center justify-center p-1",
-
-        state === "collapsed" && "bg-sidebar border-border " // Add background when expanded
+        state === "collapsed" && "bg-sidebar border-border "
       )}
     >
       <div className="size-8 items-center justify-center flex">
@@ -77,5 +104,73 @@ export function Header() {
         )}
       </AnimatePresence>
     </div>
+  ) : (
+    <motion.nav 
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="fixed bottom-0 left-0 w-full z-20 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2"
+    >
+      <NavItem 
+        href="/" 
+        icon={<Home size={20} strokeWidth={2} />} 
+        isActive={pathname === '/'} 
+      />
+      <NavItem 
+        href={chatTargetPath}
+        icon={<MessageSquare size={20} strokeWidth={2} />}
+        isActive={pathname.includes('/agent/')}
+        onClick={(e) => {
+          e.preventDefault();
+          router.push(chatTargetPath);
+        }}
+      />
+      <NavItem 
+        href="/agent/create" 
+        icon={<PlusCircle size={20} strokeWidth={2} />} 
+        isActive={pathname === '/agent/create'} 
+      />
+      <NavItem 
+        href="/account" 
+        icon={<Settings size={20} strokeWidth={2} />} 
+        isActive={pathname === '/account'} 
+      />
+    </motion.nav>
+  );
+}
+
+interface NavItemProps {
+  href: string;
+  icon: React.ReactNode;
+  isActive?: boolean;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}
+
+function NavItem({ href, icon, isActive, onClick }: NavItemProps) {
+  return (
+    <Link 
+      href={href} 
+      onClick={onClick}
+      className="group relative flex flex-col items-center justify-center"
+    >
+      <motion.div 
+        whileTap={{ scale: 0.9 }}
+        className={cn(
+          "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200",
+          isActive 
+            ? "bg-primary text-primary-foreground shadow-sm" 
+            : "text-muted-foreground group-hover:text-foreground group-hover:bg-accent/50"
+        )}
+      >
+        {icon}
+      </motion.div>
+      {isActive && (
+        <motion.div 
+          layoutId="activeIndicator"
+          className="absolute -bottom-3 h-1 w-5 bg-primary rounded-full"
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        />
+      )}
+    </Link>
   );
 }
