@@ -8,17 +8,12 @@ import {
 } from '@/components/ui/collapsible';
 import { Settings, ChevronRight } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { ModelSelect } from '@/components/model-select';
+// Removed ModelSelect import
+// Removed ModelInfo import
 
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
 
-interface SettingsSectionProps {
-  selectedModelId: string;
-  setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
-  models: ModelInfo[]; // Add models prop
-}
 
-function SettingsSectionComponent({ selectedModelId, setSelectedModelId, models }: SettingsSectionProps) { // Add models to destructuring
+function SettingsSectionComponent() { // Removed props from destructuring
   const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Default closed
 
   return (
@@ -37,15 +32,7 @@ function SettingsSectionComponent({ selectedModelId, setSelectedModelId, models 
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent className="py-3 px-3 space-y-5">
-        {/* Model Selection */}
-        <div className="space-y-2">
-          <label className="text-xs text-muted-foreground">AI Model</label>
-          <ModelSelect
-            models={models} // Pass models prop
-            defaultValue={selectedModelId} // Use prop for default value
-            onValueChange={setSelectedModelId} // Use prop for change handler
-          />
-        </div>
+        {/* Removed Model Selection section */}
 
         {/* Temperature */}
         <div className="space-y-2">

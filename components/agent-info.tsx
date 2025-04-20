@@ -41,8 +41,14 @@ function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, s
 
   return (
     <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
-      {/* Render Agent Header */}
-      <AgentHeader agent={agent} isOwner={isOwner} />
+      {/* Render Agent Header - Pass model props here */}
+      <AgentHeader
+        agent={agent}
+        isOwner={isOwner}
+        models={models}
+        selectedModelId={selectedModelId}
+        setSelectedModelId={setSelectedModelId}
+      />
 
       {/* Sections Container */}
       <div className="space-y-1">
@@ -55,12 +61,8 @@ function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, s
         {/* Render Tools Section */}
         <ToolsSection />
 
-        {/* Render Settings Section */}
-        <SettingsSection
-          models={models} // Pass models prop down
-          selectedModelId={selectedModelId}
-          setSelectedModelId={setSelectedModelId}
-        />
+        {/* Render Settings Section - Removed props */}
+        <SettingsSection />
       </div>
     </div>
   );
@@ -68,9 +70,6 @@ function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, s
 
 // Export the memoized component
 export const AgentInfo = memo(AgentInfoComponent);
-
-
-
 
 
 

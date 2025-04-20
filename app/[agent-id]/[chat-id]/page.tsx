@@ -8,7 +8,54 @@ import { auth } from "@/lib/auth";
 import { Attachment, UIMessage } from "ai";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Metadata } from 'next';
 
+
+
+type Props = {
+  params: Promise<{ 'agent-id': string; 'chat-id': string }>; // Updated type
+};
+
+export async function generateMetadata(
+  { params }: Props,
+): Promise<Metadata> {
+  // read route params
+  const { 'agent-id': agentId } = await params; // Updated access
+
+  // fetch data
+  const agent = await selectAgentWithModelById(agentId);
+
+  if (!agent) {
+    return {
+      title: 'Agent Not Found',
+    };
+  }
+
+  const description = agent.description; // TODO: Add fallback description if needed
+  const imageUrl = agent.thumbnailUrl; // TODO: Add fallback icon if needed
+
+  return {
+    title: agent.name, // Use agent name as requested
+    ...(description && { description: description }), // Only add description if it exists
+    ...(imageUrl && { // Only add icons if imageUrl exists
+      icons: {
+        icon: imageUrl,
+        apple: imageUrl,
+      },
+    }),
+    openGraph: {
+      title: agent.name,
+      ...(description && { description: description }), // Use description if available
+      ...(imageUrl && { images: [imageUrl] }), // Use image if available
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: agent.name,
+      ...(description && { description: description }), // Use description if available
+      ...(imageUrl && { images: [imageUrl] }), // Use image if available
+    },
+  };
+}
 
 export default async function Page({
   params,
@@ -93,6 +140,8 @@ export default async function Page({
 
 
 
+  const initialMessages = convertToUIMessages(messagesFromDb);
+
  // Ownership check happens in the client component (Chat)
 
  const ua = (await headers()).get("user-agent") ?? "";
@@ -105,6 +154,7 @@ export default async function Page({
      knowledgeItems={knowledgeItems}
      models={models}
      chatId={chatId}
+      initialMessages={initialMessages}
      />
    </div>
  ) : (
@@ -113,6 +163,7 @@ export default async function Page({
      knowledgeItems={knowledgeItems}
      models={models} // Pass models list
      chatId={chatId}
+      initialMessages={initialMessages}
    />
  );
 }

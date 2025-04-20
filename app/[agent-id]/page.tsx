@@ -3,7 +3,54 @@ import ChatMobile from "@/components/chat-mobile";
 import { selectAgentWithModelById, selectKnowledgeByAgentId, selectAllModels } from "@/db/repository/agent-repository"; // Added selectAllModels
 import {generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
+import type { Metadata } from 'next';
 import { headers } from "next/headers";
+
+
+type Props = {
+  params: Promise<{ 'agent-id': string }>; // Updated type
+};
+
+export async function generateMetadata(
+  { params }: Props,
+): Promise<Metadata> {
+  // read route params
+  const { 'agent-id': agentId } = await params; // Updated access
+
+  // fetch data
+  const agent = await selectAgentWithModelById(agentId);
+
+  if (!agent) {
+    return {
+      title: 'Agent Not Found',
+    };
+  }
+
+  const description = agent.description; // TODO: Add fallback description if needed
+  const imageUrl = agent.thumbnailUrl; // TODO: Add fallback icon if needed
+
+  return {
+    title: agent.name,
+    ...(description && { description: description }), // Only add description if it exists
+    ...(imageUrl && { // Only add icons if imageUrl exists
+      icons: {
+        icon: imageUrl,
+        apple: imageUrl,
+      },
+    }),
+    openGraph: {
+      title: agent.name,
+      ...(description && { description: description }), // Use description if available
+      ...(imageUrl && { images: [imageUrl] }), // Use image if available
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: agent.name,
+      ...(description && { description: description }), // Use description if available
+      ...(imageUrl && { images: [imageUrl] }), // Use image if available
+    },
+  };
+}
 
 
 export default async function Page({
