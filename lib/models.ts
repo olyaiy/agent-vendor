@@ -122,6 +122,33 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 2.50,
     outputCostPerMillion: 10.00,
     contextWindow: 128_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
   'gpt-4o-mini': {
     displayName: "GPT-4o Mini",
@@ -129,6 +156,33 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 0.15,
     outputCostPerMillion: 0.60,
     contextWindow: 128_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
   'o1': {
     displayName: "o1",
@@ -491,6 +545,33 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 8.00,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
   'gpt-4.1-mini': {
     displayName: "GPT-4.1 Mini",
@@ -498,6 +579,33 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 0.40,
     outputCostPerMillion: 1.60,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
   'gpt-4.1-nano': {
     displayName: "GPT-4.1 nano",
@@ -505,6 +613,33 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 0.10,
     outputCostPerMillion: 0.40,
     contextWindow: 1_047_576,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
 };
 
