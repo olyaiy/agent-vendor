@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 
 export const metadata: Metadata = {
   title: 'About Agent Vendor | AI Solutions Marketplace',
@@ -39,7 +39,7 @@ export default function AboutPage() {
           {/* Hero Content */}
           <div className="max-w-4xl mx-auto">
             <h1 className="text-5xl sm:text-6xl font-medium mb-6 tracking-tight">
-              The Agent Vendor <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D97742] to-[#F0A875]">Mission</span>
+              The Agent Vendor <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D97742] to-[#F0A875]">Vision</span>
             </h1>
             <p className="text-xl sm:text-2xl max-w-2xl mb-12 text-zinc-400 font-light">
               Connecting AI creators with users who need solutions, without writing a single line of code.
