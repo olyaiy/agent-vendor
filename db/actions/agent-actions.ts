@@ -26,13 +26,14 @@ import {
   selectModelByName,
   countAgents, // Added countAgents
   selectAgentsByCreatorId, // Added for fetching user's agents
+  selectAgentById, // Added for delete action authorization
+  deleteAgent as deleteAgentRepo, // Added for delete action
 } from "@/db/repository/agent-repository";
 // Corrected: Added Knowledge and Tag back to the import
 import { Agent, Model, Knowledge, Tag } from "@/db/schema/agent";
 import { z } from "zod"; // Added for input validation
 import { revalidatePath } from "next/cache"; // For potential cache invalidation
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { selectAgentById } from "@/db/repository/agent-repository"; // Added for remove action
 import { auth } from "@/lib/auth"; // Import auth
 import { headers } from "next/headers"; // Import headers
 
@@ -860,7 +861,7 @@ export async function removeAgentImageAction(
      if (!bucketName || !publicUrlBase || !process.env.R2_ENDPOINT || !process.env.R2_ACCESS_KEY || !process.env.R2_SECRET_KEY) {
         console.error("R2 environment variables are not fully configured for removal.");
         // Proceed to clear DB link even if R2 config is missing
-    }
+     }
 
     // Attempt to delete from R2 if URL exists and config is present
     if (currentUrl && bucketName && publicUrlBase && currentUrl.startsWith(publicUrlBase)) {
@@ -907,5 +908,57 @@ export async function removeAgentImageAction(
   } catch (error) {
     console.error(`Failed to remove agent ${imageType}:`, error);
     return { success: false, error: `An unexpected error occurred during removal: ${(error as Error).message}` };
+  }
+}
+
+/**
+ * Server action to delete an agent.
+ * Performs authorization check and deletes the agent and associated data.
+ * @param agentId - The ID of the agent to delete.
+ * @returns Promise with success status or error.
+ */
+export async function deleteAgentAction(agentId: string): Promise<ActionResult<void>> {
+  // Basic ID validation
+  if (!agentId || typeof agentId !== 'string') {
+    return { success: false, error: "Invalid agent ID provided." };
+  }
+
+  try {
+    // Get the user session
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: "User not authenticated." };
+    }
+
+    // Fetch agent details to check creator
+    const agentToDelete = await selectAgentById(agentId);
+
+    if (!agentToDelete) {
+      return { success: false, error: "Agent not found." };
+    }
+
+    // Check if the logged-in user is the creator
+    if (session.user.id !== agentToDelete.creatorId) {
+      return { success: false, error: "Unauthorized: You do not have permission to delete this agent." };
+    }
+
+    // Delete the agent (repository handles cascading deletes for knowledge and agent_tags)
+    await deleteAgentRepo(agentId);
+
+    // Revalidate relevant caches
+    revalidatePath(`/profile/agents`); // Revalidate the user's agents list
+    revalidatePath(`/agents`); // Revalidate the public agents list (if applicable)
+    // Consider revalidating the specific agent page path if it might still be cached
+    revalidatePath(`/agent/${agentId}`);
+
+
+    return { success: true, data: undefined };
+
+  } catch (error) {
+    console.error("Failed to delete agent:", error);
+    return { success: false, error: (error as Error).message };
   }
 }

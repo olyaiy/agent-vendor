@@ -7,30 +7,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ModelSelect } from "@/components/model-select"; 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
+import { ModelSelect } from "@/components/model-select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import MultipleSelector, { Option } from "@/components/ui/multiselect"; 
+import MultipleSelector, { Option } from "@/components/ui/multiselect";
 import {
   updateAgentAction,
   addKnowledgeItemAction,
   updateKnowledgeItemAction,
   deleteKnowledgeItemAction,
-  updateAgentTagsAction, 
-  uploadAgentImageAction, 
-  removeAgentImageAction, 
+  updateAgentTagsAction,
+  uploadAgentImageAction,
+  removeAgentImageAction,
+  deleteAgentAction, // Import the new delete action
 } from "@/db/actions/agent-actions";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
-import { AgentAvatar } from "@/components/agent-avatar"; 
+import { AgentAvatar } from "@/components/agent-avatar";
 import { FormSection } from "@/components/form-section";
-import { KnowledgeSection } from "@/components/knowledge-section"; 
+import { KnowledgeSection } from "@/components/knowledge-section";
 import { Agent, Knowledge } from "@/db/schema/agent";
 import { FullscreenIcon } from "@/components/utils/icons";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog"; // Import AlertDialog components
+
 
 export interface ModelInfo {
   id: string;
@@ -63,12 +76,11 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isKnowledgeSubmitting, startKnowledgeTransition] = useTransition(); // Separate transition for knowledge actions
+  const [isDeleting, startDeleteTransition] = useTransition(); // State for delete transition
 
   // Form state initialized with agent data
-  // Form state
-  // Form state
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl); // TODO: Implement image upload
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(agent.avatarUrl); // Added avatarUrl state // TODO: Implement image upload
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(agent.avatarUrl);
   const [primaryModelId, setPrimaryModelId] = useState<string>(agent.primaryModelId);
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
   const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge);
@@ -187,6 +199,21 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
       }
     });
   };
+
+  // --- Delete Agent Handler ---
+  const handleDeleteAgent = async () => {
+    startDeleteTransition(async () => {
+      const result = await deleteAgentAction(agent.id);
+      if (result.success) {
+        toast.success("Agent deleted successfully.");
+        router.push('/profile/agents'); // Redirect to the user's agents list
+      } else {
+        toast.error(result.error || "Failed to delete agent.");
+        console.error("Failed to delete agent:", result.error);
+      }
+    });
+  };
+
 
   // --- Knowledge Handlers ---
   const handleAddItem = async (item: { title: string; content: string; sourceUrl?: string }): Promise<Knowledge> => {
@@ -676,7 +703,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                   Tips for effective system prompts:
                 </h3>
                 <ul className="list-disc list-inside space-y-1.5 pl-1 text-muted-foreground">
-                  <li>Define the agent&apos;s role clearly (e.g., &quot;You are a math tutor&quot;)</li>
+                  <li>Define the agent&apos;s role clearly (e.g., "You are a math tutor")</li>
                   <li>Specify tone and style (formal, casual, technical)</li>
                   <li>Set response length preferences (concise, detailed)</li>
                   <li>Include any domain-specific knowledge</li>
@@ -710,6 +737,40 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
       {/* Footer Actions */}
       <div className="flex justify-between items-center py-5 border-t mt-8">
         <div className="flex gap-2"> {/* Group Cancel and Chat buttons */}
+          {/* Delete Agent Button and Dialog */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                className="w-28 cursor-pointer"
+                disabled={isDeleting} // Disable while deleting
+              >
+                {isDeleting ? <Loader2 className="size-4 animate-spin" /> : null}
+                Delete Agent
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your agent
+                  and remove all associated data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAgent}
+                  disabled={isDeleting} // Disable action button while deleting
+                >
+                   {isDeleting ? <Loader2 className="size-4 animate-spin" /> : null}
+                   Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <Button
             type="button"
             variant="outline"
