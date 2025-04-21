@@ -79,7 +79,7 @@ export async function AgentsGrid({ tag, searchQuery }: AgentsGridProps) {
           {filteredAgents.map((agent) => ( // Use filteredAgents
             <Suspense key={agent.id} fallback={<AgentItemLoading />}>
               {/* Assuming AgentCard can handle the agent object potentially including tags */}
-              <AgentCard agent={{...agent, visibility: 'public'}} />
+              <AgentCard agent={agent} />
             </Suspense>
           ))}
         </div>

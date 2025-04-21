@@ -185,6 +185,7 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
   creatorId: string;
   tags: AgentTagInfo[];
   createdAt: Date; // Added createdAt
+  visibility: string; // Added visibility
 }>> {
   // Use sql template literal for JSON aggregation
   const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
@@ -199,7 +200,8 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
       avatarUrl: agent.avatarUrl,
       creatorId: agent.creatorId,
       tags: tagsAgg, // Select the aggregated tags
-      createdAt: agent.createdAt // Select createdAt
+      createdAt: agent.createdAt, // Select createdAt
+      visibility: agent.visibility // Select visibility
     })
     .from(agent)
     // Left join to include agents even if they have no tags
@@ -265,7 +267,8 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
       agent.thumbnailUrl,
       agent.avatarUrl,
       agent.creatorId,
-      agent.createdAt // Need to include orderBy column in groupBy
+      agent.createdAt, // Need to include orderBy column in groupBy
+      agent.visibility // Need to include visibility in groupBy
     )
     .orderBy(...orderByClause) // Apply default order by
     .limit(20);

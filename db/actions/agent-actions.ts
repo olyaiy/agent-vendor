@@ -190,7 +190,7 @@ export async function deleteKnowledgeItemAction(knowledgeId: string): Promise<Ac
  * @param tagName - Optional tag name to filter agents by.
  * @returns Promise with success status and agent list or error
  */
-// Define the expected agent type returned by selectRecentAgents, including createdAt
+// Define the expected agent type returned by selectRecentAgents, including createdAt and visibility
 type AgentWithTagsAndDate = {
   id: string;
   name: string;
@@ -200,6 +200,7 @@ type AgentWithTagsAndDate = {
   creatorId: string;
   tags: { id: string; name: string }[];
   createdAt: Date;
+  visibility: string; // Added visibility
 };
 
 export async function getRecentAgents(tagName?: string, searchQuery?: string): Promise<ActionResult<AgentWithTagsAndDate[]>> {
