@@ -136,8 +136,8 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'o4-mini': {
     displayName: "o4 Mini",
-    description: "Faster, cost-efficient reasoning model delivering strong performance on math, coding and vision tasks",
-    inputCostPerMillion: 1.100,
+    description: "OpenAI's o4-mini delivers fast, cost-efficient reasoning with exceptional performance for its size, particularly excelling in math (best-performing on AIME benchmarks), coding, and visual tasks.",
+    inputCostPerMillion: 1.10,
     outputCostPerMillion: 4.40,
     contextWindow: 200_000,
   },
@@ -216,8 +216,8 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
   },
   'claude-3-5-sonnet-20241022': {
-    displayName: "Claude 3.5 Sonnet",
-    description: "Advanced model excelling in coding, writing, visual data extraction, agentic tasks, and tool use with computer action generation.",
+    displayName: "Al Anthropic / Claude 3.5 Sonnet",
+    description: "Claude 3.5 Sonnet strikes the ideal balance between intelligence and speed-particularly for enterprise workloads. It delivers strong performance at a lower cost compared to its peers, and is engineered for high endurance in large-scale Al deployments.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
     contextWindow: 200_000,
@@ -375,7 +375,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
   },
   'gpt-4.1-nano': {
-    displayName: "5 OpenAI / GPT-4.1 nano",
+    displayName: "GPT-4.1 nano",
     description: "GPT-4.1 nano is the fastest, most cost-effective GPT 4.1 model.",
     inputCostPerMillion: 0.10,
     outputCostPerMillion: 0.40,
