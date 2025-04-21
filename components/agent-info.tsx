@@ -79,7 +79,7 @@ function AgentInfoComponent({
 
         {/* Render Settings Section - Pass down new props */}
         <SettingsSection
-          selectedModelString={selectedModelString} // Pass the string identifier
+          // selectedModelString={selectedModelString} // Pass the string identifier
           modelSettings={selectedModelDetail?.defaultSettings} // Pass only the settings object or undefined
           chatSettings={chatSettings}
           onSettingChange={onSettingChange}

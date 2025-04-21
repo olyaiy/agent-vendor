@@ -164,6 +164,8 @@ export async function POST(req: Request) {
          * - Persists user and assistant messages
          */
 
+        console.log('SETTINGS APPLIED WERE', receivedSettings);
+
         // Destructure needed properties from the inferred event type
         const { response, usage } = event;
 
