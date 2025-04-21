@@ -652,10 +652,42 @@ export const modelDetails: Record<string, ModelDetails> = {
   // Perplexity Models
   'sonar-pro': {
     displayName: "Sonar Pro",
-    description: "Premium research-focused model with advanced information retrieval and synthesis capabilities for complex queries.",
+    description: "Perplexity's premier offering with search grounding, supporting advanced queries and follow-ups.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
-    contextWindow: 32_000, // Estimated based on similar models
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 8000
+      },
+      temperature: {
+        default: 0.2,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 0.9,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 0,
+        min: 0,
+        max: 2048
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
   'sonar': {
     displayName: "Sonar",
@@ -835,11 +867,27 @@ export const modelDetails: Record<string, ModelDetails> = {
   // xAI Grok Models (text only)
   'grok-2-latest': {
     displayName: "Grok 2",
-    description: "Powerful model with strong reasoning capabilities and a distinctive personality for engaging interactions.",
+    description: "Grok 2 is a frontier language model with state-of-the-art reasoning capabilities. It features advanced capabilities in chat, coding, and reasoning, outperforming both Claude 3.5 Sonnet and GPT-4-Turbo on the LMSYS leaderboard.",
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 10.00,
-    contextWindow: 32_768,
-    
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 4000
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   'grok-3': {
     displayName: "Grok 3",
