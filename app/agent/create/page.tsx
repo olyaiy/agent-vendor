@@ -3,6 +3,7 @@ import { CreateAgentForm, ModelInfo } from "./create-agent-form";
 import { headers } from "next/headers";
 import { getAllModels, getAllTagsAction } from "@/db/actions/agent-actions"; // Import server actions
 import { Tag } from "@/db/schema/agent"; // Import Tag type
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 // Models data
 // Removed mockModels definition
@@ -13,10 +14,6 @@ export default async function CreateAgentPage() {
   const session = await auth.api.getSession({
     headers: await headers()
   })
-
-  if(!session) {
-    return <div>Not authenticated</div>
-  }
   
   // Fetch models and tags efficiently on the server
   const [modelsResult, tagsResult] = await Promise.all([
@@ -47,18 +44,43 @@ export default async function CreateAgentPage() {
     // Consider showing an error message or allowing creation without tags
   }
   
-  
-    return (
-      <div className="container py-8 px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Create New Agent</h1>
-          <p className="text-muted-foreground mt-2">
-            Design your AI agent by configuring its personality, capabilities, and behavior
-          </p>
-        </div>
-        
-        {/* Pass the fetched models (or empty array) to the client component */}
-        <CreateAgentForm userId={session.user.id} models={availableModels} allTags={availableTags} />
+  const pageContent = (
+    <div className="container py-8 px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">Create New Agent</h1>
+        <p className="text-muted-foreground mt-2">
+          Design your AI agent by configuring its personality, capabilities, and behavior
+        </p>
+      </div>
+      
+      {/* Pass the fetched models (or empty array) to the client component */}
+      <CreateAgentForm userId={session?.user?.id || ''} models={availableModels} allTags={availableTags} />
     </div>
   );
+
+  if(!session) {
+    return (
+      <div className="relative max-h-screen overflow-hidden">
+        {/* Blurred background showing the form */}
+        <div className="filter blur-sm pointer-events-none opacity-50">
+          {pageContent}
+        </div>
+        
+        {/* Auth overlay */}
+        <div className="absolute inset-0 flex items-center justify-center ">
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg shadow-lg p-8 max-w-md w-full mx-4 border border-border">
+            <div className="text-center space-y-4 mb-6 ">
+              <h2 className="text-2xl font-bold">Sign in to access</h2>
+              <p className="text-muted-foreground">
+                Create and monetize your custom AI agents by signing in to your account
+              </p>
+            </div>
+            <GoogleSignInButton className="w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return pageContent;
 }

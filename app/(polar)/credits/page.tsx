@@ -20,7 +20,7 @@ export default async function Page() {
 
   // Redirect if not authenticated
   if (!session?.user?.id) {
-    redirect('/sign-in');
+    redirect('/auth');
   }
 
   // Fetch user credits from database
