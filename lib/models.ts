@@ -74,6 +74,7 @@ export const myProvider = customProvider({
     'gemini-1.5-flash-latest': google('gemini-1.5-flash-latest'),
     'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
     'gemini-1.5-flash-8b-latest': google('gemini-1.5-flash-8b-latest'),
+    'gemini-2.5-flash-preview-04-17': google('gemini-2.5-flash-preview-04-17'),
 
 
     // xAI Grok Models 
@@ -315,6 +316,13 @@ export const modelDetails: Record<string, ModelDetails> = {
     outputCostPerMillion: 0.30,
     contextWindow: 1_048_576,
   },
+  'gemini-2.5-flash-preview-04-17': {
+    displayName: "Gemini 2.5 Flash Preview",
+    description: "Gemini 2.5 Flash is our first fully hybrid reasoning model, giving developers the ability to turn thinking on or off. The model also allows developers to set thinking budgets to find the right tradeoff between quality, cost, and latency.",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.40,
+    contextWindow: 1_048_576,
+  },
   // xAI Grok Models (text only)
   'grok-2-latest': {
     displayName: "Grok 2",
@@ -430,6 +438,7 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'gemini-1.5-flash-latest': google('gemini-1.5-flash-latest'),
     'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
     'gemini-1.5-flash-8b-latest': google('gemini-1.5-flash-8b-latest'),
+    'gemini-2.5-flash-preview-04-17': google('gemini-2.5-flash-preview-04-17'),
     // xAI Grok
     'grok-2-latest': xai('grok-2-latest'),
     'grok-3': xai('grok-3'),
