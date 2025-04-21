@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export const metadata: Metadata = {
   title: 'About Agent Vendor | AI Solutions Marketplace',
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     url: 'https://www.agentvendor.com/about',
     images: [
       {
-        url: 'https://www.agentvendor.com/og-image.jpg', // Keep existing OG image for now
+        url: 'https://www.agentvendor.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Agent Vendor About',
@@ -27,232 +27,201 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="space-y-32 bg-background text-foreground">
-      {/* Hero */}
-      <section className="relative py-32 overflow-hidden border-b border-border">
-        {/* Removed multiple complex backgrounds, simplifying to a dark base with subtle gradient */}
-        <div className="absolute inset-0 bg-card opacity-95"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50"></div>
-        {/* Refined radial gradient for a focused warm glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(217,119,66,0.1),_transparent_60%)] opacity-80"></div>
-         {/* Subtle noise */}
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
-        {/* Top border subtle highlight */}
-        <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+    <main className="bg-black text-white">
+      {/* Unified Container with Consistent Padding and Background */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[#0A0A0B]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(217,119,66,0.08),_transparent_70%)] opacity-60"></div>
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
+        <div className="absolute top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-zinc-700/20 to-transparent"></div>
 
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <h1 className="text-5xl sm:text-7xl font-bold mb-6 text-foreground tracking-tight">
-            The Agent Vendor <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D97742] to-[#F0A875]">Story</span>
-          </h1>
-          <p className="text-2xl sm:text-3xl max-w-3xl mx-auto mb-12 text-muted-foreground font-light">
-            Connecting AI creators with users who need solutions, without writing a single line of code.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-5">
-            {/* Primary Button - Darker base, accent glow */}
-            <Button size="lg" className="bg-card hover:bg-muted text-foreground border border-border hover:border-accent shadow-[0_0_25px_rgba(217,119,66,0.2)] hover:shadow-[0_0_35px_rgba(217,119,66,0.3)] backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-in-out px-8 py-3" asChild>
-              <Link href="/">Start Creating</Link>
-            </Button>
-            {/* Secondary Button - Outline, accent hover */}
-            <Button variant="outline" size="lg" className="border-border text-muted-foreground hover:bg-secondary hover:border-accent hover:text-foreground backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-in-out px-8 py-3" asChild>
-              <Link href="/">Explore Agents</Link>
-            </Button>
-          </div>
-        </div>
-         {/* Bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent"></div>
-      </section>
-
-      {/* Our Mission */}
-      <section className="container mx-auto px-6 space-y-12">
-        <h2 className="text-4xl font-bold text-center text-foreground">Our <span className="text-accent-foreground">Mission</span></h2>
-        <p className="text-center max-w-3xl mx-auto text-xl text-muted-foreground">We strive to democratize AI by connecting domain experts with those who need intelligent, specialized solutions.</p>
-        {/* Updated Card Styling - More subtle, focus on border/glow */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {[
-            { title: 'Empower Experts', desc: 'Monetize your expertise by creating valuable AI agents.' },
-            { title: 'Connect Users', desc: 'Discover and deploy AI solutions tailored to your challenges.' },
-            { title: 'Reward Quality', desc: 'Support a sustainable ecosystem that values high-quality agents.' }
-          ].map((item, index) => (
-            <Card key={index} className="text-center border border-border/60 bg-card bg-opacity-80 backdrop-blur-lg shadow-xl shadow-black/40 hover:shadow-black/60 hover:border-accent transition-all duration-300 hover:-translate-y-1 rounded-xl overflow-hidden group">
-              {/* Subtle accent glow from bottom on hover */}
-              <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#D97742]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <CardHeader className="pt-8 pb-6">
-                <CardTitle className="text-foreground text-xl">{item.title}</CardTitle>
-                <CardDescription className="text-muted-foreground mt-2">{item.desc}</CardDescription>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Vision */}
-      <section className="py-24 relative border-y border-border">
-        <div className="absolute inset-0 bg-card"></div>
-        {/* Different radial gradient for variation */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(217,119,66,0.06),_transparent_50%)] opacity-90"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <h2 className="text-4xl font-bold text-center text-foreground mb-6">The Future of <span className="text-accent-foreground">AI</span></h2>
-          <p className="text-center max-w-3xl mx-auto text-xl mb-20 text-muted-foreground">We envision a world where specialized AI agents handle specific tasks with expertise, freeing humans to focus on what matters most.</p>
-          {/* Updated Vision Item Styling */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-16">
-            {[
-              { icon: '✨', title: 'Specialized Knowledge', desc: 'AI agents tailored to specific domains for expert-level performance.' },
-              { icon: '💰', title: 'Democratized Value', desc: 'Fair compensation ensures creators are rewarded for their work.' },
-              { icon: '🛡️', title: 'Responsible AI', desc: 'Privacy and security at the core of every solution.' }
-            ].map((item, index) => (
-              <div key={index} className="space-y-5 text-center group">
-                {/* Icon container - brushed metal feel with accent border */}
-                <div className="w-16 h-16 rounded-full bg-secondary border border-border mx-auto flex items-center justify-center shadow-lg shadow-black/30 group-hover:border-accent/40 group-hover:shadow-[0_0_20px_rgba(240,168,117,0.15)] transition-all duration-300">
-                  <span className="text-2xl text-accent-foreground opacity-80 group-hover:opacity-100 transition-opacity">{item.icon}</span>
-                </div>
-                <h3 className="text-xl font-semibold text-foreground">{item.title}</h3>
-                <p className="text-muted-foreground">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* For Creators */}
-      <section className="container mx-auto px-6 space-y-12">
-        <h2 className="text-4xl font-bold text-center text-foreground">For <span className="text-accent-foreground">Creators</span></h2>
-        <p className="text-center max-w-3xl mx-auto text-xl text-muted-foreground">Turn your AI expertise into a passive income stream by building specialized agents.</p>
-        {/* Updated Creator Card Styling */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {[
-            { title: 'Design Your AI Agent', desc: 'Create powerful AI agents by defining intelligence, personality, and capabilities—no coding required.' },
-            { title: 'Join the Marketplace', desc: 'List your agent among top AI solutions and reach thousands of users.' },
-            { title: 'Generate Income', desc: 'Earn 10% of token usage whenever someone interacts with your agent.' },
-            { title: 'Scale Your Business', desc: 'Iterate with user feedback and grow your portfolio to generate revenue 24/7.' }
-          ].map((item, index) => (
-            <div key={index} className="p-8 border border-border/60 rounded-xl bg-card bg-opacity-70 backdrop-blur-md hover:shadow-xl hover:shadow-black/50 hover:border-accent/70 transition-all group relative overflow-hidden hover:-translate-y-1 duration-300">
-              {/* Subtle corner gradient accent */}
-              <div className="absolute top-0 left-0 w-1/4 h-1/4 bg-gradient-to-br from-[#D97742]/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-tl-xl pointer-events-none"></div>
-              <h3 className="text-2xl font-semibold mb-4 text-foreground">{item.title}</h3>
-              <p className="text-muted-foreground">{item.desc}</p>
+        <div className="container mx-auto px-6 relative z-10 space-y-24 py-32">
+          {/* Hero Content */}
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-5xl sm:text-6xl font-medium mb-6 tracking-tight">
+              The Agent Vendor <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D97742] to-[#F0A875]">Mission</span>
+            </h1>
+            <p className="text-xl sm:text-2xl max-w-2xl mb-12 text-zinc-400 font-light">
+              Connecting AI creators with users who need solutions, without writing a single line of code.
+            </p>
+            <div className="flex gap-5">
+              <Button size="lg" className="bg-black text-white border border-zinc-800 hover:border-[#D97742]/50 hover:shadow-[0_0_25px_rgba(217,119,66,0.15)] transition-all duration-300" asChild>
+                <Link href="/">Start Creating</Link>
+              </Button>
+              <Button variant="outline" size="lg" className="border-zinc-800 text-zinc-400 hover:bg-black/30 hover:border-zinc-700 transition-all duration-300" asChild>
+                <Link href="/">Explore Agents</Link>
+              </Button>
             </div>
-          ))}
-        </div>
-        <div className="text-center pt-6">
-          {/* Reusing Hero Primary Button Style */}
-          <Button size="lg" className="bg-card hover:bg-muted text-foreground border border-border hover:border-accent shadow-[0_0_25px_rgba(217,119,66,0.2)] hover:shadow-[0_0_35px_rgba(217,119,66,0.3)] backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-in-out px-10 py-4 text-lg" asChild>
-            <Link href="/creators/start">Start Creating Today</Link>
-          </Button>
-        </div>
-      </section>
+          </div>
 
-      {/* For Users */}
-      <section className="py-24 relative border-y border-border">
-        <div className="absolute inset-0 bg-card"></div>
-        {/* Another subtle radial gradient variation */}
-         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_rgba(217,119,66,0.07),_transparent_50%)] opacity-90"></div>
-        <div className="container mx-auto px-6 space-y-12 relative z-10">
-          <h2 className="text-4xl font-bold text-center text-foreground">For <span className="text-accent-foreground">Users</span></h2>
-          <p className="text-center max-w-3xl mx-auto text-xl text-muted-foreground">Discover specialized AI agents built by domain experts to solve your unique challenges.</p>
-           {/* Updated User Card Styling */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {[
-              { title: 'Access Specialized Expertise', items: ['Domain-specific AI built with nuance.', 'Curated marketplace of high-quality agents.', 'Ratings and reviews from real users.'] },
-              { title: 'Transparent & Fair Pricing', items: ['No subscriptions or hidden fees.', 'Free tokens for new users.', 'Only pay for successful interactions.'] }
-            ].map((section, index) => (
-              <div key={index} className="p-10 border border-border/50 rounded-2xl bg-secondary backdrop-blur-lg shadow-lg shadow-black/40">
-                <h3 className="text-2xl font-semibold mb-8 text-foreground">{section.title}</h3>
-                <ul className="space-y-4">
-                  {section.items.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="text-accent-foreground mt-1 text-xl leading-none opacity-80">•</span>
-                      <span className="text-muted-foreground">{item}</span>
-                    </li>
+          {/* Mission Content - Simplified without cards */}
+          <div className="max-w-5xl mx-auto border-t border-zinc-800/40 pt-16">
+            <h2 className="text-3xl font-medium mb-12 text-white">Our <span className="text-[#D97742]">Mission</span></h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
+              {[
+                { title: 'Empower Experts', desc: 'Monetize expertise by creating valuable AI agents.' },
+                { title: 'Connect Users', desc: 'Discover and deploy solutions tailored to your challenges.' },
+                { title: 'Reward Quality', desc: 'Support a sustainable ecosystem valuing high-quality agents.' }
+              ].map((item, index) => (
+                <div key={index} className="group">
+                  <h3 className="text-lg font-normal mb-3 text-white">{item.title}</h3>
+                  <p className="text-zinc-400 font-light">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Vision Content - With circular icons */}
+          <div className="max-w-5xl mx-auto border-t border-zinc-800/40 pt-16">
+            <h2 className="text-3xl font-medium mb-12 text-white">The Future of <span className="text-[#D97742]">AI</span></h2>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-12">
+              {[
+                { icon: '✨', title: 'Specialized Knowledge', desc: 'Domain-specific AI agents with expert-level performance.' },
+                { icon: '💰', title: 'Democratized Value', desc: 'Fair compensation ensuring creators are rewarded for their work.' },
+                { icon: '🛡️', title: 'Responsible AI', desc: 'Privacy and security at the core of every solution.' }
+              ].map((item, index) => (
+                <div key={index} className="group">
+                  <div className="w-10 h-10 rounded-full bg-black border border-zinc-800 flex items-center justify-center mb-5 group-hover:border-[#D97742]/30 transition-all duration-500">
+                    <span className="text-lg text-[#D97742] opacity-80">{item.icon}</span>
+                  </div>
+                  <h3 className="text-lg font-medium mb-3 text-white">{item.title}</h3>
+                  <p className="text-zinc-400 font-light">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* For Creators - Two column layout with subtle highlights */}
+          <div className="max-w-5xl mx-auto border-t border-zinc-800/40 pt-16">
+            <div className="flex flex-col md:flex-row md:items-start gap-16">
+              <div className="md:w-1/3">
+                <h2 className="text-3xl font-medium mb-4 text-white">For <span className="text-[#D97742]">Creators</span></h2>
+                <p className="text-zinc-400 font-light mb-6">Turn your AI expertise into a passive income stream by building specialized agents.</p>
+                <Button size="lg" className="bg-black text-white border border-zinc-800 hover:border-[#D97742]/50 hover:shadow-[0_0_25px_rgba(217,119,66,0.15)] transition-all duration-300" asChild>
+                  <Link href="/creators/start">Start Creating</Link>
+                </Button>
+              </div>
+              
+              <div className="md:w-2/3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                  {[
+                    { title: 'Design Your AI Agent', desc: 'Create powerful AI agents by defining intelligence, personality, and capabilities—no coding required.' },
+                    { title: 'Join the Marketplace', desc: 'List your agent among top AI solutions and reach thousands of users.' },
+                    { title: 'Generate Income', desc: 'Earn 10% of token usage whenever someone interacts with your agent.' },
+                    { title: 'Scale Your Business', desc: 'Iterate with user feedback and grow your portfolio to generate revenue 24/7.' }
+                  ].map((item, index) => (
+                    <div key={index} className="group relative pb-6">
+                      <div className="absolute top-0 left-0 w-8 h-[1px] bg-[#D97742]/30"></div>
+                      <h3 className="text-base font-medium mb-2 mt-3 text-white">{item.title}</h3>
+                      <p className="text-zinc-400 text-sm font-light">{item.desc}</p>
+                    </div>
                   ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="text-center pt-6">
-             {/* Reusing Hero Secondary Button Style */}
-            <Button variant="outline" size="lg" className="border-border text-muted-foreground hover:bg-secondary hover:border-accent hover:text-foreground backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-in-out px-10 py-4 text-lg" asChild>
-              <Link href="/agents">Find Your AI Agent</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="container mx-auto px-6 space-y-16">
-        <h2 className="text-4xl font-bold text-center text-foreground">How Our <span className="text-accent-foreground">Ecosystem</span> Works</h2>
-        {/* Updated How It Works Card Styling */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-          {[
-            { step: '01', title: 'Users Access AI', desc: 'Purchase tokens and engage with agents, paying only for what you use.' },
-            { step: '02', title: 'Token Economics', desc: 'Costs include AI provider fee, 18% premium, and $0.30 transaction fee.' },
-            { step: '03', title: 'Creator Rewards', desc: 'Creators earn 10% of token usage, paid monthly with transparent analytics.' }
-          ].map((item, index) => (
-            <div key={index} className="p-6 border border-border/60 rounded-xl bg-card bg-opacity-70 backdrop-blur-md hover:shadow-lg hover:shadow-black/40 transition-all relative group overflow-hidden hover:-translate-y-1 duration-300 hover:border-accent/70">
-              {/* Subtle top gradient accent on hover */}
-              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#D97742]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative z-10">
-                 {/* Styled Step Indicator */}
-                <div className="w-12 h-12 rounded-lg bg-secondary border border-border flex items-center justify-center mb-5 shadow-md shadow-black/25 group-hover:border-accent/40 transition-all">
-                  <span className="text-muted-foreground font-medium group-hover:text-accent-foreground/80 transition-colors text-sm">{item.step}</span>
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-foreground">{item.title}</h3>
-                <p className="text-muted-foreground">{item.desc}</p>
               </div>
             </div>
-          ))}
-        </div>
-        {/* Example Transaction Card - Enhanced Styling */}
-        <div className="max-w-md mx-auto pt-4">
-          <Card className="border border-border/70 bg-gradient-to-b from-card/80 to-muted/80 backdrop-blur-lg shadow-xl shadow-black/50 overflow-hidden group rounded-xl">
-             {/* Accent border highlight */}
-             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D97742]/40 to-transparent"></div>
-            <CardHeader className="pb-4 pt-6">
-              <CardTitle className="text-foreground text-center text-lg font-medium">Example Transaction</CardTitle>
-            </CardHeader>
-            <CardContent className="px-6 pb-6">
-              <div className="space-y-3.5">
-                <div className="flex justify-between border-b border-border/40 pb-3">
-                  <span className="text-muted-foreground">User Pays</span>
-                  <span className="font-medium text-foreground">$10.00</span>
+          </div>
+
+          {/* For Users - Simplified with inline lists */}
+          <div className="max-w-5xl mx-auto border-t border-zinc-800/40 pt-16">
+            <div className="flex flex-col md:flex-row md:items-start gap-16">
+              <div className="md:w-1/3">
+                <h2 className="text-3xl font-medium mb-4 text-white">For <span className="text-[#D97742]">Users</span></h2>
+                <p className="text-zinc-400 font-light mb-6">Discover specialized AI agents built by domain experts to solve your unique challenges.</p>
+                <Button variant="outline" size="lg" className="border-zinc-800 text-zinc-400 hover:bg-black/30 hover:border-zinc-700 transition-all duration-300" asChild>
+                  <Link href="/agents">Find Your Agent</Link>
+                </Button>
+              </div>
+              
+              <div className="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-base font-medium mb-4 text-white border-b border-zinc-800/50 pb-2">Access Specialized Expertise</h3>
+                  <ul className="space-y-3">
+                    {['Domain-specific AI built with nuance', 'Curated marketplace of high-quality agents', 'Ratings and reviews from real users'].map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <span className="text-[#D97742] mt-1 leading-none opacity-80">—</span>
+                        <span className="text-zinc-400 font-light">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="flex justify-between border-b border-border/40 pb-3">
-                  <span className="text-muted-foreground">Creator Receives</span>
-                  <span className="font-medium text-accent-foreground">$0.85</span> {/* Highlight creator share */}
-                </div>
-                <div className="flex justify-between pb-2 pt-1">
-                  <span className="text-muted-foreground">Platform Fee</span>
-                  <span className="font-medium text-foreground">$0.68</span>
+                <div>
+                  <h3 className="text-base font-medium mb-4 text-white border-b border-zinc-800/50 pb-2">Transparent & Fair Pricing</h3>
+                  <ul className="space-y-3">
+                    {['No subscriptions or hidden fees', 'Free tokens for new users', 'Only pay for successful interactions'].map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <span className="text-[#D97742] mt-1 leading-none opacity-80">—</span>
+                        <span className="text-zinc-400 font-light">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              <p className="mt-5 text-xs text-muted-foreground/70 text-center">Note: Transactions include a $0.30 processing fee.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative py-32 overflow-hidden border-t border-border">
-        {/* Similar background to Hero */}
-        <div className="absolute inset-0 bg-card opacity-95"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/50"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(217,119,66,0.1),_transparent_60%)] opacity-80"></div>
-        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.02] mix-blend-overlay"></div>
-        <div className="absolute bottom-0 w-full h-px bg-gradient-to-r from-transparent via-border/50 to-transparent"></div>
-
-        <div className="container mx-auto px-6 text-center space-y-10 relative z-10">
-          <h2 className="text-4xl sm:text-5xl font-bold text-foreground">Ready to Join the <span className="text-accent-foreground">AI Agent</span> Economy?</h2>
-          <p className="max-w-3xl mx-auto text-xl text-muted-foreground">Whether you&apos;re creating AI agents or using them to solve problems, Agent Vendor connects experts with those who need their knowledge.</p>
-          <div className="flex flex-col sm:flex-row justify-center gap-5 pt-4">
-            {/* Reusing Hero Buttons */}
-             <Button size="lg" className="bg-card hover:bg-muted text-foreground border border-border hover:border-accent shadow-[0_0_25px_rgba(217,119,66,0.2)] hover:shadow-[0_0_35px_rgba(217,119,66,0.3)] backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-in-out px-10 py-4 text-lg" asChild>
-              <Link href="/creators/start">Get Started Today</Link>
-            </Button>
-            <Button variant="outline" size="lg" className="border-border text-muted-foreground hover:bg-secondary hover:border-accent hover:text-foreground backdrop-blur-sm hover:-translate-y-1 transition-all duration-300 ease-in-out px-10 py-4 text-lg" asChild>
-              <Link href="/faq">Explore FAQ</Link>
-            </Button>
+            </div>
           </div>
-        </div>
-      </section>
+
+          {/* How It Works - With example transaction integrated */}
+          <div className="max-w-5xl mx-auto border-t border-zinc-800/40 pt-16">
+            <h2 className="text-3xl font-medium mb-12 text-white">How Our <span className="text-[#D97742]">Ecosystem</span> Works</h2>
+            
+            <div className="flex flex-col-reverse md:flex-row gap-12">
+              <div className="md:w-2/3">
+                <div className="grid grid-cols-1 gap-8">
+                  {[
+                    { step: '01', title: 'Users Access AI', desc: 'Purchase tokens and engage with agents, paying only for what you use.' },
+                    { step: '02', title: 'Token Economics', desc: 'Costs include AI provider fee, 18% premium, and $0.30 transaction fee.' },
+                    { step: '03', title: 'Creator Rewards', desc: 'Creators earn 10% of token usage, paid monthly with transparent analytics.' }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-start gap-4 group">
+                      <div className="text-sm text-zinc-500 font-light pt-1 w-6">{item.step}</div>
+                      <div>
+                        <h3 className="text-base font-medium mb-1 text-white">{item.title}</h3>
+                        <p className="text-zinc-400 text-sm font-light">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="md:w-1/3">
+                <div className="p-6 border border-zinc-800/40 rounded-sm bg-zinc-900/30 backdrop-blur-md">
+                  <h3 className="text-base font-normal mb-5 text-white border-b border-zinc-800/60 pb-2">Example Transaction</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400 text-sm font-light">User Pays</span>
+                      <span className="font-normal text-white">$10.00</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400 text-sm font-light">Creator Receives</span>
+                      <span className="font-normal text-[#D97742]">$0.85</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400 text-sm font-light">Platform Fee</span>
+                      <span className="font-normal text-white">$0.68</span>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-xs text-zinc-500 font-light">Transactions include a $0.30 processing fee.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA - Refined minimalist approach */}
+          <div className="max-w-3xl mx-auto border-t border-zinc-800/40 pt-16">
+            <h2 className="text-3xl sm:text-4xl font-medium mb-6 text-white">Ready to Join the <span className="text-[#D97742]">AI Agent</span> Economy?</h2>
+            <p className="mb-12 text-zinc-400 font-light">Whether you&apos;re creating AI agents or using them to solve problems, Agent Vendor connects experts with those who need their knowledge.</p>
+            <div className="flex gap-5">
+              <Button size="lg" className="bg-black text-white border border-zinc-800 hover:border-[#D97742]/50 hover:shadow-[0_0_25px_rgba(217,119,66,0.15)] transition-all duration-300" asChild>
+                <Link href="/creators/start">Get Started Today</Link>
+              </Button>
+              <Button variant="outline" size="lg" className="border-zinc-800 text-zinc-400 hover:bg-black/30 hover:border-zinc-700 transition-all duration-300" asChild>
+                <Link href="/faq">Explore FAQ</Link>
+              </Button>
+            </div>
+          </div>
+        </div> 
+      </div> 
     </main>
   );
 }

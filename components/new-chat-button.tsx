@@ -3,12 +3,13 @@
 import { Plus, Command } from "lucide-react"
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation" // Import usePathname
 import { useHotkeys } from "react-hotkeys-hook"
 import { useEffect, useRef, useState } from "react"
 
 const NewChatButton = () => {
   const router = useRouter()
+  const pathname = usePathname() // Get current pathname
   const defaultNewChatPath = "/agent/new"
   const [targetPath, setTargetPath] = useState(defaultNewChatPath) // State for the target path
   const newChatButtonRef = useRef<HTMLAnchorElement>(null)
@@ -19,29 +20,48 @@ const NewChatButton = () => {
   useEffect(() => {
     setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform))
 
-    // Read last visited agent ID from local storage
-    const lastVisitedAgentId = localStorage.getItem('lastVisitedAgentId');
-    if (lastVisitedAgentId) {
-      setTargetPath(`/${lastVisitedAgentId}`);
+    // Check if the current path is an agent's chat page
+    // Match pattern like /<agent-id>/<chat-id> (ensure it's not /agent/new or similar fixed routes)
+    // A simple check for 2 segments where the first isn't 'agent', 'history', 'account', 'admin', 'auth' etc. might suffice
+    // Or more robustly check if the second segment looks like a chat ID (e.g., UUID or CUID)
+    // For simplicity, let's assume if there are two segments and the first isn't a known top-level route, it's an agent chat page.
+    // Adjust this regex/logic if agent IDs can conflict with top-level routes.
+    const agentChatPattern = /^\/([^/]+)\/([^/]+)$/;
+    const match = pathname.match(agentChatPattern);
+    const knownNonAgentRoutes = ['agent', 'history', 'account', 'admin', 'auth', 'api']; // Add other top-level routes if needed
+
+    if (match && !knownNonAgentRoutes.includes(match[1])) {
+      const agentId = match[1];
+      setTargetPath(`/${agentId}/new`); // Set path to agent's new chat page
     } else {
-      setTargetPath(defaultNewChatPath);
+      // Fallback to previous logic: use last visited or default
+      const lastVisitedAgentId = localStorage.getItem('lastVisitedAgentId');
+      if (lastVisitedAgentId) {
+        // Ensure this also points to a 'new' page for consistency, or adjust as needed
+        setTargetPath(`/${lastVisitedAgentId}/new`); // Changed from /${lastVisitedAgentId}
+      } else {
+        setTargetPath(defaultNewChatPath);
+      }
     }
-  }, []) // Runs only once on mount
+  }, [pathname]) // Re-run when the pathname changes
 
   // Prefetch the target chat route for instant navigation
   useEffect(() => {
-    router.prefetch(targetPath)
-  }, [router, targetPath]) // Re-run if targetPath changes
+    // Only prefetch if targetPath is valid and not the current path
+    if (targetPath && targetPath !== pathname) {
+       router.prefetch(targetPath)
+    }
+  }, [router, targetPath, pathname]) // Re-run if targetPath or pathname changes
 
   // Handle Command+K/Ctrl+K shortcut using react-hotkeys-hook
   useHotkeys("mod+k", (e) => {
     e.preventDefault()
-    
+
     // Simulate hover effect on key press
     if (newChatButtonRef.current) {
       // Trigger the hover effect
       setIsHovering(true)
-      
+
       // Add a slight delay before navigation for better visual feedback
       setTimeout(() => {
         router.push(targetPath, { // Use targetPath

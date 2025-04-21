@@ -6,7 +6,7 @@ import { DBMessage } from "@/db/schema/chat";
 import { auth } from "@/lib/auth";
 import { Attachment, UIMessage } from "ai";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation"; // Import redirect
 import type { Metadata } from 'next';
 
 
@@ -64,6 +64,10 @@ export default async function Page({
   // Get the agent id and chat id from the url
   const { "agent-id": agentId, "chat-id": chatId } = await params;
 
+  // Redirect if chat-id is 'new'
+  if (chatId === 'new') {
+    redirect(`/${agentId}`);
+  }
 
 
   // Fetch the chat from the database
@@ -95,11 +99,9 @@ export default async function Page({
   }
 
 
-  
   const messagesFromDb = await getMessagesByChatId({
     id: chatId,
   });
-
 
 
 
@@ -114,8 +116,8 @@ export default async function Page({
         .map(part => {
           if (part.type === 'text') return part.text;
           if (part.type === 'tool-invocation') {
-            const result = part.toolInvocation.state === 'result' 
-              ? part.toolInvocation.result 
+            const result = part.toolInvocation.state === 'result'
+              ? part.toolInvocation.result
               : null;
             // Extract relevant content from search results
             if (result?.results) {
