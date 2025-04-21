@@ -25,14 +25,16 @@ export default async function Home({ searchParams }: PageProps) {
 
 
   return (
-    <main className="container mx-auto py-8 px-4">
+    <main className="container mx-auto pt-4 pb-8 px-4">
       <HeaderPadding />
+
+      {/* Base Models Section */}
+      <BaseModelsSection searchQuery={searchQuery} />
 
       {/* Search Bar */}
       <AgentSearch /> 
 
-      {/* Base Models Section */}
-      <BaseModelsSection searchQuery={searchQuery} />
+
 
       {/* Render Tag Filters */}
       <TagFilters

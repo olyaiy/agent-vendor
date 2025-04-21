@@ -7,7 +7,7 @@ import { getBaseModelAgentsAction } from "@/db/actions/agent-actions";
 function BaseModelsLoading() {
   // Adjust loading skeleton for grid layout on mobile
   return (
-    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto py-2">
+    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-2">
       {Array.from({ length: 6 }).map((_, index) => ( // Assuming 6 base models for 2 rows of 3
         <div key={index} className="flex flex-col items-center sm:flex-shrink-0 sm:w-24 animate-pulse">
           <div className="w-full sm:w-24 h-24 bg-gray-200 rounded-md mb-1"></div>
@@ -49,7 +49,7 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
 
   return (
     // MODIFIED: Grid 3-col for mobile, flex row (scroll) for sm+
-    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-4 mb-6 border-b">
+    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-4  ">
       {agents.map((agent) => (
         // MODIFIED: Remove fixed width/shrink for grid, apply only for sm+
         <Link href={`/${agent.id}`} key={agent.id} className="flex flex-col items-center group sm:flex-shrink-0 sm:w-24">
@@ -70,9 +70,9 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
               </div>
             )}
           </div>
-          <p className="text-xs text-center mt-1 font-medium group-hover:text-orange-300 transition-colors truncate w-full px-1">
+          {/* <p className="text-xs text-center mt-1 font-medium group-hover:text-orange-300 transition-colors truncate w-full px-1">
             {agent.name}
-          </p>
+          </p> */}
         </Link>
       ))}
     </div>
@@ -101,7 +101,7 @@ export function BaseModelsSection({ searchQuery }: BaseModelsSectionProps) {
 
   return (
     <>
-      <h2 className="text-2xl font-semibold mb-3 mt-6">⚡ Base Models</h2> {/* Added margin-top */}
+      <h2 className="text-2xl font-semibold mb-3 mt-0">⚡ Base Models</h2> {/* Added margin-top */}
       <Suspense fallback={<BaseModelsLoading />}>
         <BaseModelAgentsRow promise={baseModelsResultPromise} />
       </Suspense>
