@@ -4,12 +4,10 @@ import { selectAgentWithModelById, selectKnowledgeByAgentId, selectAllModels } f
 import { getChatById, getMessagesByChatId } from "@/db/repository/chat-repository";
 import { DBMessage } from "@/db/schema/chat";
 import { auth } from "@/lib/auth";
-
 import { Attachment, UIMessage } from "ai";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
-
 
 
 type Props = {

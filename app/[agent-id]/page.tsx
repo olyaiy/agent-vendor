@@ -78,8 +78,8 @@ export default async function Page({
     notFound();
   }
 
+  
   // Ownership check happens in the client component (Chat)
-
   const ua = (await headers()).get("user-agent") ?? "";
   const isMobile = /Mobile|Android|iP(hone|od|ad)|BlackBerry|IEMobile|Opera Mini/i.test(ua);
 
