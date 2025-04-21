@@ -7,17 +7,20 @@ import { AgentSearch } from "@/components/home/agent-search"; // Assuming AgentS
 
 // Define the props for the page component, including searchParams for filtering and pagination
 type AgentsPageProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 // Define the default page size
 const PAGE_SIZE = 20;
 
 export default async function AgentsPage({ searchParams }: AgentsPageProps) {
+  // Await searchParams as it is now a Promise in Next.js 15
+  const resolvedSearchParams = await searchParams;
+
   // Extract search parameters for tag, search query, and pagination
-  const selectedTag = typeof searchParams?.tag === 'string' ? searchParams.tag : undefined;
-  const searchQuery = typeof searchParams?.search === 'string' ? searchParams.search : undefined;
-  const currentPage = Number(searchParams?.page || '1'); // Default to page 1
+  const selectedTag = typeof resolvedSearchParams?.tag === 'string' ? resolvedSearchParams.tag : undefined;
+  const searchQuery = typeof resolvedSearchParams?.search === 'string' ? resolvedSearchParams.search : undefined;
+  const currentPage = Number(resolvedSearchParams?.page || '1'); // Default to page 1
 
   // Fetch top tags (or all tags if needed for this page - using top 20 for now)
   const tagsResult = await getTopTagsAction(20);
