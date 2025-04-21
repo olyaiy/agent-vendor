@@ -20,7 +20,7 @@ export default async function Home({ searchParams }: PageProps) {
   const searchQuery = typeof params?.search === 'string' ? params.search : undefined; // Read search query
 
   // Fetch top tags
-  const tagsResult = await getTopTagsAction(5); // Fetch top 5 tags for filtering
+  const tagsResult = await getTopTagsAction(20); // Fetch top 5 tags for filtering
   const topTags = tagsResult.success ? tagsResult.data || [] : [];
 
 
