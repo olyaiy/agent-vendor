@@ -92,7 +92,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
 
         </div>
 
-        <div className="p-4">
+        <div className="py-2 px-1">
           <h3 className="text-lg font-semibold line-clamp-2 mb-2 text-foreground/90 hover:text-primary transition-colors duration-200">
             {agent.name}
           </h3>
@@ -108,7 +108,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
                 <Badge 
                   key={tag.id} 
                   variant="outline" 
-                  className="text-[10px] sm:text-xs font-medium text-muted-foreground/80 hover:text-muted-foreground/90 transition-colors duration-200"
+                  className="text-[10px] sm:text-xs font-medium  duration-200"
                 >
                   {tag.name}
                 </Badge>
