@@ -168,15 +168,24 @@ export async function deleteModel(modelId: string): Promise<void> {
 // ========================================
 
 /**
- * Selects the most recent 20 agents from the database
- * @returns Array of agent records ordered by creation date
+ * Selects agents from the database with optional tag and search filtering, and pagination.
+ * @param tagName - Optional tag name to filter agents by.
+ * @param searchQuery - Optional search query to filter agents by name, description, or tag name.
+ * @param limit - The maximum number of agents to return.
+ * @param offset - The number of agents to skip.
+ * @returns Array of agent records ordered by creation date, including associated tags.
  */
 // Define the structure for a tag within the agent result
 type AgentTagInfo = { id: string; name: string };
 
 // Update the return type to include an array of tags
 // Update return type to include createdAt
-export async function selectRecentAgents(tagName?: string, searchQuery?: string): Promise<Array<{
+export async function selectRecentAgents(
+  tagName?: string,
+  searchQuery?: string,
+  limit?: number, // Added limit parameter
+  offset?: number // Added offset parameter
+): Promise<Array<{
   id: string;
   name: string;
   description: string | null;
@@ -211,15 +220,6 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
   // Build WHERE conditions dynamically
   const whereConditions = [];
   if (tagName) {
-    // This condition needs to check if *any* of the joined tags match the name.
-    // We'll filter later based on the aggregated tags if needed, or adjust the query structure.
-    // For now, let's assume the join + where works for basic tag filtering.
-    // A subquery might be more accurate here to filter agents *before* joining tags for aggregation.
-    // Let's stick to the simpler approach first.
-    // We need to find agents where *at least one* tag matches tagName.
-    // This requires a subquery or a different approach.
-    // Let's adjust: Filter agents based on a subquery checking tag existence.
-
      const subQuery = db.select({ agentId: agentTags.agentId })
        .from(agentTags)
        .innerJoin(tags, eq(agentTags.tagId, tags.id))
@@ -231,12 +231,10 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
 
   if (searchQuery) {
     const searchPattern = `%${searchQuery}%`;
-    // Search across agent name, description, and *any* associated tag name
      whereConditions.push(
        or(
          ilike(agent.name, searchPattern),
          ilike(agent.description, searchPattern),
-         // Check if the agent is associated with *any* tag matching the search query
          sql`${agent.id} in (
            select ${agentTags.agentId}
            from ${agentTags}
@@ -258,7 +256,7 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
   const orderByClause = [desc(agent.createdAt)];
 
 
-  return await finalQuery
+  finalQuery = finalQuery
     // Group by agent fields to allow aggregation of tags
     .groupBy(
       agent.id,
@@ -270,9 +268,68 @@ export async function selectRecentAgents(tagName?: string, searchQuery?: string)
       agent.createdAt, // Need to include orderBy column in groupBy
       agent.visibility // Need to include visibility in groupBy
     )
-    .orderBy(...orderByClause) // Apply default order by
-    .limit(20);
+    .orderBy(...orderByClause); // Apply default order by
+
+  // Apply limit and offset if provided
+  if (limit !== undefined) {
+      finalQuery = finalQuery.limit(limit);
+  }
+  if (offset !== undefined) {
+      finalQuery = finalQuery.offset(offset);
+  }
+
+
+  return await finalQuery;
 }
+
+/**
+ * Counts the total number of agents matching the optional tag and search filtering.
+ * @param tagName - Optional tag name to filter agents by.
+ * @param searchQuery - Optional search query to filter agents by name, description, or tag name.
+ * @returns The total count of matching agents.
+ */
+export async function countAgents(tagName?: string, searchQuery?: string): Promise<number> {
+    const queryBuilder = db
+        .select({ value: count() })
+        .from(agent);
+
+    // Build WHERE conditions dynamically, similar to selectRecentAgents
+    const whereConditions = [];
+    if (tagName) {
+        const subQuery = db.select({ agentId: agentTags.agentId })
+            .from(agentTags)
+            .innerJoin(tags, eq(agentTags.tagId, tags.id))
+            .where(eq(tags.name, tagName));
+
+        whereConditions.push(sql`${agent.id} in ${subQuery}`);
+    }
+
+    if (searchQuery) {
+        const searchPattern = `%${searchQuery}%`;
+        whereConditions.push(
+            or(
+                ilike(agent.name, searchPattern),
+                ilike(agent.description, searchPattern),
+                sql`${agent.id} in (
+                    select ${agentTags.agentId}
+                    from ${agentTags}
+                    inner join ${tags} on ${eq(agentTags.tagId, tags.id)}
+                    where ${ilike(tags.name, searchPattern)}
+                )`
+            )
+        );
+    }
+
+    // Apply WHERE conditions if any exist
+    let finalQuery = queryBuilder.$dynamic();
+    if (whereConditions.length > 0) {
+        finalQuery = finalQuery.where(and(...whereConditions));
+    }
+
+    const result = await finalQuery;
+    return result[0]?.value || 0;
+}
+
 
 /**
  * Retrieves an agent with its associated model name by ID
@@ -407,7 +464,7 @@ export async function selectKnowledgeByAgentId(agentId: string): Promise<Knowled
 /**
  * Inserts a new tag into the database.
  * @param newTagData - The data for the new tag (name).
- * @returns The newly inserted tag record.
+ * @returns Promise with success status and created tag data or error.
  */
 export async function insertTag(newTagData: NewTag): Promise<Tag[]> {
   return await db

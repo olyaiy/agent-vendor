@@ -24,6 +24,7 @@ import {
   updateModel as updateModelRepo,
   deleteModel as deleteModelRepo,
   selectModelByName,
+  countAgents, // Added countAgents
 } from "@/db/repository/agent-repository";
 // Corrected: Added Knowledge and Tag back to the import
 import { Agent, Model, Knowledge, Tag } from "@/db/schema/agent";
@@ -159,7 +160,7 @@ export async function updateKnowledgeItemAction(knowledgeId: string, data: {
 /**
  * Server action to delete a knowledge item
  * @param knowledgeId - The ID of the knowledge item to delete
- * @returns Promise with success status or error
+ * @returns Promise with success status or error.
  */
 export async function deleteKnowledgeItemAction(knowledgeId: string): Promise<ActionResult<void>> {
   // Basic validation for ID format (optional but recommended)
@@ -185,10 +186,12 @@ export async function deleteKnowledgeItemAction(knowledgeId: string): Promise<Ac
 }
 
 /**
- * Server action to fetch the most recent 20 agents
- * This enables secure data fetching from client components
+ * Server action to fetch agents with optional tag and search filtering, and pagination.
  * @param tagName - Optional tag name to filter agents by.
- * @returns Promise with success status and agent list or error
+ * @param searchQuery - Optional search query to filter agents by name, description, or tag name.
+ * @param page - The current page number (1-based).
+ * @param pageSize - The number of agents per page.
+ * @returns Promise with success status and paginated agent list and total count, or error.
  */
 // Define the expected agent type returned by selectRecentAgents, including createdAt and visibility
 type AgentWithTagsAndDate = {
@@ -203,11 +206,23 @@ type AgentWithTagsAndDate = {
   visibility: string; // Added visibility
 };
 
-export async function getRecentAgents(tagName?: string, searchQuery?: string): Promise<ActionResult<AgentWithTagsAndDate[]>> {
+export async function getRecentAgents(
+  tagName?: string,
+  searchQuery?: string,
+  page: number = 1, // Default to page 1
+  pageSize: number = 20 // Default page size
+): Promise<ActionResult<{ agents: AgentWithTagsAndDate[]; totalCount: number }>> {
   try {
-    const agents: AgentWithTagsAndDate[] = await selectRecentAgents(tagName, searchQuery); // Pass tagName and searchQuery
+    const offset = (page - 1) * pageSize;
+    const limit = pageSize;
 
-    // If searchQuery is provided, sort the results in JavaScript
+    // Fetch agents for the current page
+    const agents: AgentWithTagsAndDate[] = await selectRecentAgents(tagName, searchQuery, limit, offset);
+
+    // Get the total count of agents matching the filter criteria
+    const totalCount = await countAgents(tagName, searchQuery);
+
+    // If searchQuery is provided, sort the results in JavaScript (ranking logic)
     if (searchQuery && agents.length > 0) {
       const queryLower = searchQuery.toLowerCase();
 
@@ -237,7 +252,7 @@ export async function getRecentAgents(tagName?: string, searchQuery?: string): P
       });
     }
 
-    return { success: true, data: agents };
+    return { success: true, data: { agents, totalCount } };
   } catch (error) {
     console.error("Failed to fetch agents:", error);
     return { success: false, error: (error as Error).message };
@@ -263,7 +278,7 @@ export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{ i
 /**
  * Server action to fetch all available models
  * This enables secure data fetching from client components
- * @returns Promise with success status and model list or error
+ * @returns Promise with success status and model list or error.
  */
 export async function getAllModels(): Promise<ActionResult<Model[]>> {
   try {
@@ -279,7 +294,7 @@ export async function getAllModels(): Promise<ActionResult<Model[]>> {
  * Server action to update an existing agent
  * @param agentId - The ID of the agent to update
  * @param data - Object containing the fields to update
- * @returns Promise with success status and updated agent data or error
+ * @returns Promise with success status and updated agent data or error.
  */
 export async function updateAgentAction(agentId: string, data: Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>>): Promise<ActionResult<Agent>> {
   try {

@@ -90,68 +90,109 @@ const PurePreviewMessage = ({
             <div data-testid="message-ui-content">{message.ui}</div>
           ) : (
             // Otherwise, render parts as usual
-            message.parts?.map((part, index) => { // Map callback starts here
-              const { type } = part;
-              const key = `message-${message.id}-part-${index}`;
+            <>
+              {/* Non-source parts */}
+              {message.parts?.filter(part => part.type !== 'source').map((part, index) => {
+                const { type } = part;
+                const key = `message-${message.id}-part-${index}`;
 
-              if (type === 'reasoning') {
-                return (
-                  <MessageReasoning
-                    key={key}
-                    isLoading={isLoading}
-                    reasoning={part.reasoning}
-                  />
-                );
-              }
-
-              if (type === 'text') {
-                if (mode === 'view') {
+                if (type === 'reasoning') {
                   return (
-                    <div key={key} className="flex flex-row gap-2 items-start">
-                      <div
-                        data-testid="message-content"
-                        className={cn('flex flex-col gap-4', {
-                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                            message.role === 'user',
-                        })}
-                      >
-                        <Markdown key={`${message.id}-${index}`}>
-                          {part.text}
-                        </Markdown>
-                        {/* {part.text} */}
+                    <MessageReasoning
+                      key={key}
+                      isLoading={isLoading}
+                      reasoning={part.reasoning}
+                    />
+                  );
+                }
+
+                if (type === 'text') {
+                  if (mode === 'view') {
+                    return (
+                      <div key={key} className="flex flex-row gap-2 items-start">
+                        <div
+                          data-testid="message-content"
+                          className={cn('flex flex-col gap-4', {
+                            'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                              message.role === 'user',
+                          })}
+                        >
+                          <Markdown key={`${message.id}-${index}`}>
+                            {part.text}
+                          </Markdown>
+                        </div>
                       </div>
-                    </div>
-                  );
+                    );
+                  }
+
+                  if (mode === 'edit') {
+                    return (
+                      <div key={key} className="flex flex-row gap-2 items-start">
+                        <div className="size-8" />
+
+                        <MessageEditor
+                          key={message.id}
+                          message={message}
+                          setMode={setMode}
+                          setMessages={setMessages}
+                          reload={reload}
+                        />
+                      </div>
+                    );
+                  }
                 }
 
-                if (mode === 'edit') {
-                  return (
-                    <div key={key} className="flex flex-row gap-2 items-start">
-                      <div className="size-8" />
-
-                      <MessageEditor
-                        key={message.id}
-                        message={message}
-                        setMode={setMode}
-                        setMessages={setMessages}
-                        reload={reload}
-                      />
-                    </div>
-                  );
+                if (type === 'tool-invocation') {
+                  const { toolInvocation } = part;
+                  const { toolCallId } = toolInvocation;
+                  // Use the new ToolMessage component
+                  return <ToolMessage key={toolCallId} toolInvocation={toolInvocation} />;
                 }
-              }
 
-              if (type === 'tool-invocation') {
-                const { toolInvocation } = part;
-                const { toolCallId } = toolInvocation;
-                // Use the new ToolMessage component
-                return <ToolMessage key={toolCallId} toolInvocation={toolInvocation} />;
-              }
-              // Add a fallback return for the map function
-              return null;
-            }) // End of map callback
-          ) // End of ternary false case
-          }
+                // Add a fallback return for the map function
+                return null;
+              })}
+              
+              {/* Source parts in a flex container */}
+              {message.parts?.some(part => part.type === 'source') && (
+                <div className="flex flex-row flex-wrap gap-2 mt-2">
+                  {message.parts
+                    .filter(part => part.type === 'source')
+                    .map((part, index) => {
+                      const key = `message-${message.id}-source-${index}`;
+                      const sourceItem = part.source as { id: string, url: string, title?: string };
+                      
+                      return (
+                        <div key={key} className="inline-flex items-center px-2 py-1 rounded-md bg-muted/40 text-xs text-muted-foreground hover:bg-muted/70 transition-colors">
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            className="mr-1.5 size-3"
+                          >
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                          </svg>
+                          <a 
+                            href={sourceItem.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="hover:underline font-medium"
+                            aria-label={`Source: ${sourceItem.title ?? new URL(sourceItem.url).hostname}`}
+                          >
+                            {sourceItem.title ?? new URL(sourceItem.url).hostname}
+                          </a>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </>
+          )}
 
           {!isReadonly && (
             <MessageActions
@@ -185,12 +226,12 @@ export const PreviewMessage = memo(
 
 export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
-  
+
   useEffect(() => {
     const timer = setInterval(() => {
       setElapsedTime(prev => prev + 1);
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, []);
 
@@ -205,11 +246,11 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
       <div className="flex flex-row gap-4 w-full">
         <div className="size-8 flex items-center rounded-full justify-center shrink-0  bg-background overflow-hidden relative">
           {agentImageUrl ? (
-            <Image 
-              src={agentImageUrl} 
-              alt="Agent avatar" 
-              width={32} 
-              height={32} 
+            <Image
+              src={agentImageUrl}
+              alt="Agent avatar"
+              width={32}
+              height={32}
               className="size-full object-cover"
               quality={100}
               unoptimized={true}
@@ -267,9 +308,9 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
                 />
               </div>
             </div>
-            
+
             {elapsedTime > 3 && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6 }}
@@ -279,7 +320,7 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
               </motion.div>
             )}
           </div>
-          
+
           {elapsedTime > 1 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}

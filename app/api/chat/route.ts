@@ -299,6 +299,7 @@ export async function POST(req: Request) {
 
     console.timeEnd('Text streaming');
     return result.toDataStreamResponse({
+      sendSources: true,
       sendReasoning: true,
     });
 
