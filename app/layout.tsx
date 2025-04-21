@@ -1,4 +1,4 @@
-import { ReactScan } from "@/components/react-scan";
+// import { ReactScan } from "@/components/react-scan";
 import { ThemeProvider } from "@/components/theme-provider" 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     
     <html lang="en" suppressHydrationWarning>
-            <ReactScan/>
+            {/* <ReactScan/> */}
 
 
 

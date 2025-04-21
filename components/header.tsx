@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function Header() {
   const { 
@@ -47,18 +46,9 @@ export function Header() {
     }
   };
 
-  const router = useRouter();
-  const defaultNewChatPath = "/agent/new";
-  const [chatTargetPath, setChatTargetPath] = useState(defaultNewChatPath);
 
-  useEffect(() => {
-    const lastVisitedAgentId = typeof window !== "undefined" ? localStorage.getItem('lastVisitedAgentId') : null;
-    if (lastVisitedAgentId) {
-      setChatTargetPath(`/${lastVisitedAgentId}`);
-    } else {
-      setChatTargetPath(defaultNewChatPath);
-    }
-  }, []);
+
+
 
   return !isMobile ? (
     <div
@@ -117,13 +107,9 @@ export function Header() {
         isActive={pathname === '/'} 
       />
       <NavItem 
-        href={chatTargetPath}
+        href={"/history"}
         icon={<MessageSquare size={20} strokeWidth={2} />}
-        isActive={pathname.includes('/agent/')}
-        onClick={(e) => {
-          e.preventDefault();
-          router.push(chatTargetPath);
-        }}
+        isActive={pathname.includes('/history')}
       />
       <NavItem 
         href="/agent/create" 

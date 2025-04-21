@@ -47,7 +47,7 @@ export function AgentSearchInput() {
         placeholder="Search agents by name, description, or tag..."
         value={searchQuery}
         onChange={handleInputChange}
-        className="w-full h-[60px] sm:h-[75px] rounded-full overflow-hidden bg-background pl-12 sm:pl-[4.5rem] pr-4 py-2 text-sm" // MODIFIED (assuming pl-18 was pl-[4.5rem])
+        className="w-full h-[60px] sm:h-[75px] rounded-full overflow-hidden bg-background pl-12 sm:pl-[4.5rem] pr-4 py-2 text-xl sm:text-2xl md:text-xl" 
       />
     </div>
   );
