@@ -197,6 +197,28 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 1.10,
     outputCostPerMillion: 4.40,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 8192
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
   'o3': {
     displayName: "o3",
