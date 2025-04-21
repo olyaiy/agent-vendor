@@ -115,7 +115,9 @@ export interface ModelDetails {
 
 // Updated modelDetails object with displayName and description
 export const modelDetails: Record<string, ModelDetails> = {
-  // OpenAI Models
+
+
+  // OpenAI Models (Model settings added ✅)
   'gpt-4o': {
     displayName: "GPT-4o",
     description: "OpenAI's flagship multimodal model with text, audio, image, and video capabilities for versatile, real-time interactions.",
@@ -278,289 +280,6 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
-  // GROQ Models with updated pricing
-  'gemma2-9b-it': {
-    displayName: "Gemma 2 9B IT",
-    description: "Lightweight, state-of-the-art open model with impressive performance in text generation, reasoning, and multilingual capabilities.",
-    inputCostPerMillion: 0.20,
-    outputCostPerMillion: 0.20,
-    contextWindow: 8_192,
-  },
-  'llama-3.3-70b-versatile': {
-    displayName: "Llama 3.3 70B Versatile",
-    description: "High-performance model excelling at coding, reasoning, math, general knowledge tasks, instruction following, and tool use.",
-    inputCostPerMillion: 0.59,
-    outputCostPerMillion: 0.79,
-    contextWindow: 128_000,
-  },
-  'llama-3.1-8b-instant': {
-    displayName: "Llama 3.1 8B Instant",
-    description: "Fast, efficient model optimized for quick responses and basic tasks with minimal computational requirements.",
-    inputCostPerMillion: 0.05,
-    outputCostPerMillion: 0.08,
-    contextWindow: 8_192,
-  },
-  'llama-guard-3-8b': {
-    displayName: "Llama Guard 3 8B",
-    description: "Specialized safety-focused model designed to detect and filter harmful content in AI interactions.",
-    inputCostPerMillion: 0.20,
-    outputCostPerMillion: 0.20,
-    contextWindow: 8_192,
-  },
-  'llama3-70b-8192': {
-    displayName: "Llama 3 70B",
-    description: "Powerful large language model with strong reasoning capabilities and high performance across diverse tasks.",
-    inputCostPerMillion: 0.59,
-    outputCostPerMillion: 0.79,
-    contextWindow: 8_192,
-  },
-  'llama3-8b-8192': {
-    displayName: "Llama 3 8B",
-    description: "Compact, efficient model suitable for deployment in resource-constrained environments while maintaining good performance.",
-    inputCostPerMillion: 0.05,
-    outputCostPerMillion: 0.08,
-    contextWindow: 8_192,
-  },
-  // Mistral Models
-  'mistral-large-latest': {
-    displayName: "Mistral Large",
-    description: "Advanced model with strong multilingual, reasoning, math, and code generation capabilities for complex, reasoning-heavy tasks.",
-    inputCostPerMillion: 2.00,
-    outputCostPerMillion: 6.00,
-    contextWindow: 32_000,
-  },
-  'pixtral-large-latest': {
-    displayName: "Pixtral Large",
-    description: "Multimodal extension of Mistral's technology with enhanced visual understanding and processing capabilities.",
-    inputCostPerMillion: 2.00,
-    outputCostPerMillion: 6.00,
-    contextWindow: 32_000,
-  },
-  'mistral-small-latest': {
-    displayName: "Mistral Small",
-    description: "Optimized for simple, bulk tasks such as classification, customer support, and basic text generation at an affordable price point.",
-    inputCostPerMillion: 0.10,
-    outputCostPerMillion: 0.30,
-    contextWindow: 32_000,
-  },
-  
-  // Anthropic Models
-  'claude-3-7-sonnet-20250219': {
-    displayName: "Claude 3.7 Sonnet",
-    description: "Claude 3.7 Sonnet is the first hybrid reasoning model and Anthropic's most intelligent model to date. It delivers state-of-the-art performance for coding, content generation, data analysis, and planning tasks, building upon its predecessor Claude 3.5 Sonnet's capabilities in software engineering and computer use.",
-    inputCostPerMillion: 3.00,
-    outputCostPerMillion: 15.00,
-    contextWindow: 200_000,
-    defaultSettings: {
-      maxOutputTokens: {
-        default: 1024,
-        min: 50,
-        max: 4096
-      },
-      temperature: {
-        default: 1,
-        min: 0.1,
-        max: 1
-      },
-      topP: {
-        default: 1,
-        min: 0,
-        max: 1
-      },
-      topK: {
-        default: 1,
-        min: 1,
-        max: 500
-      },
-      frequencyPenalty: {
-        default: 1,
-        min: 0,
-        max: 1
-      },
-      presencePenalty: {
-        default: 1,
-        min: 0,
-        max: 1
-      }
-    }
-  },
-  'claude-3-5-sonnet-20241022': {
-    displayName: "Claude 3.5 Sonnet",
-    description: "Claude 3.5 Sonnet strikes the ideal balance between intelligence and speed-particularly for enterprise workloads. It delivers strong performance at a lower cost compared to its peers, and is engineered for high endurance in large-scale Al deployments.",
-    inputCostPerMillion: 3.00,
-    outputCostPerMillion: 15.00,
-    contextWindow: 200_000,
-    defaultSettings: {
-      maxOutputTokens: {
-        default: 1024,
-        min: 50,
-        max: 4096
-      },
-      temperature: {
-        default: 1,
-        min: 0.1,
-        max: 1
-      },
-      topP: {
-        default: 1,
-        min: 0,
-        max: 1
-      },
-      topK: {
-        default: 1,
-        min: 1,
-        max: 500
-      },
-      frequencyPenalty: {
-        default: 1,
-        min: 0,
-        max: 1
-      },
-      presencePenalty: {
-        default: 1,
-        min: 0,
-        max: 1
-      }
-    }
-  },
-  'claude-3-5-haiku-20241022': {
-    displayName: "Claude 3.5 Haiku",
-    description: "Fast model combining rapid response times with improved reasoning capabilities for speed-critical applications.",
-    inputCostPerMillion: 0.80,
-    outputCostPerMillion: 4.00,
-    contextWindow: 200_000,
-  },
-  // Perplexity Models
-  'sonar-pro': {
-    displayName: "Sonar Pro",
-    description: "Premium research-focused model with advanced information retrieval and synthesis capabilities for complex queries.",
-    inputCostPerMillion: 3.00,
-    outputCostPerMillion: 15.00,
-    contextWindow: 32_000, // Estimated based on similar models
-  },
-  'sonar': {
-    displayName: "Sonar",
-    description: "Balanced model offering good performance for general research and information retrieval tasks at a moderate price point.",
-    inputCostPerMillion: 1.00,
-    outputCostPerMillion: 1.00,
-    contextWindow: 16_000, // Estimated based on similar models
-  },
-  // DeepSeek Models (cache miss pricing)
-  'deepseek-chat': {
-    displayName: "DeepSeek Chat",
-    description: "Versatile conversational model with strong general knowledge and natural dialogue capabilities for diverse applications.",
-    inputCostPerMillion: 0.27,
-    outputCostPerMillion: 1.10,
-    contextWindow: 64_000,
-  },
-  'deepseek-reasoner': {
-    displayName: "DeepSeek Reasoner",
-    description: "Specialized model focused on complex reasoning tasks, problem-solving, and logical deduction with enhanced accuracy.",
-    inputCostPerMillion: 0.55,
-    outputCostPerMillion: 2.19,
-    contextWindow: 64_000,
-  },
-  // Google Models
-  'gemini-2.5-pro-exp-03-25': {
-    displayName: "Gemini 2.5 Pro Exp",
-    description: "Gemini 2.5 Pro Experimental is our state-of-the-art thinking model, capable of reasoning over complex problems in code, math, and STEM, as well as analyzing large datasets, codebases, and documents using long context.",
-    inputCostPerMillion: 2.50,
-    outputCostPerMillion: 10.00,
-    contextWindow: 1_000_000,
-  },
-  'gemini-2.0-flash-exp': {
-    displayName: "Gemini 2.0 Flash",
-    description: "Fast model with enhanced performance, multimodal capabilities, and native support for generating images and text-to-speech audio.",
-    inputCostPerMillion: 0.10,
-    outputCostPerMillion: 0.40,
-    contextWindow: 1_048_576, // 1M tokens
-  },
-  'gemini-1.5-pro': {
-    displayName: "Gemini 1.5 Pro",
-    description: "Powerful multimodal model with an extremely large context window for handling extensive documents and complex tasks.",
-    inputCostPerMillion: 2.50,
-    outputCostPerMillion: 10.00,
-    contextWindow: 2_000_000, // 2M tokens
-  },
-  'gemini-1.5-pro-latest': {
-    displayName: "Gemini 1.5 Pro Latest",
-    description: "Most recent version of Google's powerful multimodal model with exceptional context handling and reasoning capabilities.",
-    inputCostPerMillion: 2.50,
-    outputCostPerMillion: 10.00,
-    contextWindow: 2_000_000,
-  },
-  'gemini-1.5-flash': {
-    displayName: "Gemini 1.5 Flash",
-    description: "Optimized for speed while maintaining strong performance across various tasks with an impressive context window.",
-    inputCostPerMillion: 0.15,
-    outputCostPerMillion: 0.60,
-    contextWindow: 1_048_576,
-  },
-  'gemini-1.5-flash-latest': {
-    displayName: "Gemini 1.5 Flash Latest",
-    description: "Latest version of Google's speed-optimized model with improved performance and extensive context handling.",
-    inputCostPerMillion: 0.15,
-    outputCostPerMillion: 0.60,
-    contextWindow: 1_048_576,
-  },
-  'gemini-1.5-flash-8b': {
-    displayName: "Gemini 1.5 Flash 8B",
-    description: "Compact, efficient model designed for cost-effective deployment while maintaining good performance and large context window.",
-    inputCostPerMillion: 0.075,
-    outputCostPerMillion: 0.30,
-    contextWindow: 1_048_576,
-  },
-  'gemini-1.5-flash-8b-latest': {
-    displayName: "Gemini 1.5 Flash 8B Latest",
-    description: "Latest version of Google's compact model offering improved efficiency and performance for everyday tasks.",
-    inputCostPerMillion: 0.075,
-    outputCostPerMillion: 0.30,
-    contextWindow: 1_048_576,
-  },
-  'gemini-2.5-flash-preview-04-17': {
-    displayName: "Gemini 2.5 Flash Preview",
-    description: "Gemini 2.5 Flash is our first fully hybrid reasoning model, giving developers the ability to turn thinking on or off. The model also allows developers to set thinking budgets to find the right tradeoff between quality, cost, and latency.",
-    inputCostPerMillion: 0.10,
-    outputCostPerMillion: 0.40,
-    contextWindow: 1_048_576,
-  },
-  // xAI Grok Models (text only)
-  'grok-2-latest': {
-    displayName: "Grok 2",
-    description: "Powerful model with strong reasoning capabilities and a distinctive personality for engaging interactions.",
-    inputCostPerMillion: 2.00,
-    outputCostPerMillion: 10.00,
-    contextWindow: 32_768,
-    
-  },
-  'grok-3': {
-    displayName: "Grok 3",
-    description: "Advanced model specializing in code generation, debugging, and multi-step problem-solving with multiple operational modes.",
-    inputCostPerMillion: 3.00,
-    outputCostPerMillion: 15.00,
-    contextWindow: 131_072,
-  },
-  'grok-3-mini': {
-    displayName: "Grok 3 Mini",
-    description: "Compact version of Grok 3 optimized for quick answers and everyday tasks while maintaining good performance.",
-    inputCostPerMillion: 0.30,
-    outputCostPerMillion: 0.50,
-    contextWindow: 131_072,
-  },
-  'llama-4-scout-17b-16e': {
-    displayName: "Llama 4 Scout",
-    description: "Meta's multimodal MoE model with 10M token context window, 16 experts, and strong multilingual capabilities for long-context tasks at budget-friendly pricing.",
-    inputCostPerMillion: 0.11,
-    outputCostPerMillion: 0.34,
-    contextWindow: 10_000_000,
-  },
-  'llama-4-maverick-17b-128e': {
-    displayName: "Llama 4 Maverick",
-    description: "High-performance 128-expert MoE model optimized for vision-language tasks and complex reasoning, outperforming larger models in coding and multimodal benchmarks.",
-    inputCostPerMillion: 0.20,
-    outputCostPerMillion: 0.60,
-    contextWindow: 1_000_000,
-  },
   'gpt-4.1': {
     displayName: "GPT-4.1",
     description: "GPT 4.1 is OpenAl's flagship model for complex tasks. It is well suited for problem solving across domains.",
@@ -663,6 +382,415 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
+
+
+  // Anthropic Models (Model settings added ✅)
+  'claude-3-7-sonnet-20250219': {
+    displayName: "Claude 3.7 Sonnet",
+    description: "Claude 3.7 Sonnet is the first hybrid reasoning model and Anthropic's most intelligent model to date. It delivers state-of-the-art performance for coding, content generation, data analysis, and planning tasks, building upon its predecessor Claude 3.5 Sonnet's capabilities in software engineering and computer use.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'claude-3-5-sonnet-20241022': {
+    displayName: "Claude 3.5 Sonnet",
+    description: "Claude 3.5 Sonnet strikes the ideal balance between intelligence and speed-particularly for enterprise workloads. It delivers strong performance at a lower cost compared to its peers, and is engineered for high endurance in large-scale Al deployments.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'claude-3-5-haiku-20241022': {
+    displayName: "Claude 3.5 Haiku",
+    description: "Fast model combining rapid response times with improved reasoning capabilities for speed-critical applications.",
+    inputCostPerMillion: 0.80,
+    outputCostPerMillion: 4.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+
+
+
+
+
+
+  // GROQ Models with updated pricing
+  'gemma2-9b-it': {
+    displayName: "Gemma 2 9B IT",
+    description: "Lightweight, state-of-the-art open model with impressive performance in text generation, reasoning, and multilingual capabilities.",
+    inputCostPerMillion: 0.20,
+    outputCostPerMillion: 0.20,
+    contextWindow: 8_192,
+  },
+  'llama-3.3-70b-versatile': {
+    displayName: "Llama 3.3 70B Versatile",
+    description: "High-performance model excelling at coding, reasoning, math, general knowledge tasks, instruction following, and tool use.",
+    inputCostPerMillion: 0.59,
+    outputCostPerMillion: 0.79,
+    contextWindow: 128_000,
+  },
+  'llama-3.1-8b-instant': {
+    displayName: "Llama 3.1 8B Instant",
+    description: "Fast, efficient model optimized for quick responses and basic tasks with minimal computational requirements.",
+    inputCostPerMillion: 0.05,
+    outputCostPerMillion: 0.08,
+    contextWindow: 8_192,
+  },
+  'llama-guard-3-8b': {
+    displayName: "Llama Guard 3 8B",
+    description: "Specialized safety-focused model designed to detect and filter harmful content in AI interactions.",
+    inputCostPerMillion: 0.20,
+    outputCostPerMillion: 0.20,
+    contextWindow: 8_192,
+  },
+  'llama3-70b-8192': {
+    displayName: "Llama 3 70B",
+    description: "Powerful large language model with strong reasoning capabilities and high performance across diverse tasks.",
+    inputCostPerMillion: 0.59,
+    outputCostPerMillion: 0.79,
+    contextWindow: 8_192,
+  },
+  'llama3-8b-8192': {
+    displayName: "Llama 3 8B",
+    description: "Compact, efficient model suitable for deployment in resource-constrained environments while maintaining good performance.",
+    inputCostPerMillion: 0.05,
+    outputCostPerMillion: 0.08,
+    contextWindow: 8_192,
+  },
+  'llama-4-scout-17b-16e': {
+    displayName: "Llama 4 Scout",
+    description: "Meta's multimodal MoE model with 10M token context window, 16 experts, and strong multilingual capabilities for long-context tasks at budget-friendly pricing.",
+    inputCostPerMillion: 0.11,
+    outputCostPerMillion: 0.34,
+    contextWindow: 10_000_000,
+  },
+  'llama-4-maverick-17b-128e': {
+    displayName: "Llama 4 Maverick",
+    description: "High-performance 128-expert MoE model optimized for vision-language tasks and complex reasoning, outperforming larger models in coding and multimodal benchmarks.",
+    inputCostPerMillion: 0.20,
+    outputCostPerMillion: 0.60,
+    contextWindow: 1_000_000,
+  },
+
+
+
+
+  // Mistral Models
+  'mistral-large-latest': {
+    displayName: "Mistral Large",
+    description: "Advanced model with strong multilingual, reasoning, math, and code generation capabilities for complex, reasoning-heavy tasks.",
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 6.00,
+    contextWindow: 32_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 4000
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'pixtral-large-latest': {
+    displayName: "Pixtral Large",
+    description: "Multimodal extension of Mistral's technology with enhanced visual understanding and processing capabilities.",
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 6.00,
+    contextWindow: 32_000,
+  },
+  'mistral-small-latest': {
+    displayName: "Mistral Small",
+    description: "Optimized for simple, bulk tasks such as classification, customer support, and basic text generation at an affordable price point.",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.30,
+    contextWindow: 32_000,
+  },
+  
+
+  
+
+
+
+
+  // Perplexity Models
+  'sonar-pro': {
+    displayName: "Sonar Pro",
+    description: "Premium research-focused model with advanced information retrieval and synthesis capabilities for complex queries.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 32_000, // Estimated based on similar models
+  },
+  'sonar': {
+    displayName: "Sonar",
+    description: "Balanced model offering good performance for general research and information retrieval tasks at a moderate price point.",
+    inputCostPerMillion: 1.00,
+    outputCostPerMillion: 1.00,
+    contextWindow: 16_000, // Estimated based on similar models
+  },
+
+
+  // DeepSeek Models  (Model settings added ✅)
+  'deepseek-chat': {
+    displayName: "DeepSeek Chat",
+    description: "Versatile conversational model with strong general knowledge and natural dialogue capabilities for diverse applications.",
+    inputCostPerMillion: 0.27,
+    outputCostPerMillion: 1.10,
+    contextWindow: 64_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 0,
+        max: 8192
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'deepseek-reasoner': {
+    displayName: "DeepSeek Reasoner",
+    description: "Specialized model focused on complex reasoning tasks, problem-solving, and logical deduction with enhanced accuracy.",
+    inputCostPerMillion: 0.55,
+    outputCostPerMillion: 2.19,
+    contextWindow: 64_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 8192
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 2048
+      },
+      frequencyPenalty: {
+        default: 0.1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+
+
+  
+  // Google Models
+  'gemini-2.5-pro-exp-03-25': {
+    displayName: "Gemini 2.5 Pro Exp",
+    description: "Gemini 2.5 Pro Experimental is our state-of-the-art thinking model, capable of reasoning over complex problems in code, math, and STEM, as well as analyzing large datasets, codebases, and documents using long context.",
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 1_000_000,
+  },
+  'gemini-2.0-flash-exp': {
+    displayName: "Gemini 2.0 Flash",
+    description: "Fast model with enhanced performance, multimodal capabilities, and native support for generating images and text-to-speech audio.",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.40,
+    contextWindow: 1_048_576, // 1M tokens
+  },
+  'gemini-1.5-pro': {
+    displayName: "Gemini 1.5 Pro",
+    description: "Powerful multimodal model with an extremely large context window for handling extensive documents and complex tasks.",
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 2_000_000, // 2M tokens
+  },
+  'gemini-1.5-pro-latest': {
+    displayName: "Gemini 1.5 Pro Latest",
+    description: "Most recent version of Google's powerful multimodal model with exceptional context handling and reasoning capabilities.",
+    inputCostPerMillion: 2.50,
+    outputCostPerMillion: 10.00,
+    contextWindow: 2_000_000,
+  },
+  'gemini-1.5-flash': {
+    displayName: "Gemini 1.5 Flash",
+    description: "Optimized for speed while maintaining strong performance across various tasks with an impressive context window.",
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.60,
+    contextWindow: 1_048_576,
+  },
+  'gemini-1.5-flash-latest': {
+    displayName: "Gemini 1.5 Flash Latest",
+    description: "Latest version of Google's speed-optimized model with improved performance and extensive context handling.",
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.60,
+    contextWindow: 1_048_576,
+  },
+  'gemini-1.5-flash-8b': {
+    displayName: "Gemini 1.5 Flash 8B",
+    description: "Compact, efficient model designed for cost-effective deployment while maintaining good performance and large context window.",
+    inputCostPerMillion: 0.075,
+    outputCostPerMillion: 0.30,
+    contextWindow: 1_048_576,
+  },
+  'gemini-1.5-flash-8b-latest': {
+    displayName: "Gemini 1.5 Flash 8B Latest",
+    description: "Latest version of Google's compact model offering improved efficiency and performance for everyday tasks.",
+    inputCostPerMillion: 0.075,
+    outputCostPerMillion: 0.30,
+    contextWindow: 1_048_576,
+  },
+  'gemini-2.5-flash-preview-04-17': {
+    displayName: "Gemini 2.5 Flash Preview",
+    description: "Gemini 2.5 Flash is our first fully hybrid reasoning model, giving developers the ability to turn thinking on or off. The model also allows developers to set thinking budgets to find the right tradeoff between quality, cost, and latency.",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.40,
+    contextWindow: 1_048_576,
+  },
+
+
+  
+  // xAI Grok Models (text only)
+  'grok-2-latest': {
+    displayName: "Grok 2",
+    description: "Powerful model with strong reasoning capabilities and a distinctive personality for engaging interactions.",
+    inputCostPerMillion: 2.00,
+    outputCostPerMillion: 10.00,
+    contextWindow: 32_768,
+    
+  },
+  'grok-3': {
+    displayName: "Grok 3",
+    description: "Advanced model specializing in code generation, debugging, and multi-step problem-solving with multiple operational modes.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 131_072,
+  },
+  'grok-3-mini': {
+    displayName: "Grok 3 Mini",
+    description: "Compact version of Grok 3 optimized for quick answers and everyday tasks while maintaining good performance.",
+    inputCostPerMillion: 0.30,
+    outputCostPerMillion: 0.50,
+    contextWindow: 131_072,
+  },
+
+
 };
 
 
