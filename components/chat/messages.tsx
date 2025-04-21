@@ -2,7 +2,7 @@ import type { UIMessage } from 'ai';
 import { PreviewMessage, ThinkingMessage } from './message';
 
 // import { Greeting } from './greeting';
-import { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef } from 'react'; // Import React
 
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
@@ -20,6 +20,8 @@ interface MessagesProps {
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  // Allow null for the external ref prop type
+  externalScrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 function PureMessages({
@@ -29,32 +31,37 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
+  // Destructure the new prop
+  externalScrollContainerRef,
 }: MessagesProps) {
-  
+
   // Track previous messages state for comparison
   const prevMessagesRef = useRef<UIMessage[]>([]);
-  
+
   // Custom hook that provides refs for container and end element
   // to enable automatic scrolling to the bottom when new messages arrive
   const { scrollRef, isAtBottom, scrollToBottom } = useAutoScroll({
-    content: messages.length > 0 
-      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}-${messages[messages.length - 1].reasoning?.length ?? 0}` 
+    // Pass the external ref to the hook
+    // @ts-expect-error - Type 'RefObject<HTMLDivElement | null>' is not assignable to type 'RefObject<HTMLDivElement>'. We handle this inside the hook.
+    externalRef: externalScrollContainerRef,
+    content: messages.length > 0
+      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}-${messages[messages.length - 1].reasoning?.length ?? 0}`
       : null,
     offset: 32,
     smooth: true
   });
-  
+
   // Debounce the "not at bottom" state to prevent flickering of the button
   const isNotAtBottomDebounced = useDebounce(!isAtBottom, 300);
-  
+
   // Force scroll to bottom when a new user message is added
   useEffect(() => {
     const prevMessages = prevMessagesRef.current;
-    
+
     // Check if a new user message was added
     if (
-      messages.length > prevMessages.length && 
-      messages.length > 0 && 
+      messages.length > prevMessages.length &&
+      messages.length > 0 &&
       messages[messages.length - 1].role === 'user'
     ) {
       // Always scroll to bottom when user adds a new message
@@ -71,6 +78,7 @@ function PureMessages({
   return (
     <div
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-auto pt-4 pb-2 w-full px-4 md:px-8 scrollbar-thin scrollbar-thumb-black/10 dark:scrollbar-thumb-white/10 scrollbar-track-transparent"
+      // Keep attaching the internal ref returned by the hook here
       ref={scrollRef}
     >
       {messages.length === 0 && <Greeting />}
@@ -115,7 +123,6 @@ function PureMessages({
 
 
 
-      
 
       <div className="shrink-0 min-w-[24px] min-h-[24px]" />
     </div>
@@ -128,6 +135,8 @@ export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (prevProps.status !== nextProps.status) return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
-  
+  // Add comparison for the new prop
+  if (prevProps.externalScrollContainerRef !== nextProps.externalScrollContainerRef) return false;
+
   return true;
 });

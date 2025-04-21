@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react' // Import useRef
 import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
@@ -33,6 +33,9 @@ export default function ChatMobile({
   // State and hooks copied from Chat.tsx
   const [selectedModelId] = useState<string>(agent.primaryModelId); // setSelectedModelId unused
   const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle); // displayTitle unused
+
+  // Ref for the mobile scroll container
+  const mobileScrollContainerRef = useRef<HTMLDivElement>(null); // Added ref
 
   useEffect(() => {
     if (agent?.id) {
@@ -97,7 +100,8 @@ export default function ChatMobile({
       <MobileAgentHeader agent={agent} hasMessages={messages.length > 0} />
 
       {/* Messages Area - takes remaining space and scrolls */}
-      <div className="flex-grow overflow-y-auto">
+      {/* Attach the ref here */}
+      <div ref={mobileScrollContainerRef} className="flex-grow overflow-y-auto">
         {messages.length > 0 ? (
           <Messages
             chatId={chatId}
@@ -107,6 +111,8 @@ export default function ChatMobile({
             reload={reload}
             isReadonly={false}
             isArtifactVisible={false}
+            // Pass the ref down
+            externalScrollContainerRef={mobileScrollContainerRef}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -118,7 +124,7 @@ export default function ChatMobile({
       </div>
 
       {/* Chat Input Area - fixed at the bottom */}
-      <div className="mt-auto "> 
+      <div className="mt-auto ">
         <ChatInput
           chatId={chatId}
           agentId={agent.id}
@@ -128,8 +134,7 @@ export default function ChatMobile({
           status={status}
           stop={stop}
           className=" px-2 pb-6 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
-          // Pass messages length to potentially adjust input style if needed
-          hasMessages={messages.length > 0}
+          // Removed hasMessages prop
         />
       </div>
     </div>

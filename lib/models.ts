@@ -891,17 +891,66 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'grok-3': {
     displayName: "Grok 3",
-    description: "Advanced model specializing in code generation, debugging, and multi-step problem-solving with multiple operational modes.",
+    description: "xAI's flagship model that excels at enterprise use cases like data extraction, coding, and text summarization. Possesses deep domain knowledge in finance, healthcare, law, and science.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
     contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 8192,
+        min: 0,
+        max: 16384
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   'grok-3-mini': {
     displayName: "Grok 3 Mini",
-    description: "Compact version of Grok 3 optimized for quick answers and everyday tasks while maintaining good performance.",
+    description: "xAI's lightweight model that thinks before responding. Great for simple or logic-based tasks that do not require deep domain knowledge. The raw thinking traces are accessible.",
     inputCostPerMillion: 0.30,
     outputCostPerMillion: 0.50,
     contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 8192,
+        min: 0,
+        max: 16384
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 0,
+        min: 0,
+        max: 2048
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
 
 

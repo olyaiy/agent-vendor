@@ -9,13 +9,19 @@ interface UseAutoScrollOptions {
   offset?: number;
   smooth?: boolean;
   content?: React.ReactNode;
+  externalRef?: React.RefObject<HTMLDivElement>; // Added externalRef option
 }
 
 export function useAutoScroll(options: UseAutoScrollOptions = {}) {
-  const { offset = 20, smooth = false, content } = options;
-  const scrollRef = useRef<HTMLDivElement>(null);
+  // Destructure externalRef from options
+  const { offset = 20, smooth = false, content, externalRef } = options;
+  // Rename internal ref
+  const internalScrollRef = useRef<HTMLDivElement>(null);
   const lastContentHeight = useRef(0);
   const userHasScrolled = useRef(false);
+
+  // Determine the target ref to use for calculations and listeners
+  const targetRef = externalRef ?? internalScrollRef;
 
   const [scrollState, setScrollState] = useState<ScrollState>({
     isAtBottom: true,
@@ -35,15 +41,16 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
 
   const scrollToBottom = useCallback(
     (instant?: boolean) => {
-      if (!scrollRef.current) return;
+      // Use targetRef
+      if (!targetRef.current) return;
 
       const targetScrollTop =
-        scrollRef.current.scrollHeight - scrollRef.current.clientHeight;
+        targetRef.current.scrollHeight - targetRef.current.clientHeight;
 
       if (instant) {
-        scrollRef.current.scrollTop = targetScrollTop;
+        targetRef.current.scrollTop = targetScrollTop;
       } else {
-        scrollRef.current.scrollTo({
+        targetRef.current.scrollTo({
           top: targetScrollTop,
           behavior: smooth ? "smooth" : "auto",
         });
@@ -56,13 +63,14 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
       });
       userHasScrolled.current = false; // Reset user scroll flag
     },
-    [smooth]
+    [smooth, targetRef] // Add targetRef to dependency array
   );
 
   const handleScroll = useCallback(() => {
-    if (!scrollRef.current) return;
+    // Use targetRef
+    if (!targetRef.current) return;
 
-    const atBottom = checkIsAtBottom(scrollRef.current);
+    const atBottom = checkIsAtBottom(targetRef.current);
 
     // console.log('[useAutoScroll] handleScroll triggered.', { atBottom });
     setScrollState((prev) => {
@@ -78,18 +86,20 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
       // console.log('[useAutoScroll] handleScroll state update:', { prev, newState });
       return newState;
     });
-  }, [checkIsAtBottom]);
+  }, [checkIsAtBottom, targetRef]); // Add targetRef to dependency array
 
   useEffect(() => {
-    const element = scrollRef.current;
+    // Use targetRef
+    const element = targetRef.current;
     if (!element) return;
 
     element.addEventListener("scroll", handleScroll, { passive: true });
     return () => element.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  }, [handleScroll, targetRef]); // Add targetRef to dependency array
 
   useEffect(() => {
-    const scrollElement = scrollRef.current;
+    // Use targetRef
+    const scrollElement = targetRef.current;
     if (!scrollElement) return;
 
     const currentHeight = scrollElement.scrollHeight;
@@ -108,10 +118,11 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
       }
       lastContentHeight.current = currentHeight;
     }
-  }, [content, scrollState.autoScrollEnabled, scrollToBottom]);
+  }, [content, scrollState.autoScrollEnabled, scrollToBottom, targetRef]); // Add targetRef to dependency array
 
   useEffect(() => {
-    const element = scrollRef.current;
+    // Use targetRef
+    const element = targetRef.current;
     if (!element) return;
 
     const resizeObserver = new ResizeObserver((/* entries */) => {
@@ -127,11 +138,12 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
 
     resizeObserver.observe(element);
     return () => resizeObserver.disconnect();
-  }, [scrollState.autoScrollEnabled, scrollToBottom]);
+  }, [scrollState.autoScrollEnabled, scrollToBottom, targetRef]); // Add targetRef to dependency array
 
   const disableAutoScroll = useCallback(() => {
-    const atBottom = scrollRef.current
-      ? checkIsAtBottom(scrollRef.current)
+    // Use targetRef
+    const atBottom = targetRef.current
+      ? checkIsAtBottom(targetRef.current)
       : false;
 
     // Only disable if not at bottom
@@ -146,10 +158,11 @@ export function useAutoScroll(options: UseAutoScrollOptions = {}) {
     } else {
       // console.log('[useAutoScroll] disableAutoScroll called while at bottom - doing nothing.');
     }
-  }, [checkIsAtBottom]);
+  }, [checkIsAtBottom, targetRef]); // Add targetRef to dependency array
 
   return {
-    scrollRef,
+    // Return the internal ref as scrollRef for backward compatibility
+    scrollRef: internalScrollRef,
     isAtBottom: scrollState.isAtBottom,
     autoScrollEnabled: scrollState.autoScrollEnabled,
     scrollToBottom: () => scrollToBottom(false),
