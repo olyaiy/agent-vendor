@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 // Define the shape of a tag object
 type Tag = {
@@ -21,23 +21,30 @@ type TagFiltersProps = {
  */
 export function TagFilters({ topTags, selectedTag, tagsResultSuccess, tagsResultError }: TagFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-2 mb-6">
-      <Link href="/">
-        <Badge variant={!selectedTag ? 'default' : 'outline'} className="cursor-pointer">
-          All
-        </Badge>
-      </Link>
+    <div className="flex space-x-2 overflow-x-auto pb-4 mb-6">
       {tagsResultSuccess ? (
-        topTags.map(tag => (
-          <Link key={tag.id} href={`/?tag=${encodeURIComponent(tag.name)}`}>
-            <Badge
-              variant={selectedTag === tag.name ? 'default' : 'outline'}
-              className="cursor-pointer"
+        <>
+          <Link href="/" className="flex-shrink-0">
+            <Button
+              variant={!selectedTag ? 'default' : 'outline'}
+              size="sm"
+              className="rounded-full"
             >
-              {tag.name}
-            </Badge>
+              All
+            </Button>
           </Link>
-        ))
+          {topTags.map(tag => (
+            <Link key={tag.id} href={selectedTag === tag.name ? "/" : `/?tag=${encodeURIComponent(tag.name)}`} className="flex-shrink-0">
+              <Button
+                variant={selectedTag === tag.name ? 'default' : 'outline'}
+                size="sm"
+                className="rounded-full"
+              >
+                {tag.name}
+              </Button>
+            </Link>
+          ))}
+        </>
       ) : (
         <p className="text-sm text-red-500">Error loading tags: {tagsResultError}</p>
       )}

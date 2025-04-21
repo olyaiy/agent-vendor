@@ -5,17 +5,15 @@ import { getAllModels, getAllTagsAction } from "@/db/actions/agent-actions"; // 
 import { Tag } from "@/db/schema/agent"; // Import Tag type
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
-// Models data
-// Removed mockModels definition
 
 export default async function CreateAgentPage() {
 
-  // Check Authentication
+  // Auth Check
   const session = await auth.api.getSession({
     headers: await headers()
   })
   
-  // Fetch models and tags efficiently on the server
+  // Fetch Models and Tags
   const [modelsResult, tagsResult] = await Promise.all([
     getAllModels(),
     getAllTagsAction()
@@ -33,6 +31,7 @@ export default async function CreateAgentPage() {
     // Consider showing an error message to the user
   }
 
+  
   let availableTags: { value: string; label: string }[] = [];
   if (tagsResult.success && tagsResult.data) {
     availableTags = tagsResult.data.map((tag: Tag) => ({

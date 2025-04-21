@@ -1,20 +1,20 @@
 import { getTopTagsAction } from "@/db/actions/agent-actions";
 import HeaderPadding from "@/components/header-padding";
-// import { FilterBar } from "@/components/filter-bar"; // Keep commented out or remove if not used
-
-// Import the new components
 import { AgentSearch } from "@/components/home/agent-search";
 import { TagFilters } from "@/components/home/tag-filters";
 import { BaseModelsSection } from "@/components/home/base-models-section";
 import { AgentsGrid } from "@/components/home/agents-grid";
 
-// Update PageProps type to use Promise for searchParams
+
 type PageProps = {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+
+
 export default async function Home({ searchParams }: PageProps) {
-  // Await the searchParams promise
+
+
   const params = await searchParams;
   const selectedTag = typeof params?.tag === 'string' ? params.tag : undefined;
   const searchQuery = typeof params?.search === 'string' ? params.search : undefined; // Read search query
@@ -27,10 +27,11 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <main className="container mx-auto py-8 px-4">
       <HeaderPadding />
-      <AgentSearch /> {/* Render the new search component */}
-      {/* <FilterBar /> */}
 
-      {/* Render the Base Models Section (handles its own data fetching and Suspense) */}
+      {/* Search Bar */}
+      <AgentSearch /> 
+
+      {/* Base Models Section */}
       <BaseModelsSection searchQuery={searchQuery} />
 
       {/* Render Tag Filters */}
