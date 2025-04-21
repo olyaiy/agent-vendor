@@ -553,17 +553,61 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'llama-4-scout-17b-16e': {
     displayName: "Llama 4 Scout",
-    description: "Meta's multimodal MoE model with 10M token context window, 16 experts, and strong multilingual capabilities for long-context tasks at budget-friendly pricing.",
+    description: "Llama 4 Scout is Meta's natively multimodal model with a 17B parameter mixture-of-experts architecture (16 experts), offering exceptional performance across text and image understanding with support for 12 languages, optimized for assistant-like chat, image recognition, and coding tasks. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
     inputCostPerMillion: 0.11,
     outputCostPerMillion: 0.34,
-    contextWindow: 10_000_000,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 0,
+        max: 8192
+      },
+      temperature: {
+        default: 0.5,
+        min: 0.01,
+        max: 5
+      },
+      topP: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      }
+    }
   },
   'llama-4-maverick-17b-128e': {
     displayName: "Llama 4 Maverick",
-    description: "High-performance 128-expert MoE model optimized for vision-language tasks and complex reasoning, outperforming larger models in coding and multimodal benchmarks.",
+    description: "The Llama 4 collection of models are natively multimodal AI models that enable text and multimodal experiences. These models leverage a mixture-of-experts architecture to offer industry-leading performance in text and image understanding. Llama 4 Maverick, a 17 billion parameter model with 128 experts. Served by DeepInfra.",
     inputCostPerMillion: 0.20,
     outputCostPerMillion: 0.60,
-    contextWindow: 1_000_000,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 0,
+        max: 8192
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 5
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
 
 
@@ -649,7 +693,7 @@ export const modelDetails: Record<string, ModelDetails> = {
 
 
 
-  // Perplexity Models
+  // Perplexity Models  (Model settings added ✅)
   'sonar-pro': {
     displayName: "Sonar Pro",
     description: "Perplexity's premier offering with search grounding, supporting advanced queries and follow-ups.",
@@ -864,7 +908,7 @@ export const modelDetails: Record<string, ModelDetails> = {
 
 
   
-  // xAI Grok Models (text only)
+  // xAI Grok Models(Model settings added ✅)
   'grok-2-latest': {
     displayName: "Grok 2",
     description: "Grok 2 is a frontier language model with state-of-the-art reasoning capabilities. It features advanced capabilities in chat, coding, and reasoning, outperforming both Claude 3.5 Sonnet and GPT-4-Turbo on the LMSYS leaderboard.",
