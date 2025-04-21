@@ -703,7 +703,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                   Tips for effective system prompts:
                 </h3>
                 <ul className="list-disc list-inside space-y-1.5 pl-1 text-muted-foreground">
-                  <li>Define the agent&apos;s role clearly (e.g., "You are a math tutor")</li>
+                  <li>Define the agent&apos;s role clearly (e.g., &quot;You are a math tutor&quot;)</li>
                   <li>Specify tone and style (formal, casual, technical)</li>
                   <li>Set response length preferences (concise, detailed)</li>
                   <li>Include any domain-specific knowledge</li>
