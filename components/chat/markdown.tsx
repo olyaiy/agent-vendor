@@ -11,11 +11,23 @@ const components: Partial<Components> = {
   // @ts-expect-error Type mismatch between CodeBlock and ReactMarkdown's expected type
   code: CodeBlock,
   pre: ({ children }) => <>{children}</>,
-  p: ({ children, ...props }) => (
-    <p {...props} className="text-base">
-      {children}
-    </p>
-  ),
+  p: ({ children, ...props }) => {
+    const hasBlockElement = React.Children.toArray(children).some(
+      (child) => React.isValidElement(child) && 
+        (typeof child.type === 'string' 
+          ? ['div', 'pre', 'ul', 'ol', 'table'].includes(child.type)
+          : ['CodeBlock'].includes(child.type?.name || '')
+        )
+    );
+    
+    const Element = hasBlockElement ? 'div' : 'p';
+    
+    return (
+      <Element {...props} className="text-base">
+        {children}
+      </Element>
+    );
+  },
   ol: ({ children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4" {...props}>
