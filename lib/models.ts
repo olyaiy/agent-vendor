@@ -87,6 +87,22 @@ export const myProvider = customProvider({
 
 
 
+// New interface for configurable ranges
+export interface ModelSettingRange {
+  default: number;
+  min: number;
+  max: number;
+}
+
+export interface ModelSettings {
+  maxOutputTokens?: ModelSettingRange;
+  temperature?: ModelSettingRange;
+  topP?: ModelSettingRange;
+  topK?: ModelSettingRange;
+  frequencyPenalty?: ModelSettingRange;
+  presencePenalty?: ModelSettingRange;
+}
+
 // Updated ModelDetails interface
 export interface ModelDetails {
   displayName: string;
@@ -94,6 +110,7 @@ export interface ModelDetails {
   inputCostPerMillion: number;
   outputCostPerMillion: number;
   contextWindow: number;
+  defaultSettings?: Partial<ModelSettings>;
 }
 
 // Updated modelDetails object with displayName and description
@@ -133,6 +150,28 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 10.00,
     outputCostPerMillion: 40.00,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 16384,
+        min: 0,
+        max: 32768
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
   },
   'o4-mini': {
     displayName: "o4 Mini",
@@ -140,6 +179,28 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 1.10,
     outputCostPerMillion: 4.40,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 16384,
+        min: 0,
+        max: 32768
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
   },
   // GROQ Models with updated pricing
   'gemma2-9b-it': {
@@ -214,13 +275,77 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   'claude-3-5-sonnet-20241022': {
-    displayName: "Al Anthropic / Claude 3.5 Sonnet",
+    displayName: "Claude 3.5 Sonnet",
     description: "Claude 3.5 Sonnet strikes the ideal balance between intelligence and speed-particularly for enterprise workloads. It delivers strong performance at a lower cost compared to its peers, and is engineered for high endurance in large-scale Al deployments.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
     contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   'claude-3-5-haiku-20241022': {
     displayName: "Claude 3.5 Haiku",
@@ -470,6 +595,7 @@ export function getModelPricing(modelId: string): ModelDetails {
     description: details.description,
     inputCostPerMillion: details.inputCostPerMillion,
     outputCostPerMillion: details.outputCostPerMillion,
-    contextWindow: details.contextWindow
+    contextWindow: details.contextWindow,
+    defaultSettings: details.defaultSettings
   };
 }
