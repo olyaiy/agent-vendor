@@ -40,6 +40,9 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   const query = resolvedParams.query ?? null;
   const page = parseInt(resolvedParams.page ?? '1', 10);
 
+  // Fetch initial data using the server action (only if authenticated)
+  const result = session ? await getUserChatsAction({ searchQuery: query, page }) : { success: false, data: null };
+
   // Create mock history items for the background when not authenticated
   const mockChats = Array(10).fill(null).map((_, i) => ({
     id: `mock-${i}`,
@@ -116,9 +119,6 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
       </div>
     );
   }
-
-  // Fetch initial data using the server action (only if authenticated)
-  const result = await getUserChatsAction({ searchQuery: query, page });
 
   // Handle potential fetch errors gracefully
   if (!result.success || !result.data) {
