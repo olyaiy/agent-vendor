@@ -27,7 +27,7 @@ import { HistoryMenu } from "./history-menu"
 // Agent submenu items
 const agentItems = [
   { title: "Create", url: "/agent/create" },
-  { title: "My Agents", url: "/profile/" },
+  { title: "My Agents", url: "/profile/agents" },
   // { title: "Browse", url: "/agents/browse" },
 ]
 
