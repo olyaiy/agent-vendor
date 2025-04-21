@@ -21,6 +21,10 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { MessageEditor } from '../message-editor';
 
+interface UIMessageWithUI extends UIMessage {
+  ui?: React.ReactNode;
+}
+
 const PurePreviewMessage = ({
   chatId,
   message,
@@ -31,7 +35,7 @@ const PurePreviewMessage = ({
   setMessages,
 }: {
   chatId: string;
-  message: UIMessage;
+  message: UIMessageWithUI;
   isLoading: boolean;
   setMessages: UseChatHelpers['setMessages'];
   reload: UseChatHelpers['reload'];
@@ -81,67 +85,73 @@ const PurePreviewMessage = ({
             </div>
           )}
 
-          {/* Check if there's a custom UI element first */}
-          {message.parts?.map((part, index) => { // Map callback starts here
-            const { type } = part;
-            const key = `message-${message.id}-part-${index}`;
+        {/* Check if there's a custom UI element first */}
+        {message.ui ? (
+            <div data-testid="message-ui-content">{message.ui}</div>
+          ) : (
+            // Otherwise, render parts as usual
+            message.parts?.map((part, index) => { // Map callback starts here
+              const { type } = part;
+              const key = `message-${message.id}-part-${index}`;
 
-            if (type === 'reasoning') {
-              return (
-                <MessageReasoning
-                  key={key}
-                  isLoading={isLoading}
-                  reasoning={part.reasoning}
-                />
-              );
-            }
-
-            if (type === 'text') {
-              if (mode === 'view') {
+              if (type === 'reasoning') {
                 return (
-                  <div key={key} className="flex flex-row gap-2 items-start">
-                    <div
-                      data-testid="message-content"
-                      className={cn('flex flex-col gap-4', {
-                        'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                          message.role === 'user',
-                      })}
-                    >
-                      <Markdown key={`${message.id}-${index}`}>
-                        {part.text}
-                      </Markdown>
-                      {/* {part.text} */}
+                  <MessageReasoning
+                    key={key}
+                    isLoading={isLoading}
+                    reasoning={part.reasoning}
+                  />
+                );
+              }
+
+              if (type === 'text') {
+                if (mode === 'view') {
+                  return (
+                    <div key={key} className="flex flex-row gap-2 items-start">
+                      <div
+                        data-testid="message-content"
+                        className={cn('flex flex-col gap-4', {
+                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                            message.role === 'user',
+                        })}
+                      >
+                        <Markdown key={`${message.id}-${index}`}>
+                          {part.text}
+                        </Markdown>
+                        {/* {part.text} */}
+                      </div>
                     </div>
-                  </div>
-                );
+                  );
+                }
+
+                if (mode === 'edit') {
+                  return (
+                    <div key={key} className="flex flex-row gap-2 items-start">
+                      <div className="size-8" />
+
+                      <MessageEditor
+                        key={message.id}
+                        message={message}
+                        setMode={setMode}
+                        setMessages={setMessages}
+                        reload={reload}
+                      />
+                    </div>
+                  );
+                }
               }
 
-              if (mode === 'edit') {
-                return (
-                  <div key={key} className="flex flex-row gap-2 items-start">
-                    <div className="size-8" />
-
-                    <MessageEditor
-                      key={message.id}
-                      message={message}
-                      setMode={setMode}
-                      setMessages={setMessages}
-                      reload={reload}
-                    />
-                  </div>
-                );
+              if (type === 'tool-invocation') {
+                const { toolInvocation } = part;
+                const { toolCallId } = toolInvocation;
+                // Use the new ToolMessage component
+                return <ToolMessage key={toolCallId} toolInvocation={toolInvocation} />;
               }
-            }
-
-            if (type === 'tool-invocation') {
-              const { toolInvocation } = part;
-              const { toolCallId } = toolInvocation;
-              // Use the new ToolMessage component
-              return <ToolMessage key={toolCallId} toolInvocation={toolInvocation} />;
-            }
-            // Add a fallback return for the map function
-            return null;
-          })}
+              // Add a fallback return for the map function
+              return null;
+            }) // End of map callback
+          ) // End of ternary false case
+          }
 
           {!isReadonly && (
             <MessageActions
