@@ -41,13 +41,13 @@ export function AgentSearchInput() {
 
   return (
     <div className="relative mb-6"> {/* Added margin-bottom */}
-      <Search className="absolute left-10 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Search className="absolute left-4 sm:left-10 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /> {/* MODIFIED */}
       <Input
         type="search"
         placeholder="Search agents by name, description, or tag..."
         value={searchQuery}
         onChange={handleInputChange}
-        className="w-full h-[75px] rounded-full overflow-hidden bg-background pl-18 pr-4 py-2 text-sm" // Adjusted padding for icon
+        className="w-full h-[60px] sm:h-[75px] rounded-full overflow-hidden bg-background pl-12 sm:pl-[4.5rem] pr-4 py-2 text-sm" // MODIFIED (assuming pl-18 was pl-[4.5rem])
       />
     </div>
   );

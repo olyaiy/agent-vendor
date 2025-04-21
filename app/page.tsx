@@ -26,11 +26,12 @@ function AgentItemLoading() {
 
 // Loading component for the base models row
 function BaseModelsLoading() {
+  // Adjust loading skeleton for grid layout on mobile
   return (
-    <div className="flex flex-row gap-4 overflow-x-auto py-2">
-      {Array.from({ length: 7 }).map((_, index) => (
-        <div key={index} className="flex flex-col items-center flex-shrink-0 w-24 animate-pulse">
-          <div className="w-24 h-24 bg-gray-200 rounded-md mb-1"></div>
+    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto py-2">
+      {Array.from({ length: 6 }).map((_, index) => ( // Assuming 6 base models for 2 rows of 3
+        <div key={index} className="flex flex-col items-center sm:flex-shrink-0 sm:w-24 animate-pulse">
+          <div className="w-full sm:w-24 h-24 bg-gray-200 rounded-md mb-1"></div>
           <div className="h-3 bg-gray-200 rounded w-16"></div>
         </div>
       ))}
@@ -64,11 +65,11 @@ async function AgentsList({ tag, searchQuery }: { tag?: string, searchQuery?: st
   // Updated "No agents found" messages
   if (filteredAgents.length === 0) {
     if (searchQuery && tag) {
-      return <p className="text-gray-500">No agents found matching &quot;{searchQuery}&quot; with the tag &quot;{tag}&quot;.</p>;
+      return <p className="text-gray-500">{`No agents found matching "${searchQuery}" with the tag "${tag}".`}</p>; 
     } else if (searchQuery) {
-      return <p className="text-gray-500">No agents found matching &quot;{searchQuery}&quot;.</p>;
+      return <p className="text-gray-500">{`No agents found matching "${searchQuery}".`}</p>; 
     } else if (tag) {
-      return <p className="text-gray-500">No agents found with the tag &quot;{tag}&quot;.</p>;
+      return <p className="text-gray-500">{`No agents found with the tag "${tag}".`}</p>; 
     } else {
       // Base case: No tag, no search, but base models might have been filtered out
       const message = agents.length > 0 && filteredAgents.length === 0
@@ -79,7 +80,8 @@ async function AgentsList({ tag, searchQuery }: { tag?: string, searchQuery?: st
   }
   
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    // MODIFIED: grid-cols-2 for mobile, keeping sm and up as before
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"> 
       {filteredAgents.map((agent) => ( // Use filteredAgents
         <Suspense key={agent.id} fallback={<AgentItemLoading />}>
           {/* Assuming AgentCard can handle the agent object potentially including tags */}
@@ -192,16 +194,19 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
   }
 
   return (
-    <div className="flex flex-row gap-4 overflow-x-auto pb-4 mb-6 border-b"> {/* Added padding and border */}
+    // MODIFIED: Grid 3-col for mobile, flex row (scroll) for sm+
+    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-4 mb-6 border-b"> 
       {agents.map((agent) => (
-        <Link href={`/${agent.id}`} key={agent.id} className="flex flex-col items-center flex-shrink-0 w-24 group">
-          <div className="w-24 h-24 relative rounded-md overflow-hidden border group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800">
+        // MODIFIED: Remove fixed width/shrink for grid, apply only for sm+
+        <Link href={`/${agent.id}`} key={agent.id} className="flex flex-col items-center group sm:flex-shrink-0 sm:w-24"> 
+          {/* MODIFIED: Adjust image container width for grid, apply fixed width only for sm+ */}
+          <div className="w-full sm:w-24 h-24 relative rounded-md overflow-hidden border group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800">
             {agent.thumbnailUrl ? (
               <Image
                 src={agent.thumbnailUrl}
                 alt={agent.name}
                 fill // Use fill to cover the container
-                sizes="96px" // ~ w-24
+                sizes="(max-width: 640px) 30vw, 96px" // Adjust sizes for grid vs fixed width
                 className="object-cover" // Ensure image covers the area
               />
             ) : (
@@ -211,25 +216,11 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
               </div>
             )}
           </div>
-          <p className="text-xs text-center mt-1 font-medium  group-hover:text-orange-300 transition-colors truncate w-full px-1">
+          <p className="text-xs text-center mt-1 font-medium group-hover:text-orange-300 transition-colors truncate w-full px-1">
             {agent.name}
           </p>
         </Link>
       ))}
-
-
     </div>
-
-
-    
   );
 }
-
-
-
-
-
-
-
-
-

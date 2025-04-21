@@ -28,7 +28,12 @@ interface AgentCardProps {
   className?: string;
 }
 
+const MAX_VISIBLE_TAGS = 3; // Define the maximum number of tags to show
+
 export function AgentCard({ agent, className = "" }: AgentCardProps) {
+  const visibleTags = agent.tags ? agent.tags.slice(0, MAX_VISIBLE_TAGS) : [];
+  const hiddenTagsCount = agent.tags ? Math.max(0, agent.tags.length - MAX_VISIBLE_TAGS) : 0;
+
   return (
     <Link href={`/${agent.id}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
@@ -53,7 +58,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
           )}
 
           {/* Add dropdown menu */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer">
+          <div className="absolute top-2 right-2 transition-opacity duration-200 cursor-pointer"> 
             <DropdownMenu>
               <DropdownMenuTrigger 
                 className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 transition-colors cursor-pointer"
@@ -96,18 +101,30 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
               {agent.description}
             </p>
           )}
-          {/* Render Tags */}
+          {/* Render Tags - MODIFIED to limit visible tags */}
           {agent.tags && agent.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {agent.tags.map((tag) => (
-                <Badge key={tag.id} variant="outline" className="text-xs font-medium text-muted-foreground/80 hover:text-muted-foreground/90 transition-colors duration-200">
+            <div className="flex flex-wrap gap-1.5 items-center"> {/* Added items-center */}
+              {visibleTags.map((tag) => (
+                <Badge 
+                  key={tag.id} 
+                  variant="outline" 
+                  className="text-[10px] sm:text-xs font-medium text-muted-foreground/80 hover:text-muted-foreground/90 transition-colors duration-200"
+                >
                   {tag.name}
                 </Badge>
               ))}
+              {hiddenTagsCount > 0 && (
+                <Badge 
+                  variant="secondary" // Use a slightly different variant for the count
+                  className="text-[10px] sm:text-xs font-medium" // Match text size
+                >
+                  +{hiddenTagsCount}
+                </Badge>
+              )}
             </div>
           )}
         </div>
       </div>
     </Link>
   );
-} 
+}

@@ -210,7 +210,7 @@ export const modelDetails: Record<string, ModelDetails> = {
   // Anthropic Models
   'claude-3-7-sonnet-20250219': {
     displayName: "Claude 3.7 Sonnet",
-    description: "Anthropic's most intelligent model with hybrid reasoning capabilities and extended thinking mode for complex problem-solving.",
+    description: "Claude 3.7 Sonnet is the first hybrid reasoning model and Anthropic's most intelligent model to date. It delivers state-of-the-art performance for coding, content generation, data analysis, and planning tasks, building upon its predecessor Claude 3.5 Sonnet's capabilities in software engineering and computer use.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
     contextWindow: 200_000,
@@ -262,10 +262,10 @@ export const modelDetails: Record<string, ModelDetails> = {
   // Google Models
   'gemini-2.5-pro-exp-03-25': {
     displayName: "Gemini 2.5 Pro Exp",
-    description: "Google's experimental multimodal model featuring advanced reasoning, native audio/video processing, and an extensive 1M token context window for handling complex, long-form tasks.",
+    description: "Gemini 2.5 Pro Experimental is our state-of-the-art thinking model, capable of reasoning over complex problems in code, math, and STEM, as well as analyzing large datasets, codebases, and documents using long context.",
     inputCostPerMillion: 2.50,
     outputCostPerMillion: 10.00,
-    contextWindow: 1_048_576,
+    contextWindow: 1_000_000,
   },
   'gemini-2.0-flash-exp': {
     displayName: "Gemini 2.0 Flash",
@@ -362,24 +362,24 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'gpt-4.1': {
     displayName: "GPT-4.1",
-    description: "OpenAI's smartest model for complex tasks, offering state-of-the-art performance across all domains",
+    description: "GPT 4.1 is OpenAl's flagship model for complex tasks. It is well suited for problem solving across domains.",
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 8.00,
     contextWindow: 200_000,
   },
   'gpt-4.1-mini': {
     displayName: "GPT-4.1 Mini",
-    description: "Affordable model balancing speed and intelligence for general purpose applications",
+    description: "GPT 4.1 mini provides a balance between intelligence, speed, and cost that makes it an attractive model for many use cases.",
     inputCostPerMillion: 0.40,
     outputCostPerMillion: 1.60,
     contextWindow: 200_000,
   },
   'gpt-4.1-nano': {
-    displayName: "GPT-4.1 Nano",
-    description: "Fastest, most cost-effective model optimized for low-latency tasks and high-volume applications",
+    displayName: "5 OpenAI / GPT-4.1 nano",
+    description: "GPT-4.1 nano is the fastest, most cost-effective GPT 4.1 model.",
     inputCostPerMillion: 0.10,
     outputCostPerMillion: 0.40,
-    contextWindow: 128_000,
+    contextWindow: 1_047_576,
   },
 };
 
