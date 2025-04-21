@@ -30,6 +30,7 @@ import { AgentAvatar } from "@/components/agent-avatar";
 import { FormSection } from "@/components/form-section";
 import { KnowledgeSection } from "@/components/knowledge-section"; 
 import { Agent, Knowledge } from "@/db/schema/agent";
+import { FullscreenIcon } from "@/components/utils/icons";
 
 export interface ModelInfo {
   id: string;
@@ -43,6 +44,19 @@ interface EditAgentFormProps {
   knowledge: Knowledge[];
   allTags: Option[]; // Add prop for all available tags
   currentTags: Option[]; // Add prop for currently selected tags
+}
+
+function ExitFullscreenIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg height={size} width={size} viewBox="0 0 16 16" style={{ color: 'currentcolor' }}>
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M2.5 10.75V13.5H5.25V15H2C1.44772 15 1 14.5523 1 14V10.75H2.5ZM13.5 10.75V13.5H10.75V15H14C14.5523 15 15 14.5523 15 14V10.75H13.5ZM2.5 5.25V2.5H5.25V1H2C1.44772 1 1 1.44772 1 2V5.25H2.5ZM13.5 5.25V2.5H10.75V1H14C14.5523 1 15 1.44772 15 2V5.25H13.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 
 export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allTags, currentTags }: EditAgentFormProps) {
@@ -632,9 +646,15 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="absolute top-2 right-2 text-xs h-7 px-2"
+                    className="absolute top-2 right-2 text-xs h-7 px-2 flex items-center gap-1"
                     onClick={() => setIsSystemPromptExpanded(prev => !prev)}
+                    aria-label={isSystemPromptExpanded ? 'Collapse' : 'Expand'}
                   >
+                    {isSystemPromptExpanded ? (
+                      <ExitFullscreenIcon size={16} />
+                    ) : (
+                      <FullscreenIcon size={16} />
+                    )}
                     {isSystemPromptExpanded ? 'Collapse' : 'Expand'}
                   </Button>
                 )}
