@@ -20,6 +20,8 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
   const selectedTag = typeof params?.tag === 'string' ? params.tag : undefined;
   const searchQuery = typeof params?.search === 'string' ? params.search : undefined; // Read search query
+  const page = typeof params?.page === 'string' ? parseInt(params.page) : 1; // Default to page 1
+  const pageSize = typeof params?.pageSize === 'string' ? parseInt(params.pageSize) : 12; // Default page size
 
   // Fetch top tags
   const tagsResult = await getTopTagsAction(20); // Fetch top 5 tags for filtering
@@ -48,7 +50,7 @@ export default async function Home({ searchParams }: PageProps) {
 
       {/* Render the Agents Grid (handles its own data fetching and Suspense) */}
       <Suspense fallback={<AgentsLoading />}>
-        <AgentsGrid tag={selectedTag} searchQuery={searchQuery} />
+        <AgentsGrid tag={selectedTag} searchQuery={searchQuery} page={page} pageSize={pageSize} />
       </Suspense>
 
     </main>
