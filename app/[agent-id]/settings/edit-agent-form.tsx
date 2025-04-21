@@ -7,31 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-// Removed Select imports, will use ModelSelect
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ModelSelect } from "@/components/model-select"; // Import ModelSelect
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added Tabs
+import { ModelSelect } from "@/components/model-select"; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; 
 import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import MultipleSelector, { Option } from "@/components/ui/multiselect"; // Import MultipleSelector and Option type
+import MultipleSelector, { Option } from "@/components/ui/multiselect"; 
 import {
   updateAgentAction,
   addKnowledgeItemAction,
   updateKnowledgeItemAction,
   deleteKnowledgeItemAction,
-  updateAgentTagsAction, // Import the new action
-  uploadAgentImageAction, // Added
-  removeAgentImageAction, // Added
+  updateAgentTagsAction, 
+  uploadAgentImageAction, 
+  removeAgentImageAction, 
 } from "@/db/actions/agent-actions";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, ChatBubbleIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
-import { AgentAvatar } from "@/components/agent-avatar"; // Added AgentAvatar
+import { AgentAvatar } from "@/components/agent-avatar"; 
 import { FormSection } from "@/components/form-section";
-import { KnowledgeSection } from "@/components/knowledge-section"; // Added
-import { Agent, Knowledge } from "@/db/schema/agent"; // Import types
+import { KnowledgeSection } from "@/components/knowledge-section"; 
+import { Agent, Knowledge } from "@/db/schema/agent";
 
 export interface ModelInfo {
   id: string;
@@ -67,6 +65,9 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
 
+  // Add expand/collapse state for system prompt textarea
+  const [isSystemPromptExpanded, setIsSystemPromptExpanded] = useState(false);
+  const [showExpandToggle, setShowExpandToggle] = useState(false);
 
   // Refs
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
@@ -85,7 +86,14 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
   // Adjust height on initial render and when agent data changes
   useEffect(() => {
     adjustSystemPromptHeight();
-  }, [agent.systemPrompt]); // Dependency on agent.systemPrompt
+    if (systemPromptRef.current) {
+      const text = systemPromptRef.current.value || '';
+      const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+      if (wordCount > 500) {
+        setShowExpandToggle(true);
+      }
+    }
+  }, [agent.systemPrompt]);
 
   // Form submission handler
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -618,16 +626,27 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
                   Required
                 </Badge>
               </div>
-              <div className="bg-secondary/50 border rounded-lg p-0.5">
+              <div className="bg-secondary/50 border rounded-lg p-0.5 relative">
+                {showExpandToggle && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 text-xs h-7 px-2"
+                    onClick={() => setIsSystemPromptExpanded(prev => !prev)}
+                  >
+                    {isSystemPromptExpanded ? 'Collapse' : 'Expand'}
+                  </Button>
+                )}
                 <Textarea
                   id="systemPrompt"
                   name="systemPrompt"
                   placeholder="e.g. You are a friendly assistant! Keep your responses concise and helpful."
-                  className="min-h-[180px] font-mono text-sm leading-relaxed bg-background border-0 focus-visible:ring-1 focus-visible:ring-offset-0 resize-none"
+                  className={`min-h-[180px] font-mono text-sm leading-relaxed bg-background border-0 focus-visible:ring-1 focus-visible:ring-offset-0 resize-none ${showExpandToggle && !isSystemPromptExpanded ? 'max-h-[300px] overflow-auto' : ''}`}
                   required
                   ref={systemPromptRef}
                   onInput={adjustSystemPromptHeight}
-                  defaultValue={agent.systemPrompt || ""} // Set default value
+                  defaultValue={agent.systemPrompt || ""}
                 />
               </div>
 
@@ -707,7 +726,6 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
           )}
         </Button>
       </div>
-      {/* Removed hidden userId input */}
     </form>
   );
 }
