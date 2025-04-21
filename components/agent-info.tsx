@@ -23,7 +23,7 @@ import {
 import { BookOpen, ChevronRight } from 'lucide-react';
 
 import { KnowledgeItemDisplay } from './knowledge-item-display'; // Import the new component
-
+import { modelDetails } from '@/lib/models'; // Removed unused ModelSettings import
 
 interface AgentInfoProps {
   agent: Agent & { modelName?: string; tags: Array<{ id: string; name: string }> };
@@ -32,12 +32,28 @@ interface AgentInfoProps {
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
   models: ModelInfo[]; // Add models prop
+  chatSettings: Record<string, number>; // Add chatSettings prop
+  onSettingChange: (settingName: string, value: number) => void; // Add onSettingChange prop
 }
 
 // The main component now delegates rendering to sub-components
-function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, setSelectedModelId, models }: AgentInfoProps) { // Add models
+function AgentInfoComponent({
+  agent,
+  isOwner,
+  knowledgeItems,
+  selectedModelId,
+  setSelectedModelId,
+  models,
+  chatSettings, // Destructure chatSettings
+  onSettingChange // Destructure onSettingChange
+}: AgentInfoProps) {
 
   // Removed all useState hooks for collapsible sections
+
+  // Find the model string name and details for the selected model ID
+  const selectedModelInfo = models.find(m => m.id === selectedModelId);
+  const selectedModelString = selectedModelInfo?.model;
+  const selectedModelDetail = selectedModelString ? modelDetails[selectedModelString] : undefined;
 
   return (
     <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
@@ -61,8 +77,13 @@ function AgentInfoComponent({ agent, isOwner, knowledgeItems, selectedModelId, s
         {/* Render Tools Section */}
         <ToolsSection />
 
-        {/* Render Settings Section - Removed props */}
-        <SettingsSection />
+        {/* Render Settings Section - Pass down new props */}
+        <SettingsSection
+          selectedModelString={selectedModelString} // Pass the string identifier
+          modelSettings={selectedModelDetail?.defaultSettings} // Pass only the settings object or undefined
+          chatSettings={chatSettings}
+          onSettingChange={onSettingChange}
+        />
       </div>
     </div>
   );

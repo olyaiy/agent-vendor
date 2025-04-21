@@ -518,17 +518,61 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'llama-3.3-70b-versatile': {
     displayName: "Llama 3.3 70B Versatile",
-    description: "High-performance model excelling at coding, reasoning, math, general knowledge tasks, instruction following, and tool use.",
+    description: "The Meta Llama 3.3 multilingual model is a pretrained and instruction tuned generative model with 70B parameters. Optimized for multilingual dialogue use cases, it outperforms many of the available open source and closed chat models on common industry benchmarks. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
     inputCostPerMillion: 0.59,
     outputCostPerMillion: 0.79,
     contextWindow: 128_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 8192,
+        min: 0,
+        max: 16384
+      },
+      temperature: {
+        default: 0.5,
+        min: 0.01,
+        max: 5
+      },
+      topP: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      }
+    }
   },
   'llama-3.1-8b-instant': {
     displayName: "Llama 3.1 8B Instant",
-    description: "Fast, efficient model optimized for quick responses and basic tasks with minimal computational requirements.",
+    description: "Llama 3.1 8B with 128K context window support, making it ideal for real-time conversational interfaces and data analysis while offering significant cost savings compared to larger models. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
     inputCostPerMillion: 0.05,
     outputCostPerMillion: 0.08,
-    contextWindow: 8_192,
+    contextWindow: 128_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4000,
+        min: 0,
+        max: 8000
+      },
+      temperature: {
+        default: 0.5,
+        min: 0.01,
+        max: 5
+      },
+      topP: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      }
+    }
   },
   'llama-guard-3-8b': {
     displayName: "Llama Guard 3 8B",
@@ -551,6 +595,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     outputCostPerMillion: 0.08,
     contextWindow: 8_192,
   },
+  
   'llama-4-scout-17b-16e': {
     displayName: "Llama 4 Scout",
     description: "Llama 4 Scout is Meta's natively multimodal model with a 17B parameter mixture-of-experts architecture (16 experts), offering exceptional performance across text and image understanding with support for 12 languages, optimized for assistant-like chat, image recognition, and coding tasks. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
