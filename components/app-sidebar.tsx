@@ -27,8 +27,8 @@ import { HistoryMenu } from "./history-menu"
 // Agent submenu items
 const agentItems = [
   { title: "Create", url: "/agent/create" },
+  { title: "My Agents", url: "/profile/" },
   // { title: "Browse", url: "/agents/browse" },
-  // { title: "My Agents", url: "/agents/my-agents" },
 ]
 
 // NavSecondary items

@@ -25,6 +25,7 @@ import {
   deleteModel as deleteModelRepo,
   selectModelByName,
   countAgents, // Added countAgents
+  selectAgentsByCreatorId, // Added for fetching user's agents
 } from "@/db/repository/agent-repository";
 // Corrected: Added Knowledge and Tag back to the import
 import { Agent, Model, Knowledge, Tag } from "@/db/schema/agent";
@@ -32,6 +33,8 @@ import { z } from "zod"; // Added for input validation
 import { revalidatePath } from "next/cache"; // For potential cache invalidation
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { selectAgentById } from "@/db/repository/agent-repository"; // Added for remove action
+import { auth } from "@/lib/auth"; // Import auth
+import { headers } from "next/headers"; // Import headers
 
 // Helper type for action results
 export type ActionResult<T> =
@@ -63,6 +66,36 @@ export async function createAgent(data: {
     return { success: true, data: result };
   } catch (error) {
     console.error("Failed to create agent:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+// Define the return type for the action
+type UserAgentResult = Array<Agent & { modelName: string; tags: { id: string; name: string }[] }>;
+
+/**
+ * Server action to fetch agents for the currently authenticated user.
+ * @returns Promise with success status and user's agent list or error.
+ */
+export async function getUserAgentsAction(): Promise<ActionResult<UserAgentResult>> {
+  try {
+    // Get the user session
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session || !session.user) {
+      return { success: false, error: "User not authenticated." };
+    }
+
+    const userId = session.user.id;
+
+    // Fetch agents for the user using the new repository function
+    const agents = await selectAgentsByCreatorId(userId);
+
+    return { success: true, data: agents };
+  } catch (error) {
+    console.error("Failed to fetch user agents:", error);
     return { success: false, error: (error as Error).message };
   }
 }
@@ -533,7 +566,7 @@ export async function updateTagAction(tagId: string, data: { name: string }): Pr
      // Handle potential unique constraint errors
      if (error instanceof Error && error.message.includes('unique constraint')) {
         return { success: false, error: `Another tag with the name "${data.name}" already exists.` };
-    }
+     }
     return { success: false, error: (error as Error).message };
   }
 }

@@ -657,3 +657,60 @@ export async function selectTopTags(limit: number): Promise<Tag[]> {
     .orderBy(asc(tags.name))
     .limit(limit);
 }
+
+/**
+ * Selects agents created by a specific user, including model name and tags.
+ * @param creatorId - The ID of the user who created the agents.
+ * @returns Array of agent records with model name and associated tags.
+ */
+export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<Agent & { modelName: string; tags: AgentTagInfo[] }>> {
+  // Use sql template literal for JSON aggregation
+  const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+
+  const result = await db
+    .select({
+      // Select all agent fields explicitly
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      thumbnailUrl: agent.thumbnailUrl,
+      avatarUrl: agent.avatarUrl,
+      systemPrompt: agent.systemPrompt,
+      welcomeMessage: agent.welcomeMessage,
+      primaryModelId: agent.primaryModelId,
+      visibility: agent.visibility,
+      createdAt: agent.createdAt,
+      updatedAt: agent.updatedAt,
+      creatorId: agent.creatorId,
+      // Select the model name
+      modelName: models.model,
+      // Select the aggregated tags
+      tags: tagsAgg
+    })
+    .from(agent)
+    // Join with models table
+    .innerJoin(models, eq(agent.primaryModelId, models.id))
+    // Left join with tags tables to include agents without tags
+    .leftJoin(agentTags, eq(agent.id, agentTags.agentId))
+    .leftJoin(tags, eq(agentTags.tagId, tags.id))
+    .where(eq(agent.creatorId, creatorId)) // Filter by creatorId
+    // Group by agent and model fields to allow tag aggregation
+    .groupBy(
+      agent.id,
+      agent.name,
+      agent.description,
+      agent.thumbnailUrl,
+      agent.avatarUrl,
+      agent.systemPrompt,
+      agent.welcomeMessage,
+      agent.primaryModelId,
+      agent.visibility,
+      agent.createdAt,
+      agent.updatedAt,
+      agent.creatorId,
+      models.model // Include modelName in groupBy
+    )
+    .orderBy(desc(agent.createdAt)); // Order by creation date
+
+  return result;
+}
