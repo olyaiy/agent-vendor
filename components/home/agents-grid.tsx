@@ -5,7 +5,7 @@ import { AgentCard } from "@/components/agent-card";
 // --- Loading Skeletons ---
 
 // Loading component for the overall agents data fetch
-function AgentsLoading() {
+export function AgentsLoading() {
   return <p className="text-gray-500">Loading agents data...</p>;
 }
 
@@ -72,18 +72,14 @@ export async function AgentsGrid({ tag, searchQuery }: AgentsGridProps) {
   return (
     <>
       <h1 className="text-3xl font-bold mb-4 mt-8">Explore Agents</h1> {/* Changed heading and added margin */}
-      {/* Wrap the grid rendering in Suspense */}
-      <Suspense fallback={<AgentsLoading />}>
-        {/* MODIFIED: grid-cols-2 for mobile, keeping sm and up as before */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredAgents.map((agent) => ( // Use filteredAgents
-            <Suspense key={agent.id} fallback={<AgentItemLoading />}>
-              {/* Assuming AgentCard can handle the agent object potentially including tags */}
-              <AgentCard agent={agent} />
-            </Suspense>
-          ))}
-        </div>
-      </Suspense>
+      {/* Grid container with per-item Suspense for streaming */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        {filteredAgents.map((agent) => (
+          <Suspense key={agent.id} fallback={<AgentItemLoading />}>
+            <AgentCard agent={agent} />
+          </Suspense>
+        ))}
+      </div>
     </>
   );
 }

@@ -3,7 +3,9 @@ import HeaderPadding from "@/components/header-padding";
 import { AgentSearch } from "@/components/home/agent-search";
 import { TagFilters } from "@/components/home/tag-filters";
 import { BaseModelsSection } from "@/components/home/base-models-section";
-import { AgentsGrid } from "@/components/home/agents-grid";
+import { AgentsGrid, AgentsLoading } from "@/components/home/agents-grid";
+import { Suspense } from "react";
+
 
 
 type PageProps = {
@@ -45,7 +47,9 @@ export default async function Home({ searchParams }: PageProps) {
       />
 
       {/* Render the Agents Grid (handles its own data fetching and Suspense) */}
-      <AgentsGrid tag={selectedTag} searchQuery={searchQuery} />
+      <Suspense fallback={<AgentsLoading />}>
+        <AgentsGrid tag={selectedTag} searchQuery={searchQuery} />
+      </Suspense>
 
     </main>
   );
