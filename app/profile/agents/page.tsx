@@ -23,13 +23,13 @@ export default async function AgentsPage() {
   const agents: AgentWithModelAndTags[] = result.data;
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold mb-4">My Agents</h1>
       {agents.length === 0 ? (
         // Escape the apostrophe using '
-        <p>You haven't created any agents yet.</p>
+        <p>You haven&apos;t created any agents yet.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {agents.map((agent) => (
             // Pass the agent object directly, no 'as any' needed
             <AgentCard key={agent.id} agent={agent} />
