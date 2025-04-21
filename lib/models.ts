@@ -569,10 +569,10 @@ export const modelDetails: Record<string, ModelDetails> = {
 
 
 
-  // Mistral Models
+  // Mistral Models (Model settings added ✅)
   'mistral-large-latest': {
     displayName: "Mistral Large",
-    description: "Advanced model with strong multilingual, reasoning, math, and code generation capabilities for complex, reasoning-heavy tasks.",
+    description: "Mistral Large is ideal for complex tasks that require large reasoning capabilities or are highly specialized - like Synthetic Text Generation, Code Generation, RAG, or Agents.",
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 6.00,
     contextWindow: 32_000,
@@ -596,17 +596,51 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'pixtral-large-latest': {
     displayName: "Pixtral Large",
-    description: "Multimodal extension of Mistral's technology with enhanced visual understanding and processing capabilities.",
+    description: "Pixtral Large is the second model in our multimodal family and demonstrates frontier-level image understanding. Particularly, the model is able to understand documents, charts and natural images, while maintaining the leading text-only understanding of Mistral Large 2.",
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 6.00,
     contextWindow: 32_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 4000
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   'mistral-small-latest': {
     displayName: "Mistral Small",
-    description: "Optimized for simple, bulk tasks such as classification, customer support, and basic text generation at an affordable price point.",
+    description: "Mistral Small 3.1 is a state-of-the-art multimodal and multilingual model with excellent benchmark performance while delivering 150 tokens per second inference speeds and supporting up to 128k context window.",
     inputCostPerMillion: 0.10,
     outputCostPerMillion: 0.30,
     contextWindow: 32_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 32768,
+        min: 0,
+        max: 64000
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   
 
@@ -625,10 +659,42 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'sonar': {
     displayName: "Sonar",
-    description: "Balanced model offering good performance for general research and information retrieval tasks at a moderate price point.",
+    description: "Perplexity's lightweight offering with search grounding, quicker and cheaper than Sonar Pro.",
     inputCostPerMillion: 1.00,
     outputCostPerMillion: 1.00,
     contextWindow: 16_000, // Estimated based on similar models
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 8000
+      },
+      temperature: {
+        default: 0.2,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 0.9,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 0,
+        min: 0,
+        max: 2048
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
   },
 
 
