@@ -511,10 +511,32 @@ export const modelDetails: Record<string, ModelDetails> = {
   // GROQ Models with updated pricing
   'gemma2-9b-it': {
     displayName: "Gemma 2 9B IT",
-    description: "Lightweight, state-of-the-art open model with impressive performance in text generation, reasoning, and multilingual capabilities.",
+    description: "9 billion parameter open source model by Google fine-tuned for chat purposes. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
     inputCostPerMillion: 0.20,
     outputCostPerMillion: 0.20,
     contextWindow: 8_192,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1000,
+        min: 300,
+        max: 4000
+      },
+      temperature: {
+        default: 0.2,
+        min: 0.01,
+        max: 5
+      },
+      topP: {
+        default: 0.8,
+        min: 0.01,
+        max: 1
+      },
+      topK: {
+        default: 40,
+        min: 1,
+        max: 500
+      }
+    }
   },
   'llama-3.3-70b-versatile': {
     displayName: "Llama 3.3 70B Versatile",
@@ -583,19 +605,62 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'llama3-70b-8192': {
     displayName: "Llama 3 70B",
-    description: "Powerful large language model with strong reasoning capabilities and high performance across diverse tasks.",
+    description: "Llama is a 70 billion parameter open source model by Meta fine-tuned for instruction following purposes. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
     inputCostPerMillion: 0.59,
     outputCostPerMillion: 0.79,
     contextWindow: 8_192,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1000,
+        min: 300,
+        max: 8192
+      },
+      temperature: {
+        default: 0.5,
+        min: 0.01,
+        max: 5
+      },
+      topP: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      }
+    }
   },
   'llama3-8b-8192': {
     displayName: "Llama 3 8B",
-    description: "Compact, efficient model suitable for deployment in resource-constrained environments while maintaining good performance.",
+    description: "Llama is an 8 billion parameter open source model by Meta fine-tuned for instruction following purposes. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
     inputCostPerMillion: 0.05,
     outputCostPerMillion: 0.08,
     contextWindow: 8_192,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1000,
+        min: 300,
+        max: 8192
+      },
+      temperature: {
+        default: 0.5,
+        min: 0.01,
+        max: 5
+      },
+      topP: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0.01,
+        max: 1
+      }
+    }
   },
-  
   'llama-4-scout-17b-16e': {
     displayName: "Llama 4 Scout",
     description: "Llama 4 Scout is Meta's natively multimodal model with a 17B parameter mixture-of-experts architecture (16 experts), offering exceptional performance across text and image understanding with support for 12 languages, optimized for assistant-like chat, image recognition, and coding tasks. Served by Groq with their custom Language Processing Units (LPUs) hardware to provide fast and efficient inference.",
