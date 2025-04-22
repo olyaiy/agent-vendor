@@ -57,7 +57,7 @@ const SearchResultCard = ({ result }: { result: SearchResult }) => {
             href={result.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block py-2 px-4 rounded-lg border border-border hover:bg-accent transition-colors duration-200 h-full"
+            className="block py-2 px-4 rounded-lg border border-border hover:bg-accent transition-colors duration-200 h-full overflow-hidden"
           >
             <div className="flex flex-col gap-1 h-full">
               <div className="flex items-center gap-1.5">
@@ -133,7 +133,7 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
         return (
             <div>
                 <motion.div 
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 py-2"
                     variants={container}
                     initial="hidden"
                     animate="show"
@@ -187,7 +187,7 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
         
         return (
             <>
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 py-2">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">
                         Searching for: &ldquo;{toolInvocation.args.query}&rdquo;
@@ -216,7 +216,6 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
                         </motion.div>
                     ))}
                 </motion.div>
-                <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
             </>
         );
     }
