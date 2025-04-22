@@ -27,14 +27,10 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
   if (state == 'result') {
     switch (toolName) {
       case 'webSearch':
-        return <div>
-          Web Search
-          {/* <pre>{JSON.stringify(result, null, 2)}</pre> */}
-            <WebSearchSection 
+        return <WebSearchSection 
               toolInvocation={toolInvocation}
             />
-            <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
-          </div>;
+
       default:
         return <div>
           <h1>Unknown Tool</h1>
