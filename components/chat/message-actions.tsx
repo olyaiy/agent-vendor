@@ -75,7 +75,7 @@ export function PureMessageActions({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex flex-row gap-2 opacity-0 group-hover/message:opacity-100 transition-opacity">
+      <div className="flex flex-row gap-2 opacity-0 group-hover/message:opacity-100 transition-opacity ">
         {message.role === 'user' && setMode && !isReadonly && (
           <Tooltip>
             <TooltipTrigger asChild className="cursor-pointer">

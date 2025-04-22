@@ -8,7 +8,7 @@ import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/rep
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { chargeUser } from '@/db/actions/transaction-actions';
-// import { toolRegistry } from '@/tools/registry'; // Import the tool registry
+import { toolRegistry } from '@/tools/registry'; // Import the tool registry
 
 /**
  * Handles POST requests for chat conversations
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: messages as Message[], // Cast messages to Message[]
       // Tool Call Set Up
-      // tools: toolRegistry,
+      tools: toolRegistry,
       maxSteps: 5,
       toolCallStreaming: true,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
