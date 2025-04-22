@@ -57,7 +57,7 @@ const SearchResultCard = ({ result }: { result: SearchResult }) => {
             href={result.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block py-2 px-4 rounded-lg border border-border hover:bg-accent transition-colors duration-200 h-full overflow-hidden"
+            className="block py-2 px-4 rounded-lg border border-border/20 hover:border-border/80 hover:bg-accent transition-colors duration-200 h-full overflow-hidden bg-muted/40"
           >
             <div className="flex flex-col gap-1 h-full">
               <div className="flex items-center gap-1.5">
@@ -157,7 +157,7 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-[800px]">
                                     <DialogHeader>
-                                        <DialogTitle>All Web Search Sources</DialogTitle>
+                                        <DialogTitle>Sources</DialogTitle>
                                     </DialogHeader>
                                     <div className="max-h-[60vh] overflow-y-auto pr-4">
                                         <motion.div 
