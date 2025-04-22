@@ -26,10 +26,7 @@ const tavilySearchResponse = z.object({
     })),
     response_time: z.number(), // Changed from string in example to number based on common practice
     // Images are included by default now
-    images: z.array(z.object({
-        url: z.string(),
-        description: z.string().optional(),
-    })).optional(), // Keep optional as API might not always return images
+    images: z.array(z.string()).optional(), // Updated to expect array of strings instead of objects
 });
 
 
@@ -85,7 +82,7 @@ export const webSearchTool = tool({
       return {
           results: validatedResponse.data.results,
           answer: validatedResponse.data.answer,
-          images: validatedResponse.data.images, // Include images in the return object
+          images: validatedResponse.data.images, // Images are now an array of strings
       };
 
     } catch (error) {

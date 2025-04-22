@@ -43,8 +43,6 @@ const PurePreviewMessage = ({
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
 
-  console.log('message part is', message.parts)
-
   return (
     <div
       data-testid={`message-${message.role}`}

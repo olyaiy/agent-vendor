@@ -1,6 +1,7 @@
 import React from 'react';
 // Corrected import: Use ToolInvocation instead of ToolInvocationPart
 import type { ToolInvocation } from 'ai';
+import WebSearchSection from '../web-search-section';
 
 interface ToolMessageProps {
   // Corrected prop type
@@ -9,7 +10,7 @@ interface ToolMessageProps {
 
 export function ToolMessage({ toolInvocation }: ToolMessageProps) {
 
-  const { toolName, state, args } = toolInvocation;
+  const { toolName, state } = toolInvocation;
   
   // const {
   //   state,
@@ -20,18 +21,23 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
   // } = toolInvocation;
 
 
+ 
+
   // If RESULT is available
   if (state == 'result') {
-    const { result } = toolInvocation;
-
     switch (toolName) {
-      case 'web-search':
+      case 'webSearch':
         return <div>
           Web Search
-          <pre>{JSON.stringify(result, null, 2)}</pre>
+          {/* <pre>{JSON.stringify(result, null, 2)}</pre> */}
+            <WebSearchSection 
+              toolInvocation={toolInvocation}
+            />
+            <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
           </div>;
       default:
         return <div>
+          <h1>Unknown Tool</h1>
           <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
         </div>;
     }
@@ -42,15 +48,16 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
   if (state == 'call' || state == 'partial-call') {
 
     switch (toolName) {
-      case 'web-search':
-        return <div>
-          Searching ...
-          <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
-        </div>;
+      case 'webSearch':
+        return <WebSearchSection toolInvocation={toolInvocation} />
       default:
         return <div>
           <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
         </div>;
     }
   }
+
+  return<>
+  nothing
+  </>
 }
