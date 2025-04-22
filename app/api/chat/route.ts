@@ -147,7 +147,7 @@ export async function POST(req: Request) {
       system: systemPrompt,
       messages: messages as Message[], // Cast messages to Message[]
       // Tool Call Set Up
-      tools: toolRegistry,
+      // tools: toolRegistry,
       maxSteps: 5,
       toolCallStreaming: true,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages

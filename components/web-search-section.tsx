@@ -93,6 +93,22 @@ const SearchResultCard = ({ result }: { result: SearchResult }) => {
 };
 
 const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
+    // Define animation variants outside the conditionals so they can be reused
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+    
+    const item = {
+        hidden: { opacity: 0, y: 10 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+    };
+
     if (toolInvocation.state === 'result') {
         const searchResults = toolInvocation.result as SearchResults | undefined;
         const results = searchResults?.results;
@@ -116,62 +132,65 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
 
         return (
             <div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                <motion.div 
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
+                    variants={container}
+                    initial="hidden"
+                    animate="show"
+                >
                     {initialResults.map((result, index) => (
-                        <SearchResultCard key={index} result={result} />
+                        <motion.div key={index} variants={item}>
+                            <SearchResultCard result={result} />
+                        </motion.div>
                     ))}
 
                     {showDialog && (
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="h-full w-full flex items-center justify-center text-sm text-muted-foreground hover:bg-accent"
-                                >
-                                    +{remainingResultsCount} more sources
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[800px]">
-                                <DialogHeader>
-                                    <DialogTitle>All Web Search Sources</DialogTitle>
-                                </DialogHeader>
-                                <div className="max-h-[60vh] overflow-y-auto pr-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
-                                        {results.map((result, index) => (
-                                            <SearchResultCard key={`dialog-${index}`} result={result} />
-                                        ))}
+                        <motion.div variants={item}>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="h-full w-full flex items-center justify-center text-sm text-muted-foreground hover:bg-accent"
+                                    >
+                                        +{remainingResultsCount} more sources
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[800px]">
+                                    <DialogHeader>
+                                        <DialogTitle>All Web Search Sources</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="max-h-[60vh] overflow-y-auto pr-4">
+                                        <motion.div 
+                                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4"
+                                            variants={container}
+                                            initial="hidden"
+                                            animate="show"
+                                        >
+                                            {results.map((result, index) => (
+                                                <motion.div key={`dialog-${index}`} variants={item}>
+                                                    <SearchResultCard result={result} />
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
                                     </div>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                                </DialogContent>
+                            </Dialog>
+                        </motion.div>
                     )}
-                </div>
+                </motion.div>
             </div>
         );
     }
 
     if (toolInvocation.state === 'call') {
-        const container = {
-            hidden: { opacity: 0 },
-            show: {
-                opacity: 1,
-                transition: {
-                    staggerChildren: 0.1
-                }
-            }
-        };
+        const maxResults = Math.min(toolInvocation.args.max_results || 4, 4);
         
-        const item = {
-            hidden: { opacity: 0, y: 10 },
-            show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-        };
-
         return (
             <>
                 <div className="flex items-center gap-2 mb-4">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">
-                        Searching for: &ldquo;{toolInvocation.args.search_term || toolInvocation.args.query}&rdquo;
+                        Searching for: &ldquo;{toolInvocation.args.query}&rdquo;
                     </p>
                 </div>
                 <motion.div 
@@ -180,7 +199,7 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
                     initial="hidden"
                     animate="show"
                 >
-                    {Array.from({ length: 4 }).map((_, index) => (
+                    {Array.from({ length: maxResults }).map((_, index) => (
                         <motion.div 
                             key={index}
                             className={`py-2 px-4 rounded-lg border border-border h-24 ${index > 0 && index < 2 ? 'hidden md:block' : ''} ${index > 1 ? 'hidden lg:block' : ''}`}
@@ -197,6 +216,7 @@ const WebSearchSection = ({ toolInvocation }: WebSearchSectionProps) => {
                         </motion.div>
                     ))}
                 </motion.div>
+                <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
             </>
         );
     }
