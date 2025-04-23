@@ -263,6 +263,6 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.minHeight === nextProps.minHeight &&
     prevProps.maxHeight === nextProps.maxHeight &&
     prevProps.className === nextProps.className && 
-    prev.isMobile === next.isMobile
+    prevProps.isMobile === nextProps.isMobile
   );
 });
