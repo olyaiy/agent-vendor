@@ -1,103 +1,89 @@
+// app/agents/[agent-id]/page.tsx
 import Chat from "@/components/chat";
 import ChatMobile from "@/components/chat-mobile";
-import { selectAgentWithModelById, selectKnowledgeByAgentId, selectAllModels } from "@/db/repository/agent-repository"; // Added selectAllModels
-import {generateUUID } from "@/lib/utils";
+import {
+  selectAgentWithModelBySlug,
+  selectKnowledgeByAgentId,
+  selectAllModels,
+} from "@/db/repository/agent-repository";
+import { generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 
+type Params = { "agent-id": string };
 
-type Props = {
-  params: Promise<{ 'agent-id': string }>; // Updated type
-};
-
-export async function generateMetadata(
-  { params }: Props,
-): Promise<Metadata> {
-  // read route params
-  const { 'agent-id': agentId } = await params; // Updated access
-
-  // fetch data
-  const agent = await selectAgentWithModelById(agentId);
-
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  
+  // Get the agent slug from the URL parameters
+  const slug = params["agent-id"];
+  const agent = await selectAgentWithModelBySlug(slug);
   if (!agent) {
-    return {
-      title: 'Agent Not Found',
-    };
+    return { title: "Agent Not Found" };
   }
 
-  const description = agent.description; // TODO: Add fallback description if needed
-  const imageUrl = agent.thumbnailUrl; // TODO: Add fallback icon if needed
-
-  return {
-    title: agent.name,
-    ...(description && { description: description }), // Only add description if it exists
-    ...(imageUrl && { // Only add icons if imageUrl exists
-      icons: {
-        icon: imageUrl,
+    // 1) never-null string or undefined
+    const description = agent.description ?? undefined;
+    const imageUrl   = agent.thumbnailUrl ?? undefined;
+  
+    // 2) start building a Metadata object
+    const meta: Metadata = {
+      title: agent.name,
+    };
+  
+    // top-level description
+    if (description) {
+      meta.description = description;
+    }
+  
+    // icons
+    if (imageUrl) {
+      meta.icons = {
+        icon:  imageUrl,
         apple: imageUrl,
-      },
-    }),
-    openGraph: {
+      };
+    }
+  
+    // open graph
+    meta.openGraph = {
+      title:       agent.name,
+      // these two lines only include the keys if they're defined
+      ...(description && { description }),
+      ...(imageUrl   && { images: [imageUrl] }),
+    };
+  
+    // twitter
+    meta.twitter = {
+      card:  "summary_large_image",
       title: agent.name,
-      ...(description && { description: description }), // Use description if available
-      ...(imageUrl && { images: [imageUrl] }), // Use image if available
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: agent.name,
-      ...(description && { description: description }), // Use description if available
-      ...(imageUrl && { images: [imageUrl] }), // Use image if available
-    },
-  };
+      ...(description && { description }),
+      ...(imageUrl   && { images: [imageUrl] }),
+    };
+  
+    return meta;
+  
 }
 
+export default async function Page({ params }: { params: Params }) {
+  const slug = params["agent-id"];
+  const agent = await selectAgentWithModelBySlug(slug);
+  if (!agent) notFound();
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ "agent-id": string }>;
-}) {
-
-  // Get the agent id from the url
-  const { "agent-id": agentId } = await params;
-
-
-  // Generate a random id for the chat
-  const id = generateUUID();
-
-  // Fetch agent and knowledge items in parallel for efficiency
-  // Fetch agent, knowledge items, and all models in parallel
-  const [agent, knowledgeItems, models] = await Promise.all([
-    selectAgentWithModelById(agentId),
-    selectKnowledgeByAgentId(agentId), // Fetch knowledge items
-    selectAllModels() // Fetch all models
+  // now that we know the real UUID, fetch the knowledge rows
+  const [knowledgeItems, models] = await Promise.all([
+    selectKnowledgeByAgentId(agent.id),
+    selectAllModels(),
   ]);
 
-  if (!agent) {
-    notFound();
-  }
-
-  
-  // Ownership check happens in the client component (Chat)
-  const ua = (await headers()).get("user-agent") ?? "";
-  const isMobile = /Mobile|Android|iP(hone|od|ad)|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const chatId = generateUUID();
+  const ua = (await headers()).get("user-agent") || "";
+  const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
 
   return isMobile ? (
     <div className="h-screen pb-12 w-screen">
-    <ChatMobile
-      agent={agent}
-      knowledgeItems={knowledgeItems}
-      models={models}
-      chatId={id}
-      />
+      <ChatMobile agent={agent} knowledgeItems={knowledgeItems} models={models} chatId={chatId} />
     </div>
   ) : (
-    <Chat
-      agent={agent}
-      knowledgeItems={knowledgeItems}
-      models={models} // Pass models list
-      chatId={id}
-    />
+    <Chat agent={agent} knowledgeItems={knowledgeItems} models={models} chatId={chatId} />
   );
 }

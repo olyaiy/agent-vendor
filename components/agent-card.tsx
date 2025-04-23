@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 type AgentTagInfo = { id: string; name: string };
 
 // Define the expected agent structure including tags for this component
-type AgentWithTags = Pick<Agent, 'id' | 'name' | 'description' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId' | 'visibility'> & {
+type AgentWithTags = Pick<Agent, 'id' | 'name' | 'description' | 'slug' | 'thumbnailUrl' | 'avatarUrl' | 'creatorId' | 'visibility'> & {
   tags?: AgentTagInfo[]; // Tags are optional as not all contexts might provide them
 };
 
@@ -35,7 +35,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
   const hiddenTagsCount = agent.tags ? Math.max(0, agent.tags.length - MAX_VISIBLE_TAGS) : 0;
 
   return (
-    <Link href={`/${agent.id}`} className="block">
+    <Link href={`/${agent.slug}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
         
    

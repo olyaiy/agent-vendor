@@ -190,6 +190,7 @@ export async function selectRecentAgents(
   name: string;
   description: string | null;
   thumbnailUrl: string | null;
+  slug: string;
   avatarUrl: string | null;
   creatorId: string;
   tags: AgentTagInfo[];
@@ -206,6 +207,7 @@ export async function selectRecentAgents(
       name: agent.name,
       description: agent.description,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: sql<string>`coalesce(${agent.slug}, '')`.as('slug'),
       avatarUrl: agent.avatarUrl,
       creatorId: agent.creatorId,
       tags: tagsAgg, // Select the aggregated tags
@@ -263,6 +265,7 @@ export async function selectRecentAgents(
       agent.name,
       agent.description,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.creatorId,
       agent.createdAt, // Need to include orderBy column in groupBy
@@ -356,8 +359,8 @@ export async function selectAgentWithModelBySlug(
       id: agent.id,
       name: agent.name,
       description: agent.description,
-      slug: agent.slug,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: agent.slug,
       avatarUrl: agent.avatarUrl,
       systemPrompt: agent.systemPrompt,
       welcomeMessage: agent.welcomeMessage,
@@ -378,9 +381,9 @@ export async function selectAgentWithModelBySlug(
     .groupBy(
       agent.id,
       agent.name,
-      agent.slug,
       agent.description,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.systemPrompt,
       agent.welcomeMessage,
@@ -411,8 +414,8 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
       id: agent.id,
       name: agent.name,
       description: agent.description,
-      slug: agent.slug,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: agent.slug,
       avatarUrl: agent.avatarUrl,
       systemPrompt: agent.systemPrompt,
       welcomeMessage: agent.welcomeMessage,
@@ -437,9 +440,9 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
     .groupBy(
       agent.id,
       agent.name,
-      agent.slug,
       agent.description,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.systemPrompt,
       agent.welcomeMessage,
@@ -685,12 +688,14 @@ export async function selectAgentsByTagId(tagId: string, limit: number): Promise
     id: string;
     name: string;
     thumbnailUrl: string | null;
+    slug: string;
 }>> {
     return await db
         .select({
             id: agent.id,
             name: agent.name,
-            thumbnailUrl: agent.thumbnailUrl
+            thumbnailUrl: agent.thumbnailUrl,
+            slug: sql<string>`coalesce(${agent.slug}, '')`.as('slug')
         })
         .from(agent)
         .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
@@ -729,8 +734,8 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
       id: agent.id,
       name: agent.name,
       description: agent.description,
-      slug: agent.slug,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: agent.slug,
       avatarUrl: agent.avatarUrl,
       systemPrompt: agent.systemPrompt,
       welcomeMessage: agent.welcomeMessage,
@@ -756,8 +761,8 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
       agent.id,
       agent.name,
       agent.description,
-      agent.slug,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.systemPrompt,
       agent.welcomeMessage,

@@ -53,6 +53,7 @@ export type ActionResult<T> =
 export async function createAgent(data: {
   name: string;
   description: string | null;
+  slug: string | null;
   systemPrompt: string | null;
   thumbnailUrl: string | null;
   visibility: string;
@@ -233,6 +234,7 @@ type AgentWithTagsAndDate = {
   name: string;
   description: string | null;
   thumbnailUrl: string | null;
+  slug: string | null;
   avatarUrl: string | null;
   creatorId: string;
   tags: { id: string; name: string }[];
@@ -297,16 +299,21 @@ export async function getRecentAgents(
  * Server action to fetch the 6 base model agents by their specific tag ID.
  * @returns Promise with success status and agent list (id, name, thumbnailUrl) or error
  */
-export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{ id: string; name: string; thumbnailUrl: string | null }>>> {
-  const baseModelTagId = "575527b1-803a-4c96-8a4a-58ca997f08bd";
-  const limit = 10;
-  try {
-    const agents = await selectAgentsByTagId(baseModelTagId, limit);
-    return { success: true, data: agents };
-  } catch (error) {
-    console.error("Failed to fetch base model agents:", error);
-    return { success: false, error: (error as Error).message };
-  }
+export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{ 
+    id: string; 
+    name: string; 
+    thumbnailUrl: string | null ;
+    slug: string;
+  }>>> {
+    const baseModelTagId = "575527b1-803a-4c96-8a4a-58ca997f08bd";
+    const limit = 10;
+    try {
+      const agents = await selectAgentsByTagId(baseModelTagId, limit);
+      return { success: true, data: agents };
+    } catch (error) {
+      console.error("Failed to fetch base model agents:", error);
+      return { success: false, error: (error as Error).message };
+    }
 }
 
 /**
