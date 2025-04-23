@@ -6,6 +6,7 @@ export const agent = pgTable("agent", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
+  slug: text("slug").unique(),         
   thumbnailUrl: text("thumbnail_url"),
   avatarUrl: text("avatar_url"),
   systemPrompt: text("system_prompt"),
