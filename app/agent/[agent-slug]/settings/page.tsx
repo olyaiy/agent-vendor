@@ -3,38 +3,29 @@ import { notFound } from "next/navigation";
 import { getAgentSettingsBySlugAction } from "@/db/actions/agent-actions";
 import { EditAgentForm } from "@/app/[agent-id]/settings/edit-agent-form";
 
+type Params = { "agent-slug": string };
+
 export default async function Page({
-  params,
+  params,                         // <-- now a Promise<Params>
 }: {
-  params: { "agent-slug": string };
+  params: Promise<Params>;
 }) {
-  const slug = await params["agent-slug"];
+  // await the params promise, then pull out your slug
+  const { "agent-slug": slug } = await params;
 
-  // 1) fetch everything in one go
   const result = await getAgentSettingsBySlugAction(slug);
-
-  // 1️⃣ 404 if no agent
   if (!result.success || !result.data.agent) {
     notFound();
   }
-  const {
-    agent,
-    knowledge,
-    allTags,
-    agentTags,
-    allModels,
-  } = result.data;
+  const { agent, knowledge, allTags, agentTags, allModels } = result.data;
 
-
-
-  // 3) render
   return (
     <EditAgentForm
-      agent={agent}            // ✅ agent cannot be undefined here
+      agent={agent}
       models={allModels}
-      knowledge={knowledge} 
-      allTags={ allTags.map(t => ({ value: t.id, label: t.name })) }
-      currentTags={ agentTags.map(t => ({ value: t.id, label: t.name })) }
+      knowledge={knowledge}
+      allTags={allTags.map(t => ({ value: t.id, label: t.name }))}
+      currentTags={agentTags.map(t => ({ value: t.id, label: t.name }))}
     />
   );
 }
