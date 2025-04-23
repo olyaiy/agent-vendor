@@ -777,3 +777,28 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
 
   return result;
 }
+
+
+
+
+/**
+ * Retrieves all knowledge entries for a given agent slug.
+ * @param slug – the URL-friendly agent slug
+ * @returns array of Knowledge records, or [] if no such agent
+ */
+export async function selectKnowledgeByAgentSlug(slug: string): Promise<Knowledge[]> {
+  const agentRec = await selectAgentWithModelBySlug(slug);
+  if (!agentRec) return [];
+  return await selectKnowledgeByAgentId(agentRec.id);
+}
+
+/**
+ * Retrieves all tags for a given agent slug.
+ * @param slug – the URL-friendly agent slug
+ * @returns array of Tag records, or [] if no such agent
+ */
+export async function selectTagsByAgentSlug(slug: string): Promise<Tag[]> {
+  const agentRec = await selectAgentWithModelBySlug(slug);
+  if (!agentRec) return [];
+  return await selectTagsByAgentId(agentRec.id);
+}

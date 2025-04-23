@@ -27,7 +27,9 @@ import {
   countAgents, // Added countAgents
   selectAgentsByCreatorId, // Added for fetching user's agents
   selectAgentById, // Added for delete action authorization
-  deleteAgent as deleteAgentRepo, // Added for delete action
+  deleteAgent as deleteAgentRepo,
+  selectAgentWithModelBySlug,
+  selectKnowledgeByAgentId, // Added for delete action
 } from "@/db/repository/agent-repository";
 // Corrected: Added Knowledge and Tag back to the import
 import { Agent, Model, Knowledge, Tag } from "@/db/schema/agent";
@@ -968,4 +970,54 @@ export async function deleteAgentAction(agentId: string): Promise<ActionResult<v
     console.error("Failed to delete agent:", error);
     return { success: false, error: (error as Error).message };
   }
+}
+
+
+
+
+
+/**
+ * Server action to fetch all of an agent’s settings by slug:
+ *   – agent record (with model+tags)
+ *   – knowledge items
+ *   – all available tags & models
+ */
+export async function getAgentSettingsBySlugAction(
+  slug: string
+): Promise<ActionResult<{
+  agent: Awaited<ReturnType<typeof selectAgentWithModelBySlug>>,
+  knowledge: Knowledge[],
+  allTags: Tag[],
+  agentTags: Tag[],
+  allModels: Model[]
+}>> {
+  // 1) lookup agent
+  const agentRec = await selectAgentWithModelBySlug(slug);
+  if (!agentRec) {
+    return { success: false, error: "Agent not found." };
+  }
+
+  // 2) fetch everything in parallel
+  const [
+    knowledge,
+    allTags,
+    agentTags,
+    allModels
+  ] = await Promise.all([
+    selectKnowledgeByAgentId(agentRec.id),
+    selectAllTags(),
+    selectTagsByAgentId(agentRec.id),
+    selectAllModels()
+  ]);
+
+  return {
+    success: true,
+    data: {
+      agent: agentRec,
+      knowledge,
+      allTags,
+      agentTags,
+      allModels
+    }
+  };
 }

@@ -13,14 +13,23 @@ import { headers } from "next/headers";
 
 type Params = { "agent-slug": string };
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+type GenerateMetadataProps = {
+  params: Promise<Params>;
+};
+
+export async function generateMetadata(
+  { params }: GenerateMetadataProps
+): Promise<Metadata> {
+  
   
   // Get the agent slug from the URL parameters
-  const slug = params["agent-slug"];
+  const { "agent-slug": slug } = await params;
+
   const agent = await selectAgentWithModelBySlug(slug);
   if (!agent) {
     return { title: "Agent Not Found" };
   }
+
 
     // 1) never-null string or undefined
     const description = agent.description ?? undefined;
@@ -64,10 +73,17 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   
 }
 
-export default async function Page({ params }: { params: Params }) {
-  const slug = params["agent-slug"];
+export default async function Page({
+  params,                  // <-- notice Promise<Params> here
+}: {
+  params: Promise<Params>;
+}) {
+  // await the params promise, then destructure
+  const { "agent-slug": slug } = await params;
+
   const agent = await selectAgentWithModelBySlug(slug);
   if (!agent) notFound();
+
 
   // now that we know the real UUID, fetch the knowledge rows
   const [knowledgeItems, models] = await Promise.all([
