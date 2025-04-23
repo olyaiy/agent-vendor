@@ -53,7 +53,7 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
     <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-4  ">
       {agents.map((agent, index) => (
         // MODIFIED: Remove fixed width/shrink for grid, apply only for sm+
-        <Link href={`/${agent.slug}`} key={agent.id} className={`flex flex-col items-center group sm:flex-shrink-0 sm:w-24 ${index >= 6 ? 'hidden sm:block' : ''}`}>
+        <Link href={`/agent/${agent.slug}`} key={agent.id} className={`flex flex-col items-center group sm:flex-shrink-0 sm:w-24 ${index >= 6 ? 'hidden sm:block' : ''}`}>
           {/* MODIFIED: Adjust image container width for grid, apply fixed width only for sm+ */}
           <div className="w-full sm:w-24 h-24 relative rounded-md overflow-hidden border group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800">
             {agent.thumbnailUrl ? (

@@ -35,7 +35,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
   const hiddenTagsCount = agent.tags ? Math.max(0, agent.tags.length - MAX_VISIBLE_TAGS) : 0;
 
   return (
-    <Link href={`/${agent.slug}`} className="block">
+    <Link href={`/agent/${agent.slug}`} className="block">
       <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
         
    
