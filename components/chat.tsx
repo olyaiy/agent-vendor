@@ -8,7 +8,7 @@ import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent'; // Removed unused Model type import
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
+import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo
 import { authClient } from '@/lib/auth-client'; // Import authClient again
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';

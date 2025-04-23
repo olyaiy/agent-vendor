@@ -1,4 +1,3 @@
-// app/[agent-id]/settings/loading.tsx
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 

@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { AgentImage } from '@/components/agent-image';
 import { Agent } from '@/db/schema/agent';
 import { ModelSelect } from '@/components/model-select'; // Import ModelSelect
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
+import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo
 
 interface AgentHeaderProps {
   // Update agent type to include tags
@@ -35,7 +35,7 @@ function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSele
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">{agent.name}</h2>
           {isOwner && (
-            <Link href={`/${agent.id}/settings`} passHref>
+            <Link href={`/agent/${agent.slug}/settings`} passHref>
               <Button
                 asChild
                 variant="ghost"

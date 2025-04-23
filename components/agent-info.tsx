@@ -3,7 +3,7 @@
 
 import { memo } from 'react'; // Removed useState and other unused imports
 import { Agent, Knowledge } from '@/db/schema/agent';
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo
+import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo
 
 // Import new sub-components
 import { AgentHeader } from './agent-header';

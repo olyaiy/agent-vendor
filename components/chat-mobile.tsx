@@ -6,7 +6,7 @@ import { Messages } from './chat/messages';
 import { MobileAgentHeader } from './chat/MobileAgentHeader'; // Use the mobile header
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form";
+import { ModelInfo } from "@/components/agents/edit-agent-form";
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';

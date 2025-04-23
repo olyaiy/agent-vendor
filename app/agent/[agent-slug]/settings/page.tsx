@@ -1,7 +1,6 @@
-// app/agent/[agent-slug]/settings/page.tsx
 import { notFound } from "next/navigation";
 import { getAgentSettingsBySlugAction } from "@/db/actions/agent-actions";
-import { EditAgentForm } from "@/app/[agent-id]/settings/edit-agent-form";
+import { EditAgentForm } from "@/components/agents/edit-agent-form";
 
 type Params = { "agent-slug": string };
 

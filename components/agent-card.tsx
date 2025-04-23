@@ -69,7 +69,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
               <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={(e) => e.preventDefault()}>
                 <DropdownMenuItem className="cursor-pointer" asChild>
                   <Link 
-                    href={`/${agent.id}/settings`} 
+                    href={`/agent/${agent.slug}/settings`} 
                     className="flex items-center"
                     onClick={(e) => e.stopPropagation()}
                   >
