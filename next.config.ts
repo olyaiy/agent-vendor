@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   // compiler: {
   //   removeConsole: true,
   // },
+  turbopack: {
+    resolveAlias: {},
+  },
+
   images: {
     remotePatterns: [
       {
@@ -30,7 +34,6 @@ const nextConfig: NextConfig = {
     },
     ppr: 'incremental',
   },
-
 };
 
 export default withAnalyzer(nextConfig);

@@ -21,6 +21,7 @@ interface ChatInputProps {
   maxHeight?: number;
   onFileSelect?: (file: File) => void;
   className?: string;
+  isMobile?: boolean;
 }
 
 // --- Start: Memoized Button Components ---
@@ -119,7 +120,8 @@ function ChatInputComponent({
   minHeight = 48,
   maxHeight = 164,
   onFileSelect,
-  className
+  className,
+  isMobile
 }: ChatInputProps) {
   // Ref to store the latest value without causing re-renders for handler definitions
   const inputRef = React.useRef(input);
@@ -208,10 +210,12 @@ function ChatInputComponent({
               autoFocus
               onKeyDown={useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                 if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleInternalSubmit(); // Use memoized handler
+                  if (!isMobile) {
+                    e.preventDefault();
+                    handleInternalSubmit();// Use memoized handler
+                  }
                 }
-              }, [handleInternalSubmit])} // Added dependency
+              }, [handleInternalSubmit, isMobile])} // Added dependency
               onChange={useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 setInput(e.target.value);
                 adjustHeight();
@@ -258,6 +262,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.placeholder === nextProps.placeholder &&
     prevProps.minHeight === nextProps.minHeight &&
     prevProps.maxHeight === nextProps.maxHeight &&
-    prevProps.className === nextProps.className
+    prevProps.className === nextProps.className && 
+    prev.isMobile === next.isMobile
   );
 });
