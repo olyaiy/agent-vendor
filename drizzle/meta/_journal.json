@@ -50,6 +50,13 @@
       "when": 1745444039575,
       "tag": "0006_ambiguous_ulik",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1745530485171,
+      "tag": "0007_wealthy_vertigo",
+      "breakpoints": true
     }
   ]
 }
