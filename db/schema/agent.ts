@@ -13,7 +13,7 @@ export const agent = pgTable("agent", {
   avatarUrl: text("avatar_url"),
   systemPrompt: text("system_prompt"),
   welcomeMessage: text("welcome_message"),
-  primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "no action" }), // Corrected onDelete
+  // primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "no action" }), // Corrected onDelete
   visibility: text("visibility").default("public").notNull(),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),

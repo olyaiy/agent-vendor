@@ -56,16 +56,33 @@ export async function selectAgentById(agentId: string): Promise<Agent | undefine
     return result[0];
 }
 
+
+// Define a more flexible input type for updates during/after deprecation
+// It accepts standard Agent fields (partial) but *also* allows specifying a primaryModelId separately
+export type UpdateAgentInput = Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'primaryModelId' | 'creatorId'>> & {
+    primaryModelId?: string; // Allow explicitly passing the new primary model ID
+};
+
 /**
- * Updates an existing agent in the database.
- * Handles updating the primary model relationship in the join table.
+ * Updates an existing agent (Phase 3 Version - Stops writing agent.primaryModelId).
+ * Handles updating the primary model relationship ONLY in the agent_models join table.
  * @param agentId - The ID of the agent to update.
- * @param updateData - An object containing the fields to update.
- * @returns The updated agent record (as an array for consistency with Drizzle).
+ * @param updateData - An object containing fields to update. Can include `primaryModelId` to change the primary model association.
+ * @returns The updated agent record (fetched fresh after updates). Returns as an array for repo consistency.
  */
-export async function updateAgent(agentId: string, updateData: Partial<NewAgent>): Promise<Agent[]> {
-    // If the primaryModelId is changing, update the join‐table row within a transaction
-    if (updateData.primaryModelId) {
+export async function updateAgent(agentId: string, updateData: UpdateAgentInput): Promise<Agent[]> {
+
+    // 1. Separate primaryModelId from other fields meant for the 'agent' table
+    const { primaryModelId, ...otherAgentFields } = updateData;
+
+    // 2. Handle primary model change in the 'agent_models' table (Transaction remains)
+    if (primaryModelId) {
+        // Ensure the provided primaryModelId exists in the models table (optional but recommended)
+        const modelExists = await db.select({ id: models.id }).from(models).where(eq(models.id, primaryModelId)).limit(1);
+        if (modelExists.length === 0) {
+            throw new Error(`Model with ID ${primaryModelId} not found. Cannot set as primary model.`);
+        }
+
         await db.transaction(async tx => {
             // Delete the old primary model relationship
             await tx
@@ -81,22 +98,45 @@ export async function updateAgent(agentId: string, updateData: Partial<NewAgent>
                 .insert(agentModels)
                 .values({
                     agentId,
-                    modelId: updateData.primaryModelId!,
+                    modelId: primaryModelId, // Use the separated ID
                     role: 'primary',
                 });
-            // Note: Consider adding onConflictDoUpdate if needed, though delete/insert is explicit.
+             // The unique constraint 'unique_primary_model_per_agent' prevents duplicates
         });
     }
 
-    // Update the agent row itself (maintains primaryModelId on agent for potential direct lookups/compat)
-    const updatedAgent = await db
-        .update(agent)
-        .set({ ...updateData, updatedAt: new Date() })
-        .where(eq(agent.id, agentId))
-        .returning();
+    // 3. Update the 'agent' table itself, *excluding* primaryModelId
+    let updatedAgentRecord: Agent | undefined;
+    if (Object.keys(otherAgentFields).length > 0) {
+        const result = await db
+            .update(agent)
+            // *** CRITICAL CHANGE: Only set fields other than primaryModelId ***
+            .set({ ...otherAgentFields, updatedAt: new Date() })
+            .where(eq(agent.id, agentId))
+            .returning(); // Get the updated row data directly from the agent table
+        updatedAgentRecord = result[0];
+    }
 
-    return updatedAgent;
+    // 4. Fetch the definitive final state of the agent record
+    // This ensures the returned data is correct, even if only the model changed,
+    // or if the type 'Agent' now differs slightly from the '.returning()' shape.
+    const finalAgentState = await db
+                              .select()
+                              .from(agent)
+                              .where(eq(agent.id, agentId))
+                              .limit(1);
+
+    if (!finalAgentState || finalAgentState.length === 0) {
+        // This case should ideally not happen if the agent existed, but handle it defensively.
+        // If the update deleted the agent somehow (it shouldn't), this would be empty.
+        // Or if the ID was invalid initially.
+        throw new Error(`Agent with ID ${agentId} not found after update operation.`);
+    }
+
+    // Return the fetched state, conforming to the Promise<Agent[]> signature
+    return finalAgentState;
 }
+
 
 /**
  * Deletes an agent from the database.
