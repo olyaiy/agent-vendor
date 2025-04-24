@@ -1,5 +1,5 @@
 import { db } from '../index';
-import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag } from '../schema/agent';
+import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag, agentModels } from '../schema/agent';
 import { eq, desc, and, asc, sql, or, ilike, count } from 'drizzle-orm'; // Removed unused alias import, Added count
 
 // Define the type for the data needed to insert an agent
@@ -33,12 +33,21 @@ type UpdateModel = Partial<NewModel>;
  * @returns The newly inserted agent record.
  */
 export async function insertAgent(newAgentData: NewAgent): Promise<Agent[]> {
-  const insertedAgent = await db
-    .insert(agent)
-    .values(newAgentData)
-    .returning(); // Return all columns of the inserted row
-  return insertedAgent;
-}
+     // 1️⃣ create the agent row
+     const [created] = await db
+       .insert(agent)
+       .values(newAgentData)
+       .returning();
+     
+     // 2️⃣ backfill the primary role in the join table
+     await db.insert(agentModels).values({
+       agentId: created.id,
+       modelId: newAgentData.primaryModelId,
+       role: 'primary',
+     });
+     
+     return [created];
+   }
 
 /**
  * Selects an agent by its ID.
@@ -61,13 +70,35 @@ export async function selectAgentById(agentId: string): Promise<Agent | undefine
  * @returns The updated agent record.
  */
 export async function updateAgent(agentId: string, updateData: Partial<NewAgent>): Promise<Agent[]> {
-  const updatedAgent = await db
-    .update(agent)
-    .set({ ...updateData, updatedAt: new Date() }) // Ensure updatedAt is updated
-    .where(eq(agent.id, agentId))
-    .returning();
-  return updatedAgent;
-}
+    // If the primaryModelId is changing, swap out the join‐table row
+    if (updateData.primaryModelId) {
+      await db.transaction(async tx => {
+        await tx
+          .delete(agentModels)
+          .where(
+            and(
+              eq(agentModels.agentId, agentId),
+              eq(agentModels.role, 'primary')
+            )
+          );
+        await tx
+          .insert(agentModels)
+          .values({
+            agentId,
+            modelId: updateData.primaryModelId!,
+            role: 'primary',
+          });
+      });
+    }
+    
+    // still update the agent row itself (for backwards compat)
+    const updatedAgent = await db
+      .update(agent)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(agent.id, agentId))
+      .returning();
+    return updatedAgent;
+   }
 
 /**
  * Deletes an agent from the database.
@@ -136,14 +167,19 @@ export async function updateModel(modelId: string, updateData: UpdateModel): Pro
  * @returns True if the model is in use, false otherwise.
  */
 export async function isModelInUse(modelId: string): Promise<boolean> {
-    const result = await db
-        .select({ value: count() })
-        .from(agent)
-        .where(eq(agent.primaryModelId, modelId))
-        .limit(1); // Optimization: We only need to know if count > 0
-
-    return result[0]?.value > 0;
-}
+     const result = await db
+       .select({ value: count() })
+       .from(agentModels)
+       .where(
+         and(
+           eq(agentModels.modelId, modelId),
+           eq(agentModels.role, 'primary')
+         )
+       )
+       .limit(1);
+   
+     return result[0]?.value > 0;
+   }
 
 
 /**
@@ -373,7 +409,14 @@ export async function selectAgentWithModelBySlug(
       tags: tagsAgg,
     })
     .from(agent)
-    .innerJoin(models, eq(agent.primaryModelId, models.id))
+    .innerJoin(
+      agentModels,
+      and(
+        eq(agentModels.agentId, agent.id),
+        eq(agentModels.role, 'primary')
+      )
+    )
+    .innerJoin(models, eq(agentModels.modelId, models.id))    
     .leftJoin(agentTags, eq(agent.id, agentTags.agentId))
     .leftJoin(tags, eq(agentTags.tagId, tags.id))
     .where(eq(agent.slug, slug))
