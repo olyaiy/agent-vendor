@@ -1,4 +1,3 @@
-// Added searchQuery parameter and imported `or`, `ilike`
 import { db } from '../index';
 import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag } from '../schema/agent';
 import { eq, desc, and, asc, sql, or, ilike, count } from 'drizzle-orm'; // Removed unused alias import, Added count
@@ -777,9 +776,6 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
 
   return result;
 }
-
-
-
 
 /**
  * Retrieves all knowledge entries for a given agent slug.
