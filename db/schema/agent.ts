@@ -2,6 +2,8 @@ import { pgTable, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/p
 import { sql } from "drizzle-orm";
 import { user } from "./auth-schema";
 
+// --- Agent Schema --- //
+
 export const agent = pgTable("agent", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -20,6 +22,7 @@ export const agent = pgTable("agent", {
 
 export type Agent = typeof agent.$inferSelect;
 
+// --- Model Schema --- //
 
 export const models = pgTable("models", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -36,6 +39,8 @@ export const models = pgTable("models", {
 
 export type Model = typeof models.$inferSelect;
 
+// --- Knowledge Item Schema --- //
+
 export const knowledge = pgTable("knowledge", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   agentId: text("agent_id").notNull().references(() => agent.id, { onDelete: "cascade" }),
@@ -48,7 +53,7 @@ export const knowledge = pgTable("knowledge", {
 
 export type Knowledge = typeof knowledge.$inferSelect;
 
-// --- New Tag Schema ---
+// --- Tag Schema --- //
 
 export const tags = pgTable("tags", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -64,7 +69,7 @@ export const tags = pgTable("tags", {
 
 export type Tag = typeof tags.$inferSelect;
 
-// --- New Agent-Tag Join Table Schema ---
+// --- Agent-Tag Join Table Schema --- //
 
 export const agentTags = pgTable("agent_tags", {
   agentId: text("agent_id").notNull().references(() => agent.id, { onDelete: "cascade" }),
