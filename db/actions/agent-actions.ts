@@ -29,7 +29,7 @@ import {
   selectAgentById, // Added for delete action authorization
   deleteAgent as deleteAgentRepo,
   selectAgentWithModelBySlug,
-  selectKnowledgeByAgentId, // Added for delete action
+  selectKnowledgeByAgentId, 
 } from "@/db/repository/agent-repository";
 // Corrected: Added Knowledge and Tag back to the import
 import { Agent, Model, Knowledge, Tag } from "@/db/schema/agent";
@@ -991,6 +991,8 @@ export async function getAgentSettingsBySlugAction(
   agentTags: Tag[],
   allModels: Model[]
 }>> {
+
+
   // 1) lookup agent
   const agentRec = await selectAgentWithModelBySlug(slug);
   if (!agentRec) {

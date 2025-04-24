@@ -40,11 +40,11 @@ export async function insertAgent(newAgentData: NewAgent): Promise<Agent[]> {
        .returning();
      
      // 2️⃣ backfill the primary role in the join table
-     await db.insert(agentModels).values({
-       agentId: created.id,
-       modelId: newAgentData.primaryModelId,
-       role: 'primary',
-     });
+    //  await db.insert(agentModels).values({
+    //    agentId: created.id,
+    //    modelId: newAgentData.primaryModelId,
+    //    role: 'primary',
+    //  });
      
      return [created];
    }
