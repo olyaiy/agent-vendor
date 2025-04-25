@@ -5,7 +5,7 @@ import { generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug } from "@/db/repository"; // Removed selectAgentTagsBySlug
+import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository"; // Re-added selectAgentTagsBySlug
 import type { AgentSpecificModel } from '@/components/chat'; // Import the type definition from Chat component
 
 type Params = { "agent-slug": string };
@@ -32,8 +32,8 @@ export default async function Page({
   // 4. Fetch Knowledge Items
   const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
 
-  // Removed unused tags fetching
-  // const tags = await selectAgentTagsBySlug(agentSlug);
+  // 5. Fetch Tags
+  const tags = await selectAgentTagsBySlug(agentSlug);
 
   // 6. Transform rawAgentModels into the AgentSpecificModel structure expected by Chat component
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
@@ -53,14 +53,15 @@ export default async function Page({
 
   return isMobile ? (
     <div className="h-screen pb-12 w-screen">
-      <ChatMobile agent={agent} knowledgeItems={knowledgeItems} 
+      {/* Combine agent and tags for ChatMobile */}
+      <ChatMobile agent={{ ...agent, tags }} knowledgeItems={knowledgeItems}
       agentModels={agentModelsForChat} chatId={chatId} />
     </div>
   ) : (
     <>
-    
+
     <Chat
-    agent={agent} // Pass agent directly as ChatProps expects Agent type
+    agent={{ ...agent, tags }} // Combine agent and tags for Chat
     knowledgeItems={knowledgeItems}
     agentModels={agentModelsForChat} // Pass the transformed data
     chatId={chatId}

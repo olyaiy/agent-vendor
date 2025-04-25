@@ -28,7 +28,7 @@ export interface AgentSpecificModel {
 
 interface ChatProps {
   chatId: string;
-  agent: Agent;
+  agent: Agent & { tags: Array<{ id: string; name: string }> }; // Re-add tags to agent type definition
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];

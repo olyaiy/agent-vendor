@@ -3,7 +3,8 @@
 
 import { memo } from 'react'; // Removed useState and other unused imports
 import { Agent, Knowledge } from '@/db/schema/agent';
-import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo
+// Removed unused ModelInfo import
+import type { AgentSpecificModel } from '@/components/chat'; // Import the new model type
 
 // Import new sub-components
 import { AgentHeader } from './agent-header';
@@ -31,7 +32,7 @@ interface AgentInfoProps {
   knowledgeItems: Knowledge[];
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
-  models: ModelInfo[]; // Add models prop
+  models: AgentSpecificModel[]; // Use the new AgentSpecificModel type
   chatSettings: Record<string, number>; // Add chatSettings prop
   onSettingChange: (settingName: string, value: number) => void; // Add onSettingChange prop
 }
@@ -50,9 +51,9 @@ function AgentInfoComponent({
 
   // Removed all useState hooks for collapsible sections
 
-  // Find the model string name and details for the selected model ID
-  const selectedModelInfo = models.find(m => m.id === selectedModelId);
-  const selectedModelString = selectedModelInfo?.model;
+  // Find the model string name and details for the selected model ID using modelId
+  const selectedModelInfo = models.find(m => m.modelId === selectedModelId); // Use modelId for lookup
+  const selectedModelString = selectedModelInfo?.model; // Get the model string name
   const selectedModelDetail = selectedModelString ? modelDetails[selectedModelString] : undefined;
 
   return (
