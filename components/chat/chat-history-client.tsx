@@ -1,4 +1,4 @@
-ert'use client';
+'use client';
 
 import { useState, useEffect, useCallback, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -11,8 +11,9 @@ import { ChatListItem } from '@/components/chat/chat-list-item'; // We will crea
 import type { Chat } from '@/db/schema/chat'; // Import Chat type if needed for props
 
 // Define the type for the chat data we expect from the action
-// Define the type for the chat data we expect from the action, including last message details
+// Define the type for the chat data we expect from the action, including agentSlug and last message details
 type ChatHistoryItem = Pick<Chat, 'id' | 'title' | 'createdAt' | 'agentId'> & {
+  agentSlug: string | null; // Add agentSlug
   lastMessageParts: unknown | null;
   lastMessageRole: string | null;
 };

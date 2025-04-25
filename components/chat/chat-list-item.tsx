@@ -7,6 +7,7 @@ import type { Chat } from '@/db/schema/chat'; // Import base Chat type if needed
 // Define the type for the chat data expected by this component
 // Should match the selection in getUserChatsPaginated and the type in chat-history-client
 type ChatHistoryItem = Pick<Chat, 'id' | 'title' | 'createdAt' | 'agentId'> & {
+  agentSlug: string | null; // Add agentSlug to match the data structure
   lastMessageParts: unknown | null;
   lastMessageRole: string | null;
 };
@@ -28,9 +29,9 @@ export function ChatListItem({ chat }: ChatListItemProps) {
     addSuffix: true,
   });
 
-  // Determine the link destination using agentId and chatId
-  // Handle cases where agentId might be null (though ideally it shouldn't be for a chat)
-  const chatLink = chat.agentId ? `/${chat.agentId}/${chat.id}` : '#'; // Fallback link if no agentId
+  // Determine the link destination using agentSlug and chatId
+  // Handle cases where agentSlug might be null
+  const chatLink = chat.agentSlug ? `/agent/${chat.agentSlug}/${chat.id}` : '#'; // Use agentSlug for the link
 
   // Extract and truncate last message preview
   let lastMessagePreview = '';
@@ -68,7 +69,8 @@ export function ChatListItem({ chat }: ChatListItemProps) {
     </div>
   );
 
-  if (chat.agentId) {
+  // Use agentSlug to determine if the link should be rendered
+  if (chat.agentSlug) {
     return (
       <Link href={chatLink} className="block">
         {rowContent}
