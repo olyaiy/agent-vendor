@@ -16,7 +16,7 @@ import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater';
 import { modelDetails, ModelSettings } from '@/lib/models';
 
 // Define the type for models associated with the agent
-interface AgentSpecificModel {
+export interface AgentSpecificModel {
   agentId: string;
   modelId: string;
   role: 'primary' | 'secondary';

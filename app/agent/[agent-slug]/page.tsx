@@ -1,11 +1,6 @@
 // app/agent/[agent-slug]/page.tsx
 import Chat from "@/components/chat";
 import ChatMobile from "@/components/chat-mobile";
-import {
-  selectAgentWithModelBySlug, // Keep if used elsewhere, otherwise remove
-  selectKnowledgeByAgentId, // Keep if used elsewhere, otherwise remove
-  // Removed unused selectAllModels import
-} from "@/db/repository/agent-repository";
 import { generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -58,7 +53,8 @@ export default async function Page({
 
   return isMobile ? (
     <div className="h-screen pb-12 w-screen">
-      {/* <ChatMobile agent={agent} knowledgeItems={knowledgeItems} models={models} chatId={chatId} /> */}
+      <ChatMobile agent={agent} knowledgeItems={knowledgeItems} 
+      agentModels={agentModelsForChat} chatId={chatId} />
     </div>
   ) : (
     <>

@@ -6,32 +6,46 @@ import { Messages } from './chat/messages';
 import { MobileAgentHeader } from './chat/MobileAgentHeader'; // Use the mobile header
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
-import { ModelInfo } from "@/components/agents/edit-agent-form";
+// Removed unused ModelInfo import
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater';
 
-// Interface identical to ChatProps for now
+// Define the type for models associated with the agent (same as in chat.tsx)
+interface AgentSpecificModel {
+  agentId: string;
+  modelId: string;
+  role: 'primary' | 'secondary';
+  model: string; // The actual model name, e.g., 'claude-3-haiku'
+  description?: string | null;
+  id: string; // Alias for modelId
+}
+
 interface ChatMobileProps {
   chatId: string;
-  agent: Agent & { modelName: string; tags: Array<{ id: string; name: string }> };
+  agent: Agent; // Removed modelName and tags (assuming tags aren't used directly here)
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
-  knowledgeItems: Knowledge[]; // Keep knowledge for potential future use, even if not displayed
-  models: ModelInfo[];
+  knowledgeItems: Knowledge[]; // Keep knowledge for potential future use
+  agentModels: AgentSpecificModel[]; // Use the new prop type
 }
 
 export default function ChatMobile({
   agent,
-  // knowledgeItems, (unused in mobile)
-  models,
+  // knowledgeItems, // Still unused in mobile rendering logic
+  agentModels, // Use agentModels prop
   chatId,
   initialMessages,
   initialTitle
 }: ChatMobileProps) {
 
-  const [selectedModelId] = useState<string>(agent.primaryModelId); // setSelectedModelId unused
+  // Find the primary model from the agentModels prop
+  const primaryModel = agentModels.find(m => m.role === 'primary');
+  // Get the name of the primary model, fallback if needed
+  const primaryModelName = primaryModel ? primaryModel.model : (agentModels.length > 0 ? agentModels[0].model : '');
+  // Removed unused selectedModelId state
+
   const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle); // displayTitle unused
 
   // Ref for the mobile scroll container
@@ -63,7 +77,7 @@ export default function ChatMobile({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      model: models.find(m => m.id === selectedModelId)?.model || agent.modelName
+      model: primaryModelName // Use the determined primary model name
     },
     initialMessages,
     generateId: generateUUID,
