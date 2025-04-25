@@ -97,10 +97,22 @@ export async function deleteTrailingMessages({ id }: { id: string }) {
       timestamp: message.createdAt,
     });
   }
-
-export async function getUserRecentChatsAction(limit?: number) {
-  try {
-    const session = await auth.api.getSession({
+ 
+ // Define the expected return type for the action, including agentSlug
+ type RecentChatWithSlug = {
+   id: string;
+   title: string;
+   agentId: string;
+   agentSlug: string | null; // Add agentSlug
+ };
+ 
+ export async function getUserRecentChatsAction(limit?: number): Promise<{
+   success: boolean;
+   data?: RecentChatWithSlug[]; // Update data type
+   message?: string;
+ }> {
+   try {
+     const session = await auth.api.getSession({
       headers: await headers()
     });
 
@@ -113,9 +125,10 @@ export async function getUserRecentChatsAction(limit?: number) {
       limit: limit,
     });
 
+    // The data from getUserRecentChats now includes agentSlug
     return {
       success: true,
-      data: recentChats,
+      data: recentChats, // recentChats now matches RecentChatWithSlug[]
     };
   } catch (error) {
     console.error('Failed to get recent chats:', error);

@@ -54,7 +54,7 @@ export default async function Page({
   return isMobile ? (
     <div className="h-screen pb-12 w-screen">
       {/* Combine agent and tags for ChatMobile */}
-      <ChatMobile agent={{ ...agent, tags }} knowledgeItems={knowledgeItems}
+      <ChatMobile agent={agent} knowledgeItems={knowledgeItems}
       agentModels={agentModelsForChat} chatId={chatId} />
     </div>
   ) : (
@@ -65,6 +65,7 @@ export default async function Page({
     knowledgeItems={knowledgeItems}
     agentModels={agentModelsForChat} // Pass the transformed data
     chatId={chatId}
+    agentSlug={agentSlug}
     />
    
     </>

@@ -48,7 +48,9 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <WebSearchSection toolInvocation={toolInvocation} />
       default:
         return <div>
-          <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
+          <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
+            {JSON.stringify(toolInvocation, null, 2)}
+          </pre>
         </div>;
     }
   }

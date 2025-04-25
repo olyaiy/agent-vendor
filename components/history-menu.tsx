@@ -21,6 +21,7 @@ interface HistoryDisplayItem {
   id: string;
   title: string;
   url: string;
+  agentSlug: string | null; // Add agentSlug
 }
 
 // Define the SWR key
@@ -30,11 +31,16 @@ const SWR_KEY_RECENT_CHATS = 'userRecentChats';
 const fetcher = async (): Promise<HistoryDisplayItem[]> => {
   const result = await getUserRecentChatsAction(5); // Fetch last 5 chats
   if (result.success && result.data) {
-    return result.data.map(chat => ({
-      id: chat.id,
-      title: chat.title,
-      url: `/${chat.agentId}/${chat.id}` // Construct the URL
-    }));
+    // Map the data, constructing the new URL format
+    return result.data
+      .filter(chat => chat.agentSlug) // Filter out chats without a slug (shouldn't happen ideally)
+      .map(chat => ({
+        id: chat.id,
+        title: chat.title,
+        // Construct the URL using agentSlug and chatId
+        url: `/agent/${chat.agentSlug}/${chat.id}`,
+        agentSlug: chat.agentSlug // Keep slug if needed elsewhere, though url is primary use
+      }));
   } else {
     // Throw an error if fetching failed or data is missing
     throw new Error(result.message || 'Failed to fetch history');

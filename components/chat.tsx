@@ -33,6 +33,7 @@ interface ChatProps {
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
   agentModels: AgentSpecificModel[]; // Use the new prop type
+  agentSlug: string;
 }
 
 // Helper function to get initial settings based on model ID
@@ -62,8 +63,11 @@ export default function Chat({
   agentModels, // Destructure agentModels instead of models
   chatId,
   initialMessages,
-  initialTitle
+  initialTitle,
+  agentSlug
 }: ChatProps) {
+
+
   // Find the primary model from the agentModels prop
   const primaryModel = agentModels.find(m => m.role === 'primary');
   // Provide a fallback if no primary model is found (e.g., use the first available model)
@@ -194,7 +198,7 @@ export default function Chat({
             />
             <ChatInput 
               chatId={chatId}
-              agentId={agent.id}
+              agentSlug={agentSlug}
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
@@ -208,7 +212,7 @@ export default function Chat({
             <Greeting />
             
             <ChatInput 
-              agentId={agent.id}
+              agentSlug={agentSlug}
               chatId={chatId}
               input={input}
               setInput={setInput}

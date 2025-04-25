@@ -1,4 +1,5 @@
-import { webSearchTool } from './web-search'; 
+import { webSearchTool } from './web-search';
+import { readPageTool } from './read-page';
 
 /**
  * A central registry for all available AI tools.
@@ -8,7 +9,8 @@ import { webSearchTool } from './web-search';
 
 
 export const toolRegistry = {
-  webSearch: webSearchTool, 
+  webSearch: webSearchTool,
+  readPage: readPageTool,
 
 };
 

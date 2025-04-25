@@ -173,15 +173,18 @@ export async function getUserRecentChats({
 }: {
   userId: string;
   limit?: number;
-}): Promise<Pick<Chat, 'id' | 'title' | 'agentId'>[]> {
+}): Promise<Array<{ id: string; title: string; agentId: string; agentSlug: string | null }>> { // Update return type
   try {
+    // Join with agent table to get the slug
     return await db
       .select({
         id: chat.id,
         title: chat.title,
         agentId: chat.agentId,
+        agentSlug: sql<string | null>`agent.slug`.as('agentSlug') // Select agent slug
       })
       .from(chat)
+      .leftJoin(sql`agent`, eq(chat.agentId, sql`agent.id`)) // Join with agent table
       .where(eq(chat.userId, userId))
       .orderBy(desc(chat.createdAt))
       .limit(limit);
