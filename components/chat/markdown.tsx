@@ -20,16 +20,31 @@ const components: Partial<Components> = {
       return <code className="bg-muted px-1 rounded font-mono text-sm" {...props}>{children}</code>;
     }
 
+    // Extract the code string, remove trailing newline added by markdown
+    const codeString = String(children).replace(/\\n$/, '');
+    
     // Match the language from the className (e.g., "language-js")
     const match = /language-(\w+)/.exec(className || '');
     const language = match ? match[1] : ''; // Default to empty string if no language found
 
-    // Extract the code string, remove trailing newline added by markdown
-    const codeString = String(children).replace(/\\n$/, '');
+    // Check if the code is a single line (no newlines)
+    const isSingleLine = !codeString.includes('\n');
+    
+    if (isSingleLine) {
+      // For single-line code, render a simplified inline-block code element
+      return (
+        <div className="my-2 mx-1 inline-block">
+          <code className="bg-muted px-3 py-1.5 rounded font-mono text-sm" {...props}>
+            {language && (
+              <span className="text-xs text-muted-foreground mr-2">{language}</span>
+            )}
+            {codeString}
+          </code>
+        </div>
+      );
+    }
 
-    // Render the custom CodeBlock component
-    // Note: filename is not typically provided by react-markdown, passing empty string
-    // You might need to adjust how filename is handled if it's crucial
+    // For multi-line code, render the full CodeBlock component
     return (
       <CodeBlock
         language={language}
