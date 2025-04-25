@@ -1,6 +1,6 @@
 import { and, eq, or } from "drizzle-orm";
 import { db } from "..";
-import { AgentModel, AgentTag, Knowledge, Tag, agent, agentModels, agentTags, knowledge, tags } from "../schema/agent";
+import { AgentModel, AgentTag, Knowledge, Tag, agent, agentModels, agentTags, knowledge, models, tags } from "../schema/agent"; // Added 'models' import
 
 
 // --------------------- AGENT - TAG RELATIONS ---------------------    
@@ -174,19 +174,26 @@ export async function addSecondaryModelsToAgent(agentId: string, modelIds: strin
 }
 
 /**
- * Retrieves all agent models associated with a specific agent, identified by slug.
+ * Retrieves all agent models associated with a specific agent, identified by slug,
+ * including the model name and description from the joined models table.
  * @param agentSlug - The unique slug of the agent.
- * @returns A promise that resolves to an array of AgentModel objects.
+ * @returns A promise that resolves to an array of objects containing agent model details and model info.
  */
-export async function selectAgentModelsBySlug(agentSlug: string): Promise<AgentModel[]> {
+// Define an explicit return type for better clarity
+type AgentModelWithDetails = AgentModel & { model: string; description: string | null };
+
+export async function selectAgentModelsBySlug(agentSlug: string): Promise<AgentModelWithDetails[]> {
     return await db
         .select({
             agentId: agentModels.agentId,
             modelId: agentModels.modelId,
             role: agentModels.role,
-        }) // Select only columns from agentModels
+            model: models.model, // Select model name from the models table
+            description: models.description, // Select description from the models table
+        })
         .from(agentModels)
-        .innerJoin(agent, eq(agentModels.agentId, agent.id)) // Join based on agent ID
+        .innerJoin(agent, eq(agentModels.agentId, agent.id)) // Join agentModels with agent
+        .innerJoin(models, eq(agentModels.modelId, models.id)) // Join agentModels with models
         .where(eq(agent.slug, agentSlug)); // Filter by agent slug
 }
 

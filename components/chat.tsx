@@ -6,29 +6,40 @@ import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
-import type { Agent, Knowledge } from '@/db/schema/agent'; 
-import { ModelInfo } from "@/components/agents/edit-agent-form"; 
-import { authClient } from '@/lib/auth-client'; 
+import type { Agent, Knowledge } from '@/db/schema/agent';
+// Removed unused ModelInfo import
+import { authClient } from '@/lib/auth-client';
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton'; 
 import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; 
-import { modelDetails, ModelSettings } from '@/lib/models'; 
+import { modelDetails, ModelSettings } from '@/lib/models';
+
+// Define the type for models associated with the agent
+interface AgentSpecificModel {
+  agentId: string;
+  modelId: string;
+  role: 'primary' | 'secondary';
+  model: string; // The actual model name, e.g., 'claude-3-haiku'
+  description?: string | null;
+  // Alias modelId as id for consistency within this component
+  id: string;
+}
 
 interface ChatProps {
   chatId: string;
-  agent: Agent & { modelName: string; tags: Array<{ id: string; name: string }> };
+  agent: Agent;
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
-  models: ModelInfo[]; 
+  agentModels: AgentSpecificModel[]; // Use the new prop type
 }
 
 // Helper function to get initial settings based on model ID
-const getInitialChatSettings = (modelId: string, availableModels: ModelInfo[]): Record<string, number> => {
-  const selectedModelInfo = availableModels.find(m => m.id === modelId);
+const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel[]): Record<string, number> => {
+  const selectedModelInfo = agentModels.find(m => m.modelId === modelId); // Use modelId and agentModels
   if (selectedModelInfo) {
-    const details = modelDetails[selectedModelInfo.model];
+    const details = modelDetails[selectedModelInfo.model]; // Use model string name from agentModel
     const defaultSettings = details?.defaultSettings;
     if (defaultSettings) {
       const initialSettings: Record<string, number> = {};
@@ -48,16 +59,22 @@ const getInitialChatSettings = (modelId: string, availableModels: ModelInfo[]): 
 export default function Chat({
   agent,
   knowledgeItems,
-  models, // Destructure models
+  agentModels, // Destructure agentModels instead of models
   chatId,
   initialMessages,
   initialTitle
 }: ChatProps) {
-  // State for the selected model, initialized with the agent's primary model DB UUID
-  const [selectedModelId, setSelectedModelId] = useState<string>(agent.primaryModelId);
-  // State for the dynamic chat settings, initialized with defaults
+  // Find the primary model from the agentModels prop
+  const primaryModel = agentModels.find(m => m.role === 'primary');
+  // Provide a fallback if no primary model is found (e.g., use the first available model)
+  // Consider adding logging or error handling if agentModels is empty.
+  const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
+
+  // State for the selected model, initialized with the derived primary model ID
+  const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId);
+  // State for the dynamic chat settings, initialized with defaults using the new prop
   const [chatSettings, setChatSettings] = useState<Record<string, number>>(() =>
-    getInitialChatSettings(agent.primaryModelId, models)
+    getInitialChatSettings(initialModelId, agentModels) // Use initialModelId and agentModels
   );
 
   // Use the custom hook to manage title state and update logic
@@ -74,9 +91,9 @@ export default function Chat({
   useEffect(() => {
     // We skip the initial calculation here as useState handles it
     // This effect now only handles *changes* to selectedModelId
-    setChatSettings(getInitialChatSettings(selectedModelId, models));
+    setChatSettings(getInitialChatSettings(selectedModelId, agentModels)); // Use agentModels
 
-  }, [selectedModelId, models]); // Rerun when model or available models change
+  }, [selectedModelId, agentModels]); // Rerun when model or agentModels change
 
   // Handler to update a specific chat setting
   const handleSettingChange = useCallback((settingName: string, value: number) => {
@@ -115,8 +132,8 @@ export default function Chat({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      // Find the model string name corresponding to the selected UUID
-      model: models.find(m => m.id === selectedModelId)?.model || agent.modelName, // Fallback just in case
+      // Find the model string name corresponding to the selected UUID using agentModels
+      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '', // Fallback to empty string or handle error if not found
       ...apiSettings // Spread the prepared settings into the body
     },
     initialMessages,
@@ -211,7 +228,7 @@ export default function Chat({
           agent={agent}
           isOwner={isOwner}
           knowledgeItems={knowledgeItems}
-          models={models} // Pass models down
+          models={agentModels} // Pass agentModels down instead of models
           selectedModelId={selectedModelId}
           setSelectedModelId={setSelectedModelId}
           chatSettings={chatSettings} // Pass settings state

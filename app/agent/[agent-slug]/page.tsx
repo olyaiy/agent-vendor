@@ -2,15 +2,16 @@
 import Chat from "@/components/chat";
 import ChatMobile from "@/components/chat-mobile";
 import {
-  selectAgentWithModelBySlug,
-  selectKnowledgeByAgentId,
-  selectAllModels,
+  selectAgentWithModelBySlug, // Keep if used elsewhere, otherwise remove
+  selectKnowledgeByAgentId, // Keep if used elsewhere, otherwise remove
+  // Removed unused selectAllModels import
 } from "@/db/repository/agent-repository";
 import { generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository";
+import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug } from "@/db/repository"; // Removed selectAgentTagsBySlug
+import type { AgentSpecificModel } from '@/components/chat'; // Import the type definition from Chat component
 
 type Params = { "agent-slug": string };
 
@@ -26,22 +27,28 @@ export default async function Page({
   const agentSlug = resolvedParams["agent-slug"];
 
   // 2. Fetch Agent Details using the resolved slug
-  const agent = await selectAgentBySlug(agentSlug); // Use selectAgentBySlug
+  const agent = await selectAgentBySlug(agentSlug); 
   if (!agent) notFound();
 
-  // 3. Fetch Agent Models (Removed as unused for now)
-  const agentModels = await selectAgentModelsBySlug(agentSlug);
-  const allModels = await selectAllModels();
+  // 3. Fetch Agent Models (returns AgentModelWithDetails: agentId, modelId, role, model, description)
+  const rawAgentModels = await selectAgentModelsBySlug(agentSlug);
+  // Removed unused selectAllModels call
 
-  // 4. Fetch Knowledge Items (Removed as unused for now)
+  // 4. Fetch Knowledge Items
   const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
 
-  // 5. Fetch Tags (Removed as unused for now)
-  const tags = await selectAgentTagsBySlug(agentSlug);
+  // Removed unused tags fetching
+  // const tags = await selectAgentTagsBySlug(agentSlug);
 
-
-
-
+  // 6. Transform rawAgentModels into the AgentSpecificModel structure expected by Chat component
+  const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
+    agentId: rawModel.agentId,
+    modelId: rawModel.modelId,
+    role: rawModel.role,
+    model: rawModel.model, // The model string name
+    description: rawModel.description, // Optional description
+    id: rawModel.modelId // Add the id alias required by AgentSpecificModel
+  }));
 
 
   // --- Chat ---
@@ -55,14 +62,14 @@ export default async function Page({
     </div>
   ) : (
     <>
-    {/* 
-    <Chat 
-    agent={agent} 
-    knowledgeItems={knowledgeItems} 
-    models={models} 
-    chatId={chatId} 
-    /> 
-    */}
+    
+    <Chat
+    agent={agent} // Pass agent directly as ChatProps expects Agent type
+    knowledgeItems={knowledgeItems}
+    agentModels={agentModelsForChat} // Pass the transformed data
+    chatId={chatId}
+    />
+   
     </>
   );
 }
