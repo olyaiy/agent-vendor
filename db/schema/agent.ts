@@ -2,15 +2,18 @@ import { pgTable, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/p
 import { sql } from "drizzle-orm";
 import { user } from "./auth-schema";
 
+// --- Agent Schema --- //
+
 export const agent = pgTable("agent", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
+  slug: text("slug").unique(),         
   thumbnailUrl: text("thumbnail_url"),
   avatarUrl: text("avatar_url"),
   systemPrompt: text("system_prompt"),
   welcomeMessage: text("welcome_message"),
-  primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "no action" }), // Corrected onDelete
+  // primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "no action" }), // Corrected onDelete
   visibility: text("visibility").default("public").notNull(),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
@@ -19,6 +22,7 @@ export const agent = pgTable("agent", {
 
 export type Agent = typeof agent.$inferSelect;
 
+// --- Model Schema --- //
 
 export const models = pgTable("models", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -26,14 +30,40 @@ export const models = pgTable("models", {
   description: text("description"),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
   updatedAt: timestamp("updated_at", { mode: 'date' }).default(sql`now()`).notNull(),
-}, (table) => { // Corrected: Index definition as the third argument
+}, (table) => { 
   return {
-    // Add a unique index to the model name
     modelNameIdx: uniqueIndex("model_name_idx").on(table.model),
   };
 });
 
 export type Model = typeof models.$inferSelect;
+
+
+
+// --- Agent-Model Schema --- //
+export const agentModels = pgTable("agent_models", {
+  agentId: text("agent_id")
+    .notNull()
+    .references(() => agent.id, { onDelete: "cascade" }),
+
+  modelId: text("model_id")
+    .notNull()
+    .references(() => models.id, { onDelete: "no action" }),
+
+  role: text("role").$type<"primary" | "secondary">().notNull(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.agentId, t.modelId] }),
+  uniquePrimaryPerAgent: uniqueIndex("unique_primary_model_per_agent")
+    .on(t.agentId)
+    .where(sql`${t.role} = 'primary'`),
+}));
+
+export type AgentModel = typeof agentModels.$inferSelect;
+
+
+
+
+// --- Knowledge Item Schema --- //
 
 export const knowledge = pgTable("knowledge", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -47,7 +77,7 @@ export const knowledge = pgTable("knowledge", {
 
 export type Knowledge = typeof knowledge.$inferSelect;
 
-// --- New Tag Schema ---
+// --- Tag Schema --- //
 
 export const tags = pgTable("tags", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -63,7 +93,7 @@ export const tags = pgTable("tags", {
 
 export type Tag = typeof tags.$inferSelect;
 
-// --- New Agent-Tag Join Table Schema ---
+// --- Agent-Tag Join Table Schema --- //
 
 export const agentTags = pgTable("agent_tags", {
   agentId: text("agent_id").notNull().references(() => agent.id, { onDelete: "cascade" }),
@@ -71,7 +101,6 @@ export const agentTags = pgTable("agent_tags", {
   assignedAt: timestamp("assigned_at", { mode: 'date' }).default(sql`now()`).notNull(), // Optional: track when tag was assigned
 }, (table) => {
   return {
-    // Define a composite primary key for the combination of agentId and tagId
     pk: primaryKey({ columns: [table.agentId, table.tagId] }),
   };
 });

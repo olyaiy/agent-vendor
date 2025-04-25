@@ -81,7 +81,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
   // Form state initialized with agent data
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(agent.avatarUrl);
-  const [primaryModelId, setPrimaryModelId] = useState<string>(agent.primaryModelId);
+  const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelId);
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
   const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge);
   const [selectedTags, setSelectedTags] = useState<Option[]>(currentTags); // State for selected tags
@@ -774,7 +774,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.push(`/${agent.id}`)} // Navigate back to agent page
+            onClick={() => router.push(`/agent/${agent.slug}`)} // Navigate back to agent page
             className="w-28 cursor-pointer"
           >
             Cancel
@@ -782,7 +782,7 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
           <Button
             type="button"
             variant="secondary" // Use secondary variant
-            onClick={() => router.push(`/${agent.id}`)} // Navigate to agent chat page
+            onClick={() => router.push(`/agent/${agent.slug}`)} // Navigate to agent chat page
             className="gap-2 cursor-pointer" // Add gap for icon
           >
             <ChatBubbleIcon className="size-4" />

@@ -1,6 +1,5 @@
-// Added searchQuery parameter and imported `or`, `ilike`
 import { db } from '../index';
-import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag } from '../schema/agent';
+import { agent, Agent, models, Model, knowledge, Knowledge, tags, Tag, agentTags, AgentTag, agentModels } from '../schema/agent';
 import { eq, desc, and, asc, sql, or, ilike, count } from 'drizzle-orm'; // Removed unused alias import, Added count
 
 // Define the type for the data needed to insert an agent
@@ -34,12 +33,21 @@ type UpdateModel = Partial<NewModel>;
  * @returns The newly inserted agent record.
  */
 export async function insertAgent(newAgentData: NewAgent): Promise<Agent[]> {
-  const insertedAgent = await db
-    .insert(agent)
-    .values(newAgentData)
-    .returning(); // Return all columns of the inserted row
-  return insertedAgent;
-}
+     // 1️⃣ create the agent row
+     const [created] = await db
+       .insert(agent)
+       .values(newAgentData)
+       .returning();
+     
+     // 2️⃣ backfill the primary role in the join table
+    //  await db.insert(agentModels).values({
+    //    agentId: created.id,
+    //    modelId: newAgentData.primaryModelId,
+    //    role: 'primary',
+    //  });
+     
+     return [created];
+   }
 
 /**
  * Selects an agent by its ID.
@@ -62,13 +70,35 @@ export async function selectAgentById(agentId: string): Promise<Agent | undefine
  * @returns The updated agent record.
  */
 export async function updateAgent(agentId: string, updateData: Partial<NewAgent>): Promise<Agent[]> {
-  const updatedAgent = await db
-    .update(agent)
-    .set({ ...updateData, updatedAt: new Date() }) // Ensure updatedAt is updated
-    .where(eq(agent.id, agentId))
-    .returning();
-  return updatedAgent;
-}
+    // If the primaryModelId is changing, swap out the join‐table row
+    if (updateData.primaryModelId) {
+      await db.transaction(async tx => {
+        await tx
+          .delete(agentModels)
+          .where(
+            and(
+              eq(agentModels.agentId, agentId),
+              eq(agentModels.role, 'primary')
+            )
+          );
+        await tx
+          .insert(agentModels)
+          .values({
+            agentId,
+            modelId: updateData.primaryModelId!,
+            role: 'primary',
+          });
+      });
+    }
+    
+    // still update the agent row itself (for backwards compat)
+    const updatedAgent = await db
+      .update(agent)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(agent.id, agentId))
+      .returning();
+    return updatedAgent;
+   }
 
 /**
  * Deletes an agent from the database.
@@ -137,14 +167,19 @@ export async function updateModel(modelId: string, updateData: UpdateModel): Pro
  * @returns True if the model is in use, false otherwise.
  */
 export async function isModelInUse(modelId: string): Promise<boolean> {
-    const result = await db
-        .select({ value: count() })
-        .from(agent)
-        .where(eq(agent.primaryModelId, modelId))
-        .limit(1); // Optimization: We only need to know if count > 0
-
-    return result[0]?.value > 0;
-}
+     const result = await db
+       .select({ value: count() })
+       .from(agentModels)
+       .where(
+         and(
+           eq(agentModels.modelId, modelId),
+           eq(agentModels.role, 'primary')
+         )
+       )
+       .limit(1);
+   
+     return result[0]?.value > 0;
+   }
 
 
 /**
@@ -190,6 +225,7 @@ export async function selectRecentAgents(
   name: string;
   description: string | null;
   thumbnailUrl: string | null;
+  slug: string;
   avatarUrl: string | null;
   creatorId: string;
   tags: AgentTagInfo[];
@@ -206,6 +242,7 @@ export async function selectRecentAgents(
       name: agent.name,
       description: agent.description,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: sql<string>`coalesce(${agent.slug}, '')`.as('slug'),
       avatarUrl: agent.avatarUrl,
       creatorId: agent.creatorId,
       tags: tagsAgg, // Select the aggregated tags
@@ -263,6 +300,7 @@ export async function selectRecentAgents(
       agent.name,
       agent.description,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.creatorId,
       agent.createdAt, // Need to include orderBy column in groupBy
@@ -332,13 +370,82 @@ export async function countAgents(tagName?: string, searchQuery?: string): Promi
 
 
 /**
+ * Retrieves an agent (with its model name and tags) by its slug
+ * @param slug - URL‐friendly slug of the agent
+ * @returns Combined agent + model + tags object, or undefined if not found
+ */
+export async function selectAgentWithModelBySlug(
+  slug: string
+): Promise<(typeof agent.$inferSelect & { modelName: string; tags: AgentTagInfo[] }) | undefined> {
+  const tagsAgg = sql<AgentTagInfo[]>`
+    coalesce(
+      json_agg(
+        json_build_object(
+          'id', ${tags.id},
+          'name', ${tags.name}
+        )
+      ) FILTER (WHERE ${tags.id} IS NOT NULL),
+      '[]'
+    )
+  `.as('tags');
+
+  const result = await db
+    .select({
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      thumbnailUrl: agent.thumbnailUrl,
+      slug: agent.slug,
+      avatarUrl: agent.avatarUrl,
+      systemPrompt: agent.systemPrompt,
+      welcomeMessage: agent.welcomeMessage,
+      primaryModelId: agent.primaryModelId,
+      visibility: agent.visibility,
+      createdAt: agent.createdAt,
+      updatedAt: agent.updatedAt,
+      creatorId: agent.creatorId,
+
+      modelName: models.model,
+      tags: tagsAgg,
+    })
+    .from(agent)
+    .innerJoin(
+      agentModels,
+      and(
+        eq(agentModels.agentId, agent.id),
+        eq(agentModels.role, 'primary')
+      )
+    )
+    .innerJoin(models, eq(agentModels.modelId, models.id))    
+    .leftJoin(agentTags, eq(agent.id, agentTags.agentId))
+    .leftJoin(tags, eq(agentTags.tagId, tags.id))
+    .where(eq(agent.slug, slug))
+    .groupBy(
+      agent.id,
+      agent.name,
+      agent.description,
+      agent.thumbnailUrl,
+      agent.slug,
+      agent.avatarUrl,
+      agent.systemPrompt,
+      agent.welcomeMessage,
+      agent.primaryModelId,
+      agent.visibility,
+      agent.createdAt,
+      agent.updatedAt,
+      agent.creatorId,
+      models.model
+    )
+    .limit(1);
+
+  return result[0];
+}
+
+/**
  * Retrieves an agent with its associated model name by ID
  * @param agentId - UUID of the agent to retrieve
  * @returns Combined agent and model data or undefined if not found
  */
-// AgentTagInfo is already defined above
-
-// Update the return type to include tags
 export async function selectAgentWithModelById(agentId: string): Promise<(Agent & { modelName: string; tags: AgentTagInfo[] }) | undefined> {
   // Use sql template literal for JSON aggregation
   const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
@@ -350,6 +457,7 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
       name: agent.name,
       description: agent.description,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: agent.slug,
       avatarUrl: agent.avatarUrl,
       systemPrompt: agent.systemPrompt,
       welcomeMessage: agent.welcomeMessage,
@@ -376,6 +484,7 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
       agent.name,
       agent.description,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.systemPrompt,
       agent.welcomeMessage,
@@ -384,9 +493,9 @@ export async function selectAgentWithModelById(agentId: string): Promise<(Agent 
       agent.createdAt,
       agent.updatedAt,
       agent.creatorId,
-      models.model // Include modelName in groupBy
+      models.model 
     )
-    .limit(1); // Limit to one result
+    .limit(1); 
 
   return result[0];
 }
@@ -621,12 +730,14 @@ export async function selectAgentsByTagId(tagId: string, limit: number): Promise
     id: string;
     name: string;
     thumbnailUrl: string | null;
+    slug: string;
 }>> {
     return await db
         .select({
             id: agent.id,
             name: agent.name,
-            thumbnailUrl: agent.thumbnailUrl
+            thumbnailUrl: agent.thumbnailUrl,
+            slug: sql<string>`coalesce(${agent.slug}, '')`.as('slug')
         })
         .from(agent)
         .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
@@ -635,15 +746,7 @@ export async function selectAgentsByTagId(tagId: string, limit: number): Promise
         .limit(limit);
 }
 
-// Example: If you needed full agent details by tag
-// export async function selectAgentsByTagId(tagId: string): Promise<Agent[]> {
-//     return await db
-//         .select() // Select all columns from agent table
-//         .from(agent)
-//         .innerJoin(agentTags, eq(agent.id, agentTags.agentId))
-//         .where(eq(agentTags.tagId, tagId))
-//         .orderBy(asc(agent.name));
-// }
+
 
 /**
  * Selects the top N tags ordered alphabetically by name.
@@ -674,6 +777,7 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
       name: agent.name,
       description: agent.description,
       thumbnailUrl: agent.thumbnailUrl,
+      slug: agent.slug,
       avatarUrl: agent.avatarUrl,
       systemPrompt: agent.systemPrompt,
       welcomeMessage: agent.welcomeMessage,
@@ -700,6 +804,7 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
       agent.name,
       agent.description,
       agent.thumbnailUrl,
+      agent.slug,
       agent.avatarUrl,
       agent.systemPrompt,
       agent.welcomeMessage,
@@ -713,4 +818,26 @@ export async function selectAgentsByCreatorId(creatorId: string): Promise<Array<
     .orderBy(desc(agent.createdAt)); // Order by creation date
 
   return result;
+}
+
+/**
+ * Retrieves all knowledge entries for a given agent slug.
+ * @param slug – the URL-friendly agent slug
+ * @returns array of Knowledge records, or [] if no such agent
+ */
+export async function selectKnowledgeByAgentSlug(slug: string): Promise<Knowledge[]> {
+  const agentRec = await selectAgentWithModelBySlug(slug);
+  if (!agentRec) return [];
+  return await selectKnowledgeByAgentId(agentRec.id);
+}
+
+/**
+ * Retrieves all tags for a given agent slug.
+ * @param slug – the URL-friendly agent slug
+ * @returns array of Tag records, or [] if no such agent
+ */
+export async function selectTagsByAgentSlug(slug: string): Promise<Tag[]> {
+  const agentRec = await selectAgentWithModelBySlug(slug);
+  if (!agentRec) return [];
+  return await selectTagsByAgentId(agentRec.id);
 }

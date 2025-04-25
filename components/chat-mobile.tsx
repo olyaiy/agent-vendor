@@ -6,7 +6,7 @@ import { Messages } from './chat/messages';
 import { MobileAgentHeader } from './chat/MobileAgentHeader'; // Use the mobile header
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form";
+import { ModelInfo } from "@/components/agents/edit-agent-form";
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
@@ -24,13 +24,13 @@ interface ChatMobileProps {
 
 export default function ChatMobile({
   agent,
-  // knowledgeItems, // Keep prop (unused in mobile)
+  // knowledgeItems, (unused in mobile)
   models,
   chatId,
   initialMessages,
   initialTitle
 }: ChatMobileProps) {
-  // State and hooks copied from Chat.tsx
+
   const [selectedModelId] = useState<string>(agent.primaryModelId); // setSelectedModelId unused
   const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle); // displayTitle unused
 
@@ -134,6 +134,7 @@ export default function ChatMobile({
           status={status}
           stop={stop}
           className=" px-2 pb-6 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
+          isMobile={true} 
           // Removed hasMessages prop
         />
       </div>

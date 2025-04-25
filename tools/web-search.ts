@@ -13,7 +13,6 @@ const tavilySearchParams = z.object({
 });
 
 // Define the schema for the expected response structure from the Tavily API
-// Removed raw_content from the results object schema
 const tavilySearchResponse = z.object({
     query: z.string(),
     answer: z.string().optional(),
@@ -22,11 +21,9 @@ const tavilySearchResponse = z.object({
         url: z.string(),
         content: z.string(),
         score: z.number(),
-        // raw_content is removed as we are not requesting it
     })),
-    response_time: z.number(), // Changed from string in example to number based on common practice
-    // Images are included by default now
-    images: z.array(z.string()).optional(), // Updated to expect array of strings instead of objects
+    response_time: z.number(), 
+     images: z.array(z.string()).optional(), 
 });
 
 

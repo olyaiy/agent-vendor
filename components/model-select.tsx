@@ -22,7 +22,7 @@ import {
   TooltipContent, // Keep styled content
 } from "@/components/ui/tooltip";
 import { modelDetails } from "@/lib/models"; // Import modelDetails
-import { ModelInfo } from "@/app/[agent-id]/settings/edit-agent-form"; // Import ModelInfo type
+import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo type
 import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
 
 // Updated Props interface
