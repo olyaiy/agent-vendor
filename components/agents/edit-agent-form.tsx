@@ -360,6 +360,8 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto ">
       {/* Main Form Container */}
       <div className="space-y-12 pb-10 pt-8">
+
+        
         {/* Image and Basic Info Section */}
         <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
           <div className="md:col-span-4 space-y-4">
