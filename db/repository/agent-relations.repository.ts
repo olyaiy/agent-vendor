@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { db } from "..";
 import { AgentModel, AgentTag, Knowledge, Tag, agent, agentModels, agentTags, knowledge, tags } from "../schema/agent";
 
@@ -239,8 +239,9 @@ export async function removeSecondaryModelsFromAgent(agentId: string, modelIds: 
                     eq(agentModels.agentId, agentId),
                     eq(agentModels.role, "secondary"),
                     // Only include the specified model IDs in the condition
-                    // This is equivalent to "modelId IN (modelIds)"
-                    agentModels.modelId.in(modelIds)
+                    // Using the "in" array operator for SQL "modelId IN (modelIds)"
+                    // Create individual conditions for each modelId and combine with OR
+                    or(...modelIds.map(id => eq(agentModels.modelId, id)))
                 )
             );
             
