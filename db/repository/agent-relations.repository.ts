@@ -215,4 +215,38 @@ export async function selectAgentKnowledgeBySlug(agentSlug: string): Promise<Kno
         .where(eq(agent.slug, agentSlug)); // Filter by agent slug
 }
 
+/**
+ * Removes secondary models from an agent.
+ * This function will only remove models with a 'secondary' role to prevent
+ * accidentally removing the primary model.
+ * 
+ * @param agentId - The ID of the agent.
+ * @param modelIds - An array of model IDs to remove from the agent.
+ * @returns The number of relationships removed.
+ */
+export async function removeSecondaryModelsFromAgent(agentId: string, modelIds: string[]): Promise<number> {
+    if (!modelIds.length) {
+        return 0;
+    }
+    
+    // Use a transaction to ensure data consistency
+    return await db.transaction(async (tx) => {
+        // Delete the specified secondary model relationships
+        const result = await tx
+            .delete(agentModels)
+            .where(
+                and(
+                    eq(agentModels.agentId, agentId),
+                    eq(agentModels.role, "secondary"),
+                    // Only include the specified model IDs in the condition
+                    // This is equivalent to "modelId IN (modelIds)"
+                    agentModels.modelId.in(modelIds)
+                )
+            );
+            
+        // Return the count of deleted rows
+        return result.count || 0;
+    });
+}
+
 

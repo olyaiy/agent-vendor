@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { AgentModel } from "../schema/agent";
-import { updateAgentPrimaryModel, addSecondaryModelsToAgent } from "../repository/agent-relations.repository";
+import { updateAgentPrimaryModel, addSecondaryModelsToAgent, removeSecondaryModelsFromAgent } from "../repository/agent-relations.repository";
 
 /**
  * Server action to update an agent's primary model.
@@ -71,6 +71,44 @@ export async function addSecondaryModelsToAgentAction(
     };
   } catch (error) {
     console.error("Failed to add secondary models to agent:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "An unknown error occurred"
+    };
+  }
+}
+
+/**
+ * Server action to remove secondary models from an agent.
+ * This will only remove models with a secondary role.
+ * 
+ * @param agentId - The ID of the agent.
+ * @param modelIds - Array of model IDs to remove.
+ * @returns Information about the success of the operation and count of removed models.
+ */
+export async function removeSecondaryModelsFromAgentAction(
+  agentId: string, 
+  modelIds: string[]
+): Promise<{ success: boolean; count?: number; error?: string }> {
+  try {
+    if (!agentId || !modelIds.length) {
+      return {
+        success: false,
+        error: "Agent ID and at least one Model ID are required"
+      };
+    }
+
+    const count = await removeSecondaryModelsFromAgent(agentId, modelIds);
+    
+    // Revalidate the agent page to reflect changes
+    revalidatePath(`/dashboard/agents/${agentId}`);
+    
+    return {
+      success: true,
+      count
+    };
+  } catch (error) {
+    console.error("Failed to remove secondary models from agent:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "An unknown error occurred"
