@@ -218,7 +218,7 @@ export async function getUserChatsPaginated({
 }): Promise<{
   chats: Array<
     Pick<Chat, 'id' | 'title' | 'createdAt' | 'agentId'> &
-    { lastMessageParts: unknown | null; lastMessageRole: string | null } // Add last message fields
+    { agentSlug: string | null; lastMessageParts: unknown | null; lastMessageRole: string | null } // Add agentSlug and last message fields
   >;
   totalCount: number;
 }> {
@@ -286,11 +286,13 @@ export async function getUserChatsPaginated({
         title: chat.title,
         createdAt: chat.createdAt,
         agentId: chat.agentId,
+        agentSlug: sql<string | null>`agent.slug`.as('agentSlug'), // Select agent slug
         // Select parts and role from the filtered CTE result
         lastMessageParts: lastMessageSubquery.parts,
         lastMessageRole: lastMessageSubquery.role,
       })
       .from(chat)
+      .leftJoin(sql`agent`, eq(chat.agentId, sql`agent.id`)) // Join with agent table
       // Left join with the CTE, filtering for the latest message (rn=1)
       .leftJoin(
         lastMessageSubquery,

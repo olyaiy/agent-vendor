@@ -150,10 +150,22 @@ const GetUserChatsSchema = z.object({
  * @param params - Object containing optional searchQuery and page number.
  * @returns Promise with success status and data ({ chats, totalCount }) or error message.
  */
+// Define the expected chat item structure returned by the action
+type UserChatHistoryItem = Pick<Chat, 'id' | 'title' | 'createdAt' | 'agentId'> & {
+  agentSlug: string | null;
+  lastMessageParts: unknown | null;
+  lastMessageRole: string | null;
+};
+
 export async function getUserChatsAction(params: {
   searchQuery?: string | null;
   page?: number;
-}) {
+}): Promise<{ // Define the full return type of the action
+  success: boolean;
+  data?: { chats: UserChatHistoryItem[]; totalCount: number };
+  message?: string;
+  details?: any; // Keep details for validation errors
+}> {
   try {
     // Validate input using Zod schema
     const validation = GetUserChatsSchema.safeParse(params);
