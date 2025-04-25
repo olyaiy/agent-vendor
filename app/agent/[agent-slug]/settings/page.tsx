@@ -30,8 +30,6 @@ export default async function Page({ params }: PageProps) {
 
   // Handle case where agent is not found
   if (!agentData) {
-    // TODO: Implement a proper not-found handling mechanism
-    // For now, just return a message or redirect
     return <div>Agent not found.</div>;
   }
 
@@ -50,7 +48,7 @@ export default async function Page({ params }: PageProps) {
       </Suspense>
 
 
-      
+
       {/* Other sections */}
       {/* Knowledge Items go here */}
       {/* Agent Models go here */}

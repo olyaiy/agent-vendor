@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth"; // Assuming auth setup exists
 import { headers } from "next/headers";
+import { z } from "zod"; // Import Zod for validation
 
 // Import repository functions from the barrel file
 import {
@@ -411,7 +412,7 @@ export async function deleteAgentAction(agentId: string): Promise<ActionResult<v
 }
 
 /**
- * Server action to fetch all of an agent’s settings by slug for editing.
+ * Server action to fetch all of an agent's settings by slug for editing.
  * Includes agent data, knowledge, all tags, agent's current tags, and all models.
  * Requires authentication.
  * @param slug - The URL-friendly slug of the agent.
@@ -462,5 +463,63 @@ export async function getAgentSettingsBySlugAction(slug: string): Promise<Action
     } catch (error) {
          console.error(`Failed to fetch agent settings for slug ${slug}:`, error);
          return { success: false, error: (error as Error).message };
+    }
+}
+
+/**
+ * Server action to update an agent's system prompt.
+ * Requires authentication and authorization (user must own the agent).
+ * @param agentId - The ID of the agent to update.
+ * @param systemPrompt - The new system prompt content.
+ * @returns Promise with success status and updated agent data or error.
+ */
+export async function updateAgentSystemPromptAction(
+    agentId: string,
+    systemPrompt: string
+): Promise<ActionResult<Agent>> {
+    // --- Validation ---
+    const schema = z.object({
+        agentId: z.string().uuid("Invalid Agent ID format."),
+        systemPrompt: z.string().min(1, "System prompt cannot be empty.").max(10000, "System prompt is too long."), // Example max length
+    });
+
+    const validationResult = schema.safeParse({ agentId, systemPrompt });
+    if (!validationResult.success) {
+        return { success: false, error: validationResult.error.errors.map(e => e.message).join(", ") };
+    }
+
+    // --- Authorization ---
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        
+        // Check if the user is authenticated
+        if (!session?.user) {
+            return { success: false, error: "User not authenticated." };
+        }
+
+        // Check if the agent exists
+        const agentToUpdate = await selectAgentById(agentId);
+        if (!agentToUpdate) {
+            return { success: false, error: "Agent not found." };
+        }
+
+        // Check if the agent belongs to the current user
+        if (agentToUpdate.creatorId !== session.user.id) {
+            return { success: false, error: "Unauthorized." };
+        }
+
+        // --- Database Update ---
+        const result = await updateAgentRepo(agentId, { systemPrompt }); // Use the imported repository function
+        if (result.length === 0) {
+            // This might happen if the agent was deleted between the check and update, though unlikely
+            return { success: false, error: "Agent not found or update failed unexpectedly." };
+        }
+
+        return { success: true, data: result[0] }; // Return the first updated agent record
+
+    } catch (error) {
+        console.error("Failed to update agent system prompt:", error);
+        // Could add more specific error handling (e.g., DB errors) if needed
+        return { success: false, error: (error instanceof Error) ? error.message : "An unknown error occurred." };
     }
 }
