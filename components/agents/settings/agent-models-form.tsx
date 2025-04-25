@@ -89,10 +89,10 @@ const AgentModelsForm = ({ agentModels, agentId, allModels }: AgentModelsFormPro
 
       // Process results
       if (addResult.status === 'rejected' || (addResult.status === 'fulfilled' && !addResult.value.success)) {
-        addError = addResult.status === 'fulfilled' ? addResult.value.error : (addResult.reason as Error).message;
+        addError = addResult.status === 'fulfilled' ? (addResult.value as { success: boolean; error?: string }).error ?? 'Unknown error adding models' : (addResult.reason as Error).message;
       }
       if (removeResult.status === 'rejected' || (removeResult.status === 'fulfilled' && !removeResult.value.success)) {
-        removeError = removeResult.status === 'fulfilled' ? removeResult.value.error : (removeResult.reason as Error).message;
+        removeError = removeResult.status === 'fulfilled' ? (removeResult.value as { success: boolean; error?: string }).error ?? 'Unknown error removing models' : (removeResult.reason as Error).message;
       }
 
       // Handle errors and revert state if necessary
