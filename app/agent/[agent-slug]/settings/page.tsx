@@ -1,6 +1,8 @@
 import AgentInfoForm from "@/components/agents/settings/agent-info-form";
 import AgentKnowledgeForm from "@/components/agents/settings/agent-knowledge-form";
+import AgentModelsForm from "@/components/agents/settings/agent-models-form";
 import SystemPromptForm from "@/components/agents/settings/system-prompt-form";
+import { selectAllModels } from "@/db/repository";
 import { selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository/agent-relations.repository";
 import { selectAgentBySlug } from "@/db/repository/agent.repository";
 import { Suspense } from "react";
@@ -22,7 +24,8 @@ export default async function Page({ params }: PageProps) {
   const agentData = await selectAgentBySlug(agentSlug); // Use selectAgentBySlug
 
   // 3. Fetch Agent Models (Removed as unused for now)
-  // const agentModels = await selectAgentModelsBySlug(agentSlug);
+  const agentModels = await selectAgentModelsBySlug(agentSlug);
+  const allModels = await selectAllModels();
 
   // 4. Fetch Knowledge Items (Removed as unused for now)
   const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
@@ -43,6 +46,15 @@ export default async function Page({ params }: PageProps) {
       {/* Agent Basic Info */}
       <Suspense fallback={<div>Loading agent details...</div>}>
         <AgentInfoForm agent={agentData} />
+      </Suspense>
+
+      {/* Agent Models */}
+      <Suspense fallback={<div>Loading agent details...</div>}>
+        <AgentModelsForm
+        agentModels={agentModels} 
+        agentId={agentData.id} 
+        allModels={allModels}
+        />
       </Suspense>
 
       {/* System Prompt Form */}

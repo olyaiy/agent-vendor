@@ -59,7 +59,7 @@ const AgentKnowledgeForm = ({ knowledgeItems, agentId }: AgentKnowledgeFormProps
 
   return (
     <FormSection title="Knowledge Base" description="Add knowledge items that your agent can reference during conversations.">
-      <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
+      <section className="flex flex-col gap-8">
         <div className="md:col-span-4 space-y-6">
           <div className="space-y-4">
             <div className="flex items-start gap-2">

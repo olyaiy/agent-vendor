@@ -57,6 +57,123 @@ export async function selectAgentTagsBySlug(agentSlug: string): Promise<Tag[]> {
 // --------------------- AGENT - MODEL RELATIONS ---------------------    
 
 /**
+ * Updates the primary model for an agent.
+ * This function handles the uniqueness constraint by first removing any existing primary model
+ * relationships before setting the new one.
+ * 
+ * @param agentId - The ID of the agent.
+ * @param modelId - The ID of the model to set as primary.
+ * @returns The updated agent-model relationship.
+ */
+export async function updateAgentPrimaryModel(agentId: string, modelId: string): Promise<AgentModel[]> {
+    // Start a transaction to ensure data consistency
+    return await db.transaction(async (tx) => {
+        // First, update any existing primary model to secondary or remove it
+        await tx
+            .update(agentModels)
+            .set({ role: "secondary" })
+            .where(and(
+                eq(agentModels.agentId, agentId),
+                eq(agentModels.role, "primary")
+            ));
+            
+        // Check if the new model is already associated with the agent
+        const existingRelationship = await tx
+            .select()
+            .from(agentModels)
+            .where(and(
+                eq(agentModels.agentId, agentId),
+                eq(agentModels.modelId, modelId)
+            ));
+            
+        if (existingRelationship.length > 0) {
+            // Update the existing relationship to primary
+            return await tx
+                .update(agentModels)
+                .set({ role: "primary" })
+                .where(and(
+                    eq(agentModels.agentId, agentId),
+                    eq(agentModels.modelId, modelId)
+                ))
+                .returning();
+        } else {
+            // Create a new primary relationship
+            return await tx
+                .insert(agentModels)
+                .values({
+                    agentId,
+                    modelId,
+                    role: "primary"
+                })
+                .returning();
+        }
+    });
+}
+
+/**
+ * Adds one or multiple models as secondary models for an agent.
+ * If a model is already associated with the agent, its role will be updated to secondary.
+ * 
+ * @param agentId - The ID of the agent.
+ * @param modelIds - An array of model IDs to add as secondary models.
+ * @returns The created or updated agent-model relationships.
+ */
+export async function addSecondaryModelsToAgent(agentId: string, modelIds: string[]): Promise<AgentModel[]> {
+    if (!modelIds.length) {
+        return [];
+    }
+
+    return await db.transaction(async (tx) => {
+        const results: AgentModel[] = [];
+
+        // Process each model ID
+        for (const modelId of modelIds) {
+            // Check if the model is already associated with the agent
+            const existingRelationship = await tx
+                .select()
+                .from(agentModels)
+                .where(and(
+                    eq(agentModels.agentId, agentId),
+                    eq(agentModels.modelId, modelId)
+                ));
+
+            if (existingRelationship.length > 0) {
+                // If it's not already the primary model, update it to be secondary
+                if (existingRelationship[0].role !== 'primary') {
+                    const updated = await tx
+                        .update(agentModels)
+                        .set({ role: "secondary" })
+                        .where(and(
+                            eq(agentModels.agentId, agentId),
+                            eq(agentModels.modelId, modelId)
+                        ))
+                        .returning();
+                    
+                    results.push(...updated);
+                } else {
+                    // If it's the primary model, don't change it
+                    results.push(existingRelationship[0]);
+                }
+            } else {
+                // Create a new secondary relationship
+                const inserted = await tx
+                    .insert(agentModels)
+                    .values({
+                        agentId,
+                        modelId,
+                        role: "secondary"
+                    })
+                    .returning();
+                
+                results.push(...inserted);
+            }
+        }
+
+        return results;
+    });
+}
+
+/**
  * Retrieves all agent models associated with a specific agent, identified by slug.
  * @param agentSlug - The unique slug of the agent.
  * @returns A promise that resolves to an array of AgentModel objects.
