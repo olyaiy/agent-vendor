@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Agent } from '@/db/schema/agent';
 import { updateAgentSystemPromptAction } from '@/db/actions/agent.actions';
+import { FormSection } from '@/components/form-section'
 
 interface SystemPromptFormProps {
   agent: Agent;
@@ -87,6 +88,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
+            <FormSection title="System Prompt" description="Instructions that define how your agent behaves.">
             <div className="space-y-4">
                 <div className="flex items-start justify-between mb-1.5">
                     <div className="flex items-start gap-1.5">
@@ -169,6 +171,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                      ) : 'Save Changes'}
                 </Button>
             </div>
+            </FormSection>
         </form>
     )
 }

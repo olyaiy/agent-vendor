@@ -1,3 +1,5 @@
+import AgentInfoForm from "@/components/agents/settings/agent-info-form";
+import AgentKnowledgeForm from "@/components/agents/settings/agent-knowledge-form";
 import SystemPromptForm from "@/components/agents/settings/system-prompt-form";
 import { selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository/agent-relations.repository";
 import { selectAgentBySlug } from "@/db/repository/agent.repository";
@@ -23,7 +25,9 @@ export default async function Page({ params }: PageProps) {
   // const agentModels = await selectAgentModelsBySlug(agentSlug);
 
   // 4. Fetch Knowledge Items (Removed as unused for now)
-  // const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
+  const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
+
+
 
   // 5. Fetch Tags (Removed as unused for now)
   // const tags = await selectAgentTagsBySlug(agentSlug);
@@ -34,18 +38,28 @@ export default async function Page({ params }: PageProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1>Settings</h1>
-      {/* Static content renders immediately */}
-      <pre>{JSON.stringify(resolvedParams, null, 2)}</pre>
-      <pre>{JSON.stringify(agentData, null, 2)}</pre>
+    <div className="max-w-4xl mx-auto space-y-4 py-8">
 
-      {/* Agent Details go here */}
-      {/* Suspense now correctly wraps the component doing the async work */}
+      {/* Agent Basic Info */}
       <Suspense fallback={<div>Loading agent details...</div>}>
-        {/* Pass the fetched agentData */}
+        <AgentInfoForm agent={agentData} />
+      </Suspense>
+
+      {/* System Prompt Form */}
+      <Suspense fallback={<div>Loading agent details...</div>}>
         <SystemPromptForm agent={agentData} />
       </Suspense>
+
+      {/* Agent Knowledge Items */}
+      <Suspense fallback={<div>Loading agent details...</div>}>
+        <AgentKnowledgeForm 
+        knowledgeItems={knowledgeItems} 
+        agentId={agentData.id} 
+        />
+      </Suspense>
+
+
+
 
 
 
