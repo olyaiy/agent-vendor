@@ -1,7 +1,6 @@
+import { eq, desc, and, sql, or, ilike, count, getTableColumns } from 'drizzle-orm';
 
-import { eq, desc, and, asc, sql, or, ilike, count, getTableColumns } from 'drizzle-orm';
-
-import { Agent, agent, AgentModel, agentModels, agentTags, Knowledge, models, Tag, tags } from '../schema/agent';
+import { Agent, agent, agentModels, agentTags, Knowledge, models, Tag, tags } from '../schema/agent';
 import { db } from '..';
 import { selectKnowledgeByAgentId } from './agent-repository';
 import { selectTagsByAgentId } from './tag.repository';
@@ -56,6 +55,19 @@ export async function selectAgentById(agentId: string): Promise<Agent | undefine
     return result[0];
 }
 
+/**
+ * Selects an agent by its slug.
+ * @param slug - The slug of the agent to select.
+ * @returns The agent record if found, otherwise undefined.
+ */
+export async function selectAgentBySlug(slug: string): Promise<Agent | undefined> {
+    const result = await db
+        .select()
+        .from(agent)
+        .where(eq(agent.slug, slug))
+        .limit(1);
+    return result[0];
+}
 
 // Define a more flexible input type for updates during/after deprecation
 // It accepts standard Agent fields (partial) but *also* allows specifying a primaryModelId separately
@@ -437,5 +449,4 @@ export async function selectTagsByAgentSlug(slug: string): Promise<Tag[]> {
     // Then fetch tags using the ID by calling the tag repository function
     return await selectTagsByAgentId(agentRec.id); // Use imported function
 }
-
 
