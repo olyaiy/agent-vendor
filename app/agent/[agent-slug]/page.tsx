@@ -10,13 +10,74 @@ import { generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository";
 
 type Params = { "agent-slug": string };
+
+export default async function Page({
+  params,                  
+}: {
+  params: Promise<Params>;
+}) {
+
+
+  // 1. Await the params promise
+  const resolvedParams = await params;
+  const agentSlug = resolvedParams["agent-slug"];
+
+  // 2. Fetch Agent Details using the resolved slug
+  const agent = await selectAgentBySlug(agentSlug); // Use selectAgentBySlug
+  if (!agent) notFound();
+
+  // 3. Fetch Agent Models (Removed as unused for now)
+  const agentModels = await selectAgentModelsBySlug(agentSlug);
+  const allModels = await selectAllModels();
+
+  // 4. Fetch Knowledge Items (Removed as unused for now)
+  const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
+
+  // 5. Fetch Tags (Removed as unused for now)
+  const tags = await selectAgentTagsBySlug(agentSlug);
+
+
+
+
+
+
+  // --- Chat ---
+  const chatId = generateUUID();
+  const ua = (await headers()).get("user-agent") || "";
+  const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
+
+  return isMobile ? (
+    <div className="h-screen pb-12 w-screen">
+      {/* <ChatMobile agent={agent} knowledgeItems={knowledgeItems} models={models} chatId={chatId} /> */}
+    </div>
+  ) : (
+    <>
+    {/* 
+    <Chat 
+    agent={agent} 
+    knowledgeItems={knowledgeItems} 
+    models={models} 
+    chatId={chatId} 
+    /> 
+    */}
+    </>
+  );
+}
+
+
+
+
+
+
 
 type GenerateMetadataProps = {
   params: Promise<Params>;
 };
 
+// Function to generate metadata for the agent page
 export async function generateMetadata(
   { params }: GenerateMetadataProps
 ): Promise<Metadata> {
@@ -25,7 +86,7 @@ export async function generateMetadata(
   // Get the agent slug from the URL parameters
   const { "agent-slug": slug } = await params;
 
-  const agent = await selectAgentWithModelBySlug(slug);
+  const agent = await selectAgentBySlug(slug);
   if (!agent) {
     return { title: "Agent Not Found" };
   }
@@ -39,12 +100,10 @@ export async function generateMetadata(
     const meta: Metadata = {
       title: agent.name,
     };
-  
     // top-level description
     if (description) {
       meta.description = description;
     }
-  
     // icons
     if (imageUrl) {
       meta.icons = {
@@ -52,7 +111,6 @@ export async function generateMetadata(
         apple: imageUrl,
       };
     }
-  
     // open graph
     meta.openGraph = {
       title:       agent.name,
@@ -60,7 +118,6 @@ export async function generateMetadata(
       ...(description && { description }),
       ...(imageUrl   && { images: [imageUrl] }),
     };
-  
     // twitter
     meta.twitter = {
       card:  "summary_large_image",
@@ -68,38 +125,5 @@ export async function generateMetadata(
       ...(description && { description }),
       ...(imageUrl   && { images: [imageUrl] }),
     };
-  
     return meta;
-  
-}
-
-export default async function Page({
-  params,                  // <-- notice Promise<Params> here
-}: {
-  params: Promise<Params>;
-}) {
-  // await the params promise, then destructure
-  const { "agent-slug": slug } = await params;
-
-  const agent = await selectAgentWithModelBySlug(slug);
-  if (!agent) notFound();
-
-
-  // now that we know the real UUID, fetch the knowledge rows
-  const [knowledgeItems, models] = await Promise.all([
-    selectKnowledgeByAgentId(agent.id),
-    selectAllModels(),
-  ]);
-
-  const chatId = generateUUID();
-  const ua = (await headers()).get("user-agent") || "";
-  const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
-
-  return isMobile ? (
-    <div className="h-screen pb-12 w-screen">
-      <ChatMobile agent={agent} knowledgeItems={knowledgeItems} models={models} chatId={chatId} />
-    </div>
-  ) : (
-    <Chat agent={agent} knowledgeItems={knowledgeItems} models={models} chatId={chatId} />
-  );
 }

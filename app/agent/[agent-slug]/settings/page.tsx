@@ -33,7 +33,7 @@ export default async function Page({ params }: PageProps) {
 
 
   // 5. Fetch Tags (Removed as unused for now)
-  // const tags = await selectAgentTagsBySlug(agentSlug);
+  const tags = await selectAgentTagsBySlug(agentSlug);
 
   // Handle case where agent is not found
   if (!agentData) {

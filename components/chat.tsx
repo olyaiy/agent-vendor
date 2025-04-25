@@ -1,21 +1,19 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react' // Import useEffect, useCallback
-import { useChat } from '@ai-sdk/react'; // Removed unused Message type import
-// Remove unused DbChat import
+import React, { useState, useEffect, useCallback } from 'react' 
+import { useChat } from '@ai-sdk/react'; 
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
-import type { Agent, Knowledge } from '@/db/schema/agent'; // Removed unused Model type import
-import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo
-import { authClient } from '@/lib/auth-client'; // Import authClient again
+import type { Agent, Knowledge } from '@/db/schema/agent'; 
+import { ModelInfo } from "@/components/agents/edit-agent-form"; 
+import { authClient } from '@/lib/auth-client'; 
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton'; // Import the sign-in button
-// Remove getChatTitleAction and useSWRConfig imports as they are now handled by the hook
-import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; // Import the custom hook
-import { modelDetails, ModelSettings } from '@/lib/models'; // Import modelDetails and ModelSettings
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton'; 
+import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; 
+import { modelDetails, ModelSettings } from '@/lib/models'; 
 
 interface ChatProps {
   chatId: string;
@@ -23,8 +21,7 @@ interface ChatProps {
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
-  models: ModelInfo[]; // Add models prop
-  // selectedModelId and setSelectedModelId are managed internally
+  models: ModelInfo[]; 
 }
 
 // Helper function to get initial settings based on model ID
