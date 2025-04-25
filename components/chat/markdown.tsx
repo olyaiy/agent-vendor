@@ -6,11 +6,39 @@ import { CodeBlock } from '../ui/code-block';
 import rehypeRaw from 'rehype-raw';
 import { toHtml } from 'hast-util-to-html';
 
+interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+}
 
 const components: Partial<Components> = {
-  // @ts-expect-error Type mismatch between CodeBlock and ReactMarkdown's expected type
-  code: CodeBlock,
   pre: ({ children }) => <>{children}</>,
+  code: ({ inline, className, children, ...props }: MarkdownCodeProps) => {
+    // Handle inline code blocks differently
+    if (inline) {
+      return <code className="bg-muted px-1 rounded font-mono text-sm" {...props}>{children}</code>;
+    }
+
+    // Match the language from the className (e.g., "language-js")
+    const match = /language-(\w+)/.exec(className || '');
+    const language = match ? match[1] : ''; // Default to empty string if no language found
+
+    // Extract the code string, remove trailing newline added by markdown
+    const codeString = String(children).replace(/\\n$/, '');
+
+    // Render the custom CodeBlock component
+    // Note: filename is not typically provided by react-markdown, passing empty string
+    // You might need to adjust how filename is handled if it's crucial
+    return (
+      <CodeBlock
+        language={language}
+        code={codeString}
+        filename=""
+        {...props} // Pass down other props if necessary
+      />
+    );
+  },
   p: ({ children, ...props }) => {
     const hasBlockElement = React.Children.toArray(children).some(
       (child) => React.isValidElement(child) && 
