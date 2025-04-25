@@ -60,6 +60,7 @@ export const readPageTool = tool({
             const errorJson = JSON.parse(errorBody);
             errorMessage = errorJson.detail || JSON.stringify(errorJson);
         } catch (e) {
+          console.error('Error parsing JINA Reader API error response:', e);
             // Ignore parsing error, use raw text
         }
         throw new Error(`JINA Reader API request failed with status ${response.status}: ${errorMessage}`);

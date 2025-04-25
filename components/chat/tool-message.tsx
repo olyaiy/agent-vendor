@@ -33,8 +33,9 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
 
       default:
         return <div>
-          <h1>Unknown Tool</h1>
-          <pre>{JSON.stringify(toolInvocation, null, 2)}</pre>
+          <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
+            {JSON.stringify(toolInvocation, null, 2)}
+          </pre>
         </div>;
     }
   }
@@ -48,7 +49,7 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <WebSearchSection toolInvocation={toolInvocation} />
       default:
         return <div>
-          <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
+          <pre className='text-xs max-w-full overflow-none border rounded-md p-2'>
             {JSON.stringify(toolInvocation, null, 2)}
           </pre>
         </div>;
