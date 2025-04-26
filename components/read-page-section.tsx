@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 // Removed Card imports
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { Loader2, ExternalLink, Image as ImageIcon, AlertCircle, BookOpen } from "lucide-react";
+import { Loader2, ExternalLink, AlertCircle, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from 'next/image';
 import {
@@ -141,30 +141,30 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block p-4 border rounded-lg bg-muted/30 hover:border-border/80 hover:bg-accent/10 transition-colors duration-200 relative"
+              className="block p-3 border rounded-lg bg-muted/30 hover:border-border/80 hover:bg-accent/10 transition-colors duration-200 relative"
             >
               <motion.div
                 variants={container}
                 initial="hidden"
                 animate="show"
-                className="space-y-3"
+                className="space-y-2"
               >
                 {/* Read Page Badge */}
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-2 right-2">
                   <motion.div 
                     variants={item}
-                    className="flex items-center gap-1 text-xs text-primary/80 bg-primary/5 px-2 py-1 rounded-full"
+                    className="flex items-center gap-1 text-xs text-primary/80 bg-primary/5 px-1.5 py-0.5 rounded-full"
                   >
-                    <BookOpen className="h-3 w-3" />
-                    <span>Read Page</span>
+                    <BookOpen className="h-2.5 w-2.5" />
+                    <span className="text-[10px]">Read</span>
                   </motion.div>
                 </div>
                 
                 {/* Header Section */}
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <motion.div variants={item} className="flex items-center gap-2 cursor-pointer">
                     <Image src={faviconUrl} alt="" width={16} height={16} className="h-4 w-4 flex-shrink-0" unoptimized />
-                    <CardTitle className="text-sm font-medium truncate">{title || 'Untitled Page'}</CardTitle>
+                    <CardTitle className="text-xs font-medium truncate">{title || 'Untitled Page'}</CardTitle>
                   </motion.div>
                   <motion.div variants={item} className="flex items-center gap-1.5 text-xs text-muted-foreground pl-6">
                     <span className="truncate flex items-center gap-1">
@@ -176,7 +176,7 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
                 {/* Images preview section (still visible in the card) */}
                 {imageEntries.length > 0 && (
                   <motion.div variants={item}>
-                    <h4 className="text-xs font-medium text-muted-foreground">Images ({imageEntries.length})</h4>
+                    <h4 className="text-[10px] font-medium text-muted-foreground">Images ({imageEntries.length})</h4>
                   </motion.div>
                 )}
               </motion.div>

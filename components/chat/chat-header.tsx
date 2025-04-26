@@ -17,6 +17,7 @@ interface ChatHeaderProps {
   agentName?: string;
   agentId?: string;
   chatTitle?: string | null; // Add chatTitle prop
+  agentSlug?: string;
 }
 
 // Animated title component
@@ -64,7 +65,7 @@ const AnimatedTitle = ({ title }: { title: string }) => {
   );
 };
 
-function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId, chatTitle }: ChatHeaderProps) { // Destructure chatTitle
+function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId, chatTitle, agentSlug }: ChatHeaderProps) { // Destructure chatTitle
   const [copied, setCopied] = useState(false);
   // Get sidebar state
   const { state: sidebarState } = useSidebar();
@@ -114,7 +115,7 @@ function ChatHeaderComponent({ hasMessages = false, agentName = "Agent", agentId
             <motion.div layout>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href={agentId ? `/${agentId}` : "/agent"}>
+                  <Link href={agentId ? `/agent/${agentSlug}` : "/agent"}>
                     {agentName}
                   </Link>
                 </BreadcrumbLink>
