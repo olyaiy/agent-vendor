@@ -84,12 +84,12 @@ export default function Chat({
   // Use the custom hook to manage title state and update logic
   const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
-  // Store the last visited agent ID in local storage
+  // Store the last visited agent slug in local storage
   useEffect(() => {
-    if (agent?.id) {
-      localStorage.setItem('lastVisitedAgentId', agent.id);
+    if (agentSlug) {
+      localStorage.setItem('lastVisitedAgentSlug', agentSlug);
     }
-  }, [agent?.id]);
+  }, [agentSlug]); // Depend on agentSlug
 
   // Effect to update chat settings ONLY when the selected model changes *after* initial load
   useEffect(() => {
