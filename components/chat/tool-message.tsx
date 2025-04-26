@@ -2,7 +2,7 @@ import React from 'react';
 // Corrected import: Use ToolInvocation instead of ToolInvocationPart
 import type { ToolInvocation } from 'ai';
 import WebSearchSection from '../web-search-section';
-
+import ReadPageSection from '../read-page-section'; // Import the new component
 interface ToolMessageProps {
   // Corrected prop type
   toolInvocation: ToolInvocation;
@@ -11,6 +11,8 @@ interface ToolMessageProps {
 export function ToolMessage({ toolInvocation }: ToolMessageProps) {
 
   const { toolName, state } = toolInvocation;
+
+
   
   // const {
   //   state,
@@ -30,7 +32,10 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <WebSearchSection 
               toolInvocation={toolInvocation}
             />
-
+      case 'readPage': // Add case for readPage tool (Result State)
+        return <ReadPageSection
+              toolInvocation={toolInvocation}
+            />
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
@@ -42,11 +47,14 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
 
 
   // If result is not available
-  if (state == 'call' || state == 'partial-call') {
+  if (state == 'call' ) {
+    console.log('toolInvocation', toolInvocation);
 
     switch (toolName) {
       case 'webSearch':
         return <WebSearchSection toolInvocation={toolInvocation} />
+      case 'readPage': // Add case for readPage tool (Call State)
+        return <ReadPageSection toolInvocation={toolInvocation} />
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-none border rounded-md p-2'>
