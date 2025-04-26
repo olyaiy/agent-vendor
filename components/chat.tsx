@@ -182,6 +182,7 @@ export default function Chat({
           hasMessages={messages.length > 0}
           agentName={agent.name}
           agentId={agent.id}
+          agentSlug={agentSlug}
           chatTitle={displayTitle} // Pass the title here
         />
         {/* conditional rendering of messages and chat input */}

@@ -26,19 +26,21 @@ const NewChatButton = () => {
     // Or more robustly check if the second segment looks like a chat ID (e.g., UUID or CUID)
     // For simplicity, let's assume if there are two segments and the first isn't a known top-level route, it's an agent chat page.
     // Adjust this regex/logic if agent IDs can conflict with top-level routes.
-    const agentChatPattern = /^\/([^/]+)\/([^/]+)$/;
-    const match = pathname.match(agentChatPattern);
-    const knownNonAgentRoutes = ['agent', 'history', 'account', 'admin', 'auth', 'api']; // Add other top-level routes if needed
+    // Match pattern like /agent/some-agent-slug/some-chat-id or /agent/some-agent-slug
+    const agentPathPattern = /^\/agent\/([^/]+)(?:\/[^/]+)?$/;
+    const match = pathname.match(agentPathPattern);
 
-    if (match && !knownNonAgentRoutes.includes(match[1])) {
-      const agentId = match[1];
-      setTargetPath(`/${agentId}/new`); // Set path to agent's new chat page
+    if (match) {
+      const agentSlug = match[1];
+      // Save the slug for future visits (optional, but good practice)
+      localStorage.setItem('lastVisitedAgentSlug', agentSlug);
+      setTargetPath(`/agent/${agentSlug}`); // Set path to agent's new chat page
     } else {
-      // Fallback to previous logic: use last visited or default
-      const lastVisitedAgentId = localStorage.getItem('lastVisitedAgentId');
-      if (lastVisitedAgentId) {
-        // Ensure this also points to a 'new' page for consistency, or adjust as needed
-        setTargetPath(`/${lastVisitedAgentId}/new`); // Changed from /${lastVisitedAgentId}
+      // Fallback to previous logic: use last visited slug or default
+      const lastVisitedAgentSlug = localStorage.getItem('lastVisitedAgentSlug');
+      if (lastVisitedAgentSlug) {
+        // Ensure this also points to a 'new' page for consistency
+        setTargetPath(`/agent/${lastVisitedAgentSlug}`);
       } else {
         setTargetPath(defaultNewChatPath);
       }
