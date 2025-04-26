@@ -4,12 +4,19 @@ import React from 'react';
 import type { ToolInvocation } from 'ai';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// Removed Card imports
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-import { Loader2, ExternalLink, FileText, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { Loader2, ExternalLink, Image as ImageIcon, AlertCircle, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
-import Image from 'next/image'; // For displaying images if needed
+import Image from 'next/image';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip'; // Added Tooltip imports
+import { CardTitle } from './ui/card';
 
 // --- Type Definitions ---
 
@@ -41,7 +48,7 @@ interface ReadPageSectionProps {
 // Basic HTML tag stripper (replace with a more robust sanitizer if needed)
 const stripHtml = (html: string): string => {
   if (!html) return '';
-  let doc = new DOMParser().parseFromString(html, 'text/html');
+  const doc = new DOMParser().parseFromString(html, 'text/html');
   return doc.body.textContent || "";
 };
 
@@ -120,69 +127,74 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
       );
     }
 
-    const { title, url, content, links, images } = result.data;
+    const { title, url, content, images } = result.data;
     const plainContentSnippet = truncateText(stripHtml(content), 300); // Show ~300 chars of text content
     const domain = new URL(url).hostname.replace("www.", "");
     const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
-    const linkEntries = Object.entries(links || {});
     const imageEntries = Object.entries(images || {});
 
     return (
-      <motion.div
-        className="border rounded-lg overflow-hidden bg-card"
-        variants={container}
-        initial="hidden"
-        animate="show"
-      >
-        <CardHeader className="p-4 bg-muted/30">
-          <motion.div variants={item} className="flex items-center gap-2 mb-1">
-             <FileText className="h-4 w-4 text-muted-foreground" />
-             <CardTitle className="text-base font-medium">{title || 'Untitled Page'}</CardTitle>
-          </motion.div>
-          <motion.div variants={item} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-             <Image src={faviconUrl} alt="" width={16} height={16} className="h-4 w-4" unoptimized />
-             <Link href={url} target="_blank" rel="noopener noreferrer" className="hover:underline truncate flex items-center gap-1">
-               {domain} <ExternalLink className="h-3 w-3" />
-             </Link>
-          </motion.div>
-        </CardHeader>
+      <TooltipProvider delayDuration={100}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Link
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-4 border rounded-lg bg-muted/30 hover:border-border/80 hover:bg-accent/10 transition-colors duration-200 relative"
+            >
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="space-y-3"
+              >
+                {/* Read Page Badge */}
+                <div className="absolute top-3 right-3">
+                  <motion.div 
+                    variants={item}
+                    className="flex items-center gap-1 text-xs text-primary/80 bg-primary/5 px-2 py-1 rounded-full"
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    <span>Read Page</span>
+                  </motion.div>
+                </div>
+                
+                {/* Header Section */}
+                <div className="space-y-1">
+                  <motion.div variants={item} className="flex items-center gap-2 cursor-pointer">
+                    <Image src={faviconUrl} alt="" width={16} height={16} className="h-4 w-4 flex-shrink-0" unoptimized />
+                    <CardTitle className="text-sm font-medium truncate">{title || 'Untitled Page'}</CardTitle>
+                  </motion.div>
+                  <motion.div variants={item} className="flex items-center gap-1.5 text-xs text-muted-foreground pl-6">
+                    <span className="truncate flex items-center gap-1">
+                      {domain} <ExternalLink className="h-3 w-3" />
+                    </span>
+                  </motion.div>
+                </div>
 
-        <CardContent className="p-4 space-y-4">
-          {plainContentSnippet && (
-            <motion.div variants={item}>
-              <h4 className="text-sm font-medium mb-1">Content Snippet</h4>
-              <p className="text-sm text-muted-foreground text-pretty">
+                {/* Images preview section (still visible in the card) */}
+                {imageEntries.length > 0 && (
+                  <motion.div variants={item}>
+                    <h4 className="text-xs font-medium text-muted-foreground">Images ({imageEntries.length})</h4>
+                  </motion.div>
+                )}
+              </motion.div>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="top" align="start" className="bg-card text-card-foreground max-w-md">
+            <h1 className="text-base font-medium">{title || 'Untitled Page'}</h1>
+            <Separator className="my-2" />
+            {/* Content moved to tooltip */}
+            {plainContentSnippet && (
+              <p className="text-sm text-pretty max-w-xs max-h-40 overflow-y-auto mb-2">
                 {plainContentSnippet}
               </p>
-            </motion.div>
-          )}
-
-          {/* Links section removed as per request */}
-
-          {imageEntries.length > 0 && (
-             <motion.div variants={item}>
-               <Separator className="my-3" />
-               <h4 className="text-sm font-medium mb-2">Images Found ({imageEntries.length})</h4>
-               {/* Basic display for now, could be enhanced with thumbnails */}
-               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-2">
-                 {imageEntries.map(([alt, imgUrl], index) => (
-                   <Link
-                     key={index}
-                     href={imgUrl}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="text-xs text-muted-foreground hover:underline truncate flex items-center gap-1"
-                     title={imgUrl}
-                   >
-                     <ImageIcon className="h-3 w-3 flex-shrink-0" />
-                     <span className="truncate">{alt || `Image ${index + 1}`}</span>
-                   </Link>
-                 ))}
-               </div>
-             </motion.div>
-          )}
-        </CardContent>
-      </motion.div>
+            )}
+            <p className="text-xs text-muted-foreground break-all">{url}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 

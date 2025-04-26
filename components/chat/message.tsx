@@ -93,7 +93,6 @@ const PurePreviewMessage = ({
               {message.parts?.filter(part => part.type !== 'source').map((part, index) => {
                 const { type } = part;
                 const key = `message-${message.id}-part-${index}`;
-
                 if (type === 'reasoning') {
                   return (
                     <MessageReasoning
@@ -103,7 +102,6 @@ const PurePreviewMessage = ({
                     />
                   );
                 }
-
                 if (type === 'text') {
                   if (mode === 'view') {
                     return (
@@ -139,7 +137,6 @@ const PurePreviewMessage = ({
                     );
                   }
                 }
-
                 if (type === 'tool-invocation') {
                   const { toolInvocation } = part;
                   const { toolCallId } = toolInvocation;
