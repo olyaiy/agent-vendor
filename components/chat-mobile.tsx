@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useRef } from 'react' // Import useRef
+import React, { useEffect, useRef } from 'react' // Import useRef
 import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
@@ -141,7 +141,7 @@ export default function ChatMobile({
       <div className="mt-auto ">
         <ChatInput
           chatId={chatId}
-          agentId={agent.id}
+          agentSlug={agent.slug || ''}
           input={input}
           setInput={setInput}
           handleSubmit={handleSubmit}

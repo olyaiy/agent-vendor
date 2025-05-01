@@ -46,7 +46,7 @@ const PurePreviewMessage = ({
   return (
     <div
       data-testid={`message-${message.role}`}
-      className="w-full mx-auto max-w-3xl px-4 group/message"
+      className="w-full mx-auto max-w-3xl px-4 group/message overflow-x-hidden"
       data-role={message.role}
     >
       <div
@@ -54,7 +54,7 @@ const PurePreviewMessage = ({
           'flex gap-2 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl  ',
           {
             'w-full': mode === 'edit',
-            'group-data-[role=user]/message:w-fit ': mode !== 'edit',
+            'group-data-[role=user]/message:w-fit p-4 bg-red-500 ': mode !== 'edit',
           },
         )}
       >
@@ -105,10 +105,10 @@ const PurePreviewMessage = ({
                 if (type === 'text') {
                   if (mode === 'view') {
                     return (
-                      <div key={key} className="flex flex-row gap-2 items-start">
+                      <div key={key} className="flex flex-row gap-2 items-start md:max-w-2xl sm:max-w-xl max-w-full">
                         <div
                           data-testid="message-content"
-                          className={cn('flex flex-col gap-4', {
+                          className={cn('flex flex-col gap-4 max-w-full', {
                             'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
                               message.role === 'user',
                           })}

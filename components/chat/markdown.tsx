@@ -158,8 +158,8 @@ const components: Partial<Components> = {
     );
   },
   table: ({ children, ...props }) => (
-    <div className="my-6 w-full overflow-y-auto">
-      <table className="w-full border-collapse border" {...props}>
+    <div className="my-6  max-w-full overflow-auto">
+      <table className="max-w-full border-collapse border" {...props}>
         {children}
       </table>
     </div>
