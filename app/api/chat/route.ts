@@ -130,10 +130,29 @@ export async function POST(req: Request) {
     if (temperature !== undefined) receivedSettings.temperature = temperature;
     if (topP !== undefined) receivedSettings.topP = topP;
     if (topK !== undefined) receivedSettings.topK = topK;
-    if (maxTokens !== undefined) receivedSettings.maxTokens = maxTokens;
+    if (maxTokens !== undefined) receivedSettings.maxTokens = maxTokens; // Keep original key here
     if (presencePenalty !== undefined) receivedSettings.presencePenalty = presencePenalty;
     if (frequencyPenalty !== undefined) receivedSettings.frequencyPenalty = frequencyPenalty;
     // Add checks for other potential settings if needed
+
+    // Prepare final settings, potentially renaming maxTokens
+    const finalSettings: Record<string, number | undefined> = { ...receivedSettings };
+    const modelsRequiringMaxCompletionTokens = ['gpt-4o-mini', 'o1', 'o1-mini', 'o3', 'o3-mini', 'o4-mini']; // Add other relevant models as needed
+
+    if (modelsRequiringMaxCompletionTokens.includes(modelId) && finalSettings.maxTokens !== undefined) {
+      finalSettings.maxCompletionTokens = finalSettings.maxTokens;
+      delete finalSettings.maxTokens;
+      console.log(`Mapping maxTokens to maxCompletionTokens for model: ${modelId}`); // Log the mapping
+    }
+
+    // Ensure temperature is 1 for models that require it
+    const modelsRequiringTemp1 = ['o4-mini']; // Add o1, o3 etc. if they also have this restriction
+    if (modelsRequiringTemp1.includes(modelId)) {
+        if (finalSettings.temperature !== 1) {
+             console.log(`Forcing temperature to 1 for model: ${modelId}. Original value was: ${finalSettings.temperature}`); // Log the change
+             finalSettings.temperature = 1; // Force temperature to 1
+        }
+    }
 
     /* ---- STREAMING HANDLER ---- */
     /**
@@ -142,6 +161,7 @@ export async function POST(req: Request) {
      * @param onError - Error handler for streaming failures
      */
     console.time('Text streaming');
+    console.log('Settings being passed to streamText:', finalSettings); // DEBUG: Log FINAL settings before call
     const result = streamText({
       model: modelInstance,
       system: systemPrompt,
@@ -152,12 +172,20 @@ export async function POST(req: Request) {
       toolCallStreaming: true,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
       experimental_transform: smoothStream({ delayInMs: 20 }),
-      // Spread the received settings into the streamText call
-      ...receivedSettings,
+      // Spread the FINAL (potentially modified) settings into the streamText call
+      ...finalSettings,
+      providerOptions: {
+        openai: {
+          reasoningEffort: 'low',
+        },
+      },
+
+
 
 
       // Let TypeScript infer the event type for onFinish
       onFinish: async (event) => {
+        
         /**
          * Handles post-stream operations:
          * - Validates assistant message
