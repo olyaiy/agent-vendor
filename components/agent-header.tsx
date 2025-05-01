@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { AgentImage } from '@/components/agent-image';
 import { Agent } from '@/db/schema/agent';
 import { ModelSelect } from '@/components/model-select'; // Import ModelSelect
-import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo
+import { ModelInfo } from '@/app/agent/create/create-agent-form';
 
 interface AgentHeaderProps {
   // Update agent type to include tags

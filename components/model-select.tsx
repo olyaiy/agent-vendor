@@ -22,8 +22,8 @@ import {
   TooltipContent, // Keep styled content
 } from "@/components/ui/tooltip";
 import { modelDetails } from "@/lib/models"; // Import modelDetails
-import { ModelInfo } from "@/components/agents/edit-agent-form"; // Import ModelInfo type
 import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
+import { ModelInfo } from "@/app/agent/create/create-agent-form";
 
 // Updated Props interface
 interface ModelSelectProps {
