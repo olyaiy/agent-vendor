@@ -118,15 +118,13 @@ export async function updateAgent(agentId: string, updateData: UpdateAgentInput)
     }
 
     // 3. Update the 'agent' table itself, *excluding* primaryModelId
-    let updatedAgentRecord: Agent | undefined;
     if (Object.keys(otherAgentFields).length > 0) {
-        const result = await db
+        await db // No need to store the result as it's fetched again later
             .update(agent)
             // *** CRITICAL CHANGE: Only set fields other than primaryModelId ***
             .set({ ...otherAgentFields, updatedAt: new Date() })
-            .where(eq(agent.id, agentId))
-            .returning(); // Get the updated row data directly from the agent table
-        updatedAgentRecord = result[0];
+            .where(eq(agent.id, agentId));
+            // .returning() is removed as the result wasn't used
     }
 
     // 4. Fetch the definitive final state of the agent record

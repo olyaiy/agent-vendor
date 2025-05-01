@@ -3,9 +3,10 @@ import AgentKnowledgeForm from "@/components/agents/settings/agent-knowledge-for
 import AgentModelsForm from "@/components/agents/settings/agent-models-form";
 import SystemPromptForm from "@/components/agents/settings/system-prompt-form";
 import { selectAllModels } from "@/db/repository";
-import { selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository/agent-relations.repository";
+import { selectAgentKnowledgeBySlug, selectAgentModelsBySlug } from "@/db/repository/agent-relations.repository";
 import { selectAgentBySlug } from "@/db/repository/agent.repository";
 import { Suspense } from "react";
+import { ModelInfo } from "../../create/create-agent-form";
 
 type Params = { "agent-slug": string }; // Define the shape of the resolved params
 
@@ -23,9 +24,19 @@ export default async function Page({ params }: PageProps) {
   // 2. Fetch Agent Details using the resolved slug
   const agentData = await selectAgentBySlug(agentSlug); // Use selectAgentBySlug
 
-  // 3. Fetch Agent Models (Removed as unused for now)
+  // 3. Fetch Agent Models
   const agentModels = await selectAgentModelsBySlug(agentSlug);
-  const allModels = await selectAllModels();
+  const allModelsData = await selectAllModels(); // Fetch raw data
+
+  // Transform the raw model data to match the ModelInfo type expected by the form
+  const allModels: ModelInfo[] = allModelsData.map(model => ({
+    id: model.id,
+    model: model.model,
+    description: model.description,
+    // Convert Date objects to ISO strings or handle potential undefined values
+    createdAt: model.createdAt?.toISOString(),
+    updatedAt: model.updatedAt?.toISOString(),
+  }));
 
   // 4. Fetch Knowledge Items (Removed as unused for now)
   const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
@@ -33,7 +44,7 @@ export default async function Page({ params }: PageProps) {
 
 
   // 5. Fetch Tags (Removed as unused for now)
-  const tags = await selectAgentTagsBySlug(agentSlug);
+  // const tags = await selectAgentTagsBySlug(agentSlug);
 
   // Handle case where agent is not found
   if (!agentData) {
