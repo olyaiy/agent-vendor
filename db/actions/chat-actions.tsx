@@ -15,7 +15,7 @@ import {
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { db } from '../index';
-import { message, chat } from '../schema/chat';
+import { message, chat, type Chat } from '../schema/chat'; // Import Chat type
 import { z } from 'zod'; // Import zod for input validation
 
 export async function generateTitleFromUserMessage({
@@ -164,7 +164,7 @@ export async function getUserChatsAction(params: {
   success: boolean;
   data?: { chats: UserChatHistoryItem[]; totalCount: number };
   message?: string;
-  details?: any; // Keep details for validation errors
+  details?: z.inferFlattenedErrors<typeof GetUserChatsSchema>; // Use specific Zod error type
 }> {
   try {
     // Validate input using Zod schema
