@@ -110,6 +110,7 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
         const newAgentData = {
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
+          slug: null, // Add slug property, backend will generate it
           systemPrompt: (formData.get("systemPrompt") as string) || null,
           thumbnailUrl: null, // Set to null initially, will be updated after upload
           visibility: visibility,
