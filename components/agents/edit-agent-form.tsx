@@ -81,7 +81,6 @@ export function EditAgentForm({ agent, models, knowledge: initialKnowledge, allT
   // Form state initialized with agent data
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(agent.thumbnailUrl);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(agent.avatarUrl);
-  const [selectedModelId, setSelectedModelId] = useState<string>(agent.modelId);
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(agent.visibility as "public" | "private" | "link");
   const [knowledgeItems, setKnowledgeItems] = useState<Knowledge[]>(initialKnowledge);
   const [selectedTags, setSelectedTags] = useState<Option[]>(currentTags); // State for selected tags
