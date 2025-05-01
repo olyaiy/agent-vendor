@@ -7,14 +7,14 @@ import { Separator } from '@/components/ui/separator';
 import { AgentImage } from '@/components/agent-image';
 import { Agent } from '@/db/schema/agent';
 import { ModelSelect } from '@/components/model-select'; // Import ModelSelect
-import type { AgentSpecificModel } from '@/components/chat'; // Import the correct model type
+import type { ModelInfo } from "@/app/agent/create/create-agent-form"; // Import ModelInfo
 
 interface AgentHeaderProps {
   // Update agent type to include tags
   agent: Agent & { tags?: Array<{ id: string; name: string }> };
   isOwner: boolean;
   // Add props for model selection
-  models: AgentSpecificModel[]; // Use AgentSpecificModel type
+  models: ModelInfo[]; // Use ModelInfo type
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
 }
