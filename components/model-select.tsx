@@ -23,11 +23,11 @@ import {
 } from "@/components/ui/tooltip";
 import { modelDetails } from "@/lib/models"; // Import modelDetails
 import { providerLogos } from "@/lib/provider-logos"; // Import provider logos
-import { ModelInfo } from "@/app/agent/create/create-agent-form";
+import type { AgentSpecificModel } from '@/components/chat'; // Import the correct model type
 
 // Updated Props interface
 interface ModelSelectProps {
-  models: ModelInfo[]; // Accept models from props
+  models: AgentSpecificModel[]; // Accept AgentSpecificModel from props
   defaultValue?: string; // Expecting DB UUID
   onValueChange?: (value: string) => void; // Expecting DB UUID
 }
@@ -59,7 +59,7 @@ const getProviderFromModel = (modelId: string): string => {
 
 // Define the memoized item component outside ModelSelect
 interface MemoizedModelItemProps {
-  model: ModelInfo;
+  model: AgentSpecificModel; // Use AgentSpecificModel type
   details: typeof modelDetails[string] | undefined;
   isHovered: boolean;
   isSelected: boolean;
@@ -186,7 +186,7 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
 
   // Group filtered models
   const groupedModels = React.useMemo(() => {
-    const groups: Record<string, ModelInfo[]> = {}
+    const groups: Record<string, AgentSpecificModel[]> = {} // Use AgentSpecificModel type
     
     filteredModels.forEach(model => {
       const provider = getProviderFromModel(model.model)
@@ -201,7 +201,7 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
 
   // Find selected model and provider
   const selectedModelInfo = React.useMemo(() => {
-    const model = models.find(m => m.id === defaultValue);
+    const model = models.find(m => m.modelId === defaultValue); // Use modelId for lookup
     if (!model) return { model: "Select model...", displayName: "Select model...", provider: null };
 
     const details = modelDetails[model.model];
