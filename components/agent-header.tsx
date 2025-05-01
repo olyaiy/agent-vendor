@@ -7,19 +7,27 @@ import { Separator } from '@/components/ui/separator';
 import { AgentImage } from '@/components/agent-image';
 import { Agent } from '@/db/schema/agent';
 import { ModelSelect } from '@/components/model-select'; // Import ModelSelect
-import type { ModelInfo } from "@/app/agent/create/create-agent-form"; // Import ModelInfo
+import type { AgentSpecificModel } from '@/components/chat'; // Import the correct model type
+import type { ModelInfo } from "@/app/agent/create/create-agent-form"; // Keep ModelInfo for mapping
 
 interface AgentHeaderProps {
   // Update agent type to include tags
   agent: Agent & { tags?: Array<{ id: string; name: string }> };
   isOwner: boolean;
   // Add props for model selection
-  models: ModelInfo[]; // Use ModelInfo type
+  models: AgentSpecificModel[]; // Revert back to AgentSpecificModel type
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
 }
 
-function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSelectedModelId }: AgentHeaderProps) { // Add props to destructuring
+function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSelectedModelId }: AgentHeaderProps) {
+  // Map AgentSpecificModel[] to ModelInfo[] for ModelSelect
+  const modelInfos: ModelInfo[] = models.map(m => ({
+    id: m.modelId, // Map modelId to id
+    model: m.model,
+    description: m.description || null, // Ensure description is string | null
+  }));
+
   return (
     <>
       {/* Image section */}
@@ -54,7 +62,7 @@ function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSele
         {/* Add ModelSelect below description */}
         <div className="space-y-0 pt-2 "> {/* Added pt-2 for spacing */}
           <ModelSelect
-            models={models}
+            models={modelInfos} // Pass the mapped array
             defaultValue={selectedModelId}
             onValueChange={setSelectedModelId}
           />
