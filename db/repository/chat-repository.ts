@@ -173,7 +173,7 @@ export async function getUserRecentChats({
 }: {
   userId: string;
   limit?: number;
-}): Promise<Array<{ id: string; title: string; agentId: string; agentSlug: string | null }>> { // Update return type
+}): Promise<Array<{ id: string; title: string; agentId: string | null; agentSlug: string | null }>> { // Update return type to match nullable agentId
   try {
     // Join with agent table to get the slug
     return await db
