@@ -5,9 +5,9 @@ import {
   createModelAction,
   updateModelAction,
   deleteModelAction,
-} from '@/db/actions/agent-actions';
-// Import ActionResult type
-import type { ActionResult } from '@/db/actions/agent-actions';
+} from '@/db/actions/model.actions';
+
+
 import type { Model } from '@/db/schema/agent';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner';
 // Removed SearchIcon import
 import { LoaderIcon, PlusIcon, PencilEditIcon, TrashIcon } from '@/components/utils/icons';
+import { ActionResult } from '@/db/actions/types';
 
 interface ModelManagementProps {
   initialModels: Model[];

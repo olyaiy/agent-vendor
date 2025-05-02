@@ -1,9 +1,10 @@
 import { auth } from "@/lib/auth";
 import { CreateAgentForm, ModelInfo } from "./create-agent-form";
 import { headers } from "next/headers";
-import { getAllModels, getAllTagsAction } from "@/db/actions/agent-actions"; // Import server actions
+import { getAllModelsAction } from "@/db/actions/model.actions";
 import { Tag } from "@/db/schema/agent"; // Import Tag type
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import { getAllTagsAction } from "@/db/actions/tag.actions";
 
 
 export default async function CreateAgentPage() {
@@ -15,7 +16,7 @@ export default async function CreateAgentPage() {
   
   // Fetch Models and Tags
   const [modelsResult, tagsResult] = await Promise.all([
-    getAllModels(),
+    getAllModelsAction(),
     getAllTagsAction()
   ]);
 

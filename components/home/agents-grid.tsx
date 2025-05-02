@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { getRecentAgents } from "@/db/actions/agent-actions";
+import { getRecentAgents } from '@/db/actions/agent.actions';
 import { AgentCard } from "@/components/agent-card";
 import { PaginationControls } from '@/components/agents/pagination-controls'; // Import pagination controls
 

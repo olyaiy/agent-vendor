@@ -5,7 +5,7 @@ import {
   createTagAction,
   updateTagAction,
   deleteTagAction,
-} from '@/db/actions/agent-actions'; // Assuming actions are correctly exported
+} from '@/db/actions/tag.actions';
 import type { Tag } from '@/db/schema/agent'; // Import Tag type
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

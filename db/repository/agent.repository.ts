@@ -2,8 +2,9 @@ import { eq, desc, and, sql, or, ilike, count, getTableColumns } from 'drizzle-o
 
 import { Agent, agent, agentModels, agentTags, Knowledge, models, Tag, tags } from '../schema/agent';
 import { db } from '..';
-import { selectKnowledgeByAgentId } from './agent-repository';
+
 import { selectTagsByAgentId } from './tag.repository';
+import { selectKnowledgeByAgentId } from './knowledge.repository';
 
 // Define the type for the data needed to insert an agent
 export type NewAgent = typeof agent.$inferInsert;

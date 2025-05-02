@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getBaseModelAgentsAction } from "@/db/actions/agent-actions";
+import { getBaseModelAgentsAction } from '@/db/actions/agent.actions';
 
 // --- Loading Skeleton ---
 function BaseModelsLoading() {

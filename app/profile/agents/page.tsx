@@ -1,5 +1,6 @@
-import { getUserAgentsAction } from "@/db/actions/agent-actions";
+
 import { AgentCard } from "@/components/agent-card"; // Corrected import
+import { getUserAgentsAction } from "@/db/actions/agent.actions";
 import { Agent } from "@/db/schema/agent"; // Ensure Agent is imported
 
 // Define the expected agent type from the action

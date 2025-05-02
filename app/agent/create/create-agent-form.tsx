@@ -18,15 +18,16 @@ import { Separator } from "@/components/ui/separator";
 import MultipleSelector, { Option } from "@/components/ui/multiselect"; // Import MultipleSelector and Option type
 import {
   createAgent,
-  updateAgentTagsAction,
+
   uploadAgentImageAction, // Added
   // removeAgentImageAction, // Add if implementing remove before save
-} from "@/db/actions/agent-actions"; // Import actions
+} from "@/db/actions/agent.actions";
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
 import { AgentAvatar } from "@/components/agent-avatar"; // Added AgentAvatar
 import { FormSection } from "@/components/form-section";
+import { updateAgentTagsAction } from "@/db/actions/tag.actions";
 export interface ModelInfo {
   id: string;
   model: string;
@@ -123,8 +124,11 @@ export function CreateAgentForm({ userId, models, allTags }: CreateAgentFormProp
         // 2. Use the server action to create the agent
         const agentCreateResult = await createAgent(newAgentData);
 
-        if (!agentCreateResult.success || !agentCreateResult.data || !agentCreateResult.data[0]) {
+        if (!agentCreateResult.success) {
           throw new Error(agentCreateResult.error || "Failed to create agent");
+        }
+        if (!agentCreateResult.data || !agentCreateResult.data[0]) {
+          throw new Error("Failed to create agent");
         }
 
         const newAgent = agentCreateResult.data[0];

@@ -1,5 +1,5 @@
 import { fetchUsers, type ListUsersResponse } from './admin-actions';
-import { getAllTagsAction, getAllModels } from '@/db/actions/agent-actions'; // Import tag and model actions
+import { getAllTagsAction } from '@/db/actions/tag.actions'; // Import tag and model actions
 import UserTable from './user-table';
 import TagManagement from '@/components/admin/tag-management'; // Import Tag component
 import ModelManagement from '@/components/admin/model-management'; // Import Model component
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { getAllModelsAction } from '@/db/actions';
 // Removed auth import as server-side check is temporarily removed
 // Removed redirect import
 // import { auth } from '@/lib/auth';
@@ -57,7 +58,7 @@ export default async function AdminPage() {
   // Fetch initial data using server actions
   let initialUsersData: ListUsersResponse | null = null;
   let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
-  let initialModelsData: Awaited<ReturnType<typeof getAllModels>> | null = null; // Added for models
+  let initialModelsData: Awaited<ReturnType<typeof getAllModelsAction>> | null = null; // Added for models
   let fetchUsersError = false;
   let fetchTagsError = false;
   let fetchModelsError = false; // Added for models
@@ -66,7 +67,7 @@ export default async function AdminPage() {
   const results = await Promise.allSettled([
       fetchUsers({ limit: 25 }),
       getAllTagsAction(),
-      getAllModels() // Fetch models concurrently
+      getAllModelsAction() // Fetch models concurrently
   ]);
 
   // Process Users result

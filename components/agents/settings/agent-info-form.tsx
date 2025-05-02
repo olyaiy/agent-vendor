@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from '@/components/visibility-selector';
 import { Textarea } from '@/components/ui/textarea';
-import { updateAgentAction, uploadAgentImageAction, removeAgentImageAction } from '@/db/actions/agent-actions';
+import { updateAgentAction, uploadAgentImageAction, removeAgentImageAction } from '@/db/actions/agent.actions';
 
 interface AgentInfoFormProps {
   agent: Agent;

@@ -1,10 +1,11 @@
-import { getTopTagsAction } from "@/db/actions/agent-actions";
+
 import HeaderPadding from "@/components/header-padding";
 import { AgentSearch } from "@/components/home/agent-search";
 import { TagFilters } from "@/components/home/tag-filters";
 import { BaseModelsSection } from "@/components/home/base-models-section";
 import { AgentsGrid, AgentsLoading } from "@/components/home/agents-grid";
 import { Suspense } from "react";
+import { getTopTagsAction } from "@/db/actions/tag.actions";
 
 
 

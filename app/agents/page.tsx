@@ -1,4 +1,4 @@
-import { getTopTagsAction } from "@/db/actions/agent-actions"; // Removed getRecentAgents import
+import { getTopTagsAction } from "@/db/actions/tag.actions"; // Removed getRecentAgents import
 import HeaderPadding from "@/components/header-padding";
 import { TagFilters } from "@/components/home/tag-filters";
 import { AgentsGrid, AgentsLoading } from "@/components/home/agents-grid";
