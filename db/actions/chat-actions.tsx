@@ -102,7 +102,7 @@ export async function deleteTrailingMessages({ id }: { id: string }) {
  type RecentChatWithSlug = {
    id: string;
    title: string;
-   agentId: string;
+   agentId: string | null;
    agentSlug: string | null; // Add agentSlug
  };
  
