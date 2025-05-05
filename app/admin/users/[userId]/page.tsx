@@ -21,9 +21,7 @@ import { ArrowLeft } from 'lucide-react';
 
 // Define props type for the page component
 interface UserDetailPageProps {
-  params: {
-    userId: string;
-  };
+  params: Promise<{ userId: string }>;
 }
 
 // Helper component for displaying errors
@@ -42,8 +40,7 @@ function DataFetchError({ resourceName, error }: { resourceName: string, error?:
 
 export default async function UserDetailPage({ params }: UserDetailPageProps) {
   // Await the params object first to resolve its properties
-  const resolvedParams = await params;
-  const userId = resolvedParams.userId; // Now we can safely access userId
+  const { userId } = await params;
 
   // Fetch data concurrently using the resolved userId
   const [userDetailsResult, userCreditsResult, userAgentsResult] = await Promise.allSettled([
