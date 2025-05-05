@@ -82,8 +82,8 @@ export function PureMessageActions({
       <div
         className={
           isMobile
-            ? "flex flex-row gap-2"
-            : "flex flex-row gap-2 opacity-0 group-hover/message:opacity-100 transition-opacity"
+            ? "flex flex-row gap-2 opacity-50"
+            : "flex flex-row gap-2 opacity-0 group-hover/message:opacity-80 transition-opacity"
         }
       >
         {message.role === 'user' && setMode && !isReadonly && (
