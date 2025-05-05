@@ -11,10 +11,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { getAllModelsAction } from '@/db/actions';
-// Removed auth import as server-side check is temporarily removed
-// Removed redirect import
-// import { auth } from '@/lib/auth';
-// import { redirect } from 'next/navigation';
 
 // Define a simple component for unauthorized access
 function UnauthorizedAccess() { // This component might not be reached if auth check is only in action

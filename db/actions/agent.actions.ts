@@ -528,3 +528,42 @@ export async function updateAgentSystemPromptAction(
         return { success: false, error: (error instanceof Error) ? error.message : "An unknown error occurred." };
     }
 }
+import { AgentWithModelAndTags } from "../repository/agent.repository"; // Import the return type
+
+/**
+ * Server action to fetch agents created by a specific user ID.
+ * Requires admin privileges.
+ * @param creatorId - The ID of the user whose agents to fetch.
+ * @returns Promise with success status and the user's agent list or error.
+ */
+export async function getAgentsByCreatorIdAction(creatorId: string): Promise<ActionResult<AgentWithModelAndTags[]>> {
+    // --- Authorization Check ---
+    let session;
+    try {
+        session = await auth.api.getSession({ headers: await headers() });
+    } catch (sessionError) {
+        console.error("Error fetching session in getAgentsByCreatorIdAction:", sessionError);
+        return { success: false, error: "Failed to verify session." };
+    }
+
+    if (!session?.user) {
+        console.error("No user found in session within getAgentsByCreatorIdAction.");
+        return { success: false, error: "Authentication required." };
+    }
+
+    const isAdmin = session.user.role?.includes('admin');
+    if (!isAdmin) {
+       console.warn(`Unauthorized attempt to get agents for creator ID: ${creatorId} by user ID: ${session.user.id}`);
+       return { success: false, error: 'Unauthorized: Admin access required.' };
+    }
+    // --- End Authorization Check ---
+
+    try {
+        // Use the existing repository function
+        const agents = await selectAgentsByCreatorId(creatorId);
+        return { success: true, data: agents };
+    } catch (error) {
+        console.error(`Failed to fetch agents for creator ${creatorId}:`, error);
+        return { success: false, error: (error as Error).message };
+    }
+}

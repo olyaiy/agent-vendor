@@ -80,3 +80,48 @@ export async function chargeUser({
     };
   }
 }
+
+import { auth } from '@/lib/auth'; // Import auth for admin check
+import { headers } from 'next/headers'; // Import headers for session check
+import { getUserCredits as getUserCreditsRepo } from "@/db/repository/transaction-repository"; // Import repo function
+import { UserCredits } from "../schema/transactions"; // Import return type
+
+/**
+ * Fetches the credit balance for a specific user by ID.
+ * Requires admin privileges.
+ * @param userId - The ID of the user whose credits to fetch.
+ * @returns Promise with the user credits data or an error object.
+ */
+export async function getUserCreditsAction(userId: string): Promise<{ success: true, data: UserCredits | null } | { success: false, error: string }> {
+  // --- Authorization Check ---
+  let session;
+  try {
+      session = await auth.api.getSession({ headers: await headers() });
+  } catch (sessionError) {
+      console.error("Error fetching session in getUserCreditsAction:", sessionError);
+      return { success: false, error: "Failed to verify session." };
+  }
+
+  if (!session?.user) {
+      console.error("No user found in session within getUserCreditsAction.");
+      return { success: false, error: "Authentication required." };
+  }
+
+  const isAdmin = session.user.role?.includes('admin');
+  if (!isAdmin) {
+     console.warn(`Unauthorized attempt to get credits for user ID: ${userId} by user ID: ${session.user.id}`);
+     return { success: false, error: 'Unauthorized: Admin access required.' };
+  }
+  // --- End Authorization Check ---
+
+  try {
+    const credits = await getUserCreditsRepo(userId);
+
+    // If credits is undefined (user has no entry yet), return null data
+    return { success: true, data: credits || null };
+
+  } catch (error) {
+    console.error(`Error fetching credits for user ${userId}:`, error);
+    return { success: false, error: `Failed to fetch user credits. ${(error as Error).message}` };
+  }
+}

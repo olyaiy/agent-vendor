@@ -3,6 +3,9 @@
 import { auth } from '@/lib/auth'; // Assuming your auth instance is here
 import { User } from 'better-auth'; // Assuming User type is exported from better-auth
 import { headers } from 'next/headers'; // Import headers
+import { db } from '@/db'; // Import db instance
+import * as schema from '@/db/schema'; // Import schema
+import { eq } from 'drizzle-orm'; // Import eq operator
 // Removed BetterAuthSession import as it's not exported
 
 // Define the structure of the user data we expect from listUsers, including pagination metadata
@@ -108,3 +111,59 @@ export async function banUserAction(userId: string, reason?: string) {
   }
 }
 */
+
+/**
+ * Fetches detailed information for a specific user by ID.
+ * Requires admin privileges.
+ * @param userId - The ID of the user to fetch.
+ * @returns Promise with the user data or an error object.
+ */
+// Define the specific return type based on the schema
+type UserDetailsResult = typeof schema.user.$inferSelect;
+
+export async function getUserDetailsAction(userId: string): Promise<{ success: true, data: UserDetailsResult } | { success: false, error: string }> {
+  // --- Authorization Check ---
+  let session;
+  try {
+      session = await auth.api.getSession({ headers: await headers() });
+  } catch (sessionError) {
+      console.error("Error fetching session in getUserDetailsAction:", sessionError);
+      return { success: false, error: "Failed to verify session." };
+  }
+
+  if (!session?.user) {
+      console.error("No user found in session within getUserDetailsAction.");
+      return { success: false, error: "Authentication required." };
+  }
+
+  const isAdmin = session.user.role?.includes('admin');
+  if (!isAdmin) {
+     console.warn(`Unauthorized attempt to get details for user ID: ${userId} by user ID: ${session.user.id}`);
+     return { success: false, error: 'Unauthorized: Admin access required.' };
+  }
+  // --- End Authorization Check ---
+
+  try {
+    // Fetch user directly using Better Auth's API if possible, or fallback to DB query
+    // Assuming direct DB query for now as `getUser` might not exist in better-auth API
+    // Corrected path to user schema: schema.auth.user
+    const userResult = await db.select().from(schema.auth.user).where(eq(schema.auth.user.id, userId)).limit(1);
+
+    if (userResult.length === 0) {
+      return { success: false, error: "User not found." };
+    }
+
+    // Assert the result to the inferred select type from the schema
+    // Assuming schema.user.$inferSelect is compatible with the 'User' type from better-auth
+    // Assert the result to the inferred select type from the schema
+    // Assuming schema.user.$inferSelect is compatible with the 'User' type from better-auth
+    // The type is now directly inferred from the select using the correct schema path
+    const userData = userResult[0];
+
+    return { success: true, data: userData };
+
+  } catch (error) {
+    console.error(`Error fetching details for user ${userId}:`, error);
+    return { success: false, error: `Failed to fetch user details. ${(error as Error).message}` };
+  }
+}

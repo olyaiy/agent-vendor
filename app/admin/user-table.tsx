@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link'; // Import Link
 import {
   Table,
   TableBody,
@@ -183,6 +184,10 @@ export default function UserTable({ initialData }: UserTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                           <Link href={`/admin/users/${user.id}`}>View Details</Link>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleImpersonate(user.id)}>
                           Impersonate
