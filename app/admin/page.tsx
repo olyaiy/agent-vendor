@@ -1,4 +1,4 @@
-import { fetchUsers, type ListUsersResponse } from './admin-actions';
+import { fetchUsersWithDetails, type ListUsersWithDetailsResponse } from './admin-actions'; // Import the new action and response type
 import { getAllTagsAction } from '@/db/actions/tag.actions'; // Import tag and model actions
 import UserTable from './user-table';
 import TagManagement from '@/components/admin/tag-management'; // Import Tag component
@@ -52,7 +52,7 @@ export default async function AdminPage() {
   // If `fetchUsers` throws an 'Unauthorized' error, the LoadingError component will be shown below.
 
   // Fetch initial data using server actions
-  let initialUsersData: ListUsersResponse | null = null;
+  let initialUsersData: ListUsersWithDetailsResponse | null = null; // Use the new response type
   let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
   let initialModelsData: Awaited<ReturnType<typeof getAllModelsAction>> | null = null; // Added for models
   let fetchUsersError = false;
@@ -61,7 +61,7 @@ export default async function AdminPage() {
 
   // Use Promise.allSettled for concurrent fetching and individual error handling
   const results = await Promise.allSettled([
-      fetchUsers({ limit: 25 }),
+      fetchUsersWithDetails({ limit: 25 }), // Call the new action
       getAllTagsAction(),
       getAllModelsAction() // Fetch models concurrently
   ]);

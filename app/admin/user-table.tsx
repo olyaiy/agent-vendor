@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
+// Removed unused Badge import
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
@@ -22,9 +22,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { fetchUsers, type ListUsersResponse } from './admin-actions';
-import { type User } from 'better-auth'; // Assuming User type is exported
+// Import the new action and types
+import { fetchUsersWithDetails, type ListUsersWithDetailsResponse,  } from './admin-actions';
+// Keep User type if needed for base fields, but UserWithDetails extends it
+// import { type User } from 'better-auth';
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
+import { UserWithDetails } from '@/db/repository/user.repository';
 
 
 // Helper to get initials from name
@@ -50,19 +53,26 @@ const formatDate = (dateInput: Date | string | number | null | undefined): strin
 };
 
 // Define a type for the user data structure used in the table, including potential admin fields
-// Adjust based on the actual User type from better-auth and your schema
-type DisplayUser = User & {
-    role?: string | null;
-    banned?: boolean | null;
-    // Add other relevant fields from your user schema if needed
-};
+// Removed unused DisplayUser type alias
 
 interface UserTableProps {
-  initialData: ListUsersResponse;
+  initialData: ListUsersWithDetailsResponse; // Use the new response type
 }
 
+// Helper to format credits (similar to detail page)
+const formatCredits = (amount: string | number | null | undefined): string => {
+    if (amount === null || amount === undefined) return '$0.00';
+    try {
+        // Ensure it's treated as a string before parsing, as numeric might come as string from DB/JSON
+        return `$${parseFloat(amount.toString()).toFixed(2)}`;
+    } catch {
+        return '$0.00'; // Fallback for invalid format
+    }
+};
+
 export default function UserTable({ initialData }: UserTableProps) {
-  const [users, setUsers] = React.useState<DisplayUser[]>(initialData.users as DisplayUser[]);
+  // Use the correct type for the state
+  const [users, setUsers] = React.useState<UserWithDetails[]>(initialData.users);
   const [totalUsers, setTotalUsers] = React.useState<number>(initialData.total);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
@@ -75,8 +85,9 @@ export default function UserTable({ initialData }: UserTableProps) {
     setIsLoading(true);
     try {
       const offset = (page - 1) * limit;
-      const data = await fetchUsers({ limit, offset }); // Add sorting/filtering params later
-      setUsers(data.users as DisplayUser[]);
+      // Call the new action
+      const data = await fetchUsersWithDetails({ limit, offset }); // Add sorting/filtering params later
+      setUsers(data.users); // Use the correct type
       setTotalUsers(data.total);
       setCurrentPage(page);
     } catch (error) {
@@ -127,13 +138,7 @@ export default function UserTable({ initialData }: UserTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Avatar</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[80px]">Avatar</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Credits</TableHead><TableHead>Agents</TableHead><TableHead>Created At</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -144,8 +149,8 @@ export default function UserTable({ initialData }: UserTableProps) {
                   <TableCell><Skeleton className="h-10 w-10 rounded-full" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[150px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell> {/* Credits */}
+                  <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell> {/* Agents */}
                   <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
                 </TableRow>
@@ -161,18 +166,10 @@ export default function UserTable({ initialData }: UserTableProps) {
                   </TableCell>
                   <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                      {user.role || 'user'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.banned ? (
-                      <Badge variant="destructive">Banned</Badge>
-                    ) : (
-                      <Badge variant="outline">Active</Badge>
-                    )}
-                  </TableCell>
+                  {/* Display Credits */}
+                  <TableCell>{formatCredits(user.creditBalance)}</TableCell>
+                  {/* Display Agent Count */}
+                  <TableCell>{user.agentCount}</TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -209,6 +206,7 @@ export default function UserTable({ initialData }: UserTableProps) {
               ))
             ) : (
               <TableRow>
+                {/* Adjusted colSpan */}
                 <TableCell colSpan={7} className="h-24 text-center">
                   No users found.
                 </TableCell>

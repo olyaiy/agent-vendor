@@ -119,7 +119,7 @@ export async function banUserAction(userId: string, reason?: string) {
  * @returns Promise with the user data or an error object.
  */
 // Define the specific return type based on the schema
-type UserDetailsResult = typeof schema.user.$inferSelect;
+type UserDetailsResult = typeof schema.auth.user.$inferSelect;
 
 export async function getUserDetailsAction(userId: string): Promise<{ success: true, data: UserDetailsResult } | { success: false, error: string }> {
   // --- Authorization Check ---
@@ -165,5 +165,69 @@ export async function getUserDetailsAction(userId: string): Promise<{ success: t
   } catch (error) {
     console.error(`Error fetching details for user ${userId}:`, error);
     return { success: false, error: `Failed to fetch user details. ${(error as Error).message}` };
+  }
+}
+
+import { selectUsersWithDetails, countUsersWithDetails, type ListUsersQueryOptions, type UserWithDetails } from '@/db/repository/user.repository'; // Import new repo functions and types
+
+// Define the response structure for the new action
+export interface ListUsersWithDetailsResponse {
+  users: UserWithDetails[];
+  total: number;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Fetches a paginated list of users including their credit balance and agent count.
+ * Requires admin privileges.
+ * @param query - Options for pagination, filtering, sorting.
+ * @returns Promise with the augmented user list and pagination metadata.
+ */
+export async function fetchUsersWithDetails(
+  query?: ListUsersQueryOptions
+): Promise<ListUsersWithDetailsResponse> {
+
+  // --- Authorization Check ---
+  let session;
+  try {
+      session = await auth.api.getSession({ headers: await headers() });
+  } catch (sessionError) {
+      console.error("Error fetching session in fetchUsersWithDetails:", sessionError);
+      // Consider returning a specific error structure if preferred
+      throw new Error("Failed to verify session.");
+  }
+
+  if (!session?.user) {
+      console.error("No user found in session within fetchUsersWithDetails.");
+      throw new Error("Authentication required.");
+  }
+
+  const isAdmin = session.user.role?.includes('admin');
+  if (!isAdmin) {
+     console.warn(`Unauthorized attempt to list users with details by user ID: ${session.user.id}`);
+     throw new Error('Unauthorized: Admin access required.');
+  }
+  // --- End Authorization Check ---
+
+  try {
+    const queryOptions = query || {};
+    // Fetch users and total count concurrently
+    const [usersResult, totalResult] = await Promise.all([
+        selectUsersWithDetails(queryOptions),
+        countUsersWithDetails(queryOptions) // Pass same filters to count
+    ]);
+
+    return {
+        users: usersResult,
+        total: totalResult,
+        limit: queryOptions.limit,
+        offset: queryOptions.offset
+    };
+
+  } catch (error) {
+    console.error('Error fetching users with details:', error);
+    // Re-throw or handle as appropriate for your error strategy
+    throw new Error(`Failed to fetch users with details. ${(error as Error).message}`);
   }
 }
