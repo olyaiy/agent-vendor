@@ -161,7 +161,31 @@ export async function POST(req: Request) {
      * @param onError - Error handler for streaming failures
      */
     console.time('Text streaming');
+
+// Define a specific type for OpenAI provider options
+interface OpenAIProviderOptions {
+  openai?: {
+    reasoningEffort?: 'low' | 'medium' | 'high'; // Or just 'medium' if that's the only value
+  };
+  // Add other potential provider keys here if needed
+}
+
+    // --- Start: Conditionally set providerOptions ---
+    let providerOptions: OpenAIProviderOptions | undefined = undefined; // Use the specific type
+    if (modelId.startsWith('o3') || modelId.startsWith('o4-mini')) {
+        providerOptions = {
+            openai: {
+                reasoningEffort: 'medium',
+            },
+        };
+        console.log(`Applying reasoningEffort: 'medium' for model: ${modelId}`);
+    } else {
+        console.log(`Skipping reasoningEffort for model: ${modelId}`);
+    }
+    // --- End: Conditionally set providerOptions ---
+
     console.log('Settings being passed to streamText:', finalSettings); // DEBUG: Log FINAL settings before call
+    console.log('Provider options being passed:', providerOptions); // DEBUG: Log provider options
     const result = streamText({
       model: modelInstance,
       system: systemPrompt,
@@ -174,11 +198,8 @@ export async function POST(req: Request) {
       experimental_transform: smoothStream({ delayInMs: 20 }),
       // Spread the FINAL (potentially modified) settings into the streamText call
       ...finalSettings,
-      providerOptions: {
-        openai: {
-          reasoningEffort: 'low',
-        },
-      },
+      // Pass the dynamically determined provider options
+      providerOptions: providerOptions,
 
 
 

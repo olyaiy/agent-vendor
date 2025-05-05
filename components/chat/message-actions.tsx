@@ -37,7 +37,7 @@ export function PureMessageActions({
   const [isDeleting, setIsDeleting] = useState(false);
   const isMobile = useIsMobile();
 
-  if (isLoading) return null;
+  // if (isLoading) return null;
 
   const textFromParts = message.parts
     ?.filter((part) => part.type === 'text')
