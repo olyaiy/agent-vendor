@@ -51,10 +51,10 @@ const PurePreviewMessage = ({
     >
       <div
         className={cn(
-          'flex gap-2 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl  ',
+          'flex gap-2 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl items-end justify-end ml-auto ',
           {
             'w-full': mode === 'edit',
-            'group-data-[role=user]/message:w-fit p-4 ': mode !== 'edit',
+            'group-data-[role=user]/message:w-fit  justify-end items-end justify-self-end ml-auto': mode !== 'edit',
           },
         )}
       >
@@ -68,7 +68,7 @@ const PurePreviewMessage = ({
           </div>
         )} */}
 
-        <div className="flex flex-col gap-2  w-full group-data-[role=user]/message:items-end">
+        <div className="flex flex-col gap-2  w-full group-data-[role=user]/message:items-end ml-auto">
           {message.experimental_attachments && (
             <div
               data-testid={`message-attachments`}
