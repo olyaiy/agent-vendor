@@ -117,7 +117,7 @@ function ChatInputComponent({
   handleSubmit,
   id = "ai-input-with-search",
   placeholder = "Ask Anything...",
-  minHeight = 48,
+  minHeight: minHeightProp = 12, // Renamed prop to avoid conflict
   maxHeight = 164,
   onFileSelect,
   className,
@@ -125,8 +125,13 @@ function ChatInputComponent({
 }: ChatInputProps) {
   // Ref to store the latest value without causing re-renders for handler definitions
   const inputRef = React.useRef(input);
+
+  // Determine effective minHeight based on device type
+  const mobileMinHeight = 40; // Set a smaller min height for mobile
+  const effectiveMinHeight = isMobile ? mobileMinHeight : minHeightProp;
+
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-    minHeight,
+    minHeight: effectiveMinHeight, // Use the calculated minHeight
     maxHeight,
   });
   const [showSearch, setShowSearch] = useState(false);
