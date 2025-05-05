@@ -1,3 +1,5 @@
+'use client';
+
 import type { Message } from 'ai';
 import { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import {
@@ -14,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { toast } from 'sonner';
 import markdownToTxt from 'markdown-to-txt';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function PureMessageActions({
   message,
@@ -32,6 +35,7 @@ export function PureMessageActions({
   isReadonly?: boolean;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const isMobile = useIsMobile();
 
   if (isLoading) return null;
 
@@ -75,7 +79,13 @@ export function PureMessageActions({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex flex-row gap-2 opacity-0 group-hover/message:opacity-100 transition-opacity ">
+      <div
+        className={
+          isMobile
+            ? "flex flex-row gap-2"
+            : "flex flex-row gap-2 opacity-0 group-hover/message:opacity-100 transition-opacity"
+        }
+      >
         {message.role === 'user' && setMode && !isReadonly && (
           <Tooltip>
             <TooltipTrigger asChild className="cursor-pointer">
