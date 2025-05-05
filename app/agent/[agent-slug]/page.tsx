@@ -52,10 +52,9 @@ export default async function Page({
   const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
 
   return isMobile ? (
-    <div className="h-screen pb-12 w-screen">
-      {/* Combine agent and tags for ChatMobile */}
+    <div style={{ height: "calc(100vh - 4rem)" }} className="w-screen">
       <ChatMobile agent={agent} knowledgeItems={knowledgeItems}
-      agentModels={agentModelsForChat} chatId={chatId} />
+        agentModels={agentModelsForChat} chatId={chatId} />
     </div>
   ) : (
     <>
