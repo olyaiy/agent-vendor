@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth"; // Assuming auth setup exists
-import { headers } from "next/headers";
+import { headers } from "next/headers"; // Ensure headers is imported
 import { z } from "zod"; // Import Zod for validation
 
 // Import repository functions from the barrel file
@@ -153,6 +153,10 @@ export async function getRecentAgents(
     pageSize: number = 20
 ): Promise<ActionResult<{ agents: AgentWithTagsAndDate[]; totalCount: number }>> {
     try {
+        // Get current user session
+        const session = await auth.api.getSession({ headers: await headers() });
+        const userId = session?.user?.id; // Will be undefined if not logged in
+
         const offset = (page - 1) * pageSize;
         const limit = pageSize;
 
@@ -161,8 +165,9 @@ export async function getRecentAgents(
             return { success: false, error: "Invalid pagination parameters." };
         }
 
-        const agents = await selectRecentAgents(tagName, searchQuery, limit, offset);
-        const totalCount = await countAgents(tagName, searchQuery);
+        // Pass userId to repository functions
+        const agents = await selectRecentAgents(tagName, searchQuery, limit, offset, userId);
+        const totalCount = await countAgents(tagName, searchQuery, userId);
 
         // Server-side ranking if search query is present
         if (searchQuery && agents.length > 0) {

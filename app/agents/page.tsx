@@ -1,4 +1,4 @@
-import { getTopTagsAction } from "@/db/actions/tag.actions"; // Removed getRecentAgents import
+import { getTopTagsAction } from "@/db/actions/tag.actions";
 import HeaderPadding from "@/components/header-padding";
 import { TagFilters } from "@/components/home/tag-filters";
 import { AgentsGrid, AgentsLoading } from "@/components/home/agents-grid";
@@ -26,11 +26,6 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
   const tagsResult = await getTopTagsAction(20);
   const topTags = tagsResult.success ? tagsResult.data || [] : [];
 
-  // Fetch paginated agents based on filters and current page
-  // The AgentsGrid component now fetches its own data, so we just need to pass the parameters
-  // const agentsResult = await getRecentAgents(selectedTag, searchQuery, currentPage, PAGE_SIZE);
-  // const agents = agentsResult.success ? agentsResult.data.agents || [] : [];
-  // const totalAgentCount = agentsResult.success ? agentsResult.data.totalCount : 0;
 
 
   return (

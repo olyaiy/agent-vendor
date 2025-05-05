@@ -193,7 +193,8 @@ export async function selectRecentAgents(
     tagName?: string,
     searchQuery?: string,
     limit: number = 20, // Provide default limit
-    offset: number = 0 // Provide default offset
+    offset: number = 0, // Provide default offset
+    userId?: string // Add userId parameter
 ): Promise<RecentAgentResult[]> {
     const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
 
@@ -215,6 +216,17 @@ export async function selectRecentAgents(
         .leftJoin(tags, eq(agentTags.tagId, tags.id));
 
     const whereConditions = [];
+
+    // --- Visibility/Ownership Filter ---
+    // Agent must be public OR belong to the user (if userId is provided)
+    whereConditions.push(
+        or(
+            eq(agent.visibility, 'public'),
+            userId ? eq(agent.creatorId, userId) : sql`false` // If no userId, this part is always false
+        )
+    );
+    // --- End Visibility/Ownership Filter ---
+
     if (tagName) {
         // Subquery to find agents with the specific tag name
         const subQuery = db.select({ agentId: agentTags.agentId })
@@ -273,9 +285,19 @@ export async function selectRecentAgents(
  * @param searchQuery - Optional search query to filter agents by name, description, or tag name.
  * @returns The total count of matching agents.
  */
-export async function countAgents(tagName?: string, searchQuery?: string): Promise<number> {
+export async function countAgents(tagName?: string, searchQuery?: string, userId?: string): Promise<number> {
     // Build the filtering logic similarly to selectRecentAgents
     const whereConditions = [];
+
+    // --- Visibility/Ownership Filter ---
+    whereConditions.push(
+        or(
+            eq(agent.visibility, 'public'),
+            userId ? eq(agent.creatorId, userId) : sql`false`
+        )
+    );
+    // --- End Visibility/Ownership Filter ---
+
     if (tagName) {
         const subQuery = db.select({ agentId: agentTags.agentId })
             .from(agentTags)
