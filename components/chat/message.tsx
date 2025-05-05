@@ -54,7 +54,7 @@ const PurePreviewMessage = ({
           'flex gap-2 w-full group-data-[role=user]/message:ml-auto group-data-[role=user]/message:max-w-2xl  ',
           {
             'w-full': mode === 'edit',
-            'group-data-[role=user]/message:w-fit p-4 bg-red-500 ': mode !== 'edit',
+            'group-data-[role=user]/message:w-fit p-4 ': mode !== 'edit',
           },
         )}
       >

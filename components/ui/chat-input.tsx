@@ -117,7 +117,7 @@ function ChatInputComponent({
   handleSubmit,
   id = "ai-input-with-search",
   placeholder = "Ask Anything...",
-  minHeight: minHeightProp = 12, // Renamed prop to avoid conflict
+  minHeight: minHeightProp = 48, // Renamed prop to avoid conflict
   maxHeight = 164,
   onFileSelect,
   className,

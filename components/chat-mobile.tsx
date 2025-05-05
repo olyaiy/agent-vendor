@@ -149,6 +149,7 @@ export default function ChatMobile({
           stop={stop}
           className=" px-2 pb-6 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
           isMobile={true} 
+          minHeight={12}
           // Removed hasMessages prop
         />
       </div>
