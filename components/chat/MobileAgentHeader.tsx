@@ -76,7 +76,10 @@ export function MobileAgentHeader({
               <SheetTitle>Agent Details</SheetTitle>
             </SheetHeader>
             <AgentInfo
-              agent={agent}
+              agent={{
+                ...agent,
+                tags: agent.tags || [], // Ensure tags is always an array
+              }}
               isOwner={isOwner}
               knowledgeItems={knowledgeItems}
               models={models}
