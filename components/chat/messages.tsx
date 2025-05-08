@@ -108,7 +108,7 @@ function PureMessages({
       // status === 'streaming' &&
        isNotAtBottomDebounced && (
         <div
-          className="fixed bottom-40 right-[26%]   z-10"
+          className="absolute right-2 top-2 md:fixed md:bottom-40 md:right-[26%]   z-10"
         >
           <Button
             onClick={scrollToBottom}
