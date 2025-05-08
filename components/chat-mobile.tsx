@@ -1,16 +1,17 @@
 'use client'
-import React, { useEffect, useRef } from 'react' // Import useRef
+import React, { useEffect, useRef, useState, useCallback } from 'react' // Import useRef, useState, useCallback
 import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { MobileAgentHeader } from './chat/MobileAgentHeader'; // Use the mobile header
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
-// Removed unused ModelInfo import
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater';
+import { authClient } from '@/lib/auth-client'; // Added
+import { modelDetails, type ModelSettings } from '@/lib/models'; // Added
 
 // Define the type for models associated with the agent (same as in chat.tsx)
 interface AgentSpecificModel {
@@ -24,17 +25,39 @@ interface AgentSpecificModel {
 
 interface ChatMobileProps {
   chatId: string;
-  agent: Agent; // Removed modelName and tags (assuming tags aren't used directly here)
+  agent: Agent;
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
-  knowledgeItems: Knowledge[]; // Keep knowledge for potential future use
-  agentModels: AgentSpecificModel[]; // Use the new prop type
+  knowledgeItems: Knowledge[];
+  agentModels: AgentSpecificModel[];
 }
+
+// Helper function to get initial settings based on model ID (copied from chat.tsx)
+const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel[]): Record<string, number> => {
+  const selectedModelInfo = agentModels.find(m => m.modelId === modelId);
+  if (selectedModelInfo) {
+    const details = modelDetails[selectedModelInfo.model];
+    const defaultSettings = details?.defaultSettings;
+    if (defaultSettings) {
+      const initialSettings: Record<string, number> = {};
+      for (const key in defaultSettings) {
+        const settingKey = key as keyof ModelSettings;
+        const settingConfig = defaultSettings[settingKey];
+        if (settingConfig) {
+          initialSettings[settingKey] = settingConfig.default;
+        }
+      }
+      return initialSettings;
+    }
+  }
+  return {};
+};
+
 
 export default function ChatMobile({
   agent,
-  // knowledgeItems, // Still unused in mobile rendering logic
-  agentModels, // Use agentModels prop
+  knowledgeItems, // Now used
+  agentModels,
   chatId,
   initialMessages,
   initialTitle
@@ -42,14 +65,23 @@ export default function ChatMobile({
 
   // Find the primary model from the agentModels prop
   const primaryModel = agentModels.find(m => m.role === 'primary');
-  // Get the name of the primary model, fallback if needed
-  const primaryModelName = primaryModel ? primaryModel.model : (agentModels.length > 0 ? agentModels[0].model : '');
-  // Removed unused selectedModelId state
+  // Get the name of the primary model for useChat, fallback if needed
+  const primaryModelNameForChat = primaryModel ? primaryModel.model : (agentModels.length > 0 ? agentModels[0].model : '');
+  // Determine initial model ID for settings
+  const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
 
-  const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle); // displayTitle unused
+
+  // State for the selected model, initialized with the derived primary model ID
+  const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId);
+  // State for the dynamic chat settings, initialized with defaults
+  const [chatSettings, setChatSettings] = useState<Record<string, number>>(() =>
+    getInitialChatSettings(initialModelId, agentModels)
+  );
+
+  const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
   // Ref for the mobile scroll container
-  const mobileScrollContainerRef = useRef<HTMLDivElement>(null); // Added ref
+  const mobileScrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (agent?.id) {
@@ -57,10 +89,19 @@ export default function ChatMobile({
     }
   }, [agent?.id]);
 
-  // const { data: session } = authClient.useSession(); // session unused
-  // const user = session?.user; // user unused
-  // isOwner might not be needed if sidebar is gone, but keep for consistency for now
-  // const isOwner = agent.creatorId === user?.id; // isOwner unused
+  // Effect to update chat settings ONLY when the selected model changes *after* initial load
+  useEffect(() => {
+    setChatSettings(getInitialChatSettings(selectedModelId, agentModels));
+  }, [selectedModelId, agentModels]);
+
+  // Handler to update a specific chat setting
+  const handleSettingChange = useCallback((settingName: string, value: number) => {
+    setChatSettings(prev => ({ ...prev, [settingName]: value }));
+  }, []);
+
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const isOwner = agent.creatorId === user?.id;
 
   const {
     messages,
@@ -77,7 +118,7 @@ export default function ChatMobile({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      model: primaryModelName // Use the determined primary model name
+      model: primaryModelNameForChat // Use the determined primary model name for chat
     },
     initialMessages,
     generateId: generateUUID,
@@ -111,7 +152,17 @@ export default function ChatMobile({
     // Use flex column for the entire mobile view height
     <div className="flex flex-col h-full">
       {/* Mobile Header */}
-      <MobileAgentHeader agent={agent} hasMessages={messages.length > 0} />
+      <MobileAgentHeader
+        agent={agent}
+        hasMessages={messages.length > 0}
+        isOwner={isOwner}
+        knowledgeItems={knowledgeItems}
+        models={agentModels}
+        selectedModelId={selectedModelId}
+        setSelectedModelId={setSelectedModelId}
+        chatSettings={chatSettings}
+        onSettingChange={handleSettingChange}
+      />
 
       {/* Messages Area - takes remaining space and scrolls */}
       {/* Attach the ref here */}
