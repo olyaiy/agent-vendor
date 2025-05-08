@@ -1,8 +1,9 @@
 "use client"
 
-import { History, MoreHorizontal } from "lucide-react" // Added MoreHorizontal
+import { History, MoreHorizontal, Check, X } from "lucide-react" // Added MoreHorizontal, Check, X
 import { usePathname, useRouter } from "next/navigation" // Add this import for URL awareness
 import Link from "next/link"
+import { Input } from "@/components/ui/input" // Added Input
 import {
   SidebarMenuItem,
   SidebarMenuButton,
@@ -22,12 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog" // Added AlertDialog components
-import { getUserRecentChatsAction, deleteChatAction } from "@/db/actions/chat-actions"; // Added deleteChatAction
+import { getUserRecentChatsAction, deleteChatAction, renameChatAction } from "@/db/actions/chat-actions"; // Added deleteChatAction, renameChatAction
 import useSWR, { useSWRConfig } from 'swr'; // Added useSWRConfig
 import { motion, AnimatePresence } from 'framer-motion'; // Import AnimatePresence
 import { useState, useEffect } from 'react'; // Import useState for optimistic updates
 import { authClient } from '@/lib/auth-client'; // Import authClient
-// TODO: Consider adding a toast notification for errors, e.g., import { toast } from "sonner";
+import { toast } from "sonner"; // Assuming sonner for toasts
 
 // Interface for the data structure expected by the component's rendering logic
 interface HistoryDisplayItem {
@@ -112,7 +113,12 @@ export function HistoryMenu() {
   const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
   const [chatToDeleteId, setChatToDeleteId] = useState<string | null>(null);
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false); // To disable delete button during operation
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Rename states (for inline editing)
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [inlineEditValue, setInlineEditValue] = useState<string>('');
+  const [isSubmittingRename, setIsSubmittingRename] = useState(false);
 
   // Synchronize optimistic active URL state with actual pathname
   useEffect(() => {
@@ -143,36 +149,95 @@ export function HistoryMenu() {
     if (!chatToDeleteId) return;
     setIsDeleting(true);
 
-    // Optimistic update
+    const originalItems = historyItems ? [...historyItems] : [];
     const optimisticData = historyItems?.filter(chat => chat.id !== chatToDeleteId) ?? [];
-    mutate(SWR_KEY_RECENT_CHATS, optimisticData, false); // false means don't revalidate yet
+    mutate(SWR_KEY_RECENT_CHATS, optimisticData, false);
 
     try {
       const result = await deleteChatAction(chatToDeleteId);
       if (!result.success) {
-        // Revert optimistic update on failure and revalidate
-        // toast.error(result.message || "Failed to delete chat."); // Example toast
-        console.error("Failed to delete chat:", result.message);
-        mutate(SWR_KEY_RECENT_CHATS); // Revalidate to get actual server state
+        toast.error(result.message || "Failed to delete chat.");
+        mutate(SWR_KEY_RECENT_CHATS, originalItems, false); // Revert
       } else {
-        // On success, the optimistic update is good.
-        // SWR will revalidate based on its config (e.g., on focus, interval)
-        // Or you can explicitly revalidate if desired: mutate(SWR_KEY_RECENT_CHATS);
-        // toast.success("Chat deleted successfully."); // Example toast
+        toast.success("Chat deleted.");
       }
-    } catch (err) {
-      // Handle network or unexpected errors
-      // toast.error("An unexpected error occurred."); // Example toast
-      console.error("Error during deleteChatAction:", err);
-      mutate(SWR_KEY_RECENT_CHATS); // Revalidate
+    } catch (err: unknown) {
+      console.error("Delete chat error:", err);
+      let message = "An unexpected error occurred while deleting.";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      toast.error(message);
+      mutate(SWR_KEY_RECENT_CHATS, originalItems, false); // Revert
     } finally {
       setIsConfirmDeleteDialogOpen(false);
       setChatToDeleteId(null);
       setIsDeleting(false);
-      setHoveredItemId(null); // Ensure hover state is cleared
+      setHoveredItemId(null);
+      if (editingChatId === chatToDeleteId) { // If deleting the item being edited
+        setEditingChatId(null);
+        setInlineEditValue('');
+      }
     }
   };
 
+  const handleSaveRename = async (chatId: string, originalTitle: string) => {
+    const trimmedTitle = inlineEditValue.trim();
+
+    if (trimmedTitle === originalTitle) {
+      setEditingChatId(null);
+      setInlineEditValue('');
+      return;
+    }
+    if (!trimmedTitle) {
+      toast.error("Title cannot be empty.");
+      return;
+    }
+    if (trimmedTitle.length > 100) {
+      toast.error("Title cannot exceed 100 characters.");
+      return;
+    }
+
+    setIsSubmittingRename(true);
+    const originalItems = historyItems ? [...historyItems] : [];
+    const optimisticData = historyItems?.map(chat =>
+      chat.id === chatId ? { ...chat, title: trimmedTitle, url: chat.url } : chat // Ensure URL is preserved
+    ) ?? [];
+    mutate(SWR_KEY_RECENT_CHATS, optimisticData, false);
+
+    try {
+      const result = await renameChatAction({ chatId, newTitle: trimmedTitle });
+      if (!result.success) {
+        toast.error(result.message || "Failed to rename chat.");
+        mutate(SWR_KEY_RECENT_CHATS, originalItems, false); // Revert
+      } else {
+        toast.success("Chat renamed.");
+        // If the currently active chat was renamed, we might need to update the URL or optimisticActiveUrl
+        // For now, SWR will handle data re-sync. If URL changes based on title, more logic needed.
+        if (pathname.includes(chatId) && result.updatedChat) {
+             // Potentially update optimisticActiveUrl if title affects URL generation,
+             // but current URL structure is /agent/{agentSlug}/{chatId} so title change doesn't affect it.
+        }
+      }
+    } catch (err: unknown) {
+      console.error("Rename chat error:", err);
+      let message = "An unexpected error occurred while renaming.";
+      if (err instanceof Error) {
+        message = err.message;
+      }
+      toast.error(message);
+      mutate(SWR_KEY_RECENT_CHATS, originalItems, false); // Revert
+    } finally {
+      setEditingChatId(null);
+      setIsSubmittingRename(false);
+      setInlineEditValue('');
+    }
+  };
+
+  const handleCancelRename = () => {
+    setEditingChatId(null);
+    setInlineEditValue('');
+  };
 
   return (
     <>
@@ -235,71 +300,125 @@ export function HistoryMenu() {
                 variants={listItemVariants}
                 transition={{ delay: index * 0.05, duration: 0.35 }}
                 layout
-                onMouseEnter={() => setHoveredItemId(item.id)}
-                onMouseLeave={() => setHoveredItemId(null)}
-                className="relative group" // Added group for potential group-hover styling
+                onMouseEnter={() => { if (!editingChatId) setHoveredItemId(item.id);}}
+                onMouseLeave={() => { if (!editingChatId) setHoveredItemId(null);}}
+                className="relative group"
               >
-                <SidebarMenuSubItem className="p-0"> {/* Remove padding from SubItem if Button takes full space */}
-                  <div className="flex items-center justify-between w-full">
-                    <SidebarMenuSubButton
-                      asChild
-                      className={`flex-grow ${isActive ? 'bg-slate-800/50' : ''} ${isHovered ? 'pr-8' : ''}`} // Add paddingRight if hovered to make space for icon
-                      // Reset padding if using a full-width button inside
-                    >
-                      <a
-                        href={item.url}
-                        className={`flex items-center justify-start w-full text-left py-1.5 px-2 ${isActive ? 'text-white font-medium' : ''}`}
-                        onClick={(e) => handleHistoryItemClick(item.url, e)}
+                <SidebarMenuSubItem className="p-0">
+                  <div className="flex items-center justify-between w-full min-h-[30px]"> {/* Ensure consistent height */}
+                    {editingChatId === item.id ? (
+                      // Inline Edit View
+                      <div className="flex items-center w-full px-1.5 py-0.5"> {/* Adjusted padding for input */}
+                        <Input
+                          type="text"
+                          value={inlineEditValue}
+                          onChange={(e) => setInlineEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault(); // Prevent form submission if wrapped
+                              handleSaveRename(item.id, item.title);
+                            }
+                            if (e.key === 'Escape') handleCancelRename();
+                          }}
+                          className="text-xs h-[26px] flex-grow mr-1 focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 bg-transparent border-slate-600 hover:border-slate-500 focus:border-slate-400"
+                          autoFocus
+                          disabled={isSubmittingRename}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 p-0.5 text-green-500 hover:text-green-400 disabled:text-muted-foreground"
+                          onClick={() => handleSaveRename(item.id, item.title)}
+                          disabled={isSubmittingRename || !inlineEditValue.trim() || inlineEditValue === item.title || inlineEditValue.length > 100}
+                        >
+                          <Check size={15} />
+                          <span className="sr-only">Save</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 p-0.5 text-red-500 hover:text-red-400 disabled:text-muted-foreground"
+                          onClick={handleCancelRename}
+                          disabled={isSubmittingRename}
+                        >
+                          <X size={15} />
+                          <span className="sr-only">Cancel</span>
+                        </Button>
+                      </div>
+                    ) : (
+                      // Default Display View
+                      <SidebarMenuSubButton
+                        asChild
+                        className={`flex-grow ${isActive ? 'bg-slate-800/50' : ''} ${isHovered && !editingChatId ? 'pr-7' : ''}`} // Space for 3-dot menu
                       >
-                        <span className="text-xs truncate">{item.title}</span>
-                      </a>
-                    </SidebarMenuSubButton>
+                        <a
+                          href={item.url}
+                          className={`flex items-center justify-start w-full text-left py-1.5 px-2 ${isActive ? 'text-white font-medium' : ''}`}
+                          onClick={(e) => handleHistoryItemClick(item.url, e)}
+                        >
+                          <span className="text-xs truncate" title={item.title}>{item.title}</span>
+                        </a>
+                      </SidebarMenuSubButton>
+                    )}
 
-                    {/* 3-Dot Menu and Popover (visible on hover or if popover is open) */}
+                    {/* 3-Dot Menu (visible on hover AND not editing this item) */}
                     <AnimatePresence>
-                    {isHovered && (
+                    {isHovered && editingChatId !== item.id && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center"
-                        onClick={(e) => e.stopPropagation()} // Prevent click on parent link
+                        className="absolute right-0.5 top-1/2 -translate-y-1/2 flex items-center" // Adjusted right positioning
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <Popover onOpenChange={(open) => {
-                          // If popover is closing, ensure hover state is also cleared if mouse left
-                          if (!open && !isHovered) setHoveredItemId(null);
+                           if (!open && isHovered && editingChatId !== item.id) {
+                             // If popover closes and still hovering this item (and not editing), keep hover active
+                           } else if (!open) {
+                             setHoveredItemId(null); // Clear hover if popover closes for any other reason
+                           }
                         }}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6 p-0.5 text-muted-foreground hover:text-foreground data-[state=open]:bg-slate-700"
-                              onClick={(e) => {
-                                e.stopPropagation(); // Keep this to prevent unintended side-effects like navigation
-                                // e.preventDefault(); // REMOVED: Radix PopoverTrigger needs default behavior to open
-                              }}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <MoreHorizontal size={15} />
-                              <span className="sr-only">Chat options for {item.title}</span>
+                              <span className="sr-only">Options for {item.title}</span>
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent
-                            className="w-40 p-1"
+                            className="w-auto p-1" // Adjusted width to auto for content
                             side="right"
                             align="start"
                             sideOffset={5}
                             onClick={(e) => e.stopPropagation()} // Prevent closing history dropdown
                           >
-                            <Button
+                            <Button // Rename Button
+                              variant="ghost"
+                              className="w-full h-auto text-sm justify-start px-2 py-1.5 text-foreground hover:bg-accent focus-visible:bg-accent"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent popover from closing if it's set to close on content click
+                                setEditingChatId(item.id);
+                                setInlineEditValue(item.title);
+                                // Popover remains open as per user request
+                              }}
+                            >
+                              Rename
+                            </Button>
+                            <Button // Delete Button
                               variant="ghost"
                               className="w-full h-auto text-sm justify-start px-2 py-1.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 focus-visible:bg-red-500/10 focus-visible:text-red-400"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setChatToDeleteId(item.id);
                                 setIsConfirmDeleteDialogOpen(true);
                               }}
                             >
-                              Delete Chat
+                              Delete
                             </Button>
                           </PopoverContent>
                         </Popover>

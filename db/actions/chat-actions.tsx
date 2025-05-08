@@ -10,7 +10,8 @@ import {
   getMessageById, 
   getUserRecentChats,
   getChatTitleAndUserId, // Import the repository function
-  getUserChatsPaginated // Import the new repository function
+  getUserChatsPaginated, // Import the new repository function
+  updateChatTitle // Import the repository function for renaming
 } from '../repository/chat-repository';
 import { headers } from 'next/headers';
 import { eq } from 'drizzle-orm';
@@ -38,6 +39,12 @@ export async function generateTitleFromUserMessage({
     const cleanedTitle = title.replace(/"/g, ''); // Remove double quotes
     return cleanedTitle;
   }
+
+// Validation schema for renameChatAction
+const RenameChatSchema = z.object({
+  chatId: z.string().uuid(),
+  newTitle: z.string().trim().min(1, "Title cannot be empty.").max(100, "Title cannot exceed 100 characters."),
+});
 
 export async function deleteMessageAction(messageId: string) {
   try {
@@ -245,6 +252,70 @@ export async function deleteChatAction(chatId: string): Promise<{
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to delete chat',
+    };
+  }
+}
+
+export async function renameChatAction(params: { chatId: string; newTitle: string }): Promise<{
+  success: boolean;
+  message?: string;
+  updatedChat?: { id: string; title: string };
+}> {
+  try {
+    const validation = RenameChatSchema.safeParse(params);
+    if (!validation.success) {
+      return {
+        success: false,
+        message: validation.error.flatten().fieldErrors.newTitle?.[0] || "Invalid title.",
+      };
+    }
+
+    const { chatId, newTitle } = validation.data;
+
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    // Verify ownership before renaming
+    const [chatToRename] = await db
+      .select({ userId: chat.userId, oldTitle: chat.title })
+      .from(chat)
+      .where(eq(chat.id, chatId))
+      .limit(1);
+
+    if (!chatToRename) {
+      throw new Error('Chat not found');
+    }
+
+    if (chatToRename.userId !== session.user.id) {
+      throw new Error('Unauthorized to rename this chat');
+    }
+
+    // If title is the same, no need to update (though schema validation already checks min length)
+    if (chatToRename.oldTitle === newTitle) {
+      return {
+        success: true, // Or false with a message "Title is already set to this."
+        message: 'Title is already the same.',
+        updatedChat: { id: chatId, title: newTitle },
+      };
+    }
+
+    await updateChatTitle(chatId, newTitle);
+
+    return {
+      success: true,
+      message: 'Chat renamed successfully',
+      updatedChat: { id: chatId, title: newTitle },
+    };
+  } catch (error) {
+    console.error('Failed to rename chat:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to rename chat',
     };
   }
 }
