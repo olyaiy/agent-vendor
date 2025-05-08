@@ -98,28 +98,32 @@ export function Header() {
     <motion.nav 
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.2 }}
-      className="fixed bottom-0 left-0 w-full z-20 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-10 px-2"
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="fixed bottom-0 left-0 w-full z-20 bg-background/90 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 pb-safe"
     >
       <NavItem 
         href="/" 
         icon={<Home size={20} strokeWidth={2} />} 
         isActive={pathname === '/'} 
+        label="Home"
       />
       <NavItem 
         href={"/history"}
         icon={<MessageSquare size={20} strokeWidth={2} />}
         isActive={pathname.includes('/history')}
+        label="History"
       />
       <NavItem 
         href="/agent/create" 
         icon={<PlusCircle size={20} strokeWidth={2} />} 
         isActive={pathname === '/agent/create'} 
+        label="Create"
       />
       <NavItem 
         href="/account" 
         icon={<Settings size={20} strokeWidth={2} />} 
         isActive={pathname === '/account'} 
+        label="Settings"
       />
     </motion.nav>
   );
@@ -130,31 +134,39 @@ interface NavItemProps {
   icon: React.ReactNode;
   isActive?: boolean;
   onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  label: string;
 }
 
-function NavItem({ href, icon, isActive, onClick }: NavItemProps) {
+function NavItem({ href, icon, isActive, onClick, label }: NavItemProps) {
   return (
     <Link 
       href={href} 
       onClick={onClick}
-      className="group relative flex flex-col items-center justify-center"
+      className="group relative flex flex-col items-center justify-center py-2 px-3"
     >
       <motion.div 
         whileTap={{ scale: 0.9 }}
+        whileHover={{ y: -1 }}
         className={cn(
-          "flex size-8 items-center justify-center rounded-full transition-all duration-200",
+          "flex items-center justify-center transition-all duration-200",
           isActive 
-            ? "bg-primary text-primary-foreground shadow-sm" 
-            : "text-muted-foreground group-hover:text-foreground group-hover:bg-accent/50"
+            ? "text-primary" 
+            : "text-muted-foreground group-hover:text-foreground"
         )}
       >
         {icon}
       </motion.div>
+      <span className={cn(
+        "text-[10px] mt-1 transition-colors duration-200",
+        isActive ? "text-primary font-medium" : "text-muted-foreground group-hover:text-foreground"
+      )}>
+        {label}
+      </span>
       {isActive && (
         <motion.div 
           layoutId="activeIndicator"
-          className="absolute -bottom-3 h-1 w-5 bg-primary rounded-full"
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="absolute top-0 h-0.5 w-full bg-primary"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
         />
       )}
     </Link>
