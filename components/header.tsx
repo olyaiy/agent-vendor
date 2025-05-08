@@ -11,8 +11,8 @@ import {
   // Settings 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+// import Link from "next/link";
+// import { usePathname } from "next/navigation";
 
 export function Header() {
   const { 
@@ -20,7 +20,7 @@ export function Header() {
     isMobile,
   } = useSidebar();
   
-  const pathname = usePathname();
+  // const pathname = usePathname();
 
   const buttonVariants = {
     initial: { 
@@ -126,38 +126,38 @@ export function Header() {
   );
 }
 
-interface NavItemProps {
-  href: string;
-  icon: React.ReactNode;
-  isActive?: boolean;
-  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
-}
+// interface NavItemProps {
+//   href: string;
+//   icon: React.ReactNode;
+//   isActive?: boolean;
+//   onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+// }
 
-function NavItem({ href, icon, isActive, onClick }: NavItemProps) {
-  return (
-    <Link 
-      href={href} 
-      onClick={onClick}
-      className="group relative flex flex-col items-center justify-center"
-    >
-      <motion.div 
-        whileTap={{ scale: 0.9 }}
-        className={cn(
-          "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200",
-          isActive 
-            ? "bg-primary text-primary-foreground shadow-sm" 
-            : "text-muted-foreground group-hover:text-foreground group-hover:bg-accent/50"
-        )}
-      >
-        {icon}
-      </motion.div>
-      {isActive && (
-        <motion.div 
-          layoutId="activeIndicator"
-          className="absolute -bottom-3 h-1 w-5 bg-primary rounded-full"
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        />
-      )}
-    </Link>
-  );
-}
+// function NavItem({ href, icon, isActive, onClick }: NavItemProps) {
+//   return (
+//     <Link 
+//       href={href} 
+//       onClick={onClick}
+//       className="group relative flex flex-col items-center justify-center"
+//     >
+//       <motion.div 
+//         whileTap={{ scale: 0.9 }}
+//         className={cn(
+//           "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200",
+//           isActive 
+//             ? "bg-primary text-primary-foreground shadow-sm" 
+//             : "text-muted-foreground group-hover:text-foreground group-hover:bg-accent/50"
+//         )}
+//       >
+//         {icon}
+//       </motion.div>
+//       {isActive && (
+//         <motion.div 
+//           layoutId="activeIndicator"
+//           className="absolute -bottom-3 h-1 w-5 bg-primary rounded-full"
+//           transition={{ type: "spring", stiffness: 500, damping: 30 }}
+//         />
+//       )}
+//     </Link>
+//   );
+// }
