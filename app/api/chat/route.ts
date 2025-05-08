@@ -168,6 +168,8 @@ interface OpenAIProviderOptions {
     reasoningEffort?: 'low' | 'medium' | 'high'; // Or just 'medium' if that's the only value
   };
   // Add other potential provider keys here if needed
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Add index signature to match LanguageModelV1ProviderMetadata
 }
 
     // --- Start: Conditionally set providerOptions ---

@@ -99,7 +99,7 @@ export function Header() {
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.2 }}
-      className="fixed bottom-0 left-0 w-full z-20 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2"
+      className="fixed bottom-0 left-0 w-full z-20 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-10 px-2"
     >
       <NavItem 
         href="/" 
