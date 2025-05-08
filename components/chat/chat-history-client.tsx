@@ -56,11 +56,11 @@ export function ChatHistoryClient({
   // States for inline editing and deleting
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [inlineEditValue, setInlineEditValue] = useState<string>('');
-  const [isSubmittingRename, setIsSubmittingRename] = useState<false>(false);
+  const [isSubmittingRename, setIsSubmittingRename] = useState<boolean>(false);
   const [chatToDeleteId, setChatToDeleteId] = useState<string | null>(null);
   const [chatToDeleteTitle, setChatToDeleteTitle] = useState<string>(''); // For dialog
   const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState<false>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   
   // Ref to store original chats before optimistic update for potential revert
   const originalChatsRef = useRef<ChatHistoryItem[]>(initialChats);
