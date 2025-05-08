@@ -71,8 +71,8 @@ export function MobileAgentHeader({
               <MoreVertical className="h-5 w-5" />
             </button>
           </SheetTrigger>
-          <SheetContent className="w-[90vw] sm:w-[400px] p-0 flex flex-col">
-            <SheetHeader>
+          <SheetContent className=" sm:w-[400px] p-0 flex flex-col gap-0">
+            <SheetHeader className=" px-4 py-2 m-0">
               <SheetTitle>Agent Details</SheetTitle>
             </SheetHeader>
             <AgentInfo
