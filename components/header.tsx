@@ -5,10 +5,10 @@ import { cn } from "@/lib/utils";
 import { 
   Plus, 
   SearchIcon, 
-  Home, 
-  MessageSquare, 
-  PlusCircle, 
-  Settings 
+  // Home, 
+  // MessageSquare, 
+  // PlusCircle, 
+  // Settings 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
