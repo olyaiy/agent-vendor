@@ -95,33 +95,34 @@ export function Header() {
       </AnimatePresence>
     </div>
   ) : (
-    <motion.nav 
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.2 }}
-      className="fixed bottom-0 left-0 w-full z-20 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-10 px-2"
-    >
-      <NavItem 
-        href="/" 
-        icon={<Home size={20} strokeWidth={2} />} 
-        isActive={pathname === '/'} 
-      />
-      <NavItem 
-        href={"/history"}
-        icon={<MessageSquare size={20} strokeWidth={2} />}
-        isActive={pathname.includes('/history')}
-      />
-      <NavItem 
-        href="/agent/create" 
-        icon={<PlusCircle size={20} strokeWidth={2} />} 
-        isActive={pathname === '/agent/create'} 
-      />
-      <NavItem 
-        href="/account" 
-        icon={<Settings size={20} strokeWidth={2} />} 
-        isActive={pathname === '/account'} 
-      />
-    </motion.nav>
+    <></>
+    // <motion.nav 
+    //   initial={{ y: 20, opacity: 0 }}
+    //   animate={{ y: 0, opacity: 1 }}
+    //   transition={{ duration: 0.2 }}
+    //   className="fixed bottom-0 left-0 w-full z-20 bg-background/80 backdrop-blur-md border-t border-border flex justify-around items-center h-10 px-2"
+    // >
+    //   <NavItem 
+    //     href="/" 
+    //     icon={<Home size={20} strokeWidth={2} />} 
+    //     isActive={pathname === '/'} 
+    //   />
+    //   <NavItem 
+    //     href={"/history"}
+    //     icon={<MessageSquare size={20} strokeWidth={2} />}
+    //     isActive={pathname.includes('/history')}
+    //   />
+    //   <NavItem 
+    //     href="/agent/create" 
+    //     icon={<PlusCircle size={20} strokeWidth={2} />} 
+    //     isActive={pathname === '/agent/create'} 
+    //   />
+    //   <NavItem 
+    //     href="/account" 
+    //     icon={<Settings size={20} strokeWidth={2} />} 
+    //     isActive={pathname === '/account'} 
+    //   />
+    // </motion.nav>
   );
 }
 
