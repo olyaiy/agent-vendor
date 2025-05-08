@@ -17,6 +17,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../index';
 import { message, chat, type Chat } from '../schema/chat'; // Import Chat type
 import { z } from 'zod'; // Import zod for input validation
+import { and } from 'drizzle-orm';
 
 export async function generateTitleFromUserMessage({
     message,
@@ -200,6 +201,50 @@ export async function getUserChatsAction(params: {
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to retrieve chat history',
+    };
+  }
+}
+
+export async function deleteChatAction(chatId: string): Promise<{
+  success: boolean;
+  message?: string;
+}> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers()
+    });
+
+    if (!session?.user?.id) {
+      throw new Error('Unauthorized');
+    }
+
+    // Verify ownership before deleting
+    const [chatToDelete] = await db
+      .select({ userId: chat.userId })
+      .from(chat)
+      .where(eq(chat.id, chatId))
+      .limit(1);
+
+    if (!chatToDelete) {
+      throw new Error('Chat not found');
+    }
+
+    if (chatToDelete.userId !== session.user.id) {
+      throw new Error('Unauthorized to delete this chat');
+    }
+
+    // Delete the chat. Associated messages will be deleted by cascade rule in DB schema.
+    await db.delete(chat).where(and(eq(chat.id, chatId), eq(chat.userId, session.user.id)));
+
+    return {
+      success: true,
+      message: 'Chat deleted successfully',
+    };
+  } catch (error) {
+    console.error('Failed to delete chat:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to delete chat',
     };
   }
 }
