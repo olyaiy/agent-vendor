@@ -273,6 +273,7 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
               placeholder="Search models..."
               value={searchQuery}
               onValueChange={setSearchQuery}
+              autoFocus={false}
             />
 
             {/* Wrap CommandList in a single TooltipProvider */}
