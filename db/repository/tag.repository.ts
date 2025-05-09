@@ -1,5 +1,5 @@
 
-import { eq, asc, and, sql } from 'drizzle-orm';
+import { eq, asc, sql } from 'drizzle-orm';
 import { agent, agentTags, Tag, tags } from '../schema/agent';
 import { db } from '..';
 
@@ -12,6 +12,7 @@ export type AgentInfoForTag = {
     id: string;
     name: string;
     thumbnailUrl: string | null;
+    avatarUrl: string | null; 
     slug: string;
 };
 
@@ -138,6 +139,7 @@ export async function selectAgentsByTagId(tagId: string, limit: number = 10): Pr
             id: agent.id,
             name: agent.name,
             thumbnailUrl: agent.thumbnailUrl,
+            avatarUrl: agent.avatarUrl,
             slug: sql<string>`coalesce(${agent.slug}, '')`.as('slug')
         })
         .from(agent)

@@ -25,6 +25,7 @@ type BaseModelAgent = {
   id: string;
   name: string;
   thumbnailUrl: string | null;
+  avatarUrl: string | null;
   slug: string; // Added slug property
 };
 
@@ -55,10 +56,10 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
         // MODIFIED: Remove fixed width/shrink for grid, apply only for sm+
         <Link href={`/agent/${agent.slug}`} key={agent.id} className={`flex flex-col items-center group sm:flex-shrink-0 sm:w-24 ${index >= 6 ? 'hidden sm:block' : ''}`}>
           {/* MODIFIED: Adjust image container width for grid, apply fixed width only for sm+ */}
-          <div className="w-full sm:w-24 h-24 relative rounded-md overflow-hidden border group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800">
-            {agent.thumbnailUrl ? (
+          <div className="w-full sm:w-24 h-24 relative rounded-md overflow-hidden border transition-all duration-100 group-hover:border-orange-500 group-hover:border">
+            {(agent.avatarUrl || agent.thumbnailUrl) ? (
               <Image
-                src={agent.thumbnailUrl}
+                src={agent.avatarUrl || agent.thumbnailUrl!}
                 alt={agent.name}
                 fill // Use fill to cover the container
                 sizes="(max-width: 640px) 30vw, 96px" // Adjust sizes for grid vs fixed width

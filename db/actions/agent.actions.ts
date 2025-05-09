@@ -201,6 +201,7 @@ export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{
     id: string;
     name: string;
     thumbnailUrl: string | null;
+    avatarUrl: string | null; // Added this line
     slug: string;
 }>>> {
     // Consider making this ID an environment variable or constant
