@@ -20,6 +20,7 @@ import { MessageActions } from './message-actions';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { MessageEditor } from '../message-editor';
+// Removed unused Paperclip import
 
 interface UIMessageWithUI extends UIMessage {
   ui?: React.ReactNode;
@@ -69,17 +70,52 @@ const PurePreviewMessage = ({
         )} */}
 
         <div className="flex flex-col gap-2  w-full group-data-[role=user]/message:items-end ml-auto">
-          {message.experimental_attachments && (
+          {/* Display attachments for user messages */}
+          {message.role === 'user' && message.experimental_attachments && message.experimental_attachments.length > 0 && (
             <div
-              data-testid={`message-attachments`}
-              className="flex flex-row justify-end gap-2"
+              data-testid={`message-attachments-${message.id}`}
+              className="flex flex-wrap gap-2 mb-1 justify-end" // Added mb-1 for slight spacing if text follows
             >
-              {/* {message.experimental_attachments.map((attachment) => (
-                <PreviewAttachment
-                  key={attachment.url}
-                  attachment={attachment}
-                />
-              ))} */}
+              {message.experimental_attachments.map((attachment, index) => {
+                if (attachment.contentType?.startsWith('image/')) {
+                  return (
+                    <a
+                      key={`${message.id}-attachment-${index}`}
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block border border-border rounded-md overflow-hidden hover:opacity-80 transition-opacity bg-muted/30"
+                      title={attachment.name || 'View image'}
+                    >
+                      <Image // Using next/image for optimization if applicable, otherwise regular <img>
+                        src={attachment.url}
+                        alt={attachment.name || 'Chat attachment'}
+                        width={150} // Provide width and height for next/image
+                        height={150}
+                        className="max-w-[150px] h-auto max-h-[150px] object-contain" // Style for responsiveness
+                        unoptimized={attachment.url.startsWith('blob:')} // Avoid optimization for blob URLs
+                      />
+                    </a>
+                  );
+                }
+                // Fallback for non-image types (optional)
+                // else if (attachment.url) {
+                //   return (
+                //     <a
+                //       key={`${message.id}-attachment-${index}`}
+                //       href={attachment.url}
+                //       target="_blank"
+                //       rel="noopener noreferrer"
+                //       className="text-sm text-primary hover:underline p-2 border rounded-md bg-muted/30 flex items-center gap-1"
+                //       title={attachment.name || 'View attachment'}
+                //     >
+                //       <Paperclip className="w-3 h-3" />
+                //       <span className="truncate max-w-[120px]">{attachment.name || new URL(attachment.url).pathname.split('/').pop() || 'Attachment'}</span>
+                //     </a>
+                //   );
+                // }
+                return null;
+              })}
             </div>
           )}
 
@@ -213,6 +249,8 @@ export const PreviewMessage = memo(
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.message.id !== nextProps.message.id) return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
+    // Add comparison for experimental_attachments
+    if (!equal(prevProps.message.experimental_attachments, nextProps.message.experimental_attachments)) return false;
 
 
     return true;

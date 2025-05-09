@@ -18,8 +18,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '*.r2.dev', // Changed to wildcard to cover all R2 subdomains
+        hostname: '*.r2.dev',
         pathname: '/agents/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-65f16628f63c409e9a517caa9b0c799a.r2.dev',
+        pathname: '/chat-attachments/**',
       },
       // Add other hostnames here if needed, e.g., for user avatars from Google
       {
