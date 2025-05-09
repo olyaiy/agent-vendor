@@ -46,7 +46,10 @@ export async function uploadChatAttachmentAction(
 
     try {
         const session = await auth.api.getSession({ headers: await headers() });
+        console.log("session", session);
+        console.log("userId", userId);
         if (!session?.user || session.user.id !== userId) {
+            console.error("Unauthorized user attempted to upload chat attachment.");
             return { success: false, error: "Unauthorized." };
         }
 

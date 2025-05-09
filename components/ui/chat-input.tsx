@@ -1,11 +1,41 @@
 "use client";
 
-import { Globe, Paperclip, Send, StopCircle } from "lucide-react";
-import React, { useState, useEffect, memo, useCallback } from "react"; // Import React, useCallback and memo
+import { Globe, Paperclip, Send, StopCircle, Loader2, CheckCircle2, XCircle, X } from "lucide-react";
+import React, { useState, useEffect, memo, useCallback } from "react"; // Import React, useCallback, memo
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
-import { UseChatHelpers } from "@ai-sdk/react";
+import { UseChatHelpers } from "@ai-sdk/react"; // Import ChatRequestOptions
+import { toast } from "sonner";
+
+
+import { uploadChatAttachmentAction } from "@/db/actions/chat-attachment.actions";
+import { ChatRequestOptions } from "@ai-sdk/ui-utils";
+
+
+export const CHAT_ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+// Interface for pending attachments
+interface PendingAttachment {
+  id: string;
+  file: File;
+  previewUrl: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  errorMessage?: string;
+  uploadedUrl?: string;
+  uploadedName?: string;
+  uploadedContentType?: string;
+}
+
+interface AttachmentPayload { // For chatRequestOptions
+  url: string;
+  name: string;
+  contentType: string;
+}
+
+// Add JSONValue type definition if it doesn't exist elsewhere in the codebase
+type JSONValue = string | number | boolean | null | { [key: string]: JSONValue } | JSONValue[];
 
 interface ChatInputProps {
   input: UseChatHelpers['input'];
@@ -14,12 +44,13 @@ interface ChatInputProps {
   stop: () => void;
   handleSubmit: UseChatHelpers['handleSubmit'];
   agentSlug: string;
-  chatId: string; 
+  chatId: string;
+  userId: string; // Added userId prop
   id?: string;
   placeholder?: string;
   minHeight?: number;
   maxHeight?: number;
-  onFileSelect?: (file: File) => void;
+  // onFileSelect?: (file: File) => void; // Removed as it's unused
   className?: string;
   isMobile?: boolean;
 }
@@ -28,16 +59,19 @@ interface ChatInputProps {
 
 interface FileButtonProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  allowedFileTypes: string;
 }
 
-const MemoizedFileButton = memo(({ onChange }: FileButtonProps) => (
-  <label 
+const MemoizedFileButton = memo(({ onChange, allowedFileTypes }: FileButtonProps) => (
+  <label
     className="cursor-pointer rounded-full p-2 hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
   >
-    <input 
-      type="file" 
-      className="hidden" 
+    <input
+      type="file"
+      className="hidden"
       onChange={onChange} // Use passed handler
+      multiple // Allow multiple files
+      accept={allowedFileTypes} // Set accepted file types
     />
     <Paperclip className="w-4 h-4 text-black/60 dark:text-white/60" />
   </label>
@@ -110,7 +144,8 @@ MemoizedSendStopButton.displayName = 'MemoizedSendStopButton'; // Add display na
 function ChatInputComponent({
   chatId,
   agentSlug,
-  input,  
+  userId, // Destructure userId
+  input,
   setInput,
   status,
   stop,
@@ -119,10 +154,14 @@ function ChatInputComponent({
   placeholder = "Ask Anything...",
   minHeight: minHeightProp = 48, // Renamed prop to avoid conflict
   maxHeight = 164,
-  onFileSelect,
+  // onFileSelect, // Removed
   className,
   isMobile
 }: ChatInputProps) {
+  // const fileInputRef = useRef<HTMLInputElement>(null); // Removed as unused
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  // const [isUploadingAny, setIsUploadingAny] = useState(false); // Removed as unused
+
   // Ref to store the latest value without causing re-renders for handler definitions
   const inputRef = React.useRef(input);
 
@@ -148,35 +187,158 @@ function ChatInputComponent({
     }
   }, [textareaRef]); // Added textareaRef dependency
 
-  const handleInternalSubmit = useCallback(() => {
+  const handleAttachmentFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+    const files = Array.from(event.target.files);
 
-    window.history.replaceState({}, '', `/agent/${agentSlug}/${chatId}`);
+    if (files.length === 0) return;
 
-    // Read value from ref inside the handler
-    if (inputRef.current.trim()) {
-      handleSubmit();
-      // Maintain focus after submission
+    if (pendingAttachments.length + files.length > 5) {
+      toast.error("You can attach a maximum of 5 files.");
+      if (event.target) event.target.value = ''; // Reset file input
+      return;
+    }
+
+    // Temporarily set isUploadingAny to true. This might be refined later if needed for global UI state.
+    // setIsUploadingAny(true); // Commented out as per thought process, individual loaders are used.
+
+    const newAttachments: PendingAttachment[] = []; // Changed let to const
+
+    for (const file of files) {
+      if (file.size > CHAT_ATTACHMENT_MAX_FILE_SIZE) {
+        toast.error(`File "${file.name}" is too large. Max size is ${CHAT_ATTACHMENT_MAX_FILE_SIZE / 1024 / 1024}MB.`);
+        continue;
+      }
+      // Ensure CHAT_ATTACHMENT_ALLOWED_FILE_TYPES is an array of strings (MIME types)
+      if (!CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.includes(file.type)) {
+        toast.error(`File type for "${file.name}" is not allowed. Allowed types: ${CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(', ')}`);
+        continue;
+      }
+
+      const attachmentId = crypto.randomUUID();
+      const previewUrl = URL.createObjectURL(file);
+      const newAttachment: PendingAttachment = {
+        id: attachmentId,
+        file,
+        previewUrl,
+        status: 'pending',
+      };
+      newAttachments.push(newAttachment);
+    }
+
+    if (newAttachments.length > 0) {
+      setPendingAttachments(prev => [...prev, ...newAttachments]);
+    }
+    
+    if (event.target) event.target.value = ''; // Reset file input value
+
+    for (const att of newAttachments) {
+      setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'uploading' } : pa));
+      
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', att.file);
+
+      try {
+        console.log("userId", userId);
+        // Ensure props.userId is correctly passed and used by the action
+        const result = await uploadChatAttachmentAction(uploadFormData, userId);
+
+        if (result.success && result.data) {
+          setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? {
+            ...pa,
+            status: 'success',
+            uploadedUrl: result.data.url,
+            uploadedName: result.data.name,
+            uploadedContentType: result.data.contentType,
+          } : pa));
+        } else {
+          const errorMessage = !result.success && 'error' in result ? result.error : 'Upload failed';
+          setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { 
+            ...pa, 
+            status: 'error', 
+            errorMessage: errorMessage 
+          } : pa));
+          toast.error(`Failed to upload ${att.file.name}: ${errorMessage}`);
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'error', errorMessage: 'Network or server error during upload' } : pa));
+        toast.error(`Error uploading ${att.file.name}.`);
+      }
+    }
+    // setIsUploadingAny(false); // Paired with the setIsUploadingAny(true) above.
+  }, [pendingAttachments, userId, chatId]); // Dependencies: pendingAttachments, userId, chatId (chatId might be needed by action or context)
+
+  const handleRemoveAttachment = useCallback((attachmentId: string) => {
+    setPendingAttachments(prev => {
+      const attachmentToRemove = prev.find(att => att.id === attachmentId);
+      if (attachmentToRemove && attachmentToRemove.previewUrl && attachmentToRemove.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(attachmentToRemove.previewUrl);
+      }
+      return prev.filter(att => att.id !== attachmentId);
+    });
+  }, []); // No explicit dependencies, relies on setPendingAttachments.
+
+  const handleInternalSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
+
+    const attachmentsToSend: AttachmentPayload[] = pendingAttachments
+      .filter(att => att.status === 'success' && att.uploadedUrl)
+      .map(att => ({
+        url: att.uploadedUrl!,
+        name: att.uploadedName || att.file.name,
+        contentType: att.uploadedContentType || att.file.type,
+      }));
+
+    if (inputRef.current.trim() || attachmentsToSend.length > 0) {
+      window.history.replaceState({}, '', `/agent/${agentSlug}/${chatId}`);
+      
+      const chatRequestOptions: ChatRequestOptions = {}; // Use imported ChatRequestOptions
+      if (attachmentsToSend.length > 0) {
+        chatRequestOptions.data = { 
+          experimental_attachments: attachmentsToSend as unknown as JSONValue
+        };
+      }
+      
+      handleSubmit(
+        e as React.FormEvent<HTMLFormElement> | undefined,
+        attachmentsToSend.length > 0 ? chatRequestOptions : undefined
+      );
+      
+      setPendingAttachments(prev => { // Clear successfully submitted attachments and revoke their URLs
+        prev.forEach(att => {
+          if (att.previewUrl && att.previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(att.previewUrl);
+          }
+        });
+        return [];
+      });
+      // input is managed by useChat hook, setInput(input) is not needed here.
+      
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
         }
       }, 0);
     }
-  // Remove 'value' from dependencies, use stable 'onSubmit' and 'textareaRef'
-  }, [handleSubmit, textareaRef, agentSlug, chatId]);
+  }, [handleSubmit, textareaRef, agentSlug, chatId, pendingAttachments, inputRef, setPendingAttachments]);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onFileSelect?.(file);
-    }
-  }, [onFileSelect]); // Added dependency
+  // Cleanup object URLs on unmount or when pendingAttachments change
+  useEffect(() => {
+    return () => {
+      pendingAttachments.forEach(att => {
+        if (att.previewUrl && att.previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(att.previewUrl);
+        }
+      });
+    };
+  }, [pendingAttachments]);
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 
   
-  // Ensure canSubmit is always boolean using double negation (!!)
-  const canSubmit = status === 'ready' && !!input.trim();
+  // Ensure canSubmit is always boolean
+  const canSubmit = status === 'ready' && (!!input.trim() || pendingAttachments.some(att => att.status === 'success'));
 
   // Memoize the onClick handler for the Send/Stop button
   const handleSendStopClick = useCallback(() => {
@@ -227,11 +389,59 @@ function ChatInputComponent({
               }, [setInput, adjustHeight])} // Added dependencies
             />
           </div>
+          
+          {/* UI for Pending Attachments */}
+          {pendingAttachments.length > 0 && (
+            <div className="p-2 border-t border-black/10 dark:border-white/10">
+              <div className="flex flex-wrap gap-2">
+                {pendingAttachments.map((att) => (
+                  <div key={att.id} className="relative group w-20 h-20 border rounded-md overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    {att.previewUrl.startsWith('blob:') && (att.file.type.startsWith('image/')) ? (
+                      <img src={att.previewUrl} alt={att.file.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-1">
+                        <Paperclip className="w-6 h-6 text-gray-500 dark:text-gray-400 mb-1 flex-shrink-0" />
+                        <span className="text-xs text-center text-gray-700 dark:text-gray-300 truncate w-full px-1" title={att.file.name}>
+                          {att.file.name}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {att.status === 'uploading' && <Loader2 className="w-6 h-6 text-white animate-spin" />}
+                      {att.status === 'success' && <CheckCircle2 className="w-6 h-6 text-green-400" />}
+                      {att.status === 'error' && <XCircle className="w-6 h-6 text-red-400" />}
+                    </div>
+                    {att.status !== 'uploading' && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAttachment(att.id)}
+                        className="absolute top-0.5 right-0.5 bg-black/70 hover:bg-black/90 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity z-10"
+                        aria-label="Remove attachment"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                    {att.status === 'error' && att.errorMessage && (
+                      <div
+                        className="absolute bottom-0 left-0 right-0 bg-red-600/90 text-white text-[10px] p-0.5 text-center truncate"
+                        title={att.errorMessage}
+                      >
+                        {att.errorMessage.length > 20 ? att.errorMessage.substring(0,18) + '...' : att.errorMessage}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               {/* Use Memoized File Button */}
-              <MemoizedFileButton onChange={handleFileChange} /> 
+              <MemoizedFileButton
+                onChange={handleAttachmentFileChange}
+                allowedFileTypes={CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(',')}
+              />
               
               {/* Use Memoized Search Button */}
               <MemoizedSearchButton 
@@ -262,7 +472,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.handleSubmit === nextProps.handleSubmit &&
     prevProps.setInput === nextProps.setInput &&
     prevProps.stop === nextProps.stop &&
-    prevProps.onFileSelect === nextProps.onFileSelect &&
+    // prevProps.onFileSelect === nextProps.onFileSelect && // Removed
     prevProps.id === nextProps.id &&
     prevProps.placeholder === nextProps.placeholder &&
     prevProps.minHeight === nextProps.minHeight &&

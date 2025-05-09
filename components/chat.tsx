@@ -198,6 +198,7 @@ export default function Chat({
               isArtifactVisible={false}
             />
             <ChatInput 
+              userId={user?.id || ''}
               chatId={chatId}
               agentSlug={agentSlug}
               input={input}
@@ -213,6 +214,7 @@ export default function Chat({
             <Greeting />
             
             <ChatInput 
+              userId={user?.id || ''}
               agentSlug={agentSlug}
               chatId={chatId}
               input={input}
