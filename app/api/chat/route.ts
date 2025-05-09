@@ -10,6 +10,17 @@ import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/
 import { chargeUser } from '@/db/actions/transaction-actions';
 import { toolRegistry } from '@/tools/registry'; // Import the tool registry
 
+// Define types for attachments to avoid 'any'
+interface Attachment {
+  url: string;
+  name?: string;
+  contentType?: string;
+}
+
+interface UserMessageWithAttachments extends Message {
+  experimental_attachments?: Attachment[];
+}
+
 /**
  * Handles POST requests for chat conversations
  * @param req - Request object containing chat data
@@ -48,7 +59,7 @@ export async function POST(req: Request) {
     const {
       chatId,
       model: modelId,
-      messages,
+      messages, // This will be an array of messages, potentially UserMessageWithAttachments
       systemPrompt,
       agentId,
       // Destructure potential settings from the body
@@ -66,7 +77,7 @@ export async function POST(req: Request) {
      * Extracts the most recent user message for processing
      * @throws Error if no user message found
      */
-    const userMessage = getMostRecentUserMessage(messages);
+    const userMessage = getMostRecentUserMessage(messages) as UserMessageWithAttachments | undefined; // Cast here or when used
     if (!userMessage) {
       return new Response('No user message found', { status: 400 });
     }
@@ -90,7 +101,7 @@ export async function POST(req: Request) {
           console.time('Background title generation and update');
           // 2. Generate the actual title
           const generatedTitle = await generateTitleFromUserMessage({
-            message: userMessage as Message, // Cast userMessage
+            message: userMessage as Message, // Cast userMessage for this specific function
           });
 
           // 3. Update the chat with the generated title
@@ -191,7 +202,7 @@ interface OpenAIProviderOptions {
     const result = streamText({
       model: modelInstance,
       system: systemPrompt,
-      messages: messages as Message[], // Cast messages to Message[]
+      messages: messages as Message[], // Cast messages to Message[] for streamText
       // Tool Call Set Up
       tools: toolRegistry,
       maxSteps: 5,
@@ -224,7 +235,7 @@ interface OpenAIProviderOptions {
 
 
         // --- Start: Save messages --- //
-        if (session.user?.id) {
+        if (session.user?.id && userMessage) { // Ensure userMessage is not undefined
           try {
 
             // Get Assistant Message ID using response.messages (ResponseMessage[])
@@ -239,29 +250,30 @@ interface OpenAIProviderOptions {
 
             // Append Assistant Message using response.messages (ResponseMessage[])
             const [, assistantMessage] = appendResponseMessages({
-              messages: [userMessage as Message], // Cast userMessage
+              messages: [userMessage as Message], // Cast userMessage for this specific function
               responseMessages: response.messages, // Pass ResponseMessage[]
             });
 
             // Save user message first in onFinish
+            const userMessageForDb = {
+              id: userMessage.id,
+              chatId: chatId,
+              role: 'user' as const,
+              parts: userMessage.parts,
+              attachments: (userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
+                url: att.url,
+                name: att.name || 'attachment', 
+                contentType: att.contentType || 'application/octet-stream',
+              })) ?? [],
+              createdAt: new Date(), // Or use userMessage timestamp if available
+              model_id: null // User messages don't have a model_id
+            };
+            
             await saveMessages({
-              messages: [
-                {
-                  id: userMessage.id,
-                  chatId: chatId,
-                  role: 'user',
-                  parts: userMessage.parts,
-                  attachments: [], // Assuming user messages don't have attachments here
-                  createdAt: new Date(), // Or use userMessage timestamp if available
-                  model_id: null // User messages don't have a model_id
-                },
-              ],
+              messages: [userMessageForDb],
             });
 
             // Then save assistant message
-            // Find the DB model ID corresponding to the string modelId used in the request
-            // This requires fetching models from DB or having a map available
-            // For now, using a placeholder or null. Replace with actual lookup logic.
             const assistantModelDbId = null; // Placeholder: Replace with actual DB ID lookup
 
             await saveMessages({
@@ -272,7 +284,7 @@ interface OpenAIProviderOptions {
                   role: assistantMessage.role,
                   parts: assistantMessage.parts,
                   attachments:
-                    assistantMessage.experimental_attachments ?? [],
+                    (assistantMessage as UserMessageWithAttachments).experimental_attachments ?? [],
                   createdAt: new Date(),
                   model_id: assistantModelDbId // Use the looked-up DB ID
                 },
@@ -324,20 +336,23 @@ interface OpenAIProviderOptions {
          */
         console.error('Error streaming text:', error); // Log the error object
         // Attempt to save user message even on error
-        if (session?.user?.id) { // Check session exists before accessing user
+        if (session?.user?.id && userMessage) { // Check session and userMessage exist
           try {
+            const userMessageForDbOnError = {
+              id: userMessage.id,
+              chatId: chatId,
+              role: 'user' as const,
+              parts: userMessage.parts,
+              attachments: (userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
+                url: att.url,
+                name: att.name || 'attachment',
+                contentType: att.contentType || 'application/octet-stream',
+              })) ?? [],
+              createdAt: new Date(),
+              model_id: null
+            };
             await saveMessages({
-              messages: [
-                {
-                  id: userMessage.id,
-                  chatId: chatId,
-                  role: 'user',
-                  parts: userMessage.parts,
-                  attachments: [],
-                  createdAt: new Date(),
-                  model_id: null // User messages don't have a model_id
-                },
-              ],
+              messages: [userMessageForDbOnError],
             });
 
           } catch (saveError) {
@@ -362,4 +377,4 @@ interface OpenAIProviderOptions {
   } finally {
     console.timeEnd('Total request time');
   }
-} // Added missing closing brace for POST function
+}
