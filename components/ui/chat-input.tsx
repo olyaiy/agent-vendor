@@ -404,7 +404,10 @@ function ChatInputComponent({
                         </span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className={cn(
+                        "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
+                        att.status === 'uploading' ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    )}>
                       {att.status === 'uploading' && <Loader2 className="w-6 h-6 text-white animate-spin" />}
                       {att.status === 'success' && <CheckCircle2 className="w-6 h-6 text-green-400" />}
                       {att.status === 'error' && <XCircle className="w-6 h-6 text-red-400" />}
