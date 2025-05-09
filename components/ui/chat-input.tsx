@@ -157,105 +157,68 @@ function ChatInputComponent({
   className,
   isMobile
 }: ChatInputProps) {
-  // const fileInputRef = useRef<HTMLInputElement>(null); // Removed as unused
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
-  // const [isUploadingAny, setIsUploadingAny] = useState(false); // Removed as unused
-
-  // Ref to store the latest value without causing re-renders for handler definitions
   const inputRef = React.useRef(input);
-
-  // Determine effective minHeight based on device type
-  const mobileMinHeight = 40; // Set a smaller min height for mobile
+  const mobileMinHeight = 40;
   const effectiveMinHeight = isMobile ? mobileMinHeight : minHeightProp;
-
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
-    minHeight: effectiveMinHeight, // Use the calculated minHeight
+    minHeight: effectiveMinHeight,
     maxHeight,
   });
   const [showSearch, setShowSearch] = useState(false);
 
-  // Keep the ref updated with the latest value
   useEffect(() => {
     inputRef.current = input;
   }, [input]);
 
-  // Focus textarea on component mount
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [textareaRef]); // Added textareaRef dependency
+  }, [textareaRef]);
 
-  const handleAttachmentFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) return;
-    const files = Array.from(event.target.files);
-
-    if (files.length === 0) return;
-
-    if (pendingAttachments.length + files.length > 5) {
+  // Helper function to process files (either from input or paste)
+  const processFilesForAttachment = useCallback(async (filesToProcess: File[]) => {
+    if (pendingAttachments.length + filesToProcess.length > 5) {
       toast.error("You can attach a maximum of 5 files.");
-      if (event.target) event.target.value = ''; // Reset file input
       return;
     }
 
-    // Temporarily set isUploadingAny to true. This might be refined later if needed for global UI state.
-    // setIsUploadingAny(true); // Commented out as per thought process, individual loaders are used.
-
-    const newAttachments: PendingAttachment[] = []; // Changed let to const
-
-    for (const file of files) {
+    const newAttachmentsBatch: PendingAttachment[] = [];
+    for (const file of filesToProcess) {
       if (file.size > CHAT_ATTACHMENT_MAX_FILE_SIZE) {
         toast.error(`File "${file.name}" is too large. Max size is ${CHAT_ATTACHMENT_MAX_FILE_SIZE / 1024 / 1024}MB.`);
         continue;
       }
-      // Ensure CHAT_ATTACHMENT_ALLOWED_FILE_TYPES is an array of strings (MIME types)
       if (!CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.includes(file.type)) {
         toast.error(`File type for "${file.name}" is not allowed. Allowed types: ${CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(', ')}`);
         continue;
       }
-
       const attachmentId = crypto.randomUUID();
       const previewUrl = URL.createObjectURL(file);
-      const newAttachment: PendingAttachment = {
-        id: attachmentId,
-        file,
-        previewUrl,
-        status: 'pending',
-      };
-      newAttachments.push(newAttachment);
+      newAttachmentsBatch.push({ id: attachmentId, file, previewUrl, status: 'pending' });
     }
 
-    if (newAttachments.length > 0) {
-      setPendingAttachments(prev => [...prev, ...newAttachments]);
+    if (newAttachmentsBatch.length > 0) {
+      setPendingAttachments(prev => [...prev, ...newAttachmentsBatch]);
+    } else {
+      return;
     }
-    
-    if (event.target) event.target.value = ''; // Reset file input value
 
-    for (const att of newAttachments) {
+    for (const att of newAttachmentsBatch) {
       setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'uploading' } : pa));
-      
       const uploadFormData = new FormData();
       uploadFormData.append('file', att.file);
-
       try {
-        // Ensure props.userId is correctly passed and used by the action
         const result = await uploadChatAttachmentAction(uploadFormData, userId);
-
         if (result.success && result.data) {
           setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? {
-            ...pa,
-            status: 'success',
-            uploadedUrl: result.data.url,
-            uploadedName: result.data.name,
-            uploadedContentType: result.data.contentType,
+            ...pa, status: 'success', uploadedUrl: result.data.url,
+            uploadedName: result.data.name, uploadedContentType: result.data.contentType,
           } : pa));
         } else {
           const errorMessage = !result.success && 'error' in result ? result.error : 'Upload failed';
-          setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { 
-            ...pa, 
-            status: 'error', 
-            errorMessage: errorMessage 
-          } : pa));
+          setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'error', errorMessage } : pa));
           toast.error(`Failed to upload ${att.file.name}: ${errorMessage}`);
         }
       } catch (error) {
@@ -264,8 +227,42 @@ function ChatInputComponent({
         toast.error(`Error uploading ${att.file.name}.`);
       }
     }
-    // setIsUploadingAny(false); // Paired with the setIsUploadingAny(true) above.
-  }, [pendingAttachments, userId, chatId]); // Dependencies: pendingAttachments, userId, chatId (chatId might be needed by action or context)
+  }, [pendingAttachments, userId, setPendingAttachments, toast, uploadChatAttachmentAction]);
+
+  // Handler for paste events
+  const handlePaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = Array.from(event.clipboardData.items);
+    const pastedImageFiles: File[] = [];
+    let nonAllowedFilePasted = false;
+
+    for (const item of items) {
+      if (item.kind === 'file') {
+        if (CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.includes(item.type)) {
+          const file = item.getAsFile();
+          if (file) pastedImageFiles.push(file);
+        } else {
+          nonAllowedFilePasted = true;
+        }
+      }
+    }
+
+    if (pastedImageFiles.length > 0) {
+      event.preventDefault();
+      await processFilesForAttachment(pastedImageFiles);
+    } else if (nonAllowedFilePasted) {
+      event.preventDefault();
+      toast.error(`Pasted content includes unsupported file types. Allowed image types: ${CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(', ')}`);
+    }
+  }, [processFilesForAttachment, toast]);
+
+  // Modified handler for file input changes
+  const handleAttachmentFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+    await processFilesForAttachment(files);
+    if (event.target) event.target.value = '';
+  }, [processFilesForAttachment]);
 
   const handleRemoveAttachment = useCallback((attachmentId: string) => {
     setPendingAttachments(prev => {
@@ -275,11 +272,10 @@ function ChatInputComponent({
       }
       return prev.filter(att => att.id !== attachmentId);
     });
-  }, []); // No explicit dependencies, relies on setPendingAttachments.
+  }, [setPendingAttachments]); // Added setPendingAttachments dependency
 
   const handleInternalSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
-
     const attachmentsToSend: AttachmentPayload[] = pendingAttachments
       .filter(att => att.status === 'success' && att.uploadedUrl)
       .map(att => ({
@@ -290,27 +286,12 @@ function ChatInputComponent({
 
     if (inputRef.current.trim() || attachmentsToSend.length > 0) {
       window.history.replaceState({}, '', `/agent/${agentSlug}/${chatId}`);
-      
       let chatRequestOptions: ChatRequestOptions | undefined = undefined;
-      
       if (attachmentsToSend.length > 0) {
-          chatRequestOptions = {
-              experimental_attachments: attachmentsToSend
-          };
+        chatRequestOptions = { experimental_attachments: attachmentsToSend };
       }
-      // If other ChatRequestOptions like 'data' or 'headers' were also possible,
-      // you would initialize chatRequestOptions = {} or ensure it's an object
-      // before adding other properties, then add experimental_attachments if present.
-      // For example:
-      // if (!chatRequestOptions && someOtherCondition) chatRequestOptions = {};
-      // if (chatRequestOptions && someOtherCondition) chatRequestOptions.data = { custom: 'value' };
-      
-      handleSubmit(
-        e as React.FormEvent<HTMLFormElement> | undefined,
-        chatRequestOptions // Pass the constructed options object, which might be undefined
-      );
-      
-      setPendingAttachments(prev => { // Clear successfully submitted attachments and revoke their URLs
+      handleSubmit(e as React.FormEvent<HTMLFormElement> | undefined, chatRequestOptions);
+      setPendingAttachments(prev => {
         prev.forEach(att => {
           if (att.previewUrl && att.previewUrl.startsWith('blob:')) {
             URL.revokeObjectURL(att.previewUrl);
@@ -318,17 +299,10 @@ function ChatInputComponent({
         });
         return [];
       });
-      // input is managed by useChat hook, setInput(input) is not needed here.
-      
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-        }
-      }, 0);
+      setTimeout(() => { if (textareaRef.current) textareaRef.current.focus(); }, 0);
     }
   }, [handleSubmit, textareaRef, agentSlug, chatId, pendingAttachments, inputRef, setPendingAttachments]);
 
-  // Cleanup object URLs on unmount or when pendingAttachments change
   useEffect(() => {
     return () => {
       pendingAttachments.forEach(att => {
@@ -340,27 +314,16 @@ function ChatInputComponent({
   }, [pendingAttachments]);
 
   const isStreaming = status === 'submitted' || status === 'streaming';
-
-  
-  // Ensure canSubmit is always boolean
   const canSubmit = status === 'ready' && (!!input.trim() || pendingAttachments.some(att => att.status === 'success'));
 
-  // Memoize the onClick handler for the Send/Stop button
   const handleSendStopClick = useCallback(() => {
-    if (isStreaming) {
-      stop?.(); // Use optional chaining for stop
-    } else {
-      handleInternalSubmit();
-    }
-  }, [isStreaming, stop, handleInternalSubmit]); // Add dependencies
-  
+    if (isStreaming) stop?.();
+    else handleInternalSubmit();
+  }, [isStreaming, stop, handleInternalSubmit]);
 
-  
-  // Track if handleSendStopClick reference changes
   const prevHandlerRef = React.useRef(handleSendStopClick);
   useEffect(() => {
     if (prevHandlerRef.current !== handleSendStopClick) {
-
       prevHandlerRef.current = handleSendStopClick;
     }
   }, [handleSendStopClick]);
@@ -369,10 +332,7 @@ function ChatInputComponent({
     <div className={cn("w-full px-4 mb-2 md:pb-6 md:px-8 relative", className)}>
       <div className="max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden">
         <div className="flex flex-col">
-          <div
-            className="overflow-y-auto"
-            style={{ maxHeight: `${maxHeight}px` }}
-          >
+          <div className="overflow-y-auto" style={{ maxHeight: `${maxHeight}px` }}>
             <Textarea
               id={id}
               value={input}
@@ -380,22 +340,22 @@ function ChatInputComponent({
               className="w-full overflow-hidden px-4 py-3 bg-transparent border-none dark:text-white placeholder:text-black/50 dark:placeholder:text-white/50 resize-none focus-visible:ring-0 leading-relaxed text-base"
               ref={textareaRef}
               autoFocus
+              onPaste={handlePaste} // Added onPaste
               onKeyDown={useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   if (!isMobile) {
                     e.preventDefault();
-                    handleInternalSubmit();// Use memoized handler
+                    handleInternalSubmit();
                   }
                 }
-              }, [handleInternalSubmit, isMobile])} // Added dependency
+              }, [handleInternalSubmit, isMobile])}
               onChange={useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
                 setInput(e.target.value);
                 adjustHeight();
-              }, [setInput, adjustHeight])} // Added dependencies
+              }, [setInput, adjustHeight])}
             />
           </div>
           
-          {/* UI for Pending Attachments */}
           {pendingAttachments.length > 0 && (
             <div className="p-2 border-t border-black/10 dark:border-white/10">
               <div className="flex flex-wrap gap-2">
@@ -442,22 +402,17 @@ function ChatInputComponent({
 
           <div className="px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              {/* Use Memoized File Button */}
               <MemoizedFileButton
                 onChange={handleAttachmentFileChange}
                 allowedFileTypes={CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(',')}
               />
-              
-              {/* Use Memoized Search Button */}
-              <MemoizedSearchButton 
-                onClick={useCallback(() => setShowSearch(s => !s), [])} // Memoize inline handler
-                showSearch={showSearch} 
+              <MemoizedSearchButton
+                onClick={useCallback(() => setShowSearch(s => !s), [])}
+                showSearch={showSearch}
               />
             </div>
-            
-            {/* Use Memoized Send/Stop Button */}
             <MemoizedSendStopButton
-              onClick={handleSendStopClick} // Use the memoized handler
+              onClick={handleSendStopClick}
               isStreaming={isStreaming}
               canSubmit={canSubmit}
             />
