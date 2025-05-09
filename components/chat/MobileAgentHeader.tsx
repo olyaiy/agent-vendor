@@ -51,7 +51,7 @@ export function MobileAgentHeader({
     >
       <div className="relative flex-shrink-0 w-10 h-10">
         <AgentImage
-          thumbnailUrl={agent.thumbnailUrl || agent.avatarUrl}
+          thumbnailUrl={agent.avatarUrl || agent.thumbnailUrl}
           agentId={agent.id}
           className="rounded-md"
         />
