@@ -55,27 +55,11 @@ sequenceDiagram
 ## 3. Phase 1: Backend & Core Logic
 
 ### Step 3.1: Database Schema Modification
-*   **File to Modify:** `db/schema/chat.ts` (or your equivalent chat message schema file).
-*   **Action:** Add a new column to your `messages` table (or the table storing chat messages).
-    *   **Column Name:** `attachments`
-    *   **Data Type:** `JSONB` (for PostgreSQL). If using another database, `JSON` is an alternative, though `JSONB` offers better performance for querying if needed.
-    *   **Purpose:** This column will store an array of attachment objects associated with the message.
-    *   **Example Structure for the `attachments` column value:**
-        ```json
-        [
-          { "url": "https://your-r2-public-url.com/chat-attachments/user123/1678886400000-image1.png", "name": "image1.png", "contentType": "image/png" },
-          { "url": "https://your-r2-public-url.com/chat-attachments/user123/1678886400001-photo.jpg", "name": "photo.jpg", "contentType": "image/jpeg" }
-        ]
-        ```
-    *   **Nullability:** The column should be nullable, as not all messages will have attachments.
-*   **Task:**
+* Completed
     1.  Modify the Drizzle schema definition in `db/schema/chat.ts`.
     2.  Generate a new database migration using Drizzle Kit: `pnpm drizzle-kit generate:pg` (or your specific command).
     3.  Review the generated migration SQL file.
     4.  Apply the migration to your database: `pnpm drizzle-kit push:pg` (or your specific command).
-*   **Considerations:**
-    *   This change is non-breaking for existing data as it's a new nullable column.
-    *   If you anticipate needing to query messages based on attachment properties (e.g., find all messages with PNG attachments), `JSONB` provides better indexing capabilities. For now, we primarily need to store and retrieve.
 
 ### Step 3.2: New Server Action for Chat Attachment Uploads
 *   **File Location:** Create a new file `db/actions/chat-attachment.actions.ts` or add to an existing relevant server actions file.
