@@ -98,7 +98,7 @@ export async function generateMetadata(
 
     // 1) never-null string or undefined
     const description = agent.description ?? undefined;
-    const imageUrl   = agent.thumbnailUrl ?? undefined;
+    const imageUrl = agent.avatarUrl ?? agent.thumbnailUrl ?? undefined;
   
     // 2) start building a Metadata object
     const meta: Metadata = {
