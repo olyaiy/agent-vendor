@@ -180,7 +180,7 @@ function ChatInputComponent({
   // Helper function to process files (either from input or paste)
   const processFilesForAttachment = useCallback(async (filesToProcess: File[]) => {
     if (pendingAttachments.length + filesToProcess.length > 5) {
-      toast.error("You can attach a maximum of 5 files.");
+      toast.error("You can attach a maximum of 5 files per message.");
       return;
     }
 
