@@ -238,7 +238,6 @@ function ChatInputComponent({
       uploadFormData.append('file', att.file);
 
       try {
-        console.log("userId", userId);
         // Ensure props.userId is correctly passed and used by the action
         const result = await uploadChatAttachmentAction(uploadFormData, userId);
 
