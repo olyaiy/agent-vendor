@@ -9,7 +9,7 @@ import { UseChatHelpers } from "@ai-sdk/react"; // Import ChatRequestOptions
 import { toast } from "sonner";
 
 
-import { uploadChatAttachmentAction } from "@/db/actions/chat-attachment.actions";
+import { uploadChatAttachmentAction, deleteChatAttachmentAction } from "@/db/actions/chat-attachment.actions";
 import { ChatRequestOptions } from "@ai-sdk/ui-utils";
 
 
@@ -264,15 +264,48 @@ function ChatInputComponent({
     if (event.target) event.target.value = '';
   }, [processFilesForAttachment]);
 
-  const handleRemoveAttachment = useCallback((attachmentId: string) => {
-    setPendingAttachments(prev => {
-      const attachmentToRemove = prev.find(att => att.id === attachmentId);
-      if (attachmentToRemove && attachmentToRemove.previewUrl && attachmentToRemove.previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(attachmentToRemove.previewUrl);
+  const handleRemoveAttachment = useCallback(async (attachmentId: string) => {
+    const attachmentToRemove = pendingAttachments.find(att => att.id === attachmentId);
+
+    // Optimistically remove from UI and revoke blob URL
+    setPendingAttachments(prev => prev.filter(att => att.id !== attachmentId));
+    if (attachmentToRemove && attachmentToRemove.previewUrl && attachmentToRemove.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(attachmentToRemove.previewUrl);
+    }
+
+    // If the attachment was successfully uploaded, attempt to delete from R2
+    if (attachmentToRemove && attachmentToRemove.status === 'success' && attachmentToRemove.uploadedUrl) {
+      const maxRetries = 3;
+      let attempt = 0;
+      let deletedFromR2 = false;
+
+      while (attempt < maxRetries && !deletedFromR2) {
+        attempt++;
+        try {
+          const result = await deleteChatAttachmentAction(attachmentToRemove.uploadedUrl, userId);
+          if (result.success) {
+            deletedFromR2 = true;
+            // Optionally, show a success toast or log
+            // console.log(`Successfully deleted ${attachmentToRemove.file.name} from storage.`);
+          } else {
+            if (attempt >= maxRetries) {
+              toast.error(`Failed to delete ${attachmentToRemove.file.name} from storage: ${result.error}`);
+            } else {
+              // Wait a bit before retrying
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff could be used here
+            }
+          }
+        } catch (error) {
+          console.error("Error calling deleteChatAttachmentAction:", error);
+          if (attempt >= maxRetries) {
+            toast.error(`Error deleting ${attachmentToRemove.file.name} from storage.`);
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+        }
       }
-      return prev.filter(att => att.id !== attachmentId);
-    });
-  }, [setPendingAttachments]); // Added setPendingAttachments dependency
+    }
+  }, [pendingAttachments, setPendingAttachments, userId, toast, deleteChatAttachmentAction]);
 
   const handleInternalSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();

@@ -1,7 +1,7 @@
 // In db/actions/chat-attachment.actions.ts
 'use server';
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import type { ActionResult } from "./types"; // Assuming ActionResult is defined
@@ -91,5 +91,51 @@ export async function uploadChatAttachmentAction(
     } catch (error) {
         console.error("Failed to upload chat attachment:", error);
         return { success: false, error: `Upload failed: ${(error as Error).message}` };
+    }
+}
+
+export async function deleteChatAttachmentAction(
+    attachmentUrl: string,
+    userId: string // Passed from client, verified against session
+): Promise<ActionResult<{ deleted: boolean }>> {
+    if (!s3Client || !R2_BUCKET_NAME || !R2_PUBLIC_URL_BASE) {
+        return { success: false, error: "Server configuration error for file operations." };
+    }
+
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+
+        if (!session?.user || session.user.id !== userId) {
+            console.error("Unauthorized user attempted to delete chat attachment.");
+            return { success: false, error: "Unauthorized." };
+        }
+
+        if (!attachmentUrl.startsWith(R2_PUBLIC_URL_BASE)) {
+            console.error("Invalid attachment URL for deletion:", attachmentUrl);
+            return { success: false, error: "Invalid attachment URL." };
+        }
+
+        const key = attachmentUrl.substring(R2_PUBLIC_URL_BASE.length + (R2_PUBLIC_URL_BASE.endsWith('/') ? 0 : 1));
+
+        // Security check: Ensure the key is within the user's chat attachments directory
+        if (!key.startsWith(`chat-attachments/${userId}/`)) {
+            console.error(`User ${userId} attempted to delete an unauthorized key: ${key}`);
+            return { success: false, error: "Permission denied to delete this attachment." };
+        }
+        
+        await s3Client.send(
+            new DeleteObjectCommand({
+                Bucket: R2_BUCKET_NAME,
+                Key: key,
+            })
+        );
+
+        return {
+            success: true,
+            data: { deleted: true },
+        };
+    } catch (error) {
+        console.error("Failed to delete chat attachment:", error);
+        return { success: false, error: `Deletion failed: ${(error as Error).message}` };
     }
 }
