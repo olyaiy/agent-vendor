@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react'; // Added useState, useEffect
 import Link from 'next/link';
 import { Pencil2Icon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,14 @@ interface AgentHeaderProps {
 }
 
 function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSelectedModelId }: AgentHeaderProps) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  console.log(`[AgentHeaderComponent] Render - typeof window: ${typeof window}, isOwner: ${isOwner}, agent.slug: ${agent?.slug}, hasMounted: ${hasMounted}`);
+
   // Map AgentSpecificModel[] to ModelInfo[] for ModelSelect
   const modelInfos: ModelInfo[] = models.map(m => ({
     id: m.modelId, // Map modelId to id
@@ -42,8 +50,8 @@ function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSele
       <div className="space-y-2 ">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">{agent.name}</h2>
-          {isOwner && (
-            <Link href={`/agent/${agent.slug}/settings`} passHref>
+          {hasMounted && isOwner && (
+            <Link href={`/agent/${agent.slug}/settings`}>
               <Button
                 asChild
                 variant="ghost"

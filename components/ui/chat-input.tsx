@@ -416,10 +416,10 @@ function ChatInputComponent({
                       <button
                         type="button"
                         onClick={() => handleRemoveAttachment(att.id)}
-                        className="absolute top-0.5 right-0.5 bg-black/70 hover:bg-black/90 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity z-10"
+                        className="absolute top-0.5 right-0.5 bg-black/70 hover:bg-black/90 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity z-10 cursor-pointer border border-white/20"
                         aria-label="Remove attachment"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="size-4" />
                       </button>
                     )}
                     {att.status === 'error' && att.errorMessage && (

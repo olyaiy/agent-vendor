@@ -1,5 +1,6 @@
 // import { ReactScan } from "@/components/react-scan";
-import { ThemeProvider } from "@/components/theme-provider" 
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -51,8 +52,9 @@ export default function RootLayout({
               {children}
             </div>
           </SidebarInset>
+          <Toaster />
         </ThemeProvider>
-        </SidebarProvider>  
+        </SidebarProvider>
       </body>
       
     </html>
