@@ -191,6 +191,7 @@ export default function ChatMobile({
       {/* Chat Input Area - fixed at the bottom */}
       <div className="mt-auto ">
         <ChatInput
+          userId={user?.id || ''}
           chatId={chatId}
           agentSlug={agent.slug || ''}
           input={input}
