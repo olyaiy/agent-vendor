@@ -34,8 +34,7 @@ interface AttachmentPayload { // For chatRequestOptions
   contentType: string;
 }
 
-// Add JSONValue type definition if it doesn't exist elsewhere in the codebase
-type JSONValue = string | number | boolean | null | { [key: string]: JSONValue } | JSONValue[];
+// Removed unused JSONValue type definition
 
 interface ChatInputProps {
   input: UseChatHelpers['input'];
@@ -293,16 +292,23 @@ function ChatInputComponent({
     if (inputRef.current.trim() || attachmentsToSend.length > 0) {
       window.history.replaceState({}, '', `/agent/${agentSlug}/${chatId}`);
       
-      const chatRequestOptions: ChatRequestOptions = {}; // Use imported ChatRequestOptions
+      let chatRequestOptions: ChatRequestOptions | undefined = undefined;
+      
       if (attachmentsToSend.length > 0) {
-        chatRequestOptions.data = { 
-          experimental_attachments: attachmentsToSend as unknown as JSONValue
-        };
+          chatRequestOptions = {
+              experimental_attachments: attachmentsToSend
+          };
       }
+      // If other ChatRequestOptions like 'data' or 'headers' were also possible,
+      // you would initialize chatRequestOptions = {} or ensure it's an object
+      // before adding other properties, then add experimental_attachments if present.
+      // For example:
+      // if (!chatRequestOptions && someOtherCondition) chatRequestOptions = {};
+      // if (chatRequestOptions && someOtherCondition) chatRequestOptions.data = { custom: 'value' };
       
       handleSubmit(
         e as React.FormEvent<HTMLFormElement> | undefined,
-        attachmentsToSend.length > 0 ? chatRequestOptions : undefined
+        chatRequestOptions // Pass the constructed options object, which might be undefined
       );
       
       setPendingAttachments(prev => { // Clear successfully submitted attachments and revoke their URLs
