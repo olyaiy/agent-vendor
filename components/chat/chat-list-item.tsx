@@ -48,6 +48,7 @@ export function ChatListItem({
   isSubmittingEdit,
 }: ChatListItemProps) {
   const [isMenuHovered, setIsMenuHovered] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false); // New state for popover status
   const menuAreaRef = useRef<HTMLDivElement>(null); // Ref for the popover menu area
 
   const formattedDate = formatDistanceToNow(new Date(chat.createdAt), { addSuffix: true });
@@ -163,7 +164,13 @@ export function ChatListItem({
                                   // The Link's onClick will handle preventing navigation.
             }}
           >
-            <Popover onOpenChange={(open) => { if(!open) setIsMenuHovered(false); /* Hide button if popover closes */ }}>
+            <Popover
+              open={isPopoverOpen}
+              onOpenChange={(open) => {
+                setIsPopoverOpen(open);
+                if (!open) setIsMenuHovered(false); // Also hide menu icon if popover closes
+              }}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
@@ -208,14 +215,10 @@ export function ChatListItem({
         href={chatLink}
         className="block"
         onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
-          // If the click target is within the menu area, prevent Link navigation
-          if (menuAreaRef.current && menuAreaRef.current.contains(e.target as Node)) {
+          // If the popover is open, or if the click is on the menu trigger area, prevent navigation.
+          if (isPopoverOpen || (menuAreaRef.current && menuAreaRef.current.contains(e.target as Node))) {
             e.preventDefault();
           }
-          // Original logic for isMenuHovered can be kept or removed if ref logic is sufficient
-          // else if (isMenuHovered) {
-          //   e.preventDefault();
-          // }
         }}
       >
         {content}

@@ -220,6 +220,7 @@ export default function Chat({
               handleSubmit={handleSubmit}
               status={status}
               stop={stop}
+              minHeight={64}
             />
             </div>
           </div>
