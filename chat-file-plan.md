@@ -169,6 +169,9 @@ sequenceDiagram
     *   Ensure R2 bucket policies are secure. While objects are `public-read` via their direct URL, the bucket itself should not allow public listing unless intended.
     *   Error messages returned to the client should be informative but not expose sensitive server details.
 
+
+
+
 ### Step 3.3: Update Backend API (`app/api/chat/route.ts`) to Save Attachments
 *   **File to Modify:** `app/api/chat/route.ts`.
 *   **Location of Change:** Inside the `onFinish` callback of the `streamText` call, specifically where the user's message is prepared for saving.
