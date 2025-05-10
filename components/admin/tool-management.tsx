@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tool, toolTypeEnum } from '@/db/schema/tool'; // Removed NewTool import
+import { Tool, toolTypeEnum } from '@/db/schema/tool';
 import { createToolAction, deleteToolAction } from '@/db/actions/tool.actions';
-// import { useToast } from '@/components/ui/toast'; // Commented out: Add toast component via `npx shadcn-ui@latest add toast`
+import { toast } from 'sonner'; // Import toast from sonner
 
 interface ToolManagementProps {
   initialTools: Tool[];
@@ -32,7 +32,6 @@ const toolTypes = toolTypeEnum.enumValues;
 
 export default function ToolManagement({ initialTools }: ToolManagementProps) {
   const [tools, setTools] = useState<Tool[]>(initialTools);
-  // const { toast } = useToast(); // Commented out
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newToolName, setNewToolName] = useState('');
@@ -58,24 +57,15 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
 
   const handleSaveNewTool = async () => {
     if (!newToolName.trim()) {
-      // toast({ title: "Validation Error", description: "Tool Name is required.", variant: "destructive" }); // Commented out
-      console.error("Validation Error: Tool Name is required.");
-      alert("Tool Name is required."); // Basic fallback
+      toast.error("Validation Error", { description: "Tool Name is required." });
       return;
     }
 
-    // Define the type for the payload to be sent to the action.
-    // This matches the expected structure of the `data` parameter in `createToolAction`,
-    // which is then validated by `CreateToolSchema`.
-    // Omit<typeof tools.$inferInsert, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>
-    // could also be used if NewTool was imported and used as the base for Omit.
     const toolPayload: {
       name: string;
       type: Tool['type'];
       displayName?: string;
       description?: string;
-      // definition and inputSchema are omitted here, so they will be undefined
-      // if not set, which is correctly handled by Zod's .optional()
     } = {
       name: newToolName.trim(),
       type: newToolType,
@@ -91,19 +81,13 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
       toolPayload.description = descriptionTrimmed;
     }
 
-    // The `createToolAction` expects an object that matches `Omit<NewTool, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>`.
-    // Our `toolPayload` is compatible with this.
     const result = await createToolAction(toolPayload);
     if (result.success) {
       setTools([...tools, result.data]);
-      // toast({ title: "Tool Created", description: `Tool "${result.data.name}" has been added.` }); // Commented out
-      console.log(`Tool Created: Tool "${result.data.name}" has been added.`);
-      alert(`Tool "${result.data.name}" has been added.`); // Basic fallback
+      toast.success("Tool Created", { description: `Tool "${result.data.name}" has been added.` });
       resetCreateForm();
     } else {
-      // toast({ title: "Error Creating Tool", description: result.error, variant: "destructive" }); // Commented out
-      console.error("Error Creating Tool:", result.error);
-      alert(`Error Creating Tool: ${result.error}`); // Basic fallback
+      toast.error("Error Creating Tool", { description: result.error });
     }
   };
 
@@ -112,13 +96,9 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
       const result = await deleteToolAction(toolId);
       if (result.success) {
         setTools(tools.filter(tool => tool.id !== toolId));
-        // toast({ title: "Tool Deleted", description: `Tool "${toolName}" has been removed.` }); // Commented out
-        console.log(`Tool Deleted: Tool "${toolName}" has been removed.`);
-        alert(`Tool "${toolName}" has been removed.`); // Basic fallback
+        toast.success("Tool Deleted", { description: `Tool "${toolName}" has been removed.` });
       } else {
-        // toast({ title: "Error Deleting Tool", description: result.error, variant: "destructive" }); // Commented out
-        console.error("Error Deleting Tool:", result.error);
-        alert(`Error Deleting Tool: ${result.error}`); // Basic fallback
+        toast.error("Error Deleting Tool", { description: result.error });
       }
     }
   };
