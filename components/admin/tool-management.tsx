@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tool, NewTool, toolTypeEnum } from '@/db/schema/tool';
+import { Tool, toolTypeEnum } from '@/db/schema/tool'; // Removed NewTool import
 import { createToolAction, deleteToolAction } from '@/db/actions/tool.actions';
 // import { useToast } from '@/components/ui/toast'; // Commented out: Add toast component via `npx shadcn-ui@latest add toast`
 
@@ -64,14 +64,36 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
       return;
     }
 
-    const toolData: Omit<NewTool, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'> = {
+    // Define the type for the payload to be sent to the action.
+    // This matches the expected structure of the `data` parameter in `createToolAction`,
+    // which is then validated by `CreateToolSchema`.
+    // Omit<typeof tools.$inferInsert, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>
+    // could also be used if NewTool was imported and used as the base for Omit.
+    const toolPayload: {
+      name: string;
+      type: Tool['type'];
+      displayName?: string;
+      description?: string;
+      // definition and inputSchema are omitted here, so they will be undefined
+      // if not set, which is correctly handled by Zod's .optional()
+    } = {
       name: newToolName.trim(),
-      displayName: newToolDisplayName.trim() || null,
-      description: newToolDescription.trim() || null,
       type: newToolType,
     };
 
-    const result = await createToolAction(toolData);
+    const displayNameTrimmed = newToolDisplayName.trim();
+    if (displayNameTrimmed) {
+      toolPayload.displayName = displayNameTrimmed;
+    }
+
+    const descriptionTrimmed = newToolDescription.trim();
+    if (descriptionTrimmed) {
+      toolPayload.description = descriptionTrimmed;
+    }
+
+    // The `createToolAction` expects an object that matches `Omit<NewTool, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>`.
+    // Our `toolPayload` is compatible with this.
+    const result = await createToolAction(toolPayload);
     if (result.success) {
       setTools([...tools, result.data]);
       // toast({ title: "Tool Created", description: `Tool "${result.data.name}" has been added.` }); // Commented out
