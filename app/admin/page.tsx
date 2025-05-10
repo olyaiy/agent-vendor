@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { getAllModelsAction } from '@/db/actions';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
 
 // Define a simple component for unauthorized access
 function UnauthorizedAccess() { // This component might not be reached if auth check is only in action
@@ -120,45 +121,55 @@ export default async function AdminPage() {
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
-      {/* User Management Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>
-            View, search, and manage users in the system. (Actions like ban/role change to be added).
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <UserTable initialData={initialUsersData} />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="tags">Tag Management</TabsTrigger>
+          <TabsTrigger value="models">Model Management</TabsTrigger>
+        </TabsList>
 
-      {/* Tag Management Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tag Management</CardTitle>
-          <CardDescription>
-            Create, edit, and delete agent tags used for categorization.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TagManagement initialTags={initialTagsData.data || []} />
-        </CardContent>
-      </Card>
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                View, search, and manage users in the system. (Actions like ban/role change to be added).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserTable initialData={initialUsersData} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Model Management Section (New) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Model Management</CardTitle>
-          <CardDescription>
-            Create, edit, and delete language models available for agents.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Pass fetched models to the client component */}
-          <ModelManagement initialModels={initialModelsData.data || []} />
-        </CardContent>
-      </Card>
+        <TabsContent value="tags">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tag Management</CardTitle>
+              <CardDescription>
+                Create, edit, and delete agent tags used for categorization.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TagManagement initialTags={initialTagsData.data || []} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="models">
+          <Card>
+            <CardHeader>
+              <CardTitle>Model Management</CardTitle>
+              <CardDescription>
+                Create, edit, and delete language models available for agents.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ModelManagement initialModels={initialModelsData.data || []} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Add more admin sections/cards here later */}
 
