@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
+import { toolRegistry } from '@/tools/registry'; // Import the tool registry
 
 // Define a simple component for unauthorized access
 function UnauthorizedAccess() { // This component might not be reached if auth check is only in action
@@ -120,21 +121,20 @@ export default async function AdminPage() {
       fetchToolsError = true;
   }
 
+  const codebaseToolNames = Object.keys(toolRegistry);
 
    // Render LoadingError only for non-auth fetch errors
   // Render error if any fetch failed (prioritize user fetch error message)
   if (fetchUsersError || !initialUsersData) {
     return <LoadingError resourceName="Users" />;
   }
-  // Check for tag, model and tool errors - allow page load but show error in component?
-  // For now, block page load if critical data fails
   if (fetchTagsError || !initialTagsData?.success) {
     return <LoadingError resourceName="Tags" />;
   }
   if (fetchModelsError || !initialModelsData?.success) {
     return <LoadingError resourceName="Models" />;
   }
-  if (fetchToolsError || !initialToolsData?.success) {
+  if (fetchToolsError || !initialToolsData?.success) { // Though initialToolsData might be empty if no tools in DB, success should be true
     return <LoadingError resourceName="Tools" />;
   }
 
@@ -143,11 +143,11 @@ export default async function AdminPage() {
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-4"> {/* Updated grid-cols */}
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="tags">Tag Management</TabsTrigger>
           <TabsTrigger value="models">Model Management</TabsTrigger>
-          <TabsTrigger value="tools">Tool Management</TabsTrigger> {/* New Tab Trigger */}
+          <TabsTrigger value="tools">Tool Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -192,9 +192,11 @@ export default async function AdminPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="tools"> {/* New Tab Content */}
-          {/* The ToolManagement component is already wrapped in a Card */}
-          <ToolManagement initialTools={initialToolsData.data || []} />
+        <TabsContent value="tools">
+          <ToolManagement
+            initialTools={initialToolsData.data || []}
+            codebaseToolNames={codebaseToolNames}
+          />
         </TabsContent>
 
       </Tabs>

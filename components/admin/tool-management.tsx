@@ -33,14 +33,16 @@ import {
 import { Tool, toolTypeEnum } from '@/db/schema/tool';
 import { createToolAction, deleteToolAction } from '@/db/actions/tool.actions';
 import { toast } from 'sonner';
+import { toolRegistry } from '@/tools/registry'; // Import toolRegistry
 
 interface ToolManagementProps {
   initialTools: Tool[];
+  codebaseToolNames: string[];
 }
 
 const toolTypes = toolTypeEnum.enumValues;
 
-export default function ToolManagement({ initialTools }: ToolManagementProps) {
+export default function ToolManagement({ initialTools, codebaseToolNames }: ToolManagementProps) {
   const [tools, setTools] = useState<Tool[]>(initialTools);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -123,15 +125,32 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
     setToolToDelete(null);
   };
 
+  const registeredToolNames = new Set(tools.map(tool => tool.name));
+  const unregisteredCodebaseTools = codebaseToolNames.filter(
+    name => !registeredToolNames.has(name)
+  );
+
+  const handlePrefillAndShowCreateForm = (toolName: string) => {
+    setNewToolName(toolName);
+    const toolDefinition = toolRegistry[toolName as keyof typeof toolRegistry];
+    if (toolDefinition) {
+      if (typeof toolDefinition.description === 'string') {
+        setNewToolDescription(toolDefinition.description);
+      }
+    }
+    setShowCreateForm(true);
+    setTimeout(() => document.getElementById('newToolName')?.focus(), 0);
+  };
+
   return (
     <>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Tool Management</CardTitle>
+              <CardTitle>Registered Tools</CardTitle>
               <CardDescription>
-                View, create, and manage available tools in the system.
+                View, create, and manage tools registered in the database.
               </CardDescription>
             </div>
             <Button onClick={handleCreateToolToggle}>
@@ -141,7 +160,7 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
         </CardHeader>
         <CardContent>
           {showCreateForm && (
-            <Card className="mb-6">
+            <Card className="mb-6" id="create-tool-form-card">
               <CardHeader>
                 <CardTitle>Create New Tool</CardTitle>
               </CardHeader>
@@ -227,11 +246,46 @@ export default function ToolManagement({ initialTools }: ToolManagementProps) {
             </Table>
           ) : (
             <p className="text-center text-muted-foreground py-4">
-              {showCreateForm ? 'No tools yet. Fill out the form above to add one!' : 'No tools found. Click "Create New Tool" to add one.'}
+              {showCreateForm ? 'No tools registered in the database yet. Fill out the form above to add one!' : 'No tools registered in the database. Click "Create New Tool" to add one.'}
             </p>
           )}
         </CardContent>
       </Card>
+
+      {unregisteredCodebaseTools.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Available Codebase Tools (Not Registered)</CardTitle>
+            <CardDescription>
+              {`These tools are defined in the codebase but not yet registered in the database.
+              Click "Register This Tool" to add them.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {unregisteredCodebaseTools.map(name => (
+                <li key={name} className="flex justify-between items-center p-3 border rounded-md bg-muted/20 hover:bg-muted/40 transition-colors">
+                  <div>
+                    <span className="text-sm font-medium">{name}</span>
+                    {toolRegistry[name as keyof typeof toolRegistry]?.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {toolRegistry[name as keyof typeof toolRegistry].description}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handlePrefillAndShowCreateForm(name)}
+                  >
+                    Register This Tool
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {toolToDelete && (
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
