@@ -1,40 +1,38 @@
 'use client'
-import React, { useEffect, useRef, useState, useCallback } from 'react' // Import useRef, useState, useCallback
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
-import { MobileAgentHeader } from './chat/MobileAgentHeader'; // Use the mobile header
+import { MobileAgentHeader } from './chat/MobileAgentHeader';
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
-import type { Tool } from '@/db/schema/tool'; // Added import for Tool type
+import type { Tool } from '@/db/schema/tool';
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater';
-import { authClient } from '@/lib/auth-client'; // Added
-import { modelDetails, type ModelSettings } from '@/lib/models'; // Added
+import { authClient } from '@/lib/auth-client';
+import { modelDetails, type ModelSettings } from '@/lib/models';
 
-// Define the type for models associated with the agent (same as in chat.tsx)
 interface AgentSpecificModel {
   agentId: string;
   modelId: string;
   role: 'primary' | 'secondary';
-  model: string; // The actual model name, e.g., 'claude-3-haiku'
+  model: string;
   description?: string | null;
-  id: string; // Alias for modelId
+  id: string;
 }
 
 interface ChatMobileProps {
   chatId: string;
-  agent: Agent;
+  agent: Agent & { tags: Array<{ id: string; name: string }> }; // Updated to expect tags
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
   agentModels: AgentSpecificModel[];
-  assignedTools: Tool[]; // Added new prop
+  assignedTools: Tool[];
 }
 
-// Helper function to get initial settings based on model ID (copied from chat.tsx)
 const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel[]): Record<string, number> => {
   const selectedModelInfo = agentModels.find(m => m.modelId === modelId);
   if (selectedModelInfo) {
@@ -57,36 +55,27 @@ const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel
 
 
 export default function ChatMobile({
-  agent,
-  knowledgeItems, // Now used
+  agent, // agent prop now includes tags
+  knowledgeItems,
   agentModels,
   chatId,
   initialMessages,
   initialTitle,
-  assignedTools // Destructure new prop
+  assignedTools
 }: ChatMobileProps) {
 
-  // Derive tool names from assignedTools prop
   const assignedToolNames = assignedTools.map(tool => tool.name);
 
-  // Find the primary model from the agentModels prop
   const primaryModel = agentModels.find(m => m.role === 'primary');
-  // Get the name of the primary model for useChat, fallback if needed
-  // const primaryModelNameForChat = primaryModel ? primaryModel.model : (agentModels.length > 0 ? agentModels[0].model : '');
-  // Determine initial model ID for settings
   const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
 
-
-  // State for the selected model, initialized with the derived primary model ID
   const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId);
-  // State for the dynamic chat settings, initialized with defaults
   const [chatSettings, setChatSettings] = useState<Record<string, number>>(() =>
     getInitialChatSettings(initialModelId, agentModels)
   );
 
   const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
-  // Ref for the mobile scroll container
   const mobileScrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -95,12 +84,10 @@ export default function ChatMobile({
     }
   }, [agent?.id]);
 
-  // Effect to update chat settings ONLY when the selected model changes *after* initial load
   useEffect(() => {
     setChatSettings(getInitialChatSettings(selectedModelId, agentModels));
   }, [selectedModelId, agentModels]);
 
-  // Handler to update a specific chat setting
   const handleSettingChange = useCallback((settingName: string, value: number) => {
     setChatSettings(prev => ({ ...prev, [settingName]: value }));
   }, []);
@@ -109,7 +96,6 @@ export default function ChatMobile({
   const user = session?.user;
   const isOwner = agent.creatorId === user?.id;
 
-  // Prepare settings for the API call, mapping keys if necessary
   const apiSettings = { ...chatSettings };
   if (apiSettings.maxOutputTokens !== undefined) {
     apiSettings.maxTokens = apiSettings.maxOutputTokens;
@@ -131,10 +117,9 @@ export default function ChatMobile({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      // Find the model string name corresponding to the selected UUID using agentModels
-      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '', // Fallback to empty string or handle error if not found
-      ...apiSettings, // Spread the prepared settings into the body
-      assignedToolNames: assignedToolNames // Send the array of tool names
+      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '',
+      ...apiSettings,
+      assignedToolNames: assignedToolNames
     },
     initialMessages,
     generateId: generateUUID,
@@ -165,12 +150,9 @@ export default function ChatMobile({
   const messagesProp: UIMessage[] = messages;
 
   return (
-    // Use flex column for the entire mobile view height
     <div className="flex flex-col h-full">
-      {/* Mobile Header */}
       <MobileAgentHeader
-        agent={agent}
-        hasMessages={messages.length > 0}
+        agent={agent} // agent prop now correctly includes tags due to updated ChatMobileProps
         isOwner={isOwner}
         knowledgeItems={knowledgeItems}
         models={agentModels}
@@ -178,10 +160,9 @@ export default function ChatMobile({
         setSelectedModelId={setSelectedModelId}
         chatSettings={chatSettings}
         onSettingChange={handleSettingChange}
+        assignedTools={assignedTools}
       />
 
-      {/* Messages Area - takes remaining space and scrolls */}
-      {/* Attach the ref here */}
       <div ref={mobileScrollContainerRef} className="flex-grow overflow-y-auto">
         {messages.length > 0 ? (
           <Messages
@@ -192,19 +173,17 @@ export default function ChatMobile({
             reload={reload}
             isReadonly={false}
             isArtifactVisible={false}
-            // Pass the ref down
             externalScrollContainerRef={mobileScrollContainerRef}
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <div className="w-full px-4 flex flex-col mb-4 gap-4"> {/* Adjusted padding/gap */}
+            <div className="w-full px-4 flex flex-col mb-4 gap-4">
               <Greeting />
             </div>
           </div>
         )}
       </div>
 
-      {/* Chat Input Area - fixed at the bottom */}
       <div className="mt-auto ">
         <ChatInput
           userId={user?.id || ''}
@@ -218,7 +197,6 @@ export default function ChatMobile({
           className=" px-2 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
           isMobile={true}
           minHeight={12}
-          // Removed hasMessages prop
         />
       </div>
     </div>

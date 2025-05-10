@@ -5,10 +5,10 @@ import { generateUUID } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository"; // Re-added selectAgentTagsBySlug
-import { getToolsForAgentAction } from '@/db/actions/agent-relations.actions'; // Removed .ts extension
-import type { Tool } from '@/db/schema/tool'; // Removed .ts extension
-import type { AgentSpecificModel } from '@/components/chat'; // Import the type definition from Chat component
+import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository";
+import { getToolsForAgentAction } from '@/db/actions/agent-relations.actions';
+import type { Tool } from '@/db/schema/tool';
+import type { AgentSpecificModel } from '@/components/chat';
 
 type Params = { "agent-slug": string };
 
@@ -18,47 +18,35 @@ export default async function Page({
   params: Promise<Params>;
 }) {
 
-
-  // 1. Await the params promise
   const resolvedParams = await params;
   const agentSlug = resolvedParams["agent-slug"];
 
-  // 2. Fetch Agent Details using the resolved slug
   const agent = await selectAgentBySlug(agentSlug);
   if (!agent) notFound();
 
-  // NEW: Fetch Agent's Tools
   let currentAgentTools: Tool[] = [];
   const agentToolsResult = await getToolsForAgentAction(agent.id);
   if (agentToolsResult.success) {
     currentAgentTools = agentToolsResult.data;
   } else {
     console.error(`Failed to fetch agent tools for agent ${agent.id}:`, agentToolsResult.error);
-    // currentAgentTools remains [] as initialized
   }
 
-  // 3. Fetch Agent Models (returns AgentModelWithDetails: agentId, modelId, role, model, description)
   const rawAgentModels = await selectAgentModelsBySlug(agentSlug);
-  // Removed unused selectAllModels call
-
-  // 4. Fetch Knowledge Items
   const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
+  const tags = await selectAgentTagsBySlug(agentSlug); // Tags are fetched here
 
-  // 5. Fetch Tags
-  const tags = await selectAgentTagsBySlug(agentSlug);
-
-  // 6. Transform rawAgentModels into the AgentSpecificModel structure expected by Chat component
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
     agentId: rawModel.agentId,
     modelId: rawModel.modelId,
     role: rawModel.role,
-    model: rawModel.model, // The model string name
-    description: rawModel.description, // Optional description
-    id: rawModel.modelId // Add the id alias required by AgentSpecificModel
+    model: rawModel.model,
+    description: rawModel.description,
+    id: rawModel.modelId
   }));
 
+  const agentWithTags = { ...agent, tags }; // Create agentWithTags here
 
-  // --- Chat ---
   const chatId = generateUUID();
   const ua = (await headers()).get("user-agent") || "";
   const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
@@ -66,83 +54,60 @@ export default async function Page({
   return isMobile ? (
     <div style={{ height: "calc(100dvh - 4rem)" }} className="w-screen">
       <ChatMobile
-        agent={agent}
+        agent={agentWithTags} // Pass agentWithTags
         knowledgeItems={knowledgeItems}
         agentModels={agentModelsForChat}
         chatId={chatId}
-        assignedTools={currentAgentTools} // Added prop
+        assignedTools={currentAgentTools}
       />
     </div>
   ) : (
     <>
-
-    <Chat
-    agent={{ ...agent, tags }} // Combine agent and tags for Chat
-    knowledgeItems={knowledgeItems}
-    agentModels={agentModelsForChat} // Pass the transformed data
-    chatId={chatId}
-    agentSlug={agentSlug}
-    assignedTools={currentAgentTools} // Added prop
-    />
-
+      <Chat
+        agent={agentWithTags} // Already passing agentWithTags here
+        knowledgeItems={knowledgeItems}
+        agentModels={agentModelsForChat}
+        chatId={chatId}
+        agentSlug={agentSlug}
+        assignedTools={currentAgentTools}
+      />
     </>
   );
 }
-
-
-
 
 type GenerateMetadataProps = {
   params: Promise<Params>;
 };
 
-// Function to generate metadata for the agent page
 export async function generateMetadata(
   { params }: GenerateMetadataProps
 ): Promise<Metadata> {
-
-
-  // Get the agent slug from the URL parameters
   const { "agent-slug": slug } = await params;
-
   const agent = await selectAgentBySlug(slug);
   if (!agent) {
     return { title: "Agent Not Found" };
   }
 
+  const description = agent.description ?? undefined;
+  const imageUrl = agent.avatarUrl ?? agent.thumbnailUrl ?? undefined;
 
-    // 1) never-null string or undefined
-    const description = agent.description ?? undefined;
-    const imageUrl = agent.avatarUrl ?? agent.thumbnailUrl ?? undefined;
-
-    // 2) start building a Metadata object
-    const meta: Metadata = {
-      title: agent.name,
-    };
-    // top-level description
-    if (description) {
-      meta.description = description;
-    }
-    // icons
-    if (imageUrl) {
-      meta.icons = {
-        icon:  imageUrl,
-        apple: imageUrl,
-      };
-    }
-    // open graph
-    meta.openGraph = {
-      title:       agent.name,
-      // these two lines only include the keys if they're defined
-      ...(description && { description }),
-      ...(imageUrl   && { images: [imageUrl] }),
-    };
-    // twitter
-    meta.twitter = {
-      card:  "summary_large_image",
-      title: agent.name,
-      ...(description && { description }),
-      ...(imageUrl   && { images: [imageUrl] }),
-    };
-    return meta;
+  const meta: Metadata = {
+    title: agent.name,
+  };
+  if (description) meta.description = description;
+  if (imageUrl) {
+    meta.icons = { icon:  imageUrl, apple: imageUrl };
+  }
+  meta.openGraph = {
+    title: agent.name,
+    ...(description && { description }),
+    ...(imageUrl   && { images: [imageUrl] }),
+  };
+  meta.twitter = {
+    card:  "summary_large_image",
+    title: agent.name,
+    ...(description && { description }),
+    ...(imageUrl   && { images: [imageUrl] }),
+  };
+  return meta;
 }

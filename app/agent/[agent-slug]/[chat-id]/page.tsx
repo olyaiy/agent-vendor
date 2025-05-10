@@ -6,6 +6,8 @@ import {
   selectAgentModelsBySlug,
   selectAgentTagsBySlug,
 } from "@/db/repository"; // Use slug-based functions
+import { getToolsForAgentAction } from "@/db/actions/agent-relations.actions"; // Import action for agent tools
+import { Tool } from "@/db/schema/tool"; // Import Tool type
 import { getChatById, getMessagesByChatId, getChatTitleAndUserId } from "@/db/repository/chat-repository";
 import { DBMessage } from "@/db/schema/chat";
 import { auth } from "@/lib/auth";
@@ -102,45 +104,49 @@ export default async function Page({
     notFound(); // Agent not found
   }
 
-  // 4. Fetch Agent Relations (Models, Knowledge, Tags) in parallel
-  const [rawAgentModels, knowledgeItems, tags] = await Promise.all([
+  // 4. Fetch Agent Relations (Models, Knowledge, Tags, Tools) in parallel
+  let currentAgentTools: Tool[] = [];
+  const [rawAgentModels, knowledgeItems, tags, agentToolsResult] = await Promise.all([
     selectAgentModelsBySlug(agentSlug),
     selectAgentKnowledgeBySlug(agentSlug),
     selectAgentTagsBySlug(agentSlug),
+    getToolsForAgentAction(agent.id) // Fetch agent's tools
   ]);
+
+  if (agentToolsResult.success) {
+    currentAgentTools = agentToolsResult.data;
+  } else {
+    console.error(`Failed to fetch tools for agent ${agent.id} in chat ${chatId}:`, agentToolsResult.error);
+    // currentAgentTools remains []
+  }
 
   // 5. Transform Agent Models for Chat Component
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
     agentId: rawModel.agentId,
     modelId: rawModel.modelId,
     role: rawModel.role,
-    model: rawModel.model, // The model string name
-    description: rawModel.description, // Optional description
-    id: rawModel.modelId // Alias id for Chat component compatibility
+    model: rawModel.model,
+    description: rawModel.description,
+    id: rawModel.modelId
   }));
 
   // 6. Fetch Chat Messages
   const messagesFromDb = await getMessagesByChatId({ id: chatId });
 
   // 7. Convert DB Messages to UI Messages
-  // (Consider moving this to lib/utils.ts if reused elsewhere)
   function convertToUIMessages(dbMessages: Array<DBMessage>): Array<UIMessage> {
     return dbMessages.map((message) => ({
       id: message.id,
-      // Ensure parts is correctly typed, handle potential null/undefined if necessary
       parts: (message.parts as UIMessage['parts']) ?? [],
       role: message.role as UIMessage['role'],
-      // Extract clean text content from parts (simplified example)
       content: ((message.parts as UIMessage['parts']) ?? [])
         .map(part => {
           if (part.type === 'text') return part.text;
-          // Add more sophisticated handling for other part types if needed
           return '';
         })
         .filter(Boolean)
         .join('\n'),
       createdAt: message.createdAt,
-      // Ensure attachments is correctly typed, handle potential null/undefined
       experimental_attachments:
         (message.attachments as Array<Attachment> | null | undefined) ?? [],
     }));
@@ -152,28 +158,30 @@ export default async function Page({
   const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
 
   // 9. Render Component
-  const agentWithTags = { ...agent, tags }; // Combine agent and tags
+  const agentWithTags = { ...agent, tags };
 
   return isMobile ? (
     <div style={{ height: "calc(100dvh - 4rem)" }} className="w-screen">
       <ChatMobile
         agent={agentWithTags}
         knowledgeItems={knowledgeItems}
-        agentModels={agentModelsForChat} // Pass transformed models
+        agentModels={agentModelsForChat}
         chatId={chatId}
         initialMessages={initialMessages}
-        initialTitle={chat.title} // Pass chat title
+        initialTitle={chat.title}
+        assignedTools={currentAgentTools} // Pass assignedTools
       />
     </div>
   ) : (
     <Chat
-      agent={agentWithTags} // Pass combined agent/tags
+      agent={agentWithTags}
       knowledgeItems={knowledgeItems}
-      agentModels={agentModelsForChat} // Pass transformed models
+      agentModels={agentModelsForChat}
       chatId={chatId}
       initialMessages={initialMessages}
-      initialTitle={chat.title} // Pass chat title
-      agentSlug={agentSlug} // Pass agent slug
+      initialTitle={chat.title}
+      agentSlug={agentSlug}
+      assignedTools={currentAgentTools} // Pass assignedTools
     />
   );
 }

@@ -1,24 +1,21 @@
-'use client';
+"use client";
 
 import React from 'react';
-import type { Agent, Knowledge } from '@/db/schema/agent';
-import type { AgentSpecificModel } from '@/components/chat'; // Assuming this type is accessible
-import { AgentImage } from '@/components/agent-image';
+import Link from 'next/link';
+import { Agent, Knowledge } from '@/db/schema/agent';
+import { Tool } from '@/db/schema/tool';
+import { AgentAvatar } from '@/components/agent-avatar';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AgentInfo } from '@/components/agent-info';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { MoreVertical } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ChevronLeft, Settings, InfoIcon } from 'lucide-react'; // Changed Info to InfoIcon for clarity if needed, or use Info
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'; // Import Tooltip components
+import type { AgentSpecificModel } from '@/components/chat';
 
-interface MobileAgentHeaderProps {
-  agent: Agent & { tags?: Array<{ id: string; name: string }> };
-  hasMessages: boolean;
-  // New props for AgentInfo:
+export interface MobileAgentHeaderProps {
+  // Agent prop now expects tags to be included, consistent with AgentInfoProps
+  agent: Agent & { tags: Array<{ id: string; name: string }> };
+  // hasMessages: boolean; // Removed as it was unused
   isOwner: boolean;
   knowledgeItems: Knowledge[];
   models: AgentSpecificModel[];
@@ -26,11 +23,12 @@ interface MobileAgentHeaderProps {
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
   chatSettings: Record<string, number>;
   onSettingChange: (settingName: string, value: number) => void;
+  assignedTools: Tool[];
 }
 
 export function MobileAgentHeader({
-  agent,
-  hasMessages,
+  agent, // Now expects agent with tags
+  // hasMessages,
   isOwner,
   knowledgeItems,
   models,
@@ -38,59 +36,57 @@ export function MobileAgentHeader({
   setSelectedModelId,
   chatSettings,
   onSettingChange,
+  assignedTools,
 }: MobileAgentHeaderProps) {
+  const hasActiveTools = assignedTools && assignedTools.length > 0;
+
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3 p-3 border-b border-border transition-all duration-200 ease-in-out',
-        {
-          'pb-4 pt-4': !hasMessages,
-          'pb-2 pt-2': hasMessages,
-        },
-      )}
-    >
-      <div className="relative flex-shrink-0 w-10 h-10">
-        <AgentImage
-          thumbnailUrl={agent.avatarUrl || agent.thumbnailUrl}
-          agentId={agent.id}
-          className="rounded-md"
-        />
+    <header className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 border-b shrink-0 bg-background backdrop-blur-xl">
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" className="mr-2" asChild>
+          <Link href="/agents">
+            <ChevronLeft className="w-5 h-5" />
+            <span className="sr-only">Back</span>
+          </Link>
+        </Button>
+        <div className="flex items-center gap-2">
+          <AgentAvatar agentId={agent.id} avatarUrl={agent.avatarUrl} size={32} />
+          <span className="font-semibold text-sm truncate">{agent.name}</span>
+          {hasActiveTools && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoIcon size={14} className="text-muted-foreground cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{assignedTools.length} tool(s) active</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </div>
-      <div className="flex-grow min-w-0">
-        <h2 className="text-sm font-semibold truncate">{agent.name}</h2>
-        {!hasMessages && agent.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-            {agent.description}
-          </p>
-        )}
-      </div>
-      <div className="ml-auto">
-        <Sheet>
-          <SheetTrigger asChild>
-            <button className="p-1.5 rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              <MoreVertical className="h-5 w-5" />
-            </button>
-          </SheetTrigger>
-          <SheetContent className=" sm:w-[400px] p-0 flex flex-col gap-0">
-            <SheetHeader className=" px-4 py-2 m-0">
-              <SheetTitle>Agent Details</SheetTitle>
-            </SheetHeader>
-            <AgentInfo
-              agent={{
-                ...agent,
-                tags: agent.tags || [], // Ensure tags is always an array
-              }}
-              isOwner={isOwner}
-              knowledgeItems={knowledgeItems}
-              models={models}
-              selectedModelId={selectedModelId}
-              setSelectedModelId={setSelectedModelId}
-              chatSettings={chatSettings}
-              onSettingChange={onSettingChange}
-            />
-          </SheetContent>
-        </Sheet>
-      </div>
-    </div>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Settings className="w-5 h-5" />
+            <span className="sr-only">Agent Settings</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-full max-w-md p-0">
+          <AgentInfo
+            agent={agent} // agent already includes tags due to updated prop type
+            isOwner={isOwner}
+            knowledgeItems={knowledgeItems}
+            models={models}
+            selectedModelId={selectedModelId}
+            setSelectedModelId={setSelectedModelId}
+            chatSettings={chatSettings}
+            onSettingChange={onSettingChange}
+            assignedTools={assignedTools}
+          />
+        </SheetContent>
+      </Sheet>
+    </header>
   );
 }
