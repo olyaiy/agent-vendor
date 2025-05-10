@@ -1,19 +1,15 @@
 // components/agent-info.tsx
 'use client';
 
-import { memo } from 'react'; // Removed useState and other unused imports
+import { memo } from 'react';
 import { Agent, Knowledge } from '@/db/schema/agent';
-// Removed unused ModelInfo import
-import type { AgentSpecificModel } from '@/components/chat'; // Import the new model type
+import { Tool } from '@/db/schema/tool'; // Import Tool type
+import type { AgentSpecificModel } from '@/components/chat';
 
-// Import new sub-components
 import { AgentHeader } from './agent-header';
 import { BehaviourSection } from './behaviour-section';
-
 import { ToolsSection } from './tools-section';
 import { SettingsSection } from './settings-section';
-
-
 
 import { useState } from 'react';
 import {
@@ -23,8 +19,8 @@ import {
 } from '@/components/ui/collapsible';
 import { BookOpen, ChevronRight } from 'lucide-react';
 
-import { KnowledgeItemDisplay } from './knowledge-item-display'; // Import the new component
-import { modelDetails } from '@/lib/models'; // Removed unused ModelSettings import
+import { KnowledgeItemDisplay } from './knowledge-item-display';
+import { modelDetails } from '@/lib/models';
 
 interface AgentInfoProps {
   agent: Agent & { modelName?: string; tags: Array<{ id: string; name: string }> };
@@ -32,12 +28,12 @@ interface AgentInfoProps {
   knowledgeItems: Knowledge[];
   selectedModelId: string;
   setSelectedModelId: React.Dispatch<React.SetStateAction<string>>;
-  models: AgentSpecificModel[]; // Use the new AgentSpecificModel type
-  chatSettings: Record<string, number>; // Add chatSettings prop
-  onSettingChange: (settingName: string, value: number) => void; // Add onSettingChange prop
+  models: AgentSpecificModel[];
+  chatSettings: Record<string, number>;
+  onSettingChange: (settingName: string, value: number) => void;
+  assignedTools: Tool[]; // Add assignedTools prop
 }
 
-// The main component now delegates rendering to sub-components
 function AgentInfoComponent({
   agent,
   isOwner,
@@ -45,20 +41,17 @@ function AgentInfoComponent({
   selectedModelId,
   setSelectedModelId,
   models,
-  chatSettings, // Destructure chatSettings
-  onSettingChange // Destructure onSettingChange
+  chatSettings,
+  onSettingChange,
+  assignedTools // Destructure assignedTools
 }: AgentInfoProps) {
 
-  // Removed all useState hooks for collapsible sections
-
-  // Find the model string name and details for the selected model ID using modelId
-  const selectedModelInfo = models.find(m => m.modelId === selectedModelId); // Use modelId for lookup
-  const selectedModelString = selectedModelInfo?.model; // Get the model string name
+  const selectedModelInfo = models.find(m => m.modelId === selectedModelId);
+  const selectedModelString = selectedModelInfo?.model;
   const selectedModelDetail = selectedModelString ? modelDetails[selectedModelString] : undefined;
 
   return (
     <div className="h-full p-4 space-y-6 overflow-y-auto pb-24">
-      {/* Render Agent Header - Pass model props here */}
       <AgentHeader
         agent={agent}
         isOwner={isOwner}
@@ -67,21 +60,12 @@ function AgentInfoComponent({
         setSelectedModelId={setSelectedModelId}
       />
 
-      {/* Sections Container */}
       <div className="space-y-1">
-        {/* Render Behaviour Section */}
         <BehaviourSection initialSystemPrompt={agent.systemPrompt} />
-
-        {/* Render Knowledge Section */}
         <KnowledgeSection knowledgeItems={knowledgeItems} />
-
-        {/* Render Tools Section */}
-        <ToolsSection />
-
-        {/* Render Settings Section - Pass down new props */}
+        <ToolsSection assignedTools={assignedTools} /> {/* Pass assignedTools to ToolsSection */}
         <SettingsSection
-          // selectedModelString={selectedModelString} // Pass the string identifier
-          modelSettings={selectedModelDetail?.defaultSettings} // Pass only the settings object or undefined
+          modelSettings={selectedModelDetail?.defaultSettings}
           chatSettings={chatSettings}
           onSettingChange={onSettingChange}
         />
@@ -90,13 +74,7 @@ function AgentInfoComponent({
   );
 }
 
-// Export the memoized component
 export const AgentInfo = memo(AgentInfoComponent);
-
-
-
-
-
 
 interface KnowledgeSectionProps {
   knowledgeItems: Knowledge[];

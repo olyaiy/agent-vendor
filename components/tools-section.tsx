@@ -7,10 +7,13 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Code, ChevronRight } from 'lucide-react';
+import { Tool } from '@/db/schema/tool'; // Import Tool type
 
-// No props needed for this static section currently
+interface ToolsSectionProps {
+  assignedTools: Tool[];
+}
 
-function ToolsSectionComponent() { // Removed props
+function ToolsSectionComponent({ assignedTools }: ToolsSectionProps) {
   const [isToolsOpen, setIsToolsOpen] = useState(false); // Default closed
 
   return (
@@ -26,29 +29,21 @@ function ToolsSectionComponent() { // Removed props
         </div>
         <ChevronRight size={16} className={`text-muted-foreground transition-transform duration-200 ${isToolsOpen ? 'rotate-90' : ''}`} />
       </CollapsibleTrigger>
-      <CollapsibleContent className="py-3 px-3 relative"> {/* Added relative positioning */}
-        {/* Static content replaced with overlay */}
-        <div className="absolute inset-0 bg-background/20  flex items-center justify-center rounded-md z-10"> {/* Overlay div */}
-          <span className="text-sm text-muted-foreground italic">Tool usage coming soon!</span>
-        </div>
-        {/* Original content (can be kept underneath or removed) */}
-        <div className="grid grid-cols-1 gap-1.5 opacity-20 pointer-events-none"> {/* Added opacity and disabled pointer events */}
-          <div className="flex items-center gap-2.5 py-2">
-            <div className="w-1 h-4 bg-amber-500/80 rounded-full"></div>
-            <span className="text-sm">Code Editor</span>
-          </div>
-          <div className="flex items-center gap-2.5 py-2">
-            <div className="w-1 h-4 bg-green-500/80 rounded-full"></div>
-            <span className="text-sm">Web Browser</span>
-          </div>
-          <div className="flex items-center gap-2.5 py-2">
-            <div className="w-1 h-4 bg-blue-500/80 rounded-full"></div>
-            <span className="text-sm">File Explorer</span>
-          </div>
-          <div className="flex items-center gap-2.5 py-2">
-            <div className="w-1 h-4 bg-purple-500/80 rounded-full"></div>
-            <span className="text-sm">Terminal</span>
-          </div>
+      <CollapsibleContent className="py-3 px-3 relative">
+        <div className="space-y-1">
+          {assignedTools && assignedTools.length > 0 ? (
+            assignedTools.map((tool, index) => (
+              <div key={tool.id || index} className="flex items-center gap-2.5 py-1.5 px-1">
+                {/* Optional: Add a visual indicator or icon per tool type if desired */}
+                {/* <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div> */}
+                <span className="text-sm text-muted-foreground">{tool.displayName || tool.name}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-muted-foreground italic px-1 py-1.5">
+              No tools currently active for this agent.
+            </p>
+          )}
         </div>
       </CollapsibleContent>
     </Collapsible>

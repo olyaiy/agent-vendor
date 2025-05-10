@@ -7,7 +7,7 @@ import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
-import type { Tool } from '@/db/schema/tool'; // Added import for Tool type
+import type { Tool } from '@/db/schema/tool';
 // Removed unused ModelInfo import
 import { authClient } from '@/lib/auth-client';
 import { Greeting } from './chat/greeting';
@@ -29,20 +29,20 @@ export interface AgentSpecificModel {
 
 interface ChatProps {
   chatId: string;
-  agent: Agent & { tags: Array<{ id: string; name: string }> }; // Re-add tags to agent type definition
+  agent: Agent & { tags: Array<{ id: string; name: string }> };
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
-  agentModels: AgentSpecificModel[]; // Use the new prop type
+  agentModels: AgentSpecificModel[];
   agentSlug: string;
-  assignedTools: Tool[]; // Added new prop
+  assignedTools: Tool[];
 }
 
 // Helper function to get initial settings based on model ID
 const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel[]): Record<string, number> => {
-  const selectedModelInfo = agentModels.find(m => m.modelId === modelId); // Use modelId and agentModels
+  const selectedModelInfo = agentModels.find(m => m.modelId === modelId);
   if (selectedModelInfo) {
-    const details = modelDetails[selectedModelInfo.model]; // Use model string name from agentModel
+    const details = modelDetails[selectedModelInfo.model];
     const defaultSettings = details?.defaultSettings;
     if (defaultSettings) {
       const initialSettings: Record<string, number> = {};
@@ -56,82 +56,63 @@ const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel
       return initialSettings;
     }
   }
-  return {}; // Return empty if no settings found
+  return {};
 };
 
 export default function Chat({
   agent,
   knowledgeItems,
-  agentModels, // Destructure agentModels instead of models
+  agentModels,
   chatId,
   initialMessages,
   initialTitle,
   agentSlug,
-  assignedTools // Destructure new prop
+  assignedTools
 }: ChatProps) {
 
-  // Derive tool names from assignedTools prop
   const assignedToolNames = assignedTools.map(tool => tool.name);
 
-  // Find the primary model from the agentModels prop
   const primaryModel = agentModels.find(m => m.role === 'primary');
-  // Provide a fallback if no primary model is found (e.g., use the first available model)
-  // Consider adding logging or error handling if agentModels is empty.
   const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
 
-  // State for the selected model, initialized with the derived primary model ID
   const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId);
-  // State for the dynamic chat settings, initialized with defaults using the new prop
   const [chatSettings, setChatSettings] = useState<Record<string, number>>(() =>
-    getInitialChatSettings(initialModelId, agentModels) // Use initialModelId and agentModels
+    getInitialChatSettings(initialModelId, agentModels)
   );
 
-  // Use the custom hook to manage title state and update logic
   const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
-  // Store the last visited agent slug in local storage
   useEffect(() => {
     if (agentSlug) {
       localStorage.setItem('lastVisitedAgentSlug', agentSlug);
     }
-  }, [agentSlug]); // Depend on agentSlug
+  }, [agentSlug]);
 
-  // Effect to update chat settings ONLY when the selected model changes *after* initial load
   useEffect(() => {
-    // We skip the initial calculation here as useState handles it
-    // This effect now only handles *changes* to selectedModelId
-    setChatSettings(getInitialChatSettings(selectedModelId, agentModels)); // Use agentModels
+    setChatSettings(getInitialChatSettings(selectedModelId, agentModels));
+  }, [selectedModelId, agentModels]);
 
-  }, [selectedModelId, agentModels]); // Rerun when model or agentModels change
-
-  // Handler to update a specific chat setting
   const handleSettingChange = useCallback((settingName: string, value: number) => {
     setChatSettings(prev => ({ ...prev, [settingName]: value }));
   }, []);
 
-  // Try using useSession hook from authClient
-  const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
-  const user = session?.user; // Extract user from session
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
+  const isOwner = agent.creatorId === user?.id;
 
-  const isOwner = agent.creatorId === user?.id; // Calculate isOwner using user from session
-
-
-  // Prepare settings for the API call, mapping keys if necessary
   const apiSettings = { ...chatSettings };
   if (apiSettings.maxOutputTokens !== undefined) {
     apiSettings.maxTokens = apiSettings.maxOutputTokens;
     delete apiSettings.maxOutputTokens;
   }
 
-  // use the useChat hook to manage the chat state
   const {
     messages,
     setMessages,
     handleSubmit,
     input,
     setInput,
-    // append,
     status,
     stop,
     reload
@@ -141,27 +122,23 @@ export default function Chat({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      // Find the model string name corresponding to the selected UUID using agentModels
-      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '', // Fallback to empty string or handle error if not found
-      ...apiSettings, // Spread the prepared settings into the body
-      assignedToolNames: assignedToolNames // Send the array of tool names
+      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '',
+      ...apiSettings,
+      assignedToolNames: assignedToolNames
     },
     initialMessages,
     generateId: generateUUID,
     sendExtraMessageFields: true,
-    // Use the handler function from the custom hook
     onFinish: handleChatFinish,
     onError: (error) => {
       console.log('Error from useChat:', error);
-      // Check if the error indicates unauthorized access (401)
       if (error && error.message && (error.message.includes('Unauthorized') || error.message.includes('401'))) {
-        // Append a specific message to the chat history
         setMessages((currentMessages) => [
           ...currentMessages,
           {
             id: generateUUID(),
             role: 'assistant',
-            content: '', // Add empty content to satisfy Message type
+            content: '',
             ui: (
               <div className="p-4 bg-red-100 border border-red-300 rounded-md text-red-800">
                 <p className="mb-2">Please sign in to chat!</p>
@@ -174,24 +151,19 @@ export default function Chat({
     }
   })
 
-  // Remove the old useEffect for cleanup, as it's now handled within the hook
-
   // @ts-expect-error There's a version mismatch between UIMessage types
   const messagesProp: UIMessage[] = messages;
 
   return (
     <div className="grid grid-cols-12 min-w-0 h-full">
-      {/* Main Chat Column */}
       <div className="flex flex-col min-w-0 h-full col-span-9 overflow-y-scroll">
-        {/* Pass the fetched title to ChatHeader */}
         <ChatHeader
           hasMessages={messages.length > 0}
           agentName={agent.name}
           agentId={agent.id}
           agentSlug={agentSlug}
-          chatTitle={displayTitle} // Pass the title here
+          chatTitle={displayTitle}
         />
-        {/* conditional rendering of messages and chat input */}
         {messages.length > 0 ? (
           <>
             <Messages
@@ -235,18 +207,17 @@ export default function Chat({
         )}
       </div>
 
-      {/* Sidebar Agent Details Column */}
       <div className="col-span-3 h-full max-h-full overflow-y-scroll sticky top-0 right-0">
-        {/* Pass isOwner, knowledgeItems, selectedModelId, setSelectedModelId, chatSettings, and handleSettingChange down to AgentInfo */}
         <AgentInfo
           agent={agent}
           isOwner={isOwner}
           knowledgeItems={knowledgeItems}
-          models={agentModels} // Pass agentModels down instead of models
+          models={agentModels}
           selectedModelId={selectedModelId}
           setSelectedModelId={setSelectedModelId}
-          chatSettings={chatSettings} // Pass settings state
-          onSettingChange={handleSettingChange} // Pass settings handler
+          chatSettings={chatSettings}
+          onSettingChange={handleSettingChange}
+          assignedTools={assignedTools} // Pass assignedTools to AgentInfo
         />
       </div>
     </div>
