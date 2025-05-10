@@ -46,34 +46,6 @@
             *   `agent_id`: `text().notNull().references(() => agent.id, { onDelete: "cascade" })`
             *   `tool_id`: `text().notNull().references(() => tools.id, { onDelete: "cascade" })`
         *   Primary Key: Composite (`agent_id`, `tool_id`).
-    *   **Migration:** Generate and apply the database migration script.
-
-    ```mermaid
-    erDiagram
-        USER ||--o{ AGENT : creates
-        USER ||--o{ TOOLS : creates (custom)
-        AGENT ||--|{ AGENT_TOOLS : has
-        TOOLS ||--|{ AGENT_TOOLS : used_in
-
-        TOOLS {
-            string id PK
-            string name
-            string description
-            string creatorId FK "Nullable"
-            string visibility
-            enum type "prebuilt, sequence, api"
-            jsonb definition "Stores sequence steps / API details"
-            jsonb inputSchema "Defines initial input structure"
-            timestamp createdAt
-            timestamp updatedAt
-        }
-        AGENT_TOOLS {
-            string agent_id PK, FK
-            string tool_id PK, FK
-        }
-        AGENT { string id PK ... }
-        USER { string id PK ... }
-    ```
 
 2.  **Define Pre-built Tools Locally:**
     *   Create directory: `/lib/tools/`

@@ -1,6 +1,7 @@
 import { and, eq, or } from "drizzle-orm";
 import { db } from "..";
 import { AgentModel, AgentTag, Knowledge, Tag, agent, agentModels, agentTags, knowledge, models, tags } from "../schema/agent"; // Added 'models' import
+import { tools, type Tool, agentTools, type AgentTool } from "../schema/tool";
 
 
 // --------------------- AGENT - TAG RELATIONS ---------------------    
@@ -257,4 +258,58 @@ export async function removeSecondaryModelsFromAgent(agentId: string, modelIds: 
     });
 }
 
+// --------------------- AGENT - TOOL RELATIONS ---------------------
 
+/**
+ * Adds a tool to an agent by creating an entry in the agent_tools join table.
+ * @param agentId - The ID of the agent.
+ * @param toolId - The ID of the tool.
+ * @returns The newly created agent_tools record.
+ */
+export async function addToolToAgent(agentId: string, toolId: string): Promise<AgentTool[]> {
+  return db.insert(agentTools).values({ agentId, toolId }).returning();
+}
+
+/**
+ * Removes a tool from an agent by deleting the entry from the agent_tools join table.
+ * @param agentId - The ID of the agent.
+ * @param toolId - The ID of the tool.
+ */
+export async function removeToolFromAgent(agentId: string, toolId: string): Promise<void> {
+  await db
+    .delete(agentTools)
+    .where(and(eq(agentTools.agentId, agentId), eq(agentTools.toolId, toolId)));
+}
+
+/**
+ * Retrieves all agent_tools entries for a given agentId.
+ * @param agentId - The ID of the agent.
+ * @returns A promise that resolves to an array of AgentTool objects.
+ */
+export async function selectAgentToolEntries(agentId: string): Promise<AgentTool[]> {
+  return db.select().from(agentTools).where(eq(agentTools.agentId, agentId));
+}
+
+/**
+ * Retrieves all tools associated with a specific agent.
+ * @param agentId - The ID of the agent.
+ * @returns A promise that resolves to an array of Tool objects.
+ */
+export async function selectToolsForAgent(agentId: string): Promise<Tool[]> {
+  return db
+    .select({
+      id: tools.id,
+      name: tools.name,
+      displayName: tools.displayName,
+      description: tools.description,
+      creatorId: tools.creatorId,
+      type: tools.type,
+      definition: tools.definition,
+      inputSchema: tools.inputSchema,
+      createdAt: tools.createdAt,
+      updatedAt: tools.updatedAt,
+    })
+    .from(tools)
+    .innerJoin(agentTools, eq(tools.id, agentTools.toolId))
+    .where(eq(agentTools.agentId, agentId));
+}
