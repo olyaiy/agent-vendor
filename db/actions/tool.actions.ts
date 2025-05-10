@@ -11,6 +11,7 @@ import {
   selectToolsByCreatorId,
   updateTool as updateToolRepo,
   deleteTool as deleteToolRepo,
+  selectAllTools, // Added import
 } from "@/db/repository/tool.repository"; // Adjusted import path
 
 import { Tool, NewTool } from "@/db/schema/tool"; // Adjusted import path
@@ -95,6 +96,23 @@ export async function getToolsByCreatorIdAction(): Promise<ActionResult<Tool[]>>
   }
 }
 
+export async function getAllToolsAction(): Promise<ActionResult<Tool[]>> {
+  try {
+    // TODO: Add authorization check to ensure only admins can access all tools.
+    // For now, fetching all tools is a general operation.
+    // const session = await auth.api.getSession({ headers: await headers() });
+    // if (!session?.user?.isAdmin) { // Assuming an 'isAdmin' flag on the user session
+    //   return { success: false, error: "Unauthorized to fetch all tools." };
+    // }
+
+    const allTools = await selectAllTools();
+    return { success: true, data: allTools };
+  } catch (error) {
+    console.error("Failed to fetch all tools:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 // Zod schema for updating a tool
 const UpdateToolSchema = CreateToolSchema.partial().extend({
   // You might want to disallow changing certain fields like 'type' or 'creatorId' after creation
@@ -116,6 +134,8 @@ export async function updateToolAction(
       return { success: false, error: "Tool not found." };
     }
     if (toolToUpdate.creatorId !== session.user.id) {
+      // If we implement admin editing, this logic would need to change
+      // to allow admins to edit any tool.
       return { success: false, error: "Unauthorized. You can only update your own tools." };
     }
 
@@ -132,6 +152,7 @@ export async function updateToolAction(
     revalidatePath('/tools'); // Example path
     revalidatePath(`/tools/${toolId}`); // Example path
     revalidatePath(`/profile/tools`);
+    revalidatePath('/admin'); // Revalidate admin page if tools are displayed there
     return { success: true, data: result[0] };
   } catch (error) {
     console.error("Failed to update tool:", error);
@@ -153,7 +174,9 @@ export async function deleteToolAction(toolId: string): Promise<ActionResult<voi
     if (!toolToDelete) {
       return { success: false, error: "Tool not found." };
     }
-    if (toolToDelete.creatorId !== session.user.id) {
+    // Add admin check here: if user is admin, they can delete any tool.
+    // if (!session.user.isAdmin && toolToDelete.creatorId !== session.user.id) {
+    if (toolToDelete.creatorId !== session.user.id) { // Simplified for now
       return { success: false, error: "Unauthorized. You can only delete your own tools." };
     }
 
@@ -161,6 +184,7 @@ export async function deleteToolAction(toolId: string): Promise<ActionResult<voi
 
     revalidatePath('/tools');
     revalidatePath(`/profile/tools`);
+    revalidatePath('/admin'); // Revalidate admin page if tools are displayed there
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete tool:", error);

@@ -21,6 +21,10 @@ export async function selectToolsByCreatorId(
   return db.select().from(tools).where(eq(tools.creatorId, creatorId));
 }
 
+export async function selectAllTools(): Promise<Tool[]> {
+  return db.select().from(tools);
+}
+
 export async function updateTool(
   toolId: string,
   updateData: Partial<NewTool>,

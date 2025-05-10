@@ -11,6 +11,7 @@ export default defineConfig({
      './db/schema/transactions.ts',
      './db/schema/user_credits.ts',
      './db/schema/transactions.ts',
+     './db/schema/tool.ts',
      ], 
   dialect: 'postgresql',
   dbCredentials: {

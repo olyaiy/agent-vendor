@@ -1,8 +1,11 @@
 import { fetchUsersWithDetails, type ListUsersWithDetailsResponse } from './admin-actions'; // Import the new action and response type
 import { getAllTagsAction } from '@/db/actions/tag.actions'; // Import tag and model actions
+import { getAllModelsAction } from '@/db/actions';
+import { getAllToolsAction } from '@/db/actions/tool.actions'; // Import tool action
 import UserTable from './user-table';
 import TagManagement from '@/components/admin/tag-management'; // Import Tag component
 import ModelManagement from '@/components/admin/model-management'; // Import Model component
+import ToolManagement from '@/components/admin/tool-management'; // Import Tool component
 import {
   Card,
   CardContent,
@@ -10,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { getAllModelsAction } from '@/db/actions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
 
 // Define a simple component for unauthorized access
@@ -55,16 +57,20 @@ export default async function AdminPage() {
   // Fetch initial data using server actions
   let initialUsersData: ListUsersWithDetailsResponse | null = null; // Use the new response type
   let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
-  let initialModelsData: Awaited<ReturnType<typeof getAllModelsAction>> | null = null; // Added for models
+  let initialModelsData: Awaited<ReturnType<typeof getAllModelsAction>> | null = null;
+  let initialToolsData: Awaited<ReturnType<typeof getAllToolsAction>> | null = null; // Added for tools
+
   let fetchUsersError = false;
   let fetchTagsError = false;
-  let fetchModelsError = false; // Added for models
+  let fetchModelsError = false;
+  let fetchToolsError = false; // Added for tools
 
   // Use Promise.allSettled for concurrent fetching and individual error handling
   const results = await Promise.allSettled([
       fetchUsersWithDetails({ limit: 25 }), // Call the new action
       getAllTagsAction(),
-      getAllModelsAction() // Fetch models concurrently
+      getAllModelsAction(), // Fetch models concurrently
+      getAllToolsAction() // Fetch tools concurrently
   ]);
 
   // Process Users result
@@ -102,13 +108,25 @@ export default async function AdminPage() {
       fetchModelsError = true;
   }
 
+  // Process Tools result
+  if (results[3].status === 'fulfilled') {
+    initialToolsData = results[3].value;
+    if (!initialToolsData.success) {
+        console.error("Failed to load tools:", initialToolsData.error);
+        fetchToolsError = true;
+    }
+  } else {
+      console.error("Failed to load tools for admin page:", results[3].reason);
+      fetchToolsError = true;
+  }
+
 
    // Render LoadingError only for non-auth fetch errors
   // Render error if any fetch failed (prioritize user fetch error message)
   if (fetchUsersError || !initialUsersData) {
     return <LoadingError resourceName="Users" />;
   }
-  // Check for tag and model errors - allow page load but show error in component?
+  // Check for tag, model and tool errors - allow page load but show error in component?
   // For now, block page load if critical data fails
   if (fetchTagsError || !initialTagsData?.success) {
     return <LoadingError resourceName="Tags" />;
@@ -116,16 +134,20 @@ export default async function AdminPage() {
   if (fetchModelsError || !initialModelsData?.success) {
     return <LoadingError resourceName="Models" />;
   }
+  if (fetchToolsError || !initialToolsData?.success) {
+    return <LoadingError resourceName="Tools" />;
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4"> {/* Updated grid-cols */}
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="tags">Tag Management</TabsTrigger>
           <TabsTrigger value="models">Model Management</TabsTrigger>
+          <TabsTrigger value="tools">Tool Management</TabsTrigger> {/* New Tab Trigger */}
         </TabsList>
 
         <TabsContent value="users">
@@ -169,6 +191,12 @@ export default async function AdminPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="tools"> {/* New Tab Content */}
+          {/* The ToolManagement component is already wrapped in a Card */}
+          <ToolManagement initialTools={initialToolsData.data || []} />
+        </TabsContent>
+
       </Tabs>
 
       {/* Add more admin sections/cards here later */}
