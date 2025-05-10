@@ -1,18 +1,19 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react' 
-import { useChat } from '@ai-sdk/react'; 
+import React, { useState, useEffect, useCallback } from 'react'
+import { useChat } from '@ai-sdk/react';
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { AgentInfo } from './agent-info';
 import { ChatHeader } from './chat/chat-header';
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
+import type { Tool } from '@/db/schema/tool'; // Added import for Tool type
 // Removed unused ModelInfo import
 import { authClient } from '@/lib/auth-client';
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton'; 
-import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater'; 
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater';
 import { modelDetails, ModelSettings } from '@/lib/models';
 
 // Define the type for models associated with the agent
@@ -34,6 +35,7 @@ interface ChatProps {
   knowledgeItems: Knowledge[];
   agentModels: AgentSpecificModel[]; // Use the new prop type
   agentSlug: string;
+  assignedTools: Tool[]; // Added new prop
 }
 
 // Helper function to get initial settings based on model ID
@@ -64,9 +66,12 @@ export default function Chat({
   chatId,
   initialMessages,
   initialTitle,
-  agentSlug
+  agentSlug,
+  assignedTools // Destructure new prop
 }: ChatProps) {
 
+  // Derive tool names from assignedTools prop
+  const assignedToolNames = assignedTools.map(tool => tool.name);
 
   // Find the primary model from the agentModels prop
   const primaryModel = agentModels.find(m => m.role === 'primary');
@@ -108,7 +113,7 @@ export default function Chat({
   const { data: session } = authClient.useSession(); // Assuming it returns { data: session } with session.user
   const user = session?.user; // Extract user from session
 
-  
+
   const isOwner = agent.creatorId === user?.id; // Calculate isOwner using user from session
 
 
@@ -121,13 +126,13 @@ export default function Chat({
 
   // use the useChat hook to manage the chat state
   const {
-    messages, 
+    messages,
     setMessages,
-    handleSubmit, 
-    input, 
+    handleSubmit,
+    input,
     setInput,
     // append,
-    status, 
+    status,
     stop,
     reload
   } = useChat({
@@ -138,13 +143,14 @@ export default function Chat({
       systemPrompt: agent.systemPrompt,
       // Find the model string name corresponding to the selected UUID using agentModels
       model: agentModels.find(m => m.modelId === selectedModelId)?.model || '', // Fallback to empty string or handle error if not found
-      ...apiSettings // Spread the prepared settings into the body
+      ...apiSettings, // Spread the prepared settings into the body
+      assignedToolNames: assignedToolNames // Send the array of tool names
     },
     initialMessages,
     generateId: generateUUID,
     sendExtraMessageFields: true,
     // Use the handler function from the custom hook
-    onFinish: handleChatFinish, 
+    onFinish: handleChatFinish,
     onError: (error) => {
       console.log('Error from useChat:', error);
       // Check if the error indicates unauthorized access (401)
@@ -197,7 +203,7 @@ export default function Chat({
               isReadonly={false}
               isArtifactVisible={false}
             />
-            <ChatInput 
+            <ChatInput
               userId={user?.id || ''}
               chatId={chatId}
               agentSlug={agentSlug}
@@ -212,8 +218,8 @@ export default function Chat({
           <div className="flex items-center justify-center  h-full ">
             <div className="w-full flex flex-col mb-20 gap-10">
             <Greeting />
-            
-            <ChatInput 
+
+            <ChatInput
               userId={user?.id || ''}
               agentSlug={agentSlug}
               chatId={chatId}

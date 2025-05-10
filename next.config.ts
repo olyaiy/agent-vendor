@@ -8,7 +8,7 @@ const withAnalyzer = withBundleAnalyzer({
 const nextConfig: NextConfig = {
   /* config options here */
   compiler: {
-    removeConsole: true,
+    // removeConsole: true,
   },
   turbopack: {
     resolveAlias: {},

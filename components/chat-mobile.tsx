@@ -6,6 +6,7 @@ import { Messages } from './chat/messages';
 import { MobileAgentHeader } from './chat/MobileAgentHeader'; // Use the mobile header
 import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
+import type { Tool } from '@/db/schema/tool'; // Added import for Tool type
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
@@ -30,6 +31,7 @@ interface ChatMobileProps {
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
   agentModels: AgentSpecificModel[];
+  assignedTools: Tool[]; // Added new prop
 }
 
 // Helper function to get initial settings based on model ID (copied from chat.tsx)
@@ -60,13 +62,17 @@ export default function ChatMobile({
   agentModels,
   chatId,
   initialMessages,
-  initialTitle
+  initialTitle,
+  assignedTools // Destructure new prop
 }: ChatMobileProps) {
+
+  // Derive tool names from assignedTools prop
+  const assignedToolNames = assignedTools.map(tool => tool.name);
 
   // Find the primary model from the agentModels prop
   const primaryModel = agentModels.find(m => m.role === 'primary');
   // Get the name of the primary model for useChat, fallback if needed
-  const primaryModelNameForChat = primaryModel ? primaryModel.model : (agentModels.length > 0 ? agentModels[0].model : '');
+  // const primaryModelNameForChat = primaryModel ? primaryModel.model : (agentModels.length > 0 ? agentModels[0].model : '');
   // Determine initial model ID for settings
   const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
 
@@ -103,6 +109,13 @@ export default function ChatMobile({
   const user = session?.user;
   const isOwner = agent.creatorId === user?.id;
 
+  // Prepare settings for the API call, mapping keys if necessary
+  const apiSettings = { ...chatSettings };
+  if (apiSettings.maxOutputTokens !== undefined) {
+    apiSettings.maxTokens = apiSettings.maxOutputTokens;
+    delete apiSettings.maxOutputTokens;
+  }
+
   const {
     messages,
     setMessages,
@@ -118,7 +131,10 @@ export default function ChatMobile({
       chatId: chatId,
       agentId: agent.id,
       systemPrompt: agent.systemPrompt,
-      model: primaryModelNameForChat // Use the determined primary model name for chat
+      // Find the model string name corresponding to the selected UUID using agentModels
+      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '', // Fallback to empty string or handle error if not found
+      ...apiSettings, // Spread the prepared settings into the body
+      assignedToolNames: assignedToolNames // Send the array of tool names
     },
     initialMessages,
     generateId: generateUUID,
@@ -200,7 +216,7 @@ export default function ChatMobile({
           status={status}
           stop={stop}
           className=" px-2 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
-          isMobile={true} 
+          isMobile={true}
           minHeight={12}
           // Removed hasMessages prop
         />

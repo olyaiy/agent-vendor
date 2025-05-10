@@ -8,7 +8,7 @@ import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/rep
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { chargeUser } from '@/db/actions/transaction-actions';
-import { toolRegistry } from '@/tools/registry'; // Import the tool registry
+import { toolRegistry, type ToolRegistry } from '@/tools/registry'; // Import ToolRegistry
 
 // Define types for attachments to avoid 'any'
 interface Attachment {
@@ -54,6 +54,7 @@ export async function POST(req: Request) {
      * @param messages - Array of chat messages
      * @param systemPrompt - System instructions for the AI
      * @param agentId - Optional identifier for AI agent configuration
+     * @param assignedToolNames - Optional array of tool names to activate
      * @param ...settings - Optional model settings (temperature, topP, etc.)
      */
     const {
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
       messages, // This will be an array of messages, potentially UserMessageWithAttachments
       systemPrompt,
       agentId,
+      assignedToolNames, // Added assignedToolNames
       // Destructure potential settings from the body
       temperature,
       topP,
@@ -165,6 +167,21 @@ export async function POST(req: Request) {
         }
     }
 
+    /* ---- TOOL FILTERING ---- */
+    let activeToolsForThisCall: Partial<ToolRegistry> = {}; // Use Partial<ToolRegistry>
+    if (assignedToolNames && Array.isArray(assignedToolNames) && assignedToolNames.length > 0) {
+      console.log('Filtering tools based on assignedToolNames:', assignedToolNames);
+      activeToolsForThisCall = Object.fromEntries(
+        Object.entries(toolRegistry).filter(([toolName]) =>
+          assignedToolNames.includes(toolName)
+        )
+      ) as Partial<ToolRegistry>; // Cast to ensure type compatibility
+      console.log('Active tools for this call:', Object.keys(activeToolsForThisCall));
+    } else {
+      console.log('No assignedToolNames provided or empty, no tools will be activated.');
+      activeToolsForThisCall = {}; // Ensure it's an empty object if no tools are assigned
+    }
+
     /* ---- STREAMING HANDLER ---- */
     /**
      * Configures text streaming with error handling and message persistence
@@ -204,7 +221,7 @@ interface OpenAIProviderOptions {
       system: systemPrompt,
       messages: messages as Message[], // Cast messages to Message[] for streamText
       // Tool Call Set Up
-      tools: toolRegistry,
+      tools: activeToolsForThisCall, // Use the filtered tools
       maxSteps: 5,
       toolCallStreaming: true,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages

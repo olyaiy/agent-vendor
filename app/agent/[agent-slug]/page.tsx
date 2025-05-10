@@ -6,12 +6,14 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository"; // Re-added selectAgentTagsBySlug
+import { getToolsForAgentAction } from '@/db/actions/agent-relations.actions'; // Removed .ts extension
+import type { Tool } from '@/db/schema/tool'; // Removed .ts extension
 import type { AgentSpecificModel } from '@/components/chat'; // Import the type definition from Chat component
 
 type Params = { "agent-slug": string };
 
 export default async function Page({
-  params,                  
+  params,
 }: {
   params: Promise<Params>;
 }) {
@@ -22,8 +24,18 @@ export default async function Page({
   const agentSlug = resolvedParams["agent-slug"];
 
   // 2. Fetch Agent Details using the resolved slug
-  const agent = await selectAgentBySlug(agentSlug); 
+  const agent = await selectAgentBySlug(agentSlug);
   if (!agent) notFound();
+
+  // NEW: Fetch Agent's Tools
+  let currentAgentTools: Tool[] = [];
+  const agentToolsResult = await getToolsForAgentAction(agent.id);
+  if (agentToolsResult.success) {
+    currentAgentTools = agentToolsResult.data;
+  } else {
+    console.error(`Failed to fetch agent tools for agent ${agent.id}:`, agentToolsResult.error);
+    // currentAgentTools remains [] as initialized
+  }
 
   // 3. Fetch Agent Models (returns AgentModelWithDetails: agentId, modelId, role, model, description)
   const rawAgentModels = await selectAgentModelsBySlug(agentSlug);
@@ -53,8 +65,13 @@ export default async function Page({
 
   return isMobile ? (
     <div style={{ height: "calc(100dvh - 4rem)" }} className="w-screen">
-      <ChatMobile agent={agent} knowledgeItems={knowledgeItems}
-        agentModels={agentModelsForChat} chatId={chatId} />
+      <ChatMobile
+        agent={agent}
+        knowledgeItems={knowledgeItems}
+        agentModels={agentModelsForChat}
+        chatId={chatId}
+        assignedTools={currentAgentTools} // Added prop
+      />
     </div>
   ) : (
     <>
@@ -65,14 +82,12 @@ export default async function Page({
     agentModels={agentModelsForChat} // Pass the transformed data
     chatId={chatId}
     agentSlug={agentSlug}
+    assignedTools={currentAgentTools} // Added prop
     />
-   
+
     </>
   );
 }
-
-
-
 
 
 
@@ -85,8 +100,8 @@ type GenerateMetadataProps = {
 export async function generateMetadata(
   { params }: GenerateMetadataProps
 ): Promise<Metadata> {
-  
-  
+
+
   // Get the agent slug from the URL parameters
   const { "agent-slug": slug } = await params;
 
@@ -99,7 +114,7 @@ export async function generateMetadata(
     // 1) never-null string or undefined
     const description = agent.description ?? undefined;
     const imageUrl = agent.avatarUrl ?? agent.thumbnailUrl ?? undefined;
-  
+
     // 2) start building a Metadata object
     const meta: Metadata = {
       title: agent.name,

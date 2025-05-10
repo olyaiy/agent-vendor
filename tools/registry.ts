@@ -9,9 +9,8 @@ import { readPageTool } from './read-page';
 
 
 export const toolRegistry = {
-  webSearch: webSearchTool,
-  readPage: readPageTool,
-
+  web_search: webSearchTool,
+  read_page: readPageTool,
 };
 
 // Optional: Export the type for the registry if needed elsewhere
