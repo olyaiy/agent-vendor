@@ -9,41 +9,7 @@ import {
 import { Code, ChevronRight } from 'lucide-react';
 import { Tool } from '@/db/schema/tool'; // Import Tool type
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
-// Utility function to generate a vibrant retro color from a string
-function stringToColor(str: string): string {
-  // Generate a hash from the string
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  // Define a set of retro-inspired, vibrant base hues
-  const retroHues = [
-    350,  // vibrant pink/red
-    320,  // magenta
-    275,  // purple
-    230,  // vibrant blue
-    195,  // cyan
-    160,  // mint/teal
-    130,  // lime green
-    95,   // vibrant green
-    55,   // neon yellow
-    35,   // orange
-    10    // coral/red-orange
-  ];
-  
-  // Pick a base hue from our retro palette based on the hash
-  const baseHue = retroHues[Math.abs(hash) % retroHues.length];
-  
-  // Add a small variation to the selected base hue (+/- 10 degrees)
-  const hueVariation = ((hash >> 8) % 20) - 10;
-  const finalHue = (baseHue + hueVariation + 360) % 360;
-  
-  // Retro colors have high saturation but not too high lightness
-  // so they pop but aren't too bright
-  return `hsl(${finalHue}, 80%, 60%)`;
-}
+import { generateRetroColorFromString } from '@/lib/utils';
 
 interface ToolsSectionProps {
   assignedTools: Tool[];
@@ -73,7 +39,7 @@ function ToolsSectionComponent({ assignedTools }: ToolsSectionProps) {
             <div className="grid grid-cols-1 gap-2">
               {assignedTools.map((tool, index) => {
                 // Generate a unique color for each tool based on its name or ID
-                const accentColor = stringToColor(tool.name || tool.id || `tool-${index}`);
+                const accentColor = generateRetroColorFromString(tool.name || tool.id || `tool-${index}`);
                 
                 return (
                   <TooltipProvider key={tool.id || index} delayDuration={300}>

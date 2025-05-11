@@ -32,6 +32,44 @@ export function parseAgentSlug(slug: string) {
 }
 
 /**
+ * Generates a vibrant retro-inspired color from a string
+ * Useful for creating visually distinct colors based on names or IDs
+ */
+export function generateRetroColorFromString(str: string): string {
+  // Generate a hash from the string
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Define a set of retro-inspired, vibrant base hues
+  const retroHues = [
+    350,  // vibrant pink/red
+    320,  // magenta
+    275,  // purple
+    230,  // vibrant blue
+    195,  // cyan
+    160,  // mint/teal
+    130,  // lime green
+    95,   // vibrant green
+    55,   // neon yellow
+    35,   // orange
+    10    // coral/red-orange
+  ];
+  
+  // Pick a base hue from our retro palette based on the hash
+  const baseHue = retroHues[Math.abs(hash) % retroHues.length];
+  
+  // Add a small variation to the selected base hue (+/- 10 degrees)
+  const hueVariation = ((hash >> 8) % 20) - 10;
+  const finalHue = (baseHue + hueVariation + 360) % 360;
+  
+  // Retro colors have high saturation but not too high lightness
+  // so they pop but aren't too bright
+  return `hsl(${finalHue}, 80%, 60%)`;
+}
+
+/**
  * Generates a more efficient UUID using v7
  * UUID v7 is time-ordered for better database performance
  */
