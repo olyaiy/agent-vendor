@@ -9,7 +9,7 @@ import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
 import type { Tool } from '@/db/schema/tool';
 // Removed unused ModelInfo import
-import { authClient } from '@/lib/auth-client';
+// import { authClient } from '@/lib/auth-client'; // Removed as it's no longer used
 import { Greeting } from './chat/greeting';
 import { generateUUID } from '@/lib/utils';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
@@ -36,6 +36,7 @@ interface ChatProps {
   agentModels: AgentSpecificModel[];
   agentSlug: string;
   assignedTools: Tool[];
+  isOwner: boolean;
 }
 
 // Helper function to get initial settings based on model ID
@@ -67,7 +68,8 @@ export default function Chat({
   initialMessages,
   initialTitle,
   agentSlug,
-  assignedTools
+  assignedTools,
+  isOwner
 }: ChatProps) {
 
   const assignedToolNames = assignedTools.map(tool => tool.name);
@@ -96,10 +98,10 @@ export default function Chat({
     setChatSettings(prev => ({ ...prev, [settingName]: value }));
   }, []);
 
-  const { data: session } = authClient.useSession();
-  const user = session?.user;
+  // const { data: session } = authClient.useSession(); // Removed
+  // const user = session?.user; // Removed
 
-  const isOwner = agent.creatorId === user?.id;
+  // const isOwner = agent.creatorId === user?.id; // Removed, now passed as prop
 
   const apiSettings = { ...chatSettings };
   if (apiSettings.maxOutputTokens !== undefined) {
@@ -176,7 +178,7 @@ export default function Chat({
               isArtifactVisible={false}
             />
             <ChatInput
-              userId={user?.id || ''}
+              userId={agent.creatorId} // Or a more appropriate user ID if available, session.user.id is no longer here
               chatId={chatId}
               agentSlug={agentSlug}
               input={input}
@@ -192,7 +194,7 @@ export default function Chat({
             <Greeting />
 
             <ChatInput
-              userId={user?.id || ''}
+              userId={agent.creatorId} // Or a more appropriate user ID if available, session.user.id is no longer here
               agentSlug={agentSlug}
               chatId={chatId}
               input={input}

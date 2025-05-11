@@ -21,7 +21,7 @@ interface AgentHeaderProps {
 }
 
 function AgentHeaderComponent({ agent, isOwner, models, selectedModelId, setSelectedModelId }: AgentHeaderProps) {
-  console.log(`[AgentHeaderComponent] Render - typeof window: ${typeof window}, isOwner: ${isOwner}, agent.slug: ${agent?.slug}`);
+  // console.log(`[AgentHeaderComponent] Render - typeof window: ${typeof window}, isOwner: ${isOwner}, agent.slug: ${agent?.slug}`); // Removed debug log
 
   // Map AgentSpecificModel[] to ModelInfo[] for ModelSelect
   const modelInfos: ModelInfo[] = models.map(m => ({

@@ -104,6 +104,8 @@ export default async function Page({
     notFound(); // Agent not found
   }
 
+  const isOwner = agent?.creatorId === session?.user?.id;
+
   // 4. Fetch Agent Relations (Models, Knowledge, Tags, Tools) in parallel
   let currentAgentTools: Tool[] = [];
   const [rawAgentModels, knowledgeItems, tags, agentToolsResult] = await Promise.all([
@@ -170,6 +172,7 @@ export default async function Page({
         initialMessages={initialMessages}
         initialTitle={chat.title}
         assignedTools={currentAgentTools} // Pass assignedTools
+        isOwner={isOwner}
       />
     </div>
   ) : (
@@ -182,6 +185,7 @@ export default async function Page({
       initialTitle={chat.title}
       agentSlug={agentSlug}
       assignedTools={currentAgentTools} // Pass assignedTools
+      isOwner={isOwner}
     />
   );
 }
