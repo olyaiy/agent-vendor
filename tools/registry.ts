@@ -1,6 +1,7 @@
 import { webSearchTool } from './web-search';
 import { readPageTool } from './read-page';
 import { e2bSandboxTool } from './e2b-sandbox-tool';
+import { calculatorTool } from './calculator-tool';
 
 /**
  * A central registry for all available AI tools.
@@ -13,6 +14,7 @@ export const toolRegistry = {
   web_search: webSearchTool,
   read_page: readPageTool,
   e2b_sandbox: e2bSandboxTool,
+  calculator: calculatorTool,
 };
 
 // Optional: Export the type for the registry if needed elsewhere
