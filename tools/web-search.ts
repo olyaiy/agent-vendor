@@ -28,7 +28,7 @@ const tavilySearchResponse = z.object({
 
 
 export const webSearchTool = tool({
-  description: 'Performs a web search using the Tavily API (basic depth, includes answer and images by default) to find relevant information and provide a summarized answer.',
+  description: "Searches the web using the Tavily API for a given 'query'. Returns a list of search results (including title, URL, and content snippet), an AI-generated 'answer' summarizing the findings, and relevant 'images'. This tool performs a 'basic' depth search. You can control 'max_results' (1-10, default 5), and specify 'include_domains' or 'exclude_domains' to refine the search. Ideal for finding current information, facts, or general knowledge from across the web.",
   parameters: tavilySearchParams,
   execute: async (params) => {
     // Removed search_depth and include_raw_content from destructuring
