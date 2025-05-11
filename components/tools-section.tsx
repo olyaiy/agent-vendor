@@ -10,7 +10,7 @@ import { Code, ChevronRight } from 'lucide-react';
 import { Tool } from '@/db/schema/tool'; // Import Tool type
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-// Utility function to generate a vibrant color from a string
+// Utility function to generate a vibrant retro color from a string
 function stringToColor(str: string): string {
   // Generate a hash from the string
   let hash = 0;
@@ -18,12 +18,31 @@ function stringToColor(str: string): string {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   
-  // Generate vibrant HSL color
-  // Use fixed saturation (80%) and lightness (55%) for vibrant colors
-  // Only vary the hue based on hash (0-360)
-  const hue = Math.abs(hash % 360);
+  // Define a set of retro-inspired, vibrant base hues
+  const retroHues = [
+    350,  // vibrant pink/red
+    320,  // magenta
+    275,  // purple
+    230,  // vibrant blue
+    195,  // cyan
+    160,  // mint/teal
+    130,  // lime green
+    95,   // vibrant green
+    55,   // neon yellow
+    35,   // orange
+    10    // coral/red-orange
+  ];
   
-  return `hsl(${hue}, 80%, 55%)`;
+  // Pick a base hue from our retro palette based on the hash
+  const baseHue = retroHues[Math.abs(hash) % retroHues.length];
+  
+  // Add a small variation to the selected base hue (+/- 10 degrees)
+  const hueVariation = ((hash >> 8) % 20) - 10;
+  const finalHue = (baseHue + hueVariation + 360) % 360;
+  
+  // Retro colors have high saturation but not too high lightness
+  // so they pop but aren't too bright
+  return `hsl(${finalHue}, 80%, 60%)`;
 }
 
 interface ToolsSectionProps {
