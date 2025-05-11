@@ -4,9 +4,10 @@ import React from 'react';
 import type { ToolInvocation } from 'ai';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { CodeBlock } from '@/components/ui/code-block';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Terminal, Code2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from "lucide-react";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 
 interface E2BSandboxSectionProps {
   toolInvocation: ToolInvocation;
@@ -35,6 +36,21 @@ type ToolInvocationWithResult = ToolInvocation & {
   result: E2BSandboxResult;
 };
 
+// Animation variants
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 5 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
 
 export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
   // Safely cast args to our expected type.
@@ -44,22 +60,36 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
 
   if (toolInvocation.state === 'call') {
     return (
-      <div className="p-3 my-2 border rounded-lg bg-muted/30">
-        <div className="flex items-center gap-2 mb-2">
+      <motion.div 
+        className="p-2 my-1 border rounded-lg bg-muted/30"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={item} className="flex items-center gap-2 mb-2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          <p className="text-sm font-medium text-muted-foreground">Executing Python Code...</p>
-        </div>
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="item-1" className="border-b-0">
-            <AccordionTrigger className="text-xs hover:no-underline py-2 text-muted-foreground hover:text-foreground">
-              Show Code
-            </AccordionTrigger>
-            <AccordionContent className="mt-1">
-              <CodeBlock language="python" code={codeToExecute || ''} filename="submitted_code.py" />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium text-foreground">Executing Python Code</p>
+            <Badge variant="outline" className="bg-primary/5 text-primary/80 text-[10px] py-0 px-1.5 h-4">
+              <Code2 className="h-2.5 w-2.5 mr-1" />
+              Python
+            </Badge>
+          </div>
+        </motion.div>
+        
+        <motion.div variants={item}>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="code-preview" className="border-b-0">
+              <AccordionTrigger className="text-xs hover:no-underline py-1 text-muted-foreground hover:text-foreground cursor-pointer">
+                Show Code
+              </AccordionTrigger>
+              <AccordionContent className="mt-1">
+                <CodeBlock language="python" code={codeToExecute || ''} filename="submitted_code.py" />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </motion.div>
+      </motion.div>
     );
   }
 
@@ -73,76 +103,126 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
     const hasStderr = sandboxResult?.stderr && sandboxResult.stderr.length > 0;
     
     const isDefaultOpen = !outputText && !sandboxResult?.error && !hasStdout && !hasStderr;
+    const hasOutput = outputText || hasStdout || hasStderr || sandboxResult?.error;
 
     return (
-      <div className="p-3 my-2 border rounded-lg bg-muted/30 space-y-3">
+      <motion.div 
+        className="p-2 my-1 border rounded-lg bg-muted/30 space-y-2"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        <motion.div variants={item} className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-primary/5 text-primary/80 text-[10px] py-0 px-1.5 h-4">
+              <Code2 className="h-2.5 w-2.5 mr-1" />
+              Python
+            </Badge>
+            
+            {sandboxResult?.error ? (
+              <span className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Execution Failed
+              </span>
+            ) : (
+              <span className="text-xs text-emerald-600 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Execution Complete
+              </span>
+            )}
+          </div>
+        </motion.div>
+
         {sandboxResult?.error && (
-          <Alert variant="destructive" className="bg-destructive/10 border-destructive/30">
-            <Terminal className="h-4 w-4" />
-            <AlertTitle className="font-semibold text-sm">Execution Error</AlertTitle>
-            <AlertDescription className="text-xs">
-              <pre className="whitespace-pre-wrap font-mono">{sandboxResult.error}</pre>
-            </AlertDescription>
-          </Alert>
+          <motion.div variants={item}>
+            <Alert variant="destructive" className="bg-destructive/10 border-destructive/30 py-2">
+              <Terminal className="h-4 w-4" />
+              <AlertTitle className="font-semibold text-sm">Execution Error</AlertTitle>
+              <AlertDescription className="text-xs">
+                <pre className="whitespace-pre-wrap font-mono">{sandboxResult.error}</pre>
+              </AlertDescription>
+            </Alert>
+          </motion.div>
         )}
 
         {outputText && !sandboxResult?.error && (
-          <div>
-            <h4 className="text-xs font-medium mb-1 text-muted-foreground">Output:</h4>
-            <pre className="bg-background p-2 rounded-md text-sm whitespace-pre-wrap border">{outputText}</pre>
-          </div>
+          <motion.div variants={item} className="bg-background p-2 rounded-md border">
+            <h4 className="text-xs font-medium mb-1 text-primary flex items-center gap-1.5">
+              <Terminal className="h-3.5 w-3.5" />
+              Output
+            </h4>
+            <pre className="text-sm whitespace-pre-wrap overflow-auto max-h-[200px] font-mono text-foreground">{outputText}</pre>
+          </motion.div>
         )}
         
-        {!outputText && !sandboxResult?.error && !hasStdout && !hasStderr && (
-             <p className="text-sm text-muted-foreground italic">Code executed successfully with no output.</p>
+        {!hasOutput && (
+          <motion.div variants={item} className="bg-muted/40 p-2 rounded-md border">
+            <p className="text-sm text-muted-foreground italic flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Code executed successfully with no output.
+            </p>
+          </motion.div>
         )}
 
-        <Accordion 
-            type="single" 
-            collapsible 
-            className="w-full" 
-            defaultValue={isDefaultOpen ? "executed-code-item" : undefined}
-        >
-          <AccordionItem value="executed-code-item" className="border-b-0">
-            <AccordionTrigger className="text-xs hover:no-underline py-2 text-muted-foreground hover:text-foreground">
-              Executed Code
-            </AccordionTrigger>
-            <AccordionContent className="mt-1">
-              <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        <motion.div variants={item}>
+          <Accordion 
+              type="single" 
+              collapsible 
+              className="w-full" 
+              defaultValue={isDefaultOpen ? "executed-code-item" : undefined}
+          >
+            <AccordionItem value="executed-code-item" className="border-b-0">
+              <AccordionTrigger className="text-xs hover:no-underline py-1 text-muted-foreground hover:text-foreground flex items-center gap-1.5 cursor-pointer">
+                <Code2 className="h-3.5 w-3.5" />
+                View Executed Code
+              </AccordionTrigger>
+              <AccordionContent className="mt-1">
+                <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </motion.div>
 
         {hasStdout && sandboxResult?.stdout && (
-          <div>
-            <h4 className="text-xs font-medium mb-1 text-muted-foreground">Stdout:</h4>
+          <motion.div variants={item}>
+            <h4 className="text-xs font-medium mb-0.5 text-muted-foreground flex items-center gap-1.5">
+              <Terminal className="h-3.5 w-3.5" />
+              Standard Output
+            </h4>
             <CodeBlock language="bash" code={sandboxResult.stdout.join('\n')} filename="stdout" />
-          </div>
+          </motion.div>
         )}
 
         {hasStderr && !sandboxResult?.error && sandboxResult?.stderr && ( 
-          <div>
-            <h4 className="text-xs font-medium mb-1 text-destructive/80">Stderr:</h4>
+          <motion.div variants={item}>
+            <h4 className="text-xs font-medium mb-0.5 text-destructive/80 flex items-center gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Standard Error
+            </h4>
             <CodeBlock language="bash" code={sandboxResult.stderr.join('\n')} filename="stderr" />
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
     );
   }
 
   // Fallback for unexpected states or missing data
   return (
-    <div className="p-3 my-2 border rounded-lg bg-muted/30">
-      <Alert variant="default" className="bg-amber-500/10 border-amber-500/30 text-amber-700">
-        <Terminal className="h-4 w-4" />
+    <motion.div 
+      className="p-2 my-1 border rounded-lg bg-muted/30"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <Alert variant="default" className="bg-amber-500/10 border-amber-500/30 text-amber-700 py-2">
+        <AlertCircle className="h-4 w-4" />
         <AlertTitle className="font-semibold text-sm">Code Execution Status</AlertTitle>
         <AlertDescription className="text-xs">
           Displaying raw tool invocation data as current state is not fully handled:
-          <pre className='text-xs max-w-full overflow-auto mt-2 p-2 bg-background border rounded-md'>
+          <pre className='text-xs max-w-full overflow-auto mt-1 p-2 bg-background border rounded-md'>
             {JSON.stringify(toolInvocation, null, 2)}
           </pre>
         </AlertDescription>
       </Alert>
-    </div>
+    </motion.div>
   );
 }
