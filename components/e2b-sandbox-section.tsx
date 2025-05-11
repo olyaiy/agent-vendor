@@ -4,10 +4,11 @@ import React from 'react';
 import type { ToolInvocation } from 'ai';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { CodeBlock } from '@/components/ui/code-block';
-import { Loader2, Terminal, Code2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Terminal, Code2, CheckCircle2, AlertCircle, DownloadCloud } from 'lucide-react'; // Added DownloadCloud
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Added Button
 
 interface E2BSandboxSectionProps {
   toolInvocation: ToolInvocation;
@@ -20,6 +21,11 @@ interface E2BSandboxResult {
   stderr?: string[];
   results?: Array<{ text: string }>;
   error?: string | null;
+  downloadable_file?: {
+    name: string;
+    content_base64: string;
+    // mimetype?: string; // Optional: if we decide to pass/infer it
+  } | null;
 }
 
 // Args type for e2b_sandbox tool
@@ -152,9 +158,33 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
     const hasStderr = sandboxResult?.stderr && sandboxResult.stderr.length > 0;
     const hasOutput = outputText || hasStdout || hasStderr;
     const hasError = !!sandboxResult?.error;
+    const downloadableFile = sandboxResult?.downloadable_file;
+
+    const handleDownload = (fileName: string, base64Content: string, mimeType: string = 'application/octet-stream') => {
+      try {
+        const byteCharacters = atob(base64Content);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+    
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href); // Clean up
+      } catch (error) {
+        console.error("Error during file download:", error);
+        // Optionally, display an error message to the user via a toast or alert
+      }
+    };
 
     return (
-      <motion.div 
+      <motion.div
         className="my-1 border rounded-lg bg-muted/30"
         variants={container}
         initial="hidden"
@@ -341,6 +371,27 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                           Standard Error
                         </h4>
                         <CodeBlock language="bash" code={sandboxResult.stderr.join('\n')} filename="stderr" />
+                      </motion.div>
+                    )}
+
+                    {/* Download button */}
+                    {downloadableFile && downloadableFile.name && downloadableFile.content_base64 && (
+                      <motion.div
+                        variants={item}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-2" // Add some margin
+                      >
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full sm:w-auto"
+                          onClick={() => handleDownload(downloadableFile.name, downloadableFile.content_base64)}
+                        >
+                          <DownloadCloud className="h-4 w-4 mr-2" />
+                          Download {downloadableFile.name}
+                        </Button>
                       </motion.div>
                     )}
                   </AccordionContent>
