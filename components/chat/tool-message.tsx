@@ -3,6 +3,7 @@ import React from 'react';
 import type { ToolInvocation } from 'ai';
 import WebSearchSection from '../web-search-section';
 import ReadPageSection from '../read-page-section'; // Import the new component
+import { E2BSandboxSection } from '../e2b-sandbox-section'; // Import E2B Sandbox UI
 interface ToolMessageProps {
   // Corrected prop type
   toolInvocation: ToolInvocation;
@@ -36,6 +37,8 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <ReadPageSection
               toolInvocation={toolInvocation}
             />
+      case 'e2b_sandbox':
+        return <E2BSandboxSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
@@ -55,6 +58,8 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <WebSearchSection toolInvocation={toolInvocation} />
       case 'readPage': // Add case for readPage tool (Call State)
         return <ReadPageSection toolInvocation={toolInvocation} />
+      case 'e2b_sandbox':
+        return <E2BSandboxSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-none border rounded-md p-2'>
