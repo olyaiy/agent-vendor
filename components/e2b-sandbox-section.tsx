@@ -66,7 +66,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
         initial="hidden"
         animate="show"
       >
-        <motion.div variants={item} className="flex items-center gap-2 mb-2">
+        <motion.div variants={item} className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-foreground">Executing Python Code</p>
@@ -75,19 +75,6 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
               Python
             </Badge>
           </div>
-        </motion.div>
-        
-        <motion.div variants={item}>
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="code-preview" className="border-b-0">
-              <AccordionTrigger className="text-xs hover:no-underline py-1 text-muted-foreground hover:text-foreground cursor-pointer">
-                Show Code
-              </AccordionTrigger>
-              <AccordionContent className="mt-1">
-                <CodeBlock language="python" code={codeToExecute || ''} filename="submitted_code.py" />
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
         </motion.div>
       </motion.div>
     );
@@ -101,13 +88,12 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
     const outputText = sandboxResult?.text || (sandboxResult?.results && sandboxResult.results.length > 0 && sandboxResult.results[0]?.text);
     const hasStdout = sandboxResult?.stdout && sandboxResult.stdout.length > 0;
     const hasStderr = sandboxResult?.stderr && sandboxResult.stderr.length > 0;
-    
-    const isDefaultOpen = !outputText && !sandboxResult?.error && !hasStdout && !hasStderr;
-    const hasOutput = outputText || hasStdout || hasStderr || sandboxResult?.error;
+    const hasOutput = outputText || hasStdout || hasStderr;
+    const hasError = !!sandboxResult?.error;
 
     return (
       <motion.div 
-        className="p-2 my-1 border rounded-lg bg-muted/30 space-y-2"
+        className="p-2 my-1 border rounded-lg bg-muted/30"
         variants={container}
         initial="hidden"
         animate="show"
@@ -119,7 +105,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
               Python
             </Badge>
             
-            {sandboxResult?.error ? (
+            {hasError ? (
               <span className="text-xs text-destructive flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
                 Execution Failed
@@ -133,75 +119,80 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
           </div>
         </motion.div>
 
-        {sandboxResult?.error && (
-          <motion.div variants={item}>
-            <Alert variant="destructive" className="bg-destructive/10 border-destructive/30 py-2">
-              <Terminal className="h-4 w-4" />
-              <AlertTitle className="font-semibold text-sm">Execution Error</AlertTitle>
-              <AlertDescription className="text-xs">
-                <pre className="whitespace-pre-wrap font-mono">{sandboxResult.error}</pre>
-              </AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-
-        {outputText && !sandboxResult?.error && (
-          <motion.div variants={item} className="bg-background p-2 rounded-md border">
-            <h4 className="text-xs font-medium mb-1 text-primary flex items-center gap-1.5">
-              <Terminal className="h-3.5 w-3.5" />
-              Output
-            </h4>
-            <pre className="text-sm whitespace-pre-wrap overflow-auto max-h-[200px] font-mono text-foreground">{outputText}</pre>
-          </motion.div>
-        )}
-        
-        {!hasOutput && (
-          <motion.div variants={item} className="bg-muted/40 p-2 rounded-md border">
-            <p className="text-sm text-muted-foreground italic flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Code executed successfully with no output.
-            </p>
-          </motion.div>
-        )}
-
-        <motion.div variants={item}>
-          <Accordion 
-              type="single" 
-              collapsible 
-              className="w-full" 
-              defaultValue={isDefaultOpen ? "executed-code-item" : undefined}
-          >
-            <AccordionItem value="executed-code-item" className="border-b-0">
+        <motion.div variants={item} className="mt-1">
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="results" className="border-b-0">
               <AccordionTrigger className="text-xs hover:no-underline py-1 text-muted-foreground hover:text-foreground flex items-center gap-1.5 cursor-pointer">
-                <Code2 className="h-3.5 w-3.5" />
-                View Executed Code
+                <Terminal className="h-3.5 w-3.5" />
+                {hasError ? "View Error Details" : hasOutput ? "View Execution Results" : "No Output"}
               </AccordionTrigger>
-              <AccordionContent className="mt-1">
-                <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
+              <AccordionContent className="space-y-2 pt-2">
+                {/* Code block */}
+                <div className="bg-muted/20 p-2 rounded-md border">
+                  <h4 className="text-xs font-medium mb-1 text-muted-foreground flex items-center gap-1.5">
+                    <Code2 className="h-3.5 w-3.5" />
+                    Executed Code
+                  </h4>
+                  <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
+                </div>
+
+                {/* Error output */}
+                {hasError && (
+                  <Alert variant="destructive" className="bg-destructive/10 border-destructive/30 py-2">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle className="font-semibold text-sm">Execution Error</AlertTitle>
+                    <AlertDescription className="text-xs">
+                      <pre className="whitespace-pre-wrap font-mono">{sandboxResult?.error}</pre>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Text output */}
+                {outputText && !hasError && (
+                  <div className="bg-background p-2 rounded-md border">
+                    <h4 className="text-xs font-medium mb-1 text-primary flex items-center gap-1.5">
+                      <Terminal className="h-3.5 w-3.5" />
+                      Output
+                    </h4>
+                    <pre className="text-sm whitespace-pre-wrap overflow-auto max-h-[200px] font-mono text-foreground">{outputText}</pre>
+                  </div>
+                )}
+                
+                {/* No output message */}
+                {!hasOutput && !hasError && (
+                  <div className="bg-muted/20 p-2 rounded-md border">
+                    <p className="text-sm text-muted-foreground italic flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Code executed successfully with no output.
+                    </p>
+                  </div>
+                )}
+
+                {/* Stdout */}
+                {hasStdout && sandboxResult?.stdout && (
+                  <div>
+                    <h4 className="text-xs font-medium mb-0.5 text-muted-foreground flex items-center gap-1.5">
+                      <Terminal className="h-3.5 w-3.5" />
+                      Standard Output
+                    </h4>
+                    <CodeBlock language="bash" code={sandboxResult.stdout.join('\n')} filename="stdout" />
+                  </div>
+                )}
+
+                {/* Stderr */}
+                {hasStderr && !hasError && sandboxResult?.stderr && ( 
+                  <div>
+                    <h4 className="text-xs font-medium mb-0.5 text-destructive/80 flex items-center gap-1.5">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      Standard Error
+                    </h4>
+                    <CodeBlock language="bash" code={sandboxResult.stderr.join('\n')} filename="stderr" />
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         </motion.div>
-
-        {hasStdout && sandboxResult?.stdout && (
-          <motion.div variants={item}>
-            <h4 className="text-xs font-medium mb-0.5 text-muted-foreground flex items-center gap-1.5">
-              <Terminal className="h-3.5 w-3.5" />
-              Standard Output
-            </h4>
-            <CodeBlock language="bash" code={sandboxResult.stdout.join('\n')} filename="stdout" />
-          </motion.div>
-        )}
-
-        {hasStderr && !sandboxResult?.error && sandboxResult?.stderr && ( 
-          <motion.div variants={item}>
-            <h4 className="text-xs font-medium mb-0.5 text-destructive/80 flex items-center gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5" />
-              Standard Error
-            </h4>
-            <CodeBlock language="bash" code={sandboxResult.stderr.join('\n')} filename="stderr" />
-          </motion.div>
-        )}
       </motion.div>
     );
   }
