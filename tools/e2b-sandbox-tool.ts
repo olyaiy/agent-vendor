@@ -18,14 +18,20 @@ export const e2bSandboxTool = tool({
 
       sandbox = await Sandbox.create({ apiKey: process.env.E2B_API_KEY });
 
-      const execution = await sandbox.runCode(code);
+      const {
+        text,
+        results,
+        logs,
+        error: executionError // Renamed to avoid conflict with the catch block variable
+      } = await sandbox.runCode(code);
 
       return {
-        stdout: execution.stdout,
-        stderr: execution.stderr,
-        results: execution.results,
-        logs: execution.logs,
-        error: execution.error ? execution.error.message : null,
+        text: text, // Primary textual output
+        stdout: logs?.stdout, // stdout from logs
+        stderr: logs?.stderr, // stderr from logs
+        results: results,     // Structured results from execution
+        // logs: logs,        // The full logs object, can be verbose. Optional to include.
+        error: executionError ? String(executionError) : null, // Convert ExecutionError to string
       };
     } catch (error: unknown) {
       console.error('Error executing code in E2B sandbox:', error);
