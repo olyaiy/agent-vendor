@@ -370,7 +370,7 @@ function ChatInputComponent({
               id={id}
               value={input}
               placeholder={placeholder}
-              className="w-full overflow-hidden px-4 py-3 bg-transparent border-none dark:text-white placeholder:text-black/50 dark:placeholder:text-white/50 resize-none focus-visible:ring-0 leading-relaxed text-base"
+              className="w-full overflow-auto px-4 py-3 bg-transparent border-none dark:text-white placeholder:text-black/50 dark:placeholder:text-white/50 resize-none focus-visible:ring-0 leading-relaxed text-base"
               ref={textareaRef}
               autoFocus
               onPaste={handlePaste} // Added onPaste
