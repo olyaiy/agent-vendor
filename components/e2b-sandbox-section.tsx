@@ -249,18 +249,15 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                   variants={accordionAnimation}
                 >
                   <AccordionContent 
-                    className="space-y-2 px-2 py-2 border-t mt-0.5" 
+                    className="space-y-2 px-2 pb-2" 
                     forceMount
                   >
                     {/* Code block */}
                     <motion.div 
-                      className="bg-muted/20 p-2 rounded-md border"
+                      className="rounded-md"
                       variants={item}
                     >
-                      <h4 className="text-xs font-medium mb-1 text-muted-foreground flex items-center gap-1.5">
-                        <Code2 className="h-3.5 w-3.5" />
-                        Executed Code
-                      </h4>
+                    
                       <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
                     </motion.div>
 

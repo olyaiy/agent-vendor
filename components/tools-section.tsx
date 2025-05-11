@@ -10,6 +10,22 @@ import { Code, ChevronRight } from 'lucide-react';
 import { Tool } from '@/db/schema/tool'; // Import Tool type
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
+// Utility function to generate a vibrant color from a string
+function stringToColor(str: string): string {
+  // Generate a hash from the string
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  // Generate vibrant HSL color
+  // Use fixed saturation (80%) and lightness (55%) for vibrant colors
+  // Only vary the hue based on hash (0-360)
+  const hue = Math.abs(hash % 360);
+  
+  return `hsl(${hue}, 80%, 55%)`;
+}
+
 interface ToolsSectionProps {
   assignedTools: Tool[];
 }
@@ -36,24 +52,31 @@ function ToolsSectionComponent({ assignedTools }: ToolsSectionProps) {
           
           {assignedTools && assignedTools.length > 0 ? (
             <div className="grid grid-cols-1 gap-2">
-              {assignedTools.map((tool, index) => (
-                <TooltipProvider key={tool.id || index} delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild className="cursor-pointer">
-                      <div className="relative group/tool border border-border/40 bg-muted/20 hover:bg-muted/40 rounded-md p-2.5 transition-all duration-150 hover:shadow-sm cursor-default">
-                        <div className="absolute top-0 left-0 w-1 h-full bg-primary/60 rounded-l-md"></div>
-                        <div className="pl-1.5">
-                          <p className="text-sm font-medium truncate">{tool.displayName || tool.name}</p>
-                        
+              {assignedTools.map((tool, index) => {
+                // Generate a unique color for each tool based on its name or ID
+                const accentColor = stringToColor(tool.name || tool.id || `tool-${index}`);
+                
+                return (
+                  <TooltipProvider key={tool.id || index} delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild className="cursor-pointer">
+                        <div className="relative group/tool border border-border/40 bg-muted/20 hover:bg-muted/40 rounded-md p-2.5 transition-all duration-150 hover:shadow-sm cursor-default">
+                          <div 
+                            className="absolute top-0 left-0 w-1 h-full rounded-l-md" 
+                            style={{ backgroundColor: accentColor }}
+                          ></div>
+                          <div className="pl-1.5">
+                            <p className="text-sm font-medium truncate">{tool.displayName || tool.name}</p>
+                          </div>
                         </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[250px]">
-                      <p className="text-xs">{tool.description || `Tool: ${tool.name}`}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ))}
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[250px]">
+                        <p className="text-xs">{tool.description || `Tool: ${tool.name}`}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              })}
             </div>
           ) : (
             <div className="flex items-center justify-center py-4 px-3 rounded-md bg-muted/20 border border-border/40">
