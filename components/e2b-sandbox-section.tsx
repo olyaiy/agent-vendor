@@ -4,17 +4,18 @@ import React from 'react';
 import type { ToolInvocation } from 'ai';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { CodeBlock } from '@/components/ui/code-block';
-import { Loader2, Terminal, Code2, CheckCircle2, AlertCircle, DownloadCloud } from 'lucide-react'; // Added DownloadCloud
+import { Loader2, Terminal, Code2, CheckCircle2, AlertCircle, DownloadCloud } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // Added Button
+import { Button } from "@/components/ui/button";
+
+const LOCAL_STORAGE_DOWNLOADED_KEY = 'autoDownloadedFileSignatures';
 
 interface E2BSandboxSectionProps {
-  toolInvocation: ToolInvocation;
+  toolInvocation: ToolInvocation & { state: 'call' | 'result' };
 }
 
-// Interface for the expected structure of the 'result' object from e2b_sandbox
 interface E2BSandboxResult {
   text?: string;
   stdout?: string[];
@@ -24,25 +25,21 @@ interface E2BSandboxResult {
   downloadable_file?: {
     name: string;
     content_base64: string;
-    // mimetype?: string; // Optional: if we decide to pass/infer it
   } | null;
 }
 
-// Args type for e2b_sandbox tool
 type E2BSandboxArgs = {
     code: string;
-    [key: string]: unknown; // Allow other potential args safely
+    [key: string]: unknown;
 };
 
-// More specific type for ToolInvocation when state is 'result'
-// Using type intersection to combine ToolInvocation with specific properties for the 'result' state
-type ToolInvocationWithResult = ToolInvocation & {
+type ToolInvocationWithE2BResult = E2BSandboxSectionProps['toolInvocation'] & {
   state: 'result';
   args: E2BSandboxArgs;
   result: E2BSandboxResult;
+  toolCallId: string; // Ensure toolCallId is part of this specific type
 };
 
-// Animation variants
 const container = {
   hidden: { opacity: 0 },
   show: {
@@ -57,26 +54,25 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 5 },
-  show: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { 
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
       duration: 0.2,
-      ease: "easeOut" 
-    } 
+      ease: "easeOut"
+    }
   }
 };
 
-// Animations for accordion content
 const accordionAnimation = {
-  closed: { 
+  closed: {
     opacity: 0,
     height: 0
   },
-  open: { 
+  open: {
     opacity: 1,
     height: "auto",
-    transition: { 
+    transition: {
       height: {
         duration: 0.3,
         ease: "easeOut"
@@ -103,18 +99,84 @@ const accordionAnimation = {
 };
 
 export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
-  // Safely cast args to our expected type.
-  // The 'code' property is essential for this component.
   const currentArgs = toolInvocation.args as E2BSandboxArgs;
   const codeToExecute = currentArgs.code;
   const [isOpen, setIsOpen] = React.useState(false);
-  
-  // Generate a unique key for animation layout transitions
   const layoutKey = React.useMemo(() => `sandbox-${Math.random().toString(36).substring(2, 9)}`, []);
+
+  const previousStateRef = React.useRef<E2BSandboxSectionProps['toolInvocation']['state'] | null>(null);
+  const isInitialMountRef = React.useRef(true);
+
+  const handleDownload = React.useCallback((fileName: string, base64Content: string, mimeType: string = 'application/octet-stream') => {
+    try {
+      const byteCharacters = atob(base64Content);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: mimeType });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error("Error during file download:", error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!toolInvocation || !toolInvocation.toolCallId) { // Guard against missing toolInvocation or toolCallId
+        previousStateRef.current = toolInvocation?.state || null;
+        return;
+    }
+
+    const currentState = toolInvocation.state;
+    const prevState = previousStateRef.current;
+
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      previousStateRef.current = currentState;
+      return; 
+    }
+
+    if (prevState !== 'result' && currentState === 'result') {
+      const invocationWithResult = toolInvocation as ToolInvocationWithE2BResult;
+      const file = invocationWithResult.result?.downloadable_file;
+      const toolCallId = invocationWithResult.toolCallId; // Already guarded above
+
+      if (file && file.name && file.content_base64) {
+        const currentFileSignature = `${toolCallId}-${file.name}`;
+        try {
+          const storedSignaturesRaw = localStorage.getItem(LOCAL_STORAGE_DOWNLOADED_KEY);
+          const downloadedSignatures: string[] = storedSignaturesRaw ? JSON.parse(storedSignaturesRaw) : [];
+
+          if (!downloadedSignatures.includes(currentFileSignature)) {
+            handleDownload(file.name, file.content_base64);
+            downloadedSignatures.push(currentFileSignature);
+            localStorage.setItem(LOCAL_STORAGE_DOWNLOADED_KEY, JSON.stringify(downloadedSignatures));
+          }
+        } catch (error) {
+          console.error("Error accessing localStorage for auto-download:", error);
+          // Fallback: still attempt download if localStorage fails, as it's better than silently failing.
+          // This might lead to re-downloads if localStorage is consistently failing, but it's a trade-off.
+          // Alternatively, don't download if localStorage fails to avoid unexpected behavior.
+          // For now, let's attempt download if localStorage access fails to ensure user gets the file at least once.
+           handleDownload(file.name, file.content_base64);
+        }
+      }
+    }
+    previousStateRef.current = currentState;
+  }, [toolInvocation, handleDownload]);
+
+  if (!toolInvocation) return null; // Guard if toolInvocation is initially null/undefined
 
   if (toolInvocation.state === 'call') {
     return (
-      <motion.div 
+      <motion.div
         className="p-2 my-1 border rounded-lg bg-muted/30"
         variants={container}
         initial="hidden"
@@ -132,7 +194,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
           </motion.div>
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium text-foreground">Executing Python Code</p>
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.2 }}
@@ -149,39 +211,19 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
   }
 
   if (toolInvocation.state === 'result') {
-    // Type assertion to inform TypeScript that 'result' is available
-    const invocationWithResult = toolInvocation as ToolInvocationWithResult;
+    const invocationWithResult = toolInvocation as ToolInvocationWithE2BResult;
     const sandboxResult = invocationWithResult.result;
 
-    const outputText = sandboxResult?.text || (sandboxResult?.results && sandboxResult.results.length > 0 && sandboxResult.results[0]?.text);
-    const hasStdout = sandboxResult?.stdout && sandboxResult.stdout.length > 0;
-    const hasStderr = sandboxResult?.stderr && sandboxResult.stderr.length > 0;
-    const hasOutput = outputText || hasStdout || hasStderr;
-    const hasError = !!sandboxResult?.error;
-    const downloadableFile = sandboxResult?.downloadable_file;
+    if (!sandboxResult) {
+        return null;
+    }
 
-    const handleDownload = (fileName: string, base64Content: string, mimeType: string = 'application/octet-stream') => {
-      try {
-        const byteCharacters = atob(base64Content);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: mimeType });
-    
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href); // Clean up
-      } catch (error) {
-        console.error("Error during file download:", error);
-        // Optionally, display an error message to the user via a toast or alert
-      }
-    };
+    const outputText = sandboxResult.text || (sandboxResult.results && sandboxResult.results.length > 0 && sandboxResult.results[0]?.text);
+    const hasStdout = sandboxResult.stdout && sandboxResult.stdout.length > 0;
+    const hasStderr = sandboxResult.stderr && sandboxResult.stderr.length > 0;
+    const hasOutput = outputText || hasStdout || hasStderr;
+    const hasError = !!sandboxResult.error;
+    const downloadableFileFromResult = sandboxResult.downloadable_file;
 
     return (
       <motion.div
@@ -192,15 +234,15 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
         layoutId={layoutKey}
         transition={{ duration: 0.3 }}
       >
-        <Accordion 
-          type="single" 
-          collapsible 
+        <Accordion
+          type="single"
+          collapsible
           className="w-full"
           onValueChange={(value) => setIsOpen(!!value)}
         >
           <AccordionItem value="results" className="border-b-0">
             <motion.div
-              whileHover={{ 
+              whileHover={{
                 backgroundColor: 'rgba(0, 0, 0, 0.03)'
               }}
               transition={{ duration: 0.2 }}
@@ -208,7 +250,6 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
             >
               <AccordionTrigger className="hover:no-underline cursor-pointer">
                 <div className="flex items-center justify-between w-full px-2 py-1.5">
-                  {/* Left side: Badge and status */}
                   <div className="flex items-center gap-2">
                     <motion.div whileTap={{ scale: 0.97 }}>
                       <Badge variant="outline" className="bg-primary/5 text-primary/80 text-[10px] py-0 px-1.5 h-4">
@@ -216,16 +257,15 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         Python
                       </Badge>
                     </motion.div>
-                    
                     {hasError ? (
-                      <motion.span 
+                      <motion.span
                         className="text-xs text-destructive flex items-center gap-1"
                         initial={{ opacity: 0, x: -5 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 }}
                       >
                         <motion.div
-                          animate={{ 
+                          animate={{
                             scale: [1, 1.15, 1],
                             transition: { duration: 0.5, delay: 0.3 }
                           }}
@@ -235,7 +275,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         Execution Failed
                       </motion.span>
                     ) : (
-                      <motion.span 
+                      <motion.span
                         className="text-xs text-emerald-600 flex items-center gap-1"
                         initial={{ opacity: 0, x: -5 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -243,8 +283,8 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                       >
                         <motion.div
                           initial={{ scale: 0, opacity: 0 }}
-                          animate={{ 
-                            scale: 1, 
+                          animate={{
+                            scale: 1,
                             opacity: 1,
                             transition: { delay: 0.2, duration: 0.3, type: "spring" }
                           }}
@@ -255,21 +295,17 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                       </motion.span>
                     )}
                   </div>
-                  
-                  {/* Custom trigger text on right side */}
-                  <motion.span 
+                  <motion.span
                     className="text-xs text-muted-foreground flex items-center gap-1"
                     whileHover={{ color: 'var(--foreground)' }}
                     transition={{ duration: 0.15 }}
                   >
                     <Terminal className="h-3.5 w-3.5" />
                     {hasError ? "View Error Details" : hasOutput ? "View Results" : "No Output"}
-                    {/* The AccordionTrigger adds a chevron automatically */}
                   </motion.span>
                 </div>
               </AccordionTrigger>
             </motion.div>
-            
             <AnimatePresence>
               {isOpen && (
                 <motion.div
@@ -278,20 +314,16 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                   exit="exit"
                   variants={accordionAnimation}
                 >
-                  <AccordionContent 
-                    className="space-y-2 px-2 pb-2" 
+                  <AccordionContent
+                    className="space-y-2 px-2 pb-2"
                     forceMount
                   >
-                    {/* Code block */}
-                    <motion.div 
+                    <motion.div
                       className="rounded-md"
                       variants={item}
                     >
-                    
                       <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
                     </motion.div>
-
-                    {/* Error output */}
                     {hasError && (
                       <motion.div
                         variants={item}
@@ -308,10 +340,8 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         </Alert>
                       </motion.div>
                     )}
-
-                    {/* Text output */}
                     {outputText && !hasError && (
-                      <motion.div 
+                      <motion.div
                         className="bg-background p-2 rounded-md border"
                         variants={item}
                         initial={{ opacity: 0, y: 10 }}
@@ -325,10 +355,8 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         <pre className="text-sm whitespace-pre-wrap overflow-auto max-h-[200px] font-mono text-foreground">{outputText}</pre>
                       </motion.div>
                     )}
-                    
-                    {/* No output message */}
                     {!hasOutput && !hasError && (
-                      <motion.div 
+                      <motion.div
                         className="bg-muted/20 p-2 rounded-md border"
                         variants={item}
                         initial={{ opacity: 0, y: 10 }}
@@ -341,8 +369,6 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         </p>
                       </motion.div>
                     )}
-
-                    {/* Stdout */}
                     {hasStdout && sandboxResult?.stdout && (
                       <motion.div
                         variants={item}
@@ -357,9 +383,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         <CodeBlock language="bash" code={sandboxResult.stdout.join('\n')} filename="stdout" />
                       </motion.div>
                     )}
-
-                    {/* Stderr */}
-                    {hasStderr && !hasError && sandboxResult?.stderr && ( 
+                    {hasStderr && !hasError && sandboxResult?.stderr && (
                       <motion.div
                         variants={item}
                         initial={{ opacity: 0, y: 10 }}
@@ -373,24 +397,22 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                         <CodeBlock language="bash" code={sandboxResult.stderr.join('\n')} filename="stderr" />
                       </motion.div>
                     )}
-
-                    {/* Download button */}
-                    {downloadableFile && downloadableFile.name && downloadableFile.content_base64 && (
+                    {downloadableFileFromResult && downloadableFileFromResult.name && downloadableFileFromResult.content_base64 && (
                       <motion.div
                         variants={item}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="mt-2" // Add some margin
+                        className="mt-2"
                       >
                         <Button
                           variant="outline"
                           size="sm"
                           className="w-full sm:w-auto"
-                          onClick={() => handleDownload(downloadableFile.name, downloadableFile.content_base64)}
+                          onClick={() => handleDownload(downloadableFileFromResult.name, downloadableFileFromResult.content_base64)}
                         >
                           <DownloadCloud className="h-4 w-4 mr-2" />
-                          Download {downloadableFile.name}
+                          Download {downloadableFileFromResult.name}
                         </Button>
                       </motion.div>
                     )}
@@ -406,7 +428,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
 
   // Fallback for unexpected states or missing data
   return (
-    <motion.div 
+    <motion.div
       className="p-2 my-1 border rounded-lg bg-muted/30"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
