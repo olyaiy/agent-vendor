@@ -86,11 +86,11 @@ const components: Partial<Components> = {
     const html = node?.children ? toHtml(node.children) : '';
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { children, ...rest } = props;
-    return <li className="py-1 ml-4" dangerouslySetInnerHTML={{ __html: html }} {...rest} />;
+    return <li className="py-0.5 ml-4" dangerouslySetInnerHTML={{ __html: html }} {...rest} />;
   },
   ul: ({ children, ...props }) => {
     return (
-      <ul className="list-decimal list-outside ml-4" {...props}>
+      <ul className="list-disc list-outside ml-4" {...props}>
         {children}
       </ul>
     );
