@@ -108,15 +108,15 @@ function PureMessages({
       // status === 'streaming' &&
        isNotAtBottomDebounced && (
         <div
-          className="absolute left-2 top-16 md:left-auto md:top-auto md:fixed md:bottom-40 md:right-[26%] z-10"
+          className=" absolute left-2 top-16 md:left-auto md:top-auto md:fixed md:bottom-40 md:right-[26%] z-10 pt-2 sm:pt-0"
         >
           <Button
             onClick={scrollToBottom}
-            className="rounded-full p-2 shadow-md backdrop-blur-sm opacity-90"
+            className="rounded-full sm:p-2 size-8 sm:size-auto border border-border shadow-md backdrop-blur-sm opacity-80"
             size="icon"
             variant="secondary"
           >
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="sm:size-4 size-3" />
           </Button>
         </div>
       )}

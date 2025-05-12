@@ -150,7 +150,7 @@ export default function ChatMobile({
   const messagesProp: UIMessage[] = messages;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full px-2">
       <MobileAgentHeader
         agent={agent} // agent prop now correctly includes tags due to updated ChatMobileProps
         isOwner={isOwner}
