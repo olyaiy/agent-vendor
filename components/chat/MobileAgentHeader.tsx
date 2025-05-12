@@ -6,7 +6,7 @@ import { Agent, Knowledge } from '@/db/schema/agent';
 import { Tool } from '@/db/schema/tool';
 import { AgentAvatar } from '@/components/agent-avatar';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'; // Added SheetTitle
 import { AgentInfo } from '@/components/agent-info';
 import { ChevronLeft, Settings, InfoIcon } from 'lucide-react'; // Changed Info to InfoIcon for clarity if needed, or use Info
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'; // Import Tooltip components
@@ -73,7 +73,8 @@ export function MobileAgentHeader({
             <span className="sr-only">Agent Settings</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-full max-w-md p-0">
+        <SheetContent side="right" className="w-[70%] max-w-md pt-8">
+          <SheetTitle className="sr-only">Agent Settings</SheetTitle> {/* Added SheetTitle */}
           <AgentInfo
             agent={agent} // agent already includes tags due to updated prop type
             isOwner={isOwner}
