@@ -172,7 +172,6 @@ export default async function Page({
         initialMessages={initialMessages}
         initialTitle={chat.title}
         assignedTools={currentAgentTools} // Pass assignedTools
-        isOwner={isOwner}
       />
     </div>
   ) : (
