@@ -9,6 +9,7 @@ import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug,
 import { getToolsForAgentAction } from '@/db/actions/agent-relations.actions';
 import type { Tool } from '@/db/schema/tool';
 import type { AgentSpecificModel } from '@/components/chat';
+import { auth } from "@/lib/auth"; // Import auth from better-auth
 
 type Params = { "agent-slug": string };
 
@@ -35,6 +36,10 @@ export default async function Page({
   const rawAgentModels = await selectAgentModelsBySlug(agentSlug);
   const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
   const tags = await selectAgentTagsBySlug(agentSlug); // Tags are fetched here
+
+  // Get the current user session to determine ownership
+  const session = await auth.api.getSession({ headers: await headers() });
+  const isOwner = agent.creatorId === session?.user?.id;
 
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
     agentId: rawModel.agentId,
@@ -70,6 +75,7 @@ export default async function Page({
         chatId={chatId}
         agentSlug={agentSlug}
         assignedTools={currentAgentTools}
+        isOwner={isOwner}
       />
     </>
   );
