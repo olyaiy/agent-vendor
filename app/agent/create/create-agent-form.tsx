@@ -242,10 +242,11 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
     startTransition(async () => {
       let newAgentId: string | null = null;
       try {
+        // Prepare data for the createAgent action (slug is removed)
         const newAgentData = {
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
-          slug: null,
+          // slug: null, // Removed: Slug is now generated in the backend
           systemPrompt: systemPrompt || null, // Use systemPrompt state
           thumbnailUrl: null,
           visibility: visibility,
@@ -330,7 +331,8 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
           }
         }
 
-        router.push(`/agent/${newAgent.slug || newAgentId}`);
+        // Use the generated slug from the backend result for navigation
+        router.push(`/agent/${newAgent.slug || newAgentId}`); 
 
       } catch (error) {
         toast.error(`Failed to create agent: ${(error as Error).message}`);
@@ -407,7 +409,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
     setTimeout(() => setLoading(false), 300);
   };
 
-
+  // Ensure the return statement is inside the CreateAgentForm function
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
       <div className="space-y-12 pb-10 pt-8">

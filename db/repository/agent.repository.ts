@@ -5,41 +5,62 @@ import { db } from '..';
 
 import { selectTagsByAgentId } from './tag.repository';
 import { selectKnowledgeByAgentId } from './knowledge.repository';
+import { generateAgentSlug } from '@/lib/utils'; // Import the slug generation utility
 
 // Define the type for the data needed to insert an agent
-export type NewAgent = typeof agent.$inferInsert;
+// Note: Slug is intentionally omitted here as it's generated internally
+export type NewAgent = Omit<typeof agent.$inferInsert, 'slug'>;
 
 // Define the structure for a tag within the agent result (Keep here or move to shared types)
 export type AgentTagInfo = { id: string; name: string };
 
 
 /**
- * Inserts a new agent into the database.
- * @param newAgentData - The data for the new agent.
- * @returns The newly inserted agent record (as an array for consistency with Drizzle).
+ * Inserts a new agent into the database and generates its slug.
+ * @param newAgentData - The data for the new agent (excluding slug).
+ * @returns The newly inserted and updated agent record with the generated slug.
  */
 export async function insertAgent(newAgentData: NewAgent): Promise<Agent[]> {
-    // 1️⃣ create the agent row
-    const created = await db
+    // 1️⃣ Create the agent row *without* the slug initially
+    const initialInsertResult = await db
         .insert(agent)
-        .values(newAgentData)
-        .returning();
+        .values({
+            ...newAgentData,
+            slug: null // Explicitly set slug to null initially
+        })
+        .returning({ id: agent.id, name: agent.name }); // Only return needed fields for slug generation
 
-    // 2️⃣ backfill the primary role in the join table (if needed, uncommented logic was here)
-    // Consider if this logic should be here or in a separate service layer function
-    // If primaryModelId is always present in NewAgent, this could potentially be done here
-    // or via a database trigger/constraint if your DB supports it.
+    if (!initialInsertResult || initialInsertResult.length === 0) {
+        throw new Error("Failed to insert agent record initially.");
+    }
 
-    // Example backfill if needed:
-    // if (newAgentData.primaryModelId && created.length > 0) {
+    const { id: newAgentId, name: newAgentName } = initialInsertResult[0];
+
+    // 2️⃣ Generate the slug using the utility function
+    const generatedSlug = generateAgentSlug(newAgentName, newAgentId);
+
+    // 3️⃣ Update the agent record with the generated slug
+    const updatedAgentResult = await db
+        .update(agent)
+        .set({ slug: generatedSlug, updatedAt: new Date() }) // Also update updatedAt
+        .where(eq(agent.id, newAgentId))
+        .returning(); // Return the full updated record
+
+    if (!updatedAgentResult || updatedAgentResult.length === 0) {
+        // This is unlikely but handle defensively
+        throw new Error("Failed to update agent record with generated slug.");
+    }
+
+    // 4️⃣ Optional: Backfill primary model in agent_models if needed (logic remains the same)
+    // if (newAgentData.primaryModelId) { // Check if primaryModelId exists in input data
     //     await db.insert(agentModels).values({
-    //         agentId: created[0].id,
+    //         agentId: newAgentId,
     //         modelId: newAgentData.primaryModelId,
     //         role: 'primary',
-    //     }).onConflictDoNothing(); // Avoid errors if somehow already exists
+    //     }).onConflictDoNothing();
     // }
 
-    return created;
+    return updatedAgentResult; // Return the final, updated agent record
 }
 
 /**
@@ -173,7 +194,7 @@ export type RecentAgentResult = {
     name: string;
     description: string | null;
     thumbnailUrl: string | null;
-    slug: string;
+    slug: string | null; // Slug can be null temporarily during creation
     avatarUrl: string | null;
     creatorId: string;
     tags: AgentTagInfo[];
@@ -204,7 +225,8 @@ export async function selectRecentAgents(
             name: agent.name,
             description: agent.description,
             thumbnailUrl: agent.thumbnailUrl,
-            slug: sql<string>`coalesce(${agent.slug}, '')`.as('slug'), // Ensure slug is never null in result
+            // Slug might be null if fetched before update, handle in application logic if needed
+            slug: agent.slug,
             avatarUrl: agent.avatarUrl,
             creatorId: agent.creatorId,
             tags: tagsAgg,
@@ -275,7 +297,8 @@ export async function selectRecentAgents(
     .limit(limit)
     .offset(offset);
 
-    return await finalQuery;
+    // Cast needed because select includes aggregated 'tags'
+    return await finalQuery as RecentAgentResult[];
 }
 
 /**
@@ -470,4 +493,3 @@ export async function selectTagsByAgentSlug(slug: string): Promise<Tag[]> {
     // Then fetch tags using the ID by calling the tag repository function
     return await selectTagsByAgentId(agentRec.id); // Use imported function
 }
-

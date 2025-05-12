@@ -25,6 +25,7 @@ import {
 
 import { Agent, Knowledge, Tag, Model } from "@/db/schema/agent"; // Import schema types
 import { ActionResult } from "./types"; // Import shared type
+import { NewAgent } from "../repository/agent.repository"; // Import NewAgent type from repo
 
 // --- S3 Configuration (Keep here or move to a dedicated service) ---
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -54,27 +55,12 @@ if (R2_ENDPOINT && R2_ACCESS_KEY && R2_SECRET_KEY) {
 
 
 /**
- * Server action to create a new agent
- * @param data - Object containing all required agent properties for insertion (matching NewAgent type from repo)
- * @returns Promise with success status and created agent data or error
+ * Server action to create a new agent. Slug is generated automatically.
+ * @param data - Object containing agent properties for insertion (matching NewAgent type from repo, excluding slug).
+ * @returns Promise with success status and created agent data or error.
  */
-// Use the inferred type from the repository for better type safety if possible
-// Assuming NewAgent type is exported from agent.repository.ts or index.ts
-// import { NewAgent } from "@/db/repositories";
-type CreateAgentData = {
-    name: string;
-    description: string | null;
-    slug: string | null;
-    systemPrompt: string | null;
-    thumbnailUrl: string | null;
-    visibility: string; // Consider using an enum type 'public' | 'private' | 'unlisted'
-    primaryModelId: string;
-    creatorId: string;
-    welcomeMessage: string | null;
-    avatarUrl: string | null;
-};
-
-export async function createAgent(data: CreateAgentData): Promise<ActionResult<Agent[]>> {
+// Use the NewAgent type imported from the repository, which already excludes slug
+export async function createAgent(data: NewAgent): Promise<ActionResult<Agent[]>> {
     // Basic validation could be added here with Zod if desired
     try {
         // Get user session to potentially validate creatorId, although it's passed in
@@ -84,15 +70,30 @@ export async function createAgent(data: CreateAgentData): Promise<ActionResult<A
            // Allow creation for now if creatorId is provided correctly, but auth check is good practice
         }
 
-        const result = await insertAgent(data);
+        // Pass the data directly to insertAgent; slug generation happens in the repository
+        const result = await insertAgent(data); 
+
+        // Check if result is valid and contains the slug (it should after repo update)
+        if (!result || result.length === 0 || !result[0].slug) {
+            console.error("Agent creation succeeded but slug might be missing:", result);
+            // Decide if this is a critical error or just needs logging
+            // For now, proceed but log the potential issue.
+        }
+
         revalidatePath('/profile/agents'); // Revalidate user's agent list
         revalidatePath('/agents'); // Revalidate public agent list
+        // Revalidate the specific agent page if slug exists
+        if (result && result.length > 0 && result[0].slug) {
+            revalidatePath(`/agent/${result[0].slug}`);
+        }
+
         return { success: true, data: result };
     } catch (error) {
         console.error("Failed to create agent:", error);
-        // Handle specific errors like unique constraint violations if slug needs to be unique
-        if (error instanceof Error && error.message.includes('unique constraint') && data.slug) {
-             return { success: false, error: `Agent slug "${data.slug}" is already taken.` };
+        // Handle specific errors like unique constraint violations (less likely for auto-generated slug)
+        if (error instanceof Error && error.message.includes('unique constraint')) {
+             // This error is less likely now but kept for robustness
+             return { success: false, error: `Generated agent slug might conflict. Please try again or adjust the name.` };
         }
         return { success: false, error: (error as Error).message };
     }
@@ -129,7 +130,7 @@ type AgentWithTagsAndDate = {
     name: string;
     description: string | null;
     thumbnailUrl: string | null;
-    slug: string; // Should not be null based on repo coalese
+    slug: string | null; // Slug might be null temporarily
     avatarUrl: string | null;
     creatorId: string;
     tags: { id: string; name: string }[];
@@ -173,6 +174,7 @@ export async function getRecentAgents(
         if (searchQuery && agents.length > 0) {
             const queryLower = searchQuery.toLowerCase();
             const getRank = (agent: AgentWithTagsAndDate): number => {
+                // Handle potentially null slug during ranking
                 if (agent.name.toLowerCase().includes(queryLower)) return 1; // Name match
                 if (agent.tags.some(tag => tag.name.toLowerCase().includes(queryLower))) return 2; // Tag match
                 if (agent.description?.toLowerCase().includes(queryLower)) return 3; // Description match
@@ -202,7 +204,7 @@ export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{
     name: string;
     thumbnailUrl: string | null;
     avatarUrl: string | null; // Added this line
-    slug: string;
+    slug: string | null; // Slug might be null
 }>>> {
     // Consider making this ID an environment variable or constant
     const baseModelTagId = "575527b1-803a-4c96-8a4a-58ca997f08bd";

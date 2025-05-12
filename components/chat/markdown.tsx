@@ -1,11 +1,15 @@
+"use client"
+
 import Link from 'next/link';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from '../ui/code-block';
 import rehypeRaw from 'rehype-raw';
 import { toHtml } from 'hast-util-to-html';
 import { CopyButton } from '../ui/copy-button';
+import { DownloadIcon } from '../utils/icons';
+import { Button } from '../ui/button';
 
 interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
@@ -13,13 +17,86 @@ interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
 }
 
+interface MarkdownImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src: string;
+  alt?: string;
+}
+
+// Image component with download functionality
+const MarkdownImage: React.FC<MarkdownImageProps> = ({ src, alt, ...props }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+  
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!src || isDownloading) return;
+    
+    try {
+      setIsDownloading(true);
+      
+      // Fetch the image
+      const response = await fetch(src);
+      const blob = await response.blob();
+      
+      // Create a blob URL
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Extract filename from path or use alt text
+      const filename = alt || src.split('/').pop() || 'image';
+      
+      // Create a link element and trigger download
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+  
+  return (
+    <span className="relative group inline-block">
+      <span className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <Button 
+          onClick={handleDownload} 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm shadow-sm hover:bg-background"
+          aria-label="Download image"
+          disabled={isDownloading}
+        >
+          {isDownloading ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
+          ) : (
+            <DownloadIcon size={16} />
+          )}
+        </Button>
+      </span>
+      <img 
+        src={src} 
+        alt={alt || ''} 
+        className="rounded-lg object-contain max-h-[300px] h-full" 
+        {...props}
+      />
+    </span>
+  );
+};
+
 // Component to handle image grid layout
 const ImageGrid = ({ children }: { children: React.ReactNode }) => {
   const childrenArray = React.Children.toArray(children);
   
   // Only apply grid if there are multiple images (up to 4)
   if (childrenArray.length > 1 && childrenArray.length <= 4) {
-    let gridClassName = "grid gap-2 my-4 ";
+    let gridClassName = "inline-grid gap-2 my-4 ";
     
     // Set grid columns based on image count
     switch (childrenArray.length) {
@@ -36,10 +113,11 @@ const ImageGrid = ({ children }: { children: React.ReactNode }) => {
         gridClassName += "grid-cols-1";
     }
     
-    return <div className={gridClassName}>{children}</div>;
+    // Use span to avoid block element nesting issues
+    return <span className={gridClassName}>{children}</span>;
   }
   
-  // If only one image or more than 4, render normally
+  // If only one image or more than 4, render normally as fragments
   return <>{children}</>;
 };
 
@@ -90,40 +168,40 @@ const components: Partial<Components> = {
   },
   img: ({ src, alt, ...props }) => {
     if (!src) return null;
-    
-    return (
-      <img 
-        src={src} 
-        alt={alt || ''} 
-        className="rounded-lg object-contain max-h-[300px]  h-full" 
-        {...props}
-      />
-    );
+    return <MarkdownImage key={src} src={src} alt={alt} {...props} />;
   },
   p: ({ children, ...props }) => {
     // Check if paragraph contains only images
     const childrenArray = React.Children.toArray(children);
+    
+    // Handle case where paragraph contains only images
     const onlyImages = childrenArray.every(
-      child => React.isValidElement(child) && child.type === 'img'
+      child => React.isValidElement(child) && 
+        ((typeof child.type === 'string' && child.type === 'img') || 
+         (typeof child.type !== 'string' && child.type?.name === 'MarkdownImage'))
     );
     
     // If paragraph contains only images, wrap in ImageGrid
     if (onlyImages && childrenArray.length > 0) {
       return (
-        <ImageGrid>
-          {children}
-        </ImageGrid>
+        <span className="inline-block">
+          <ImageGrid>
+            {children}
+          </ImageGrid>
+        </span>
       );
     }
     
+    // Check if this paragraph has any block elements inside it
     const hasBlockElement = React.Children.toArray(children).some(
       (child) => React.isValidElement(child) && 
         (typeof child.type === 'string' 
           ? ['div', 'pre', 'ul', 'ol', 'table'].includes(child.type)
-          : ['CodeBlock'].includes(child.type?.name || '')
+          : ['CodeBlock', 'MarkdownImage', 'ImageGrid'].includes(child.type?.name || '')
         )
     );
     
+    // If there are block elements, use a div instead of a p to avoid nesting violations
     const Element = hasBlockElement ? 'div' : 'p';
     
     return (

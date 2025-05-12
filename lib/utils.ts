@@ -11,24 +11,35 @@ export function cn(...inputs: ClassValue[]) {
 export function slugify(str: string) {
   return str
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^\w\s-]/g, '') // Remove non-word characters (excluding spaces and hyphens)
+    .replace(/[\s_-]+/g, '-') // Replace spaces, underscores, hyphens with a single hyphen
+    .replace(/^-+|-+$/g, ''); // Trim leading/trailing hyphens
 }
 
 export function generateAgentSlug(name: string, id: string) {
   const safeSlug = slugify(name);
-  return `${safeSlug}_${id}`;
+  // Ensure id is long enough and extract last 4 characters
+  const idSuffix = id && id.length >= 4 ? id.slice(-4) : id; 
+  return `${safeSlug}-${idSuffix}`; // Use hyphen and last 4 chars of ID
 }
 
 export function parseAgentSlug(slug: string) {
-  const lastSeparatorIndex = slug.lastIndexOf('_');
-  if (lastSeparatorIndex === -1) return { slugifiedName: '', agentId: slug };
-  
-  return {
-    slugifiedName: slug.slice(0, lastSeparatorIndex),
-    agentId: slug.slice(lastSeparatorIndex + 1)
-  };
+  // Updated to look for the last hyphen, assuming the suffix is always 4 chars + hyphen
+  // A more robust approach might be needed if slugs can contain hyphens AND the suffix isn't fixed length
+  const lastHyphenIndex = slug.lastIndexOf('-');
+  // Check if the part after the last hyphen looks like our 4-char suffix
+  if (lastHyphenIndex !== -1 && slug.length - lastHyphenIndex - 1 === 4) {
+    // Basic check if suffix looks like hex, adjust if needed
+    const potentialSuffix = slug.slice(lastHyphenIndex + 1);
+    if (/^[a-f0-9]{4}$/i.test(potentialSuffix)) {
+      return {
+        slugifiedName: slug.slice(0, lastHyphenIndex),
+        agentIdSuffix: potentialSuffix // Return suffix instead of full ID
+      };
+    }
+  }
+  // Fallback if pattern doesn't match: return original slug as name, no suffix
+  return { slugifiedName: slug, agentIdSuffix: '' };
 }
 
 /**
