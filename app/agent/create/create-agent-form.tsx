@@ -19,7 +19,7 @@ import {
   uploadAgentImageAction,
 } from "@/db/actions/agent.actions";
 import { addToolToAgentAction } from "@/db/actions/agent-relations.actions";
-import { InfoCircledIcon, ChevronRightIcon, DiscIcon } from '@radix-ui/react-icons';
+import { InfoCircledIcon, ChevronRightIcon, DiscIcon, MagicWandIcon, CheckIcon, Cross2Icon, ReloadIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
 import { AgentAvatar } from "@/components/agent-avatar";
@@ -57,9 +57,148 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
   
+  const [systemPrompt, setSystemPrompt] = useState<string>(""); // New state for system prompt
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // --- Start of "Enhance Prompt" feature state and logic ---
+  const [isImproving, setIsImproving] = useState(false);
+  const [showImprovementActions, setShowImprovementActions] = useState(false);
+  const [promptBeforeImprovement, setPromptBeforeImprovement] = useState("");
+  const [improvementError, setImprovementError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [customImproveInstructions, setCustomImproveInstructions] = useState("Please improve the following prompt:");
+
+  const improvePresets = [
+    { label: "✂️ More concise", value: "Make this prompt more concise while maintaining all key instructions. Reduce verbosity and redundancy." },
+    { label: "🔍 Add examples", value: "Enhance this prompt with 2-3 clear, specific examples that demonstrate the expected behavior and outputs." },
+    { label: "🧠 More precise", value: "Make this prompt more precise and specific. Clarify ambiguous instructions and add necessary constraints." },
+    { label: "🌟 More creative", value: "Make this prompt encourage more creative and diverse responses while maintaining the core requirements." },
+  ];
+
+  useEffect(() => {
+    // Add the custom animation style for textarea pulsing
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes textarea-pulse {
+            0%, 100% {
+                border-color: rgb(129, 140, 248, 0.5);
+                box-shadow: 0 0 5px rgba(99, 102, 241, 0.2);
+            }
+            50% {
+                border-color: rgb(99, 102, 241, 1);
+                box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+            }
+        }
+        
+        .animate-textarea-pulse {
+            border-width: 2px;
+            border-color: rgb(129, 140, 248, 0.5);
+            animation: textarea-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .dark .animate-textarea-pulse {
+            border-color: rgb(129, 140, 248, 0.3);
+            box-shadow: 0 0 5px rgba(99, 102, 241, 0.2);
+        }
+        
+        .dark .animate-textarea-pulse {
+            animation: textarea-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+        document.head.removeChild(style);
+    };
+  }, []);
+
+  const handleImprovePrompt = async () => { 
+    if (!systemPrompt.trim() || isImproving || isPending) return;
+
+    setIsImproving(true);
+    setShowImprovementActions(false);
+    setImprovementError(null);
+    setPromptBeforeImprovement(systemPrompt);
+    
+    let accumulatedStream = "";
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+
+    try {
+        const response = await fetch('/api/improve-prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                prompt: systemPrompt,
+                customInstructions: customImproveInstructions 
+            }),
+            signal,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to fetch improved prompt.' }));
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+
+        if (!response.body) {
+            throw new Error('Response body is null.');
+        }
+        
+        setSystemPrompt(""); 
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true }); 
+            accumulatedStream += chunk;
+            setSystemPrompt(accumulatedStream);
+            // adjustSystemPromptHeight will be called by useEffect on systemPrompt change
+        }
+        
+        setShowImprovementActions(true);
+
+    } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            console.log("Prompt improvement stopped by user.");
+            setSystemPrompt(promptBeforeImprovement); 
+            setImprovementError("Prompt improvement was cancelled.");
+        } else {
+            console.error("Improvement error:", error);
+            setImprovementError(error instanceof Error ? error.message : String(error));
+            setSystemPrompt(promptBeforeImprovement); 
+        }
+    } finally {
+        setIsImproving(false);
+        abortControllerRef.current = null;
+    }
+  };
+
+  const handleKeepImprovement = () => {
+    setShowImprovementActions(false);
+    setImprovementError(null);
+    // No need to set isDirty or initialSystemPrompt.current as this is a create form
+  };
+
+  const handleStopImproving = () => {
+    if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+    }
+  };
+
+  const handleGoBackFromImprovement = () => {
+    setSystemPrompt(promptBeforeImprovement);
+    setShowImprovementActions(false);
+    setImprovementError(null);
+  };
+
+  const applyPreset = (preset: string) => {
+    setCustomImproveInstructions(preset);
+  };
+  // --- End of "Enhance Prompt" feature state and logic ---
   
   const adjustSystemPromptHeight = () => {
     const textarea = systemPromptRef.current;
@@ -68,6 +207,10 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   };
+
+  useEffect(() => {
+    adjustSystemPromptHeight();
+  }, [systemPrompt]); // Adjust height when systemPrompt changes
 
   useEffect(() => {
     const thumbUrl = thumbnailUrl;
@@ -103,7 +246,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
           name: formData.get("agentDisplayName") as string,
           description: (formData.get("description") as string) || null,
           slug: null,
-          systemPrompt: (formData.get("systemPrompt") as string) || null,
+          systemPrompt: systemPrompt || null, // Use systemPrompt state
           thumbnailUrl: null,
           visibility: visibility,
           primaryModelId: primaryModelId,
@@ -117,7 +260,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
         if (!agentCreateResult.success) {
           throw new Error(agentCreateResult.error || "Failed to create agent data");
         }
-        if (!agentCreateResult.data || !agentCreateResult.data[0]) { // Check if data exists
+        if (!agentCreateResult.data || !agentCreateResult.data[0]) { 
           throw new Error("Failed to create agent: No data returned");
         }
 
@@ -617,17 +760,167 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
                   Required
                 </Badge>
               </div>
-              <div className="bg-secondary/50 border rounded-lg p-0.5">
+              <div className={`bg-secondary/50 border rounded-lg p-0.5 relative ${isImproving ? 'animate-textarea-pulse' : ''}`}>
                 <Textarea
                   id="systemPrompt"
-                  name="systemPrompt"
+                  name="systemPrompt" // Keep name for form data, but value is controlled by state
                   placeholder="e.g. You are a friendly assistant! Keep your responses concise and helpful."
-                  className="min-h-[180px] font-mono text-sm leading-relaxed bg-background border-0 focus-visible:ring-1 focus-visible:ring-offset-0 resize-none"
+                  className="min-h-[180px] font-mono text-sm leading-relaxed bg-background border-0 focus-visible:ring-1 focus-visible:ring-offset-0 resize-none w-full"
                   required
                   ref={systemPromptRef}
-                  onInput={adjustSystemPromptHeight}
+                  value={systemPrompt} // Controlled component
+                  onChange={(e) => {
+                    setSystemPrompt(e.target.value);
+                    if (showImprovementActions) setShowImprovementActions(false);
+                    setImprovementError(null);
+                  }}
+                  onInput={adjustSystemPromptHeight} // Keep for manual typing resize
+                  readOnly={isImproving}
                 />
               </div>
+
+              {/* --- Start of "Enhance Prompt" UI elements --- */}
+              {improvementError && (
+                  <div className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-md flex items-start gap-2 mt-2 text-sm border border-red-200 dark:border-red-900">
+                      <Cross2Icon className="size-4 mt-0.5 flex-shrink-0" />
+                      <p>{improvementError}</p>
+                  </div>
+              )}
+
+              <div className="flex justify-end items-center mt-4 space-x-2">
+                  {!showImprovementActions && (
+                      <TooltipProvider delayDuration={300}>
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                  <Button
+                                      type="button"
+                                      onClick={handleImprovePrompt}
+                                      disabled={isPending || isImproving || !systemPrompt.trim() || !customImproveInstructions.trim()}
+                                      className="bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-950/40 dark:to-sky-950/40 border-indigo-200 dark:border-indigo-900 hover:border-indigo-300 dark:hover:border-indigo-800 text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5"
+                                  >
+                                      {isImproving ? (
+                                          <span className="flex items-center gap-1.5">
+                                              <ReloadIcon className="size-4 animate-spin" />
+                                              Enhancing...
+                                          </span>
+                                      ) : (
+                                          <span className="flex items-center gap-1.5">
+                                              <MagicWandIcon className="size-4" />
+                                              Enhance Prompt
+                                          </span>
+                                      )}
+                                  </Button>
+                              </TooltipTrigger>
+                              <TooltipContent 
+                                  side="top"
+                                  align="end"
+                                  className="p-0 bg-gradient-to-r from-indigo-50/20 to-sky-50/20 dark:from-indigo-950/20 dark:to-sky-950/20 border-none shadow-xl rounded-xl w-80 z-50 backdrop-blur-sm [&>svg]:hidden overflow-hidden"
+                                  sideOffset={10}
+                                  forceMount
+                              >
+                                  <div className="p-4 space-y-4 relative">
+                                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/20 to-sky-100/30 dark:from-indigo-900/20 dark:to-sky-900/30 rounded-xl pointer-events-none" aria-hidden="true"></div>
+                                      <div className="absolute -bottom-2 right-4 w-4 h-4 rotate-45 bg-gradient-to-br from-indigo-50 to-sky-50 dark:from-indigo-950 dark:to-sky-950 shadow-sm"></div>
+                                      <div className="flex justify-between items-center relative">
+                                          <Label htmlFor="customImproveInstructions" className="text-sm font-medium text-white flex items-center gap-1.5">
+                                              <MagicWandIcon className="size-3.5" />
+                                              Enhancement Options
+                                          </Label>
+                                          <Button 
+                                              variant="default" 
+                                              size="sm" 
+                                              className="h-7 px-2.5 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-full" 
+                                              onClick={(e) => {
+                                                  e.preventDefault();
+                                                  e.stopPropagation();
+                                                  handleImprovePrompt();
+                                              }}
+                                              disabled={isImproving || !systemPrompt.trim() || !customImproveInstructions.trim()}
+                                          >
+                                              Apply
+                                          </Button>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-2 relative">
+                                          {improvePresets.map((preset, index) => (
+                                              <Button 
+                                                  key={index}
+                                                  type="button" 
+                                                  variant="outline" 
+                                                  size="sm"
+                                                  onClick={(e) => {
+                                                      e.preventDefault();
+                                                      e.stopPropagation();
+                                                      applyPreset(preset.value);
+                                                  }}
+                                                  className="text-xs py-1 h-8 border-indigo-200/70 dark:border-indigo-800/50 bg-white/90 dark:bg-slate-900/80 text-white hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 dark:hover:border-indigo-700 rounded-lg shadow-sm transition-colors duration-150"
+                                              >
+                                                  {preset.label}
+                                              </Button>
+                                          ))}
+                                      </div>
+                                      <div className="mb-2 rounded-lg overflow-hidden ring-1 ring-indigo-200/50 dark:ring-indigo-800/30 shadow-sm">
+                                          <Textarea
+                                              id="customImproveInstructions"
+                                              value={customImproveInstructions}
+                                              onChange={(e) => {
+                                                  e.stopPropagation();
+                                                  setCustomImproveInstructions(e.target.value);
+                                              }}
+                                              onMouseDown={(e) => e.stopPropagation()}
+                                              onPointerDown={(e) => e.stopPropagation()}
+                                              placeholder="e.g., Focus on making it more concise and add examples."
+                                              className="min-h-[80px] text-xs resize-none border-0 rounded-lg w-full bg-white/90 dark:bg-slate-900/90 text-white placeholder:text-white focus-visible:ring-1 focus-visible:ring-indigo-300 dark:focus-visible:ring-indigo-700 focus-visible:ring-offset-0"
+                                              rows={3}
+                                          />
+                                      </div>
+                                  </div>
+                              </TooltipContent>
+                          </Tooltip>
+                      </TooltipProvider>
+                  )}
+
+                  {showImprovementActions && (
+                      <div className="flex items-center gap-3 bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900 p-2 pl-3 pr-1 rounded-lg">
+                          <div className="text-sm text-green-700 dark:text-green-400 flex items-center gap-1.5">
+                              <CheckIcon className="size-4" />
+                              <span>Prompt enhanced successfully!</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              <Button
+                                  type="button"
+                                  onClick={handleKeepImprovement}
+                                  className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5"
+                                  size="sm"
+                              >
+                                  <CheckIcon className="size-3.5" />
+                                  Keep Changes
+                              </Button>
+                              <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleGoBackFromImprovement}
+                                  className="border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 flex items-center gap-1.5"
+                              >
+                                  <Cross2Icon className="size-3.5" />
+                                  Revert
+                              </Button>
+                          </div>
+                      </div>
+                  )}
+                  {isImproving && (
+                      <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleStopImproving}
+                          className="border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:border-red-300 dark:hover:border-red-800 flex items-center gap-1.5"
+                      >
+                          <Cross2Icon className="size-4" />
+                          Stop
+                      </Button>
+                  )}
+              </div>
+              {/* --- End of "Enhance Prompt" UI elements --- */}
               
               <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border text-sm">
                 <h3 className="font-medium mb-2 text-primary flex items-center gap-2">
@@ -657,7 +950,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
         </Button>
         <Button 
           type="submit" 
-          disabled={isPending || !primaryModelId}
+          disabled={isPending || !primaryModelId || isImproving || showImprovementActions} // Disable submit if improving
           className="w-36 gap-2 cursor-pointer"
         >
           {isPending ? (
