@@ -1,15 +1,18 @@
 'use client'
 import { Label } from '@/components/ui/label'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { Textarea } from '@/components/ui/textarea'
-import { TooltipProvider } from '@/components/ui/tooltip'
-import { CheckIcon, ChevronRightIcon, EnterFullScreenIcon, ExitFullScreenIcon, InfoCircledIcon, Cross2Icon, MagicWandIcon } from '@radix-ui/react-icons' // Added Cross2Icon, MagicWandIcon
+// TooltipProvider was already imported, but ensuring it's available for new instance
+import { CheckIcon, ChevronRightIcon, EnterFullScreenIcon, ExitFullScreenIcon, InfoCircledIcon, Cross2Icon, MagicWandIcon } from '@radix-ui/react-icons'
 import React, { useEffect, useRef, useState, useTransition } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Agent } from '@/db/schema/agent';
 import { updateAgentSystemPromptAction } from '@/db/actions/agent.actions';
 import { FormSection } from '@/components/form-section'
+// Import for onPointerDownOutside event type if needed, though often inferred
+// import type { PointerDownOutsideEvent } from '@radix-ui/react-dismissable-layer';
+
 
 interface SystemPromptFormProps {
   agent: Agent;
@@ -25,19 +28,24 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const initialSystemPrompt = useRef(agent.systemPrompt || "");
 
-    // New state variables for "Improve Prompt" feature
     const [isImproving, setIsImproving] = useState(false);
     const [showImprovementActions, setShowImprovementActions] = useState(false);
     const [promptBeforeImprovement, setPromptBeforeImprovement] = useState("");
     const [improvementError, setImprovementError] = useState<string | null>(null);
+
+    const [customImproveInstructions, setCustomImproveInstructions] = useState("Please improve the following prompt:");
+    const [isImproveTooltipOpen, setIsImproveTooltipOpen] = useState(false);
+
 
     useEffect(() => {
         const newPrompt = agent.systemPrompt || "";
         setCurrentSystemPrompt(newPrompt);
         initialSystemPrompt.current = newPrompt;
         setIsDirty(false);
-        setShowImprovementActions(false); // Reset improvement state on agent change
+        setShowImprovementActions(false);
         setImprovementError(null);
+        setCustomImproveInstructions("Please improve the following prompt:");
+        setIsImproveTooltipOpen(false);
         adjustSystemPromptHeight();
     }, [agent.systemPrompt]);
 
@@ -65,7 +73,6 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
     const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCurrentSystemPrompt(event.target.value);
         adjustSystemPromptHeight();
-        // If user types, hide improvement actions as the improved prompt is being modified
         if (showImprovementActions) {
             setShowImprovementActions(false);
         }
@@ -95,13 +102,14 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
         });
     };
 
-    const handleImprovePrompt = async () => {
+    const handleImprovePrompt = async () => { 
         if (!currentSystemPrompt.trim() || isImproving || isPending) return;
 
         setIsImproving(true);
         setShowImprovementActions(false);
         setImprovementError(null);
         setPromptBeforeImprovement(currentSystemPrompt);
+        setIsImproveTooltipOpen(false); 
         
         let accumulatedStream = "";
 
@@ -109,7 +117,10 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
             const response = await fetch('/api/improve-prompt', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: currentSystemPrompt }),
+                body: JSON.stringify({ 
+                    prompt: currentSystemPrompt,
+                    customInstructions: customImproveInstructions 
+                }),
             });
 
             if (!response.ok) {
@@ -121,17 +132,17 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                 throw new Error('Response body is null.');
             }
             
-            setCurrentSystemPrompt(""); // Clear current prompt to show only streamed one initially
+            setCurrentSystemPrompt(""); 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
 
             while (true) {
                 const { value, done } = await reader.read();
                 if (done) break;
-                const chunk = decoder.decode(value, { stream: true }); // Pass { stream: true }
+                const chunk = decoder.decode(value, { stream: true }); 
                 accumulatedStream += chunk;
                 setCurrentSystemPrompt(accumulatedStream);
-                adjustSystemPromptHeight(); // Adjust height as content streams
+                adjustSystemPromptHeight(); 
             }
             
             setShowImprovementActions(true);
@@ -139,7 +150,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
         } catch (error) {
             console.error("Improvement error:", error);
             setImprovementError(error instanceof Error ? error.message : String(error));
-            setCurrentSystemPrompt(promptBeforeImprovement); // Revert on error
+            setCurrentSystemPrompt(promptBeforeImprovement); 
             adjustSystemPromptHeight();
         } finally {
             setIsImproving(false);
@@ -149,10 +160,8 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
     const handleKeepImprovement = () => {
         setShowImprovementActions(false);
         setImprovementError(null);
-        // currentSystemPrompt is already the improved version.
-        // isDirty will be true if it's different from initialSystemPrompt.current
-        initialSystemPrompt.current = promptBeforeImprovement; // Set initial to before improvement, so save is enabled
-        setIsDirty(true); // Explicitly set dirty as we are keeping a change
+        initialSystemPrompt.current = promptBeforeImprovement; 
+        setIsDirty(true); 
     };
 
     const handleGoBackFromImprovement = () => {
@@ -215,7 +224,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                         value={currentSystemPrompt}
                         onChange={handleInputChange}
                         onInput={adjustSystemPromptHeight}
-                        readOnly={isImproving} // Make textarea readonly during improvement
+                        readOnly={isImproving} 
                     />
                 </div>
 
@@ -229,7 +238,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                         Tips for effective system prompts:
                     </h3>
                     <ul className="list-disc list-inside space-y-1.5 pl-1 text-muted-foreground">
-                        <li>Define the agent&amp;apos;s role clearly (e.g., &amp;quot;You are a math tutor&amp;quot;)</li>
+                        <li>Define the agent&apos;s role clearly (e.g., &quot;You are a math tutor&quot;)</li>
                         <li>Specify tone and style (formal, casual, technical)</li>
                         <li>Set response length preferences (concise, detailed)</li>
                         <li>Include any domain-specific knowledge</li>
@@ -239,16 +248,55 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
 
             <div className="flex justify-end items-center mt-4 space-x-2">
                 {!showImprovementActions && (
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleImprovePrompt}
-                        disabled={isPending || isImproving || !currentSystemPrompt.trim() || showSuccess}
-                        className="flex items-center gap-1.5"
-                    >
-                        <MagicWandIcon className="size-4" />
-                        {isImproving ? 'Improving...' : 'Improve Prompt'}
-                    </Button>
+                    <TooltipProvider delayDuration={0}>
+                        <Tooltip open={isImproveTooltipOpen} onOpenChange={setIsImproveTooltipOpen}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={isPending || isImproving || !currentSystemPrompt.trim() || showSuccess}
+                                    className="flex items-center gap-1.5"
+                                    // Removed onClick here, TooltipTrigger handles opening
+                                >
+                                    <MagicWandIcon className="size-4" />
+                                    {isImproving ? 'Improving...' : 'Improve Prompt'}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                                side="top"
+                                align="end"
+                                className="p-4 bg-background border shadow-lg rounded-md min-w-[380px] w-auto z-[60]"
+                                
+                                // Removed onInteractOutside as it's not a valid prop
+                            >
+                                <div className="space-y-3">
+                                    <Label htmlFor="customImproveInstructions" className="text-sm font-medium block mb-1.5">
+                                        Custom Instructions for AI Improver:
+                                    </Label>
+                                    <Textarea
+                                        id="customImproveInstructions"
+                                        value={customImproveInstructions}
+                                        onChange={(e) => setCustomImproveInstructions(e.target.value)}
+                                        placeholder="e.g., Focus on making it more concise and add examples."
+                                        className="min-h-[100px] text-sm p-2 border rounded-md w-full"
+                                        rows={4}
+                                        onClick={(e) => e.stopPropagation()} // Attempt to keep tooltip open
+                                        onMouseDown={(e) => e.stopPropagation()} // Attempt to keep tooltip open
+                                        onFocus={(e) => e.stopPropagation()} // Attempt to keep tooltip open
+                                    />
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={handleImprovePrompt} 
+                                        className="w-full mt-2"
+                                        disabled={isPending || isImproving || !currentSystemPrompt.trim() || showSuccess || !customImproveInstructions.trim()}
+                                    >
+                                        {isImproving ? 'Improving...' : 'Improve with these Instructions'}
+                                    </Button>
+                                </div>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 )}
 
                 {showImprovementActions && (

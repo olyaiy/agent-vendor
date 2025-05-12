@@ -6,7 +6,7 @@ export const runtime = 'edge';
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt: currentPrompt } = await req.json();
+    const { prompt: currentPrompt, customInstructions } = await req.json();
 
     if (!currentPrompt) {
       return new NextResponse(JSON.stringify({ error: 'Prompt is required' }), {
@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const model = openai('gpt-4.1-mini');
+    const model = openai('gpt-4.1-mini'); // User file shows gpt-4.1-mini, can be changed
 
-    // Define a system message to guide the AI
+    // System message defining the AI's role as a prompt engineer
     const systemMessage = `You are a prompt engineering assistant specialized in refining user-provided prompts for AI models. Your goal is to transform user prompts into clear, context-rich, and actionable instructions for AI applications, maximizing model effectiveness while preserving the user's original intent. Follow these guidelines:
 - Clarify the agent's role, objectives, constraints, and required output.
 - Structure the prompt with sections like Context, Task, and Output Format when needed.
@@ -27,10 +27,14 @@ export async function POST(req: NextRequest) {
 - Avoid meta-commentary, apologies, or verbose preambles.
 Output only the improved prompt text as plain text, without any additional explanation or formatting.`;
 
+    const userDefinedInstructions = customInstructions || "Please improve the following prompt:";
+
+    const finalPrompt = `${userDefinedInstructions}\n\nOriginal prompt:\n---\n${currentPrompt}\n---\n\nImproved prompt:`;
+
     const result = await streamText({
       model: model,
       system: systemMessage,
-      prompt: `Original prompt:\n---\n${currentPrompt}\n---\nImproved prompt:`,
+      prompt: finalPrompt,
     });
 
     // Respond with the stream using toTextStreamResponse
