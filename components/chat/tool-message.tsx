@@ -31,11 +31,11 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
   // If RESULT is available
   if (state == 'result') {
     switch (toolName) {
-      case 'webSearch':
+      case 'web_search':
         return <WebSearchSection 
               toolInvocation={toolInvocation}
             />
-      case 'readPage': // Add case for readPage tool (Result State)
+      case 'read_page': // Add case for readPage tool (Result State)
         return <ReadPageSection
               toolInvocation={toolInvocation}
             />
@@ -58,9 +58,9 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
     console.log('toolInvocation', toolInvocation);
 
     switch (toolName) {
-      case 'webSearch':
+      case 'web_search':
         return <WebSearchSection toolInvocation={toolInvocation} />
-      case 'readPage': // Add case for readPage tool (Call State)
+      case 'read_page': // Add case for readPage tool (Call State)
         return <ReadPageSection toolInvocation={toolInvocation} />
       case 'e2b_sandbox':
         return <E2BSandboxSection toolInvocation={toolInvocation} />;

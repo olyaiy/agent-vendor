@@ -48,8 +48,16 @@ interface ReadPageSectionProps {
 // Basic HTML tag stripper (replace with a more robust sanitizer if needed)
 const stripHtml = (html: string): string => {
   if (!html) return '';
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return doc.body.textContent || "";
+  
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    // Server-side: Use a simple regex-based approach
+    return html.replace(/<[^>]*>/g, '');
+  } else {
+    // Client-side: Use DOMParser
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+  }
 };
 
 const truncateText = (text: string, maxLength: number): string => {
@@ -161,24 +169,41 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
                 </div>
                 
                 {/* Header Section */}
-                <div className="space-y-0.5">
-                  <motion.div variants={item} className="flex items-center gap-2 cursor-pointer">
-                    <Image src={faviconUrl} alt="" width={16} height={16} className="h-4 w-4 flex-shrink-0" unoptimized />
-                    <CardTitle className="text-xs font-medium truncate">{title || 'Untitled Page'}</CardTitle>
-                  </motion.div>
-                  <motion.div variants={item} className="flex items-center gap-1.5 text-xs text-muted-foreground pl-6">
-                    <span className="truncate flex items-center gap-1">
-                      {domain} <ExternalLink className="h-3 w-3" />
-                    </span>
-                  </motion.div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="space-y-0.5 flex-1 min-w-0">
+                    <motion.div variants={item} className="flex items-center gap-2 cursor-pointer">
+                      <Image src={faviconUrl} alt="" width={16} height={16} className="h-4 w-4 flex-shrink-0" unoptimized />
+                      <CardTitle className="text-xs font-medium truncate">{title || 'Untitled Page'}</CardTitle>
+                    </motion.div>
+                    <motion.div variants={item} className="flex items-center gap-1.5 text-xs text-muted-foreground pl-6">
+                      <span className="truncate flex items-center gap-1">
+                        {domain} <ExternalLink className="h-3 w-3" />
+                      </span>
+                    </motion.div>
+                  </div>
+                  
+                  {/* Images preview section - inline with title */}
+                  {imageEntries.length > 0 && (
+                    <motion.div variants={item} className="flex gap-1 h-16 flex-shrink-0">
+                      {imageEntries.slice(0, 3).map(([key, url], index) => (
+                        <div key={index} className="relative w-16 h-full rounded overflow-hidden border border-border/30">
+                          <Image 
+                            src={url} 
+                            alt={key} 
+                            fill 
+                            className="object-cover" 
+                            unoptimized 
+                          />
+                          {imageEntries.length > 3 && index === 2 && (
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center text-xs font-medium">
+                              +{imageEntries.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
-
-                {/* Images preview section (still visible in the card) */}
-                {imageEntries.length > 0 && (
-                  <motion.div variants={item}>
-                    <h4 className="text-[10px] font-medium text-muted-foreground">Images ({imageEntries.length})</h4>
-                  </motion.div>
-                )}
               </motion.div>
             </Link>
           </TooltipTrigger>
