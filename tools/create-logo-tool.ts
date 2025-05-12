@@ -38,16 +38,21 @@ export const createLogoTool = tool({
     const { prompt } = params; // Extract validated parameters
 
     // Ensure the Fal AI API key is set in environment variables
-    const apiKey = process.env.FAL_KEY;
+    const apiKey = process.env.FAL_API_KEY;
     if (!apiKey) {
       // It's better practice to configure the key once globally if possible,
       // but checking here ensures the tool won't run without it.
-      // Consider initializing fal.config({ credentials: apiKey }); elsewhere if needed.
-      console.error('Fal AI API key (FAL_KEY) is not set in environment variables.');
+      console.error('Fal AI API key (FAL_API_KEY) is not set in environment variables.');
       return { error: 'Fal AI API key is not configured.' };
     }
+    console.log('apiKey', apiKey);
 
     try {
+      // Properly initialize the fal client with your API key
+      fal.config({
+        credentials: apiKey
+      });
+
       console.log(`[createLogoTool] Calling fal.ai with prompt: "${prompt}"`);
 
       // Use fal.subscribe for potentially long-running image generation
