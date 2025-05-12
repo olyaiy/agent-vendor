@@ -44,7 +44,7 @@ export function MobileAgentHeader({
     <header className="sticky top-0 z-50 flex items-center justify-between w-full h-16 px-4 border-b shrink-0 bg-background backdrop-blur-xl">
       <div className="flex items-center">
         <Button variant="ghost" size="icon" className="mr-2" asChild>
-          <Link href="/agents">
+          <Link href="/">
             <ChevronLeft className="w-5 h-5" />
             <span className="sr-only">Back</span>
           </Link>
