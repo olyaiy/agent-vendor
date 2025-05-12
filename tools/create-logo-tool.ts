@@ -73,7 +73,12 @@ export const createLogoTool = tool({
       console.log('[createLogoTool] Received response from fal.ai:', result);
 
       // Validate the response structure
-      const validatedResponse = falIdeogramResponseSchema.safeParse(result);
+      // Extract the data property from the result since the actual response is nested
+      const dataToValidate = typeof result === 'object' && result !== null && 'data' in result 
+        ? (result as { data: unknown }).data 
+        : result;
+        
+      const validatedResponse = falIdeogramResponseSchema.safeParse(dataToValidate);
 
       if (!validatedResponse.success) {
         console.error("[createLogoTool] Fal AI response validation error:", validatedResponse.error);

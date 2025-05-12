@@ -13,6 +13,36 @@ interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
   children?: React.ReactNode;
 }
 
+// Component to handle image grid layout
+const ImageGrid = ({ children }: { children: React.ReactNode }) => {
+  const childrenArray = React.Children.toArray(children);
+  
+  // Only apply grid if there are multiple images (up to 4)
+  if (childrenArray.length > 1 && childrenArray.length <= 4) {
+    let gridClassName = "grid gap-2 my-4 ";
+    
+    // Set grid columns based on image count
+    switch (childrenArray.length) {
+      case 2:
+        gridClassName += "grid-cols-2";
+        break;
+      case 3:
+        gridClassName += "grid-cols-3";
+        break;
+      case 4:
+        gridClassName += "grid-cols-2 md:grid-cols-4";
+        break;
+      default:
+        gridClassName += "grid-cols-1";
+    }
+    
+    return <div className={gridClassName}>{children}</div>;
+  }
+  
+  // If only one image or more than 4, render normally
+  return <>{children}</>;
+};
+
 const components: Partial<Components> = {
   pre: ({ children }) => <>{children}</>,
   code: ({ inline, className, children, ...props }: MarkdownCodeProps) => {
@@ -58,7 +88,34 @@ const components: Partial<Components> = {
       />
     );
   },
+  img: ({ src, alt, ...props }) => {
+    if (!src) return null;
+    
+    return (
+      <img 
+        src={src} 
+        alt={alt || ''} 
+        className="rounded-lg object-contain max-h-[300px]  h-full" 
+        {...props}
+      />
+    );
+  },
   p: ({ children, ...props }) => {
+    // Check if paragraph contains only images
+    const childrenArray = React.Children.toArray(children);
+    const onlyImages = childrenArray.every(
+      child => React.isValidElement(child) && child.type === 'img'
+    );
+    
+    // If paragraph contains only images, wrap in ImageGrid
+    if (onlyImages && childrenArray.length > 0) {
+      return (
+        <ImageGrid>
+          {children}
+        </ImageGrid>
+      );
+    }
+    
     const hasBlockElement = React.Children.toArray(children).some(
       (child) => React.isValidElement(child) && 
         (typeof child.type === 'string' 
