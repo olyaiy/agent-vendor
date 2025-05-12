@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { deleteAgentAction } from '@/db/actions/agent.actions';
-import { LoaderIcon } from '@/components/utils/icons'; // Changed import
+import { LoaderIcon } from '@/components/utils/icons';
 
 interface AgentDeleteSectionProps {
   agentId: string;
@@ -45,7 +45,7 @@ export default function AgentDeleteSection({ agentId, agentName }: AgentDeleteSe
         setIsDialogOpen(false);
       }
     } catch (error) {
-      console.error("Error deleting agent:", error); // Added error logging
+      console.error("Error deleting agent:", error);
       toast.error(`An unexpected error occurred while deleting ${agentName}.`, { id: 'delete-agent' });
       setIsLoading(false);
       setIsDialogOpen(false);
@@ -75,7 +75,7 @@ export default function AgentDeleteSection({ agentId, agentName }: AgentDeleteSe
               <Button variant="destructive" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> {/* Changed to LoaderIcon */}
+                    <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                     Deleting...
                   </>
                 ) : (
@@ -101,7 +101,7 @@ export default function AgentDeleteSection({ agentId, agentName }: AgentDeleteSe
                 >
                   {isLoading ? (
                     <>
-                      <LoaderIcon className="mr-2 h-4 w-4 animate-spin" /> {/* Changed to LoaderIcon */}
+                      <LoaderIcon className="mr-2 h-4 w-4 animate-spin" />
                       Deleting...
                     </>
                   ) : (

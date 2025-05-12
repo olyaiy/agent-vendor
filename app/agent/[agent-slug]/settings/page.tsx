@@ -3,6 +3,7 @@ import AgentKnowledgeForm from "@/components/agents/settings/agent-knowledge-for
 import AgentModelsForm from "@/components/agents/settings/agent-models-form";
 import SystemPromptForm from "@/components/agents/settings/system-prompt-form";
 import AgentToolsForm from "@/components/agents/settings/agent-tools-form"; // Import AgentToolsForm
+import AgentDeleteSection from "@/components/agents/settings/AgentDeleteSection"; // Import AgentDeleteSection
 import { selectAllModels } from "@/db/repository";
 import { selectAgentKnowledgeBySlug, selectAgentModelsBySlug } from "@/db/repository/agent-relations.repository";
 import { getToolsForAgentAction } from "@/db/actions/agent-relations.actions";
@@ -92,6 +93,11 @@ export default async function Page({ params }: PageProps) {
           currentAgentTools={currentAgentTools}
           allAvailableTools={allAvailableTools}
         />
+      </Suspense>
+
+      {/* Add the Delete Agent Section */}
+      <Suspense fallback={<div>Loading delete section...</div>}>
+        <AgentDeleteSection agentId={agentData.id} agentName={agentData.name} />
       </Suspense>
 
     </div>
