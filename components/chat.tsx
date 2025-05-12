@@ -73,6 +73,7 @@ export default function Chat({
 }: ChatProps) {
 
   const assignedToolNames = assignedTools.map(tool => tool.name);
+  const isWebSearchEnabled = assignedToolNames.includes('web_search');
 
   const primaryModel = agentModels.find(m => m.role === 'primary');
   const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
@@ -186,6 +187,7 @@ export default function Chat({
               handleSubmit={handleSubmit}
               status={status}
               stop={stop}
+              isWebSearchEnabled={isWebSearchEnabled}
             />
           </>
         ) : (
@@ -203,6 +205,7 @@ export default function Chat({
               status={status}
               stop={stop}
               minHeight={64}
+              isWebSearchEnabled={isWebSearchEnabled}
             />
             </div>
           </div>

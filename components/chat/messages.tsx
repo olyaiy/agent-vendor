@@ -77,7 +77,7 @@ function PureMessages({
 
   return (
     <div
-      className="flex flex-col min-w-0 sm:gap-6 flex-1 overflow-y-auto pt-4 pb-2 w-full  md:px-8 scrollbar-thin scrollbar-thumb-black/10 dark:scrollbar-thumb-white/10 scrollbar-track-transparent"
+      className="flex flex-col min-w-0 gap-4 sm:gap-6 flex-1 overflow-y-auto pt-4 pb-2 w-full  md:px-8 scrollbar-thin scrollbar-thumb-black/10 dark:scrollbar-thumb-white/10 scrollbar-track-transparent"
       // Keep attaching the internal ref returned by the hook here
       ref={scrollRef}
     >

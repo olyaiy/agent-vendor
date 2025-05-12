@@ -52,6 +52,7 @@ interface ChatInputProps {
   // onFileSelect?: (file: File) => void; // Removed as it's unused
   className?: string;
   isMobile?: boolean;
+  isWebSearchEnabled?: boolean; // New prop
 }
 
 // --- Start: Memoized Button Components ---
@@ -155,7 +156,8 @@ function ChatInputComponent({
   maxHeight = 164,
   // onFileSelect, // Removed
   className,
-  isMobile
+  isMobile,
+  isWebSearchEnabled // Destructure new prop
 }: ChatInputProps) {
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
   const inputRef = React.useRef(input);
@@ -166,6 +168,8 @@ function ChatInputComponent({
     maxHeight,
   });
   const [showSearch, setShowSearch] = useState(false);
+
+  const toggleSearch = useCallback(() => setShowSearch(s => !s), []);
 
   useEffect(() => {
     inputRef.current = input;
@@ -442,10 +446,12 @@ function ChatInputComponent({
                 onChange={handleAttachmentFileChange}
                 allowedFileTypes={CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(',')}
               />
-              <MemoizedSearchButton
-                onClick={useCallback(() => setShowSearch(s => !s), [])}
-                showSearch={showSearch}
-              />
+              {isWebSearchEnabled && (
+                <MemoizedSearchButton
+                  onClick={toggleSearch}
+                  showSearch={showSearch}
+                />
+              )}
             </div>
             <MemoizedSendStopButton
               onClick={handleSendStopClick}
@@ -474,6 +480,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.minHeight === nextProps.minHeight &&
     prevProps.maxHeight === nextProps.maxHeight &&
     prevProps.className === nextProps.className && 
-    prevProps.isMobile === nextProps.isMobile
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.isWebSearchEnabled === nextProps.isWebSearchEnabled // New comparison
   );
 });
