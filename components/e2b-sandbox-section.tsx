@@ -30,6 +30,7 @@ interface E2BSandboxResult {
 
 type E2BSandboxArgs = {
     code: string;
+    language?: 'python' | 'javascript' | 'js' | 'r' | 'java' | 'bash';
     [key: string]: unknown;
 };
 
@@ -101,6 +102,7 @@ const accordionAnimation = {
 export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
   const currentArgs = toolInvocation.args as E2BSandboxArgs;
   const codeToExecute = currentArgs.code;
+  const language = currentArgs.language || 'python'; // Default to python if not provided
   const [isOpen, setIsOpen] = React.useState(false);
   const layoutKey = React.useMemo(() => `sandbox-${Math.random().toString(36).substring(2, 9)}`, []);
 
@@ -193,7 +195,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
             <Loader2 className="h-4 w-4 text-primary" />
           </motion.div>
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-foreground">Executing Python Code</p>
+            <p className="text-sm font-medium text-foreground">Executing {getLanguageDisplayName(language)} Code</p>
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -201,7 +203,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
             >
               <Badge variant="outline" className="bg-primary/5 text-primary/80 text-[10px] py-0 px-1.5 h-4">
                 <Code2 className="h-2.5 w-2.5 mr-1" />
-                Python
+                {getLanguageDisplayName(language)}
               </Badge>
             </motion.div>
           </div>
@@ -254,7 +256,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                     <motion.div whileTap={{ scale: 0.97 }}>
                       <Badge variant="outline" className="bg-primary/5 text-primary/80 text-[10px] py-0 px-1.5 h-4">
                         <Code2 className="h-2.5 w-2.5 mr-1" />
-                        Python
+                        {getLanguageDisplayName(language)}
                       </Badge>
                     </motion.div>
                     {hasError ? (
@@ -322,7 +324,7 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
                       className="rounded-md"
                       variants={item}
                     >
-                      <CodeBlock language="python" code={codeToExecute || ''} filename="executed_code.py" />
+                      <CodeBlock language={getHighlightingLanguage(language)} code={codeToExecute || ''} filename={`executed_code.${getLanguageFileExtension(language)}`} />
                     </motion.div>
                     {hasError && (
                       <motion.div
@@ -446,4 +448,61 @@ export function E2BSandboxSection({ toolInvocation }: E2BSandboxSectionProps) {
       </Alert>
     </motion.div>
   );
+}
+
+// Helper function to get display name for language
+function getLanguageDisplayName(lang: E2BSandboxArgs['language']): string {
+  switch (lang) {
+    case 'javascript':
+    case 'js':
+      return 'JavaScript';
+    case 'python':
+      return 'Python';
+    case 'r':
+      return 'R';
+    case 'java':
+      return 'Java';
+    case 'bash':
+      return 'Bash';
+    default:
+      return 'Python'; // Default display name
+  }
+}
+
+// Helper function to get the appropriate language for syntax highlighting
+function getHighlightingLanguage(lang: E2BSandboxArgs['language']): string {
+   switch (lang) {
+    case 'javascript':
+    case 'js':
+      return 'javascript';
+    case 'python':
+      return 'python';
+    case 'r':
+      return 'r';
+    case 'java':
+      return 'java';
+    case 'bash':
+      return 'bash';
+    default:
+      return 'python'; // Default highlighting
+  }
+}
+
+// Helper function to get file extension based on language
+function getLanguageFileExtension(lang: E2BSandboxArgs['language']): string {
+  switch (lang) {
+    case 'javascript':
+    case 'js':
+      return 'js';
+    case 'python':
+      return 'py';
+    case 'r':
+      return 'R';
+    case 'java':
+      return 'java';
+    case 'bash':
+      return 'sh';
+    default:
+      return 'py'; // Default extension
+  }
 }
