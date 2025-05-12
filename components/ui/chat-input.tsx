@@ -366,7 +366,7 @@ function ChatInputComponent({
   }, [handleSendStopClick]);
 
   return (
-    <div className={cn("w-full px-4 mb-2 md:pb-6 md:px-8 relative", className)}>
+    <div className={cn("w-full px-0 mb-4 md:pb-6 md:px-8 relative", className)}>
       <div className="max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden">
         <div className="flex flex-col">
           <div className="overflow-y-auto" style={{ maxHeight: `${maxHeight}px` }}>
