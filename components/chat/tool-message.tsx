@@ -5,6 +5,7 @@ import WebSearchSection from '../web-search-section';
 import ReadPageSection from '../read-page-section'; // Import the new component
 import { E2BSandboxSection } from '../e2b-sandbox-section'; // Import E2B Sandbox UI
 import CalculatorSection from '../calculator-section'; // Import Calculator UI
+import CreateLogoSection from '../create-logo-section'; // Import the new logo section
 
 interface ToolMessageProps {
   // Corrected prop type
@@ -43,6 +44,8 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <E2BSandboxSection toolInvocation={toolInvocation} />;
       case 'calculator':
         return <CalculatorSection toolInvocation={toolInvocation} />;
+      case 'create_logo': // Add case for create_logo tool (Result State)
+        return <CreateLogoSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
@@ -55,7 +58,7 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
 
   // If result is not available
   if (state == 'call' ) {
-    console.log('toolInvocation', toolInvocation);
+    // console.log('toolInvocation', toolInvocation); // Keep console log for debugging if needed
 
     switch (toolName) {
       case 'web_search':
@@ -66,6 +69,8 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         return <E2BSandboxSection toolInvocation={toolInvocation} />;
       case 'calculator':
         return <CalculatorSection toolInvocation={toolInvocation} />;
+      case 'create_logo': // Add case for create_logo tool (Call State)
+        return <CreateLogoSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-none border rounded-md p-2'>
