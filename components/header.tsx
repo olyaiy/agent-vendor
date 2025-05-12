@@ -46,9 +46,17 @@ export function Header() {
     }
   };
 
-
-
-
+  let isOnRestrictedAgentPage = false;
+  if (isMobile) {
+    const pathSegments = pathname.split('/').filter(segment => segment.length > 0);
+    if (pathSegments[0] === 'agent') {
+      if (pathSegments.length === 2 && pathSegments[1] !== 'create') {
+        isOnRestrictedAgentPage = true;
+      } else if (pathSegments.length === 3) {
+        isOnRestrictedAgentPage = true;
+      }
+    }
+  }
 
   return !isMobile ? (
     <div
@@ -95,37 +103,39 @@ export function Header() {
       </AnimatePresence>
     </div>
   ) : (
-    <motion.nav 
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-      className="fixed bottom-0 left-0 w-full z-20 bg-background/90 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 pb-safe"
-    >
-      <NavItem 
-        href="/" 
-        icon={<Home size={20} strokeWidth={2} />} 
-        isActive={pathname === '/'} 
-        label="Home"
-      />
-      <NavItem 
-        href={"/history"}
-        icon={<MessageSquare size={20} strokeWidth={2} />}
-        isActive={pathname.includes('/history')}
-        label="History"
-      />
-      <NavItem 
-        href="/agent/create" 
-        icon={<PlusCircle size={20} strokeWidth={2} />} 
-        isActive={pathname === '/agent/create'} 
-        label="Create"
-      />
-      <NavItem 
-        href="/account" 
-        icon={<Settings size={20} strokeWidth={2} />} 
-        isActive={pathname === '/account'} 
-        label="Settings"
-      />
-    </motion.nav>
+    isMobile && !isOnRestrictedAgentPage ? (
+      <motion.nav 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="fixed bottom-0 left-0 w-full z-20 bg-background/90 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-2 pb-safe"
+      >
+        <NavItem 
+          href="/" 
+          icon={<Home size={20} strokeWidth={2} />} 
+          isActive={pathname === '/'} 
+          label="Home"
+        />
+        <NavItem 
+          href={"/history"}
+          icon={<MessageSquare size={20} strokeWidth={2} />}
+          isActive={pathname.includes('/history')}
+          label="History"
+        />
+        <NavItem 
+          href="/agent/create" 
+          icon={<PlusCircle size={20} strokeWidth={2} />} 
+          isActive={pathname === '/agent/create'} 
+          label="Create"
+        />
+        <NavItem 
+          href="/account" 
+          icon={<Settings size={20} strokeWidth={2} />} 
+          isActive={pathname === '/account'} 
+          label="Settings"
+        />
+      </motion.nav>
+    ) : null
   );
 }
 

@@ -163,7 +163,7 @@ export default async function Page({
   const agentWithTags = { ...agent, tags };
 
   return isMobile ? (
-    <div style={{ height: "calc(100dvh - 4rem)" }} className="w-screen">
+    <div style={{ height: "calc(100dvh )" }} className="w-screen">
       <ChatMobile
         agent={agentWithTags}
         knowledgeItems={knowledgeItems}
