@@ -14,7 +14,7 @@ import { ChatRequestOptions } from "@ai-sdk/ui-utils";
 
 
 export const CHAT_ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "text/*", "application/pdf"];
+export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "text/*", "application/pdf", "text/csv"];
 
 // Interface for pending attachments
 interface PendingAttachment {
@@ -28,13 +28,17 @@ interface PendingAttachment {
   uploadedContentType?: string;
 }
 
-interface AttachmentPayload { // For chatRequestOptions
+interface AttachmentPayload { // For chatRequestOptions - REUSED for csv_attachment_payloads
   url: string;
   name: string;
   contentType: string;
 }
 
-// Removed unused JSONValue type definition
+// Custom type for the known structure of our part of the request body
+interface CustomChatRequestBody {
+  csv_attachment_payloads?: AttachmentPayload[];
+  // other known custom fields could be added here if needed
+}
 
 interface ChatInputProps {
   input: UseChatHelpers['input'];
@@ -309,24 +313,49 @@ function ChatInputComponent({
         }
       }
     }
-  }, [pendingAttachments, setPendingAttachments, userId, toast, deleteChatAttachmentAction]);
+  }, [pendingAttachments, setPendingAttachments, userId]);
 
   const handleInternalSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
-    const attachmentsToSend: AttachmentPayload[] = pendingAttachments
-      .filter(att => att.status === 'success' && att.uploadedUrl)
+
+    const successfulAttachments = pendingAttachments.filter(att => att.status === 'success' && att.uploadedUrl);
+
+    const attachmentsForSdk = successfulAttachments
+      .filter(att => att.uploadedContentType !== 'text/csv')
       .map(att => ({
         url: att.uploadedUrl!,
         name: att.uploadedName || att.file.name,
         contentType: att.uploadedContentType || att.file.type,
       }));
 
-    if (inputRef.current.trim() || attachmentsToSend.length > 0) {
+    const csvAttachmentPayloads: AttachmentPayload[] = successfulAttachments
+      .filter(att => att.uploadedContentType === 'text/csv')
+      .map(att => ({
+        url: att.uploadedUrl!,
+        name: att.uploadedName || att.file.name,
+        contentType: att.uploadedContentType || att.file.type,
+      }));
+
+    if (inputRef.current.trim() || attachmentsForSdk.length > 0 || csvAttachmentPayloads.length > 0) {
       window.history.replaceState({}, '', `/agent/${agentSlug}/${chatId}`);
-      let chatRequestOptions: ChatRequestOptions | undefined = undefined;
-      if (attachmentsToSend.length > 0) {
-        chatRequestOptions = { experimental_attachments: attachmentsToSend };
+      
+      const chatRequestOptions: ChatRequestOptions = {};
+
+      if (attachmentsForSdk.length > 0) {
+        chatRequestOptions.experimental_attachments = attachmentsForSdk;
       }
+
+      const customBodyParts: CustomChatRequestBody = {};
+      if (csvAttachmentPayloads.length > 0) {
+        customBodyParts.csv_attachment_payloads = csvAttachmentPayloads;
+      }
+
+      // If there are any custom body parts, assign them to chatRequestOptions.body.
+      // This works because CustomChatRequestBody is compatible with Record<string, any>.
+      if (Object.keys(customBodyParts).length > 0) {
+        chatRequestOptions.body = customBodyParts;
+      }
+      
       handleSubmit(e as React.FormEvent<HTMLFormElement> | undefined, chatRequestOptions);
       setPendingAttachments(prev => {
         prev.forEach(att => {

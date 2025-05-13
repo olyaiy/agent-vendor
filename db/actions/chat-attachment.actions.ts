@@ -28,7 +28,7 @@ if (R2_ENDPOINT && R2_ACCESS_KEY && R2_SECRET_KEY) {
 }
 
 const CHAT_ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "text/*", "application/pdf", "text/csv"];
 
 interface UploadedAttachmentData {
   url: string;
