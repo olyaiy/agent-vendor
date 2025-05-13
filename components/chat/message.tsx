@@ -20,7 +20,7 @@ import { MessageActions } from './message-actions';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { MessageEditor } from '../message-editor';
-// Removed unused Paperclip import
+import { Paperclip } from 'lucide-react';
 
 interface UIMessageWithUI extends UIMessage {
   ui?: React.ReactNode;
@@ -77,6 +77,7 @@ const PurePreviewMessage = ({
               className="flex flex-wrap gap-2 mb-1 justify-end" // Added mb-1 for slight spacing if text follows
             >
               {message.experimental_attachments.map((attachment, index) => {
+                // Handle image attachments
                 if (attachment.contentType?.startsWith('image/')) {
                   return (
                     <a
@@ -87,33 +88,43 @@ const PurePreviewMessage = ({
                       className="block border border-border rounded-md overflow-hidden hover:opacity-80 transition-opacity bg-muted/30"
                       title={attachment.name || 'View image'}
                     >
-                      <Image // Using next/image for optimization if applicable, otherwise regular <img>
+                      <Image
                         src={attachment.url}
                         alt={attachment.name || 'Chat attachment'}
-                        width={150} // Provide width and height for next/image
+                        width={150}
                         height={150}
-                        className="max-w-[150px] h-auto max-h-[150px] object-contain" // Style for responsiveness
-                        unoptimized={attachment.url.startsWith('blob:')} // Avoid optimization for blob URLs
+                        className="max-w-[150px] h-auto max-h-[150px] object-contain"
+                        unoptimized={attachment.url.startsWith('blob:')}
                       />
                     </a>
                   );
                 }
-                // Fallback for non-image types (optional)
-                // else if (attachment.url) {
-                //   return (
-                //     <a
-                //       key={`${message.id}-attachment-${index}`}
-                //       href={attachment.url}
-                //       target="_blank"
-                //       rel="noopener noreferrer"
-                //       className="text-sm text-primary hover:underline p-2 border rounded-md bg-muted/30 flex items-center gap-1"
-                //       title={attachment.name || 'View attachment'}
-                //     >
-                //       <Paperclip className="w-3 h-3" />
-                //       <span className="truncate max-w-[120px]">{attachment.name || new URL(attachment.url).pathname.split('/').pop() || 'Attachment'}</span>
-                //     </a>
-                //   );
-                // }
+                // Handle CSV attachments
+                else if (attachment.contentType === 'text/csv') {
+                  return (
+                    <a
+                      key={`${message.id}-attachment-${index}`}
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted/20 transition-colors bg-muted/10"
+                      title={`Open ${attachment.name || 'CSV file'}`}
+                    >
+                      <div className="w-8 h-8 flex items-center justify-center bg-muted/30 rounded-md border border-border/50">
+                        <Paperclip className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium truncate max-w-[150px]">
+                          {attachment.name || 'csv-data.csv'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          CSV File
+                        </span>
+                      </div>
+                    </a>
+                  );
+                }
+                // Other file types can be handled here if needed
                 return null;
               })}
             </div>
