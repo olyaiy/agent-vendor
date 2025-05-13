@@ -14,7 +14,7 @@ import { ChatRequestOptions } from "@ai-sdk/ui-utils";
 
 
 export const CHAT_ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "text/*", "application/pdf"];
 
 // Interface for pending attachments
 interface PendingAttachment {
@@ -231,7 +231,7 @@ function ChatInputComponent({
         toast.error(`Error uploading ${att.file.name}.`);
       }
     }
-  }, [pendingAttachments, userId, setPendingAttachments, toast, uploadChatAttachmentAction]);
+  }, [pendingAttachments, userId, setPendingAttachments]);
 
   // Handler for paste events
   const handlePaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
