@@ -142,17 +142,17 @@ const components: Partial<Components> = {
     if (isSingleLine) {
       // For single-line code, render a simplified inline-block code element
       return (
-        <div className="my-2 mx-1 inline-block relative group">
-          <div className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="my-2 mx-1 inline-block relative group">
+          <span className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <CopyButton content={codeString} />
-          </div>
+          </span>
           <code className="bg-muted px-3 py-1.5 rounded font-mono text-sm" {...props}>
             {language && (
               <span className="text-xs text-muted-foreground mr-2">{language}</span>
             )}
             {codeString}
           </code>
-        </div>
+        </span>
       );
     }
 
