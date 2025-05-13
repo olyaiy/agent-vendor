@@ -257,7 +257,7 @@ function ChatInputComponent({
       event.preventDefault();
       toast.error(`Pasted content includes unsupported file types. Allowed image types: ${CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(', ')}`);
     }
-  }, [processFilesForAttachment, toast]);
+  }, [processFilesForAttachment]);
 
   // Modified handler for file input changes
   const handleAttachmentFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
