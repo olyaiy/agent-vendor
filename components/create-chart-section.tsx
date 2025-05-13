@@ -19,33 +19,28 @@ type ChartToolResult = {
 };
 
 export default function CreateChartSection({ toolInvocation }: CreateChartSectionProps) {
-  // Access tool arguments, assuming this is where the chart data payload resides.
-  const chartArgs = toolInvocation.args as ChartToolResult | undefined;
+  // The tool's 'execute' function returns its arguments, so they will be in 'toolInvocation.result'.
+  const chartDataPayload = toolInvocation.result as ChartToolResult | undefined;
 
-  if (!chartArgs || typeof chartArgs !== 'object' || chartArgs.chartType !== 'line') {
-    // Fallback or attempt to access `result` if `args` is not the correct payload structure
-    // This part might need adjustment based on the actual structure of ToolInvocation
-    const resultFallback = toolInvocation.result as ChartToolResult | undefined; // Keep for now if SDK is inconsistent
-    if (!resultFallback || typeof resultFallback !== 'object' || resultFallback.chartType !== 'line') {
-        return (
-            <Card className="w-full p-4">
-                <CardHeader>
-                    <CardTitle>Chart Error</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Error: Invalid chart data or type received from the tool.</p>
-                    <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded-md">
-                        {JSON.stringify(toolInvocation, null, 2)}
-                    </pre>
-                </CardContent>
-            </Card>
-        );
-    }
-    // If args are valid, use them
-    return <RenderChart {...resultFallback} />;
+  if (!chartDataPayload || typeof chartDataPayload !== 'object' || chartDataPayload.chartType !== 'line') {
+    // If result is not as expected, show an error and the raw toolInvocation for debugging.
+    return (
+        <Card className="w-full p-4">
+            <CardHeader>
+                <CardTitle>Chart Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>Error: Invalid chart data or type received from the tool.</p>
+                <p className="text-xs text-muted-foreground">Expected 'result' to contain chart parameters.</p>
+                <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded-md">
+                    {JSON.stringify(toolInvocation, null, 2)}
+                </pre>
+            </CardContent>
+        </Card>
+    );
   }
 
-  return <RenderChart {...chartArgs} />;
+  return <RenderChart {...chartDataPayload} />;
 }
 
 function RenderChart(props: ChartToolResult) {
@@ -56,7 +51,7 @@ function RenderChart(props: ChartToolResult) {
     if (!finalChartConfig[key]) {
       finalChartConfig[key] = {
         label: key.charAt(0).toUpperCase() + key.slice(1),
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
+        color: `var(--chart-${(index % 5) + 1})`,
       };
     }
   });
@@ -88,7 +83,7 @@ function RenderChart(props: ChartToolResult) {
                   key={key}
                   type="monotone"
                   dataKey={key}
-                  stroke={`var(--color-${key})`} // Relies on ChartContainer to set these CSS variables
+                  stroke={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 6 }}
