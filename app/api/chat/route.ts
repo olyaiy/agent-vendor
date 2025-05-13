@@ -1,4 +1,4 @@
-import { appendResponseMessages, smoothStream, streamText, type Message } from 'ai'; // Keep Message for casting input
+import { appendResponseMessages, smoothStream, streamText, type Message, type UIMessage } from 'ai'; // Keep Message for casting input
 // Remove direct openai import, we'll get the model instance via the helper
 // import { openai } from "@ai-sdk/openai";
 import { getModelInstanceById, getModelPricing } from '@/lib/models'; // Import the helper function
@@ -17,8 +17,32 @@ interface Attachment {
   contentType?: string;
 }
 
+// Interface for CSV attachment payloads from the frontend
+interface CsvAttachmentPayload {
+  url: string;
+  name: string;
+  contentType: string;
+}
+
 interface UserMessageWithAttachments extends Message {
   experimental_attachments?: Attachment[];
+}
+
+// Extended request body to include csv_attachment_payloads
+interface RequestBody {
+  chatId: string;
+  model: string;
+  messages: Message[];
+  systemPrompt: string;
+  agentId?: string;
+  assignedToolNames?: string[];
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  maxTokens?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
+  csv_attachment_payloads?: CsvAttachmentPayload[];
 }
 
 /**
@@ -56,13 +80,14 @@ export async function POST(req: Request) {
      * @param agentId - Optional identifier for AI agent configuration
      * @param assignedToolNames - Optional array of tool names to activate
      * @param ...settings - Optional model settings (temperature, topP, etc.)
+     * @param csv_attachment_payloads - Optional CSV file metadata for processing
      */
     const {
       chatId,
       model: modelId,
       messages, // This will be an array of messages, potentially UserMessageWithAttachments
       systemPrompt,
-      agentId,
+      agentId = null, // Set a default value of null to avoid undefined
       assignedToolNames, // Added assignedToolNames
       // Destructure potential settings from the body
       temperature,
@@ -71,15 +96,17 @@ export async function POST(req: Request) {
       maxTokens, // Note: using maxTokens here as mapped from frontend
       presencePenalty,
       frequencyPenalty,
+      // Add custom field for CSV attachments
+      csv_attachment_payloads,
       // Add others if defined in ModelSettings and passed from frontend
-    } = await req.json();
+    } = await req.json() as RequestBody;
 
     /* ---- MESSAGE VALIDATION ---- */
     /**
      * Extracts the most recent user message for processing
      * @throws Error if no user message found
      */
-    const userMessage = getMostRecentUserMessage(messages) as UserMessageWithAttachments | undefined; // Cast here or when used
+    const userMessage = getMostRecentUserMessage(messages as unknown as UIMessage[]) as UserMessageWithAttachments | undefined;
     if (!userMessage) {
       return new Response('No user message found', { status: 400 });
     }
@@ -96,7 +123,12 @@ export async function POST(req: Request) {
         try {
           console.time('Background chat placeholder creation');
           // 1. Create chat with placeholder title immediately
-          await createChat({ id: chatId, userId: session.user!.id, title: "New Conversation" , agentId: agentId}); // Added non-null assertion
+          await createChat({ 
+            id: chatId, 
+            userId: session.user!.id, 
+            title: "New Conversation", 
+            agentId: agentId // This now has null as a default value
+          }); 
           console.timeEnd('Background chat placeholder creation');
 
 
@@ -182,6 +214,92 @@ export async function POST(req: Request) {
       activeToolsForThisCall = {}; // Ensure it's an empty object if no tools are assigned
     }
 
+    /* ---- CSV PROCESSING ---- */
+    // Process CSV files if present
+    // Create a deep copy of messages that will be safe to modify
+    const messagesForAi = messages.map(msg => ({...msg}));
+
+    if (csv_attachment_payloads && csv_attachment_payloads.length > 0) {
+      console.time('CSV processing');
+      console.log(`Processing ${csv_attachment_payloads.length} CSV attachments`);
+      
+      try {
+        // Get the latest user message in our copy, which we'll modify with CSV content
+        const lastUserMessageIndex = messagesForAi.findLastIndex(msg => msg.role === 'user');
+        
+        if (lastUserMessageIndex === -1) {
+          throw new Error('No user message found for CSV content addition');
+        }
+        
+        // Collect all CSV content with headers
+        let combinedCsvContent = '';
+        
+        for (const csvPayload of csv_attachment_payloads) {
+          try {
+            // Fetch the CSV content from the URL
+            const response = await fetch(csvPayload.url);
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch CSV content from ${csvPayload.url}. Status: ${response.status}`);
+            }
+            
+            const csvText = await response.text();
+            
+            // Add a header for this CSV file
+            combinedCsvContent += `\n\n--- Begin CSV Content: ${csvPayload.name} ---\n${csvText}\n--- End CSV Content: ${csvPayload.name} ---\n\n`;
+            
+          } catch (csvFetchError) {
+            console.error(`Error fetching CSV content:`, csvFetchError);
+            // Add error note instead of content
+            combinedCsvContent += `\n\nError loading CSV content from ${csvPayload.name}: ${csvFetchError instanceof Error ? csvFetchError.message : 'Unknown error'}\n\n`;
+          }
+        }
+        
+        // Get the user message we want to modify
+        const lastUserMessage = messagesForAi[lastUserMessageIndex];
+        
+        // Check if content is a string or array of parts
+        if (typeof lastUserMessage.content === 'string') {
+          // If string, append CSV content directly
+          lastUserMessage.content += combinedCsvContent;
+        } else if (Array.isArray(lastUserMessage.content)) {
+          // We need to safely handle the content array type
+          // Cast to a type with known structure to satisfy TypeScript
+          interface ContentPart {
+            type: string;
+            text?: string;
+            [key: string]: unknown;
+          }
+          
+          const contentArray = lastUserMessage.content as ContentPart[];
+          
+          // Find first text part
+          const textPartIndex = contentArray.findIndex(part => part.type === 'text');
+          
+          if (textPartIndex !== -1 && contentArray[textPartIndex].text !== undefined) {
+            // Append to existing text part
+            contentArray[textPartIndex].text += combinedCsvContent;
+          } else {
+            // Add new text part with CSV content
+            contentArray.push({
+              type: 'text',
+              text: combinedCsvContent
+            });
+          }
+        } else {
+          // If content is unexpected format, convert to string and append
+          lastUserMessage.content = String(lastUserMessage.content) + combinedCsvContent;
+        }
+        
+        console.log('CSV content successfully appended to user message');
+      } catch (error) {
+        console.error('Error processing CSV attachments:', error);
+        // Continue with original messages if CSV processing fails
+      }
+      
+      console.timeEnd('CSV processing');
+    }
+
     /* ---- STREAMING HANDLER ---- */
     /**
      * Configures text streaming with error handling and message persistence
@@ -219,7 +337,7 @@ interface OpenAIProviderOptions {
     const result = streamText({
       model: modelInstance,
       system: systemPrompt,
-      messages: messages as Message[], // Cast messages to Message[] for streamText
+      messages: messagesForAi as Message[], // Modified messages with CSV content
       // Tool Call Set Up
       tools: activeToolsForThisCall, // Use the filtered tools
       maxSteps: 5,
@@ -271,17 +389,27 @@ interface OpenAIProviderOptions {
               responseMessages: response.messages, // Pass ResponseMessage[]
             });
 
-            // Save user message first in onFinish
+            // Save user message first in onFinish - using ORIGINAL user message, not modified with CSV
+            // Combine experimental_attachments with csv_attachment_payloads (if any) for db storage
+            const attachmentsForDb = [
+              ...(userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
+                url: att.url,
+                name: att.name || 'attachment', 
+                contentType: att.contentType || 'application/octet-stream',
+              })) || [],
+              ...(csv_attachment_payloads?.map(att => ({
+                url: att.url,
+                name: att.name || 'attachment',
+                contentType: att.contentType || 'application/octet-stream',
+              })) || [])
+            ];
+            
             const userMessageForDb = {
               id: userMessage.id,
               chatId: chatId,
               role: 'user' as const,
-              parts: userMessage.parts,
-              attachments: (userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
-                url: att.url,
-                name: att.name || 'attachment', 
-                contentType: att.contentType || 'application/octet-stream',
-              })) ?? [],
+              parts: userMessage.parts, // Use original parts, not with CSV content appended
+              attachments: attachmentsForDb,
               createdAt: new Date(), // Or use userMessage timestamp if available
               model_id: null // User messages don't have a model_id
             };
@@ -355,16 +483,26 @@ interface OpenAIProviderOptions {
         // Attempt to save user message even on error
         if (session?.user?.id && userMessage) { // Check session and userMessage exist
           try {
+            // Also save CSV attachments to the database on error
+            const attachmentsForDbOnError = [
+              ...(userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
+                url: att.url,
+                name: att.name || 'attachment',
+                contentType: att.contentType || 'application/octet-stream',
+              })) ?? [],
+              ...(csv_attachment_payloads?.map(att => ({
+                url: att.url,
+                name: att.name || 'csv_attachment', // Ensure name is never undefined
+                contentType: att.contentType || 'text/csv',
+              })) ?? [])
+            ];
+
             const userMessageForDbOnError = {
               id: userMessage.id,
               chatId: chatId,
               role: 'user' as const,
               parts: userMessage.parts,
-              attachments: (userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
-                url: att.url,
-                name: att.name || 'attachment',
-                contentType: att.contentType || 'application/octet-stream',
-              })) ?? [],
+              attachments: attachmentsForDbOnError,
               createdAt: new Date(),
               model_id: null
             };
