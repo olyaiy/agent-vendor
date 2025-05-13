@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ToolInvocation } from 'ai';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ChartContainer, ChartTooltipContent, ChartLegendContent, type ChartConfig } from './ui/chart';
 
@@ -9,7 +9,7 @@ interface CreateChartSectionProps {
 }
 
 type ChartToolResult = {
-  chartType: "line";
+  chartType: "line" | "bar";
   data: Record<string, unknown>[];
   title?: string;
   description?: string;
@@ -22,7 +22,7 @@ export default function CreateChartSection({ toolInvocation }: CreateChartSectio
   // The tool's 'execute' function returns its arguments, so they will be in 'toolInvocation.result'.
   const chartDataPayload = toolInvocation.result as ChartToolResult | undefined;
 
-  if (!chartDataPayload || typeof chartDataPayload !== 'object' || chartDataPayload.chartType !== 'line') {
+  if (!chartDataPayload || typeof chartDataPayload !== 'object' || !["line", "bar"].includes(chartDataPayload.chartType)) {
     // If result is not as expected, show an error and the raw toolInvocation for debugging.
     return (
         <Card className="w-full p-4">
@@ -44,7 +44,7 @@ export default function CreateChartSection({ toolInvocation }: CreateChartSectio
 }
 
 function RenderChart(props: ChartToolResult) {
-  const { data, title, description, xAxisKey, yAxisKeys, chartConfig = {} } = props;
+  const { data, title, description, xAxisKey, yAxisKeys, chartConfig = {}, chartType } = props;
 
   const finalChartConfig: ChartConfig = { ...chartConfig };
   yAxisKeys.forEach((key, index) => {
@@ -55,6 +55,50 @@ function RenderChart(props: ChartToolResult) {
       };
     }
   });
+
+  const chartContent = () => {
+    if (chartType === "line") {
+      return (
+        <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey={xAxisKey} tickLine={false} axisLine={false} tickMargin={8} />
+          <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+          <Tooltip content={<ChartTooltipContent indicator="line" hideLabel={yAxisKeys.length > 1 ? false : true} />} />
+          {yAxisKeys.map((key) => (
+            <Line
+              key={key}
+              type="monotone"
+              dataKey={key}
+              stroke={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6 }}
+            />
+          ))}
+          {yAxisKeys.length > 1 && <Legend content={<ChartLegendContent />} />}
+        </LineChart>
+      );
+    } else if (chartType === "bar") {
+      return (
+        <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey={xAxisKey} tickLine={false} axisLine={false} tickMargin={8} />
+          <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+          <Tooltip content={<ChartTooltipContent indicator="dashed" hideLabel={yAxisKeys.length > 1 ? false : true} />} />
+          {yAxisKeys.map((key) => (
+            <Bar
+              key={key}
+              dataKey={key}
+              fill={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
+              radius={4}
+            />
+          ))}
+          {yAxisKeys.length > 1 && <Legend content={<ChartLegendContent />} />}
+        </BarChart>
+      );
+    }
+    return <p>Unsupported chart type: {chartType}</p>; // Fallback
+  };
 
   return (
     <Card className="w-full">
@@ -67,30 +111,7 @@ function RenderChart(props: ChartToolResult) {
       <CardContent>
         <ChartContainer config={finalChartConfig} className="min-h-[300px] w-full sm:min-h-[350px] md:min-h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis
-                dataKey={xAxisKey}
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                // Example: tickFormatter={(value) => typeof value === 'string' ? value.slice(0, 3) : value}
-              />
-              <YAxis tickLine={false} axisLine={false} tickMargin={8} />
-              <Tooltip content={<ChartTooltipContent indicator="line" hideLabel={yAxisKeys.length > 1 ? false : true} />} />
-              {yAxisKeys.map((key) => (
-                <Line
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 6 }}
-                />
-              ))}
-              {yAxisKeys.length > 1 && <Legend content={<ChartLegendContent />} />}
-            </LineChart>
+            {chartContent()}
           </ResponsiveContainer>
         </ChartContainer>
       </CardContent>

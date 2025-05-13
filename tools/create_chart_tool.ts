@@ -2,9 +2,9 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 export const createChartTool = tool({
-  description: 'Creates a chart or data visualization based on the provided data and specifications. Currently supports line charts.',
+  description: 'Creates a chart or data visualization based on the provided data and specifications. Currently supports line and bar charts.',
   parameters: z.object({
-    chartType: z.enum(["line"]).describe("The type of chart to create, e.g., 'line'."),
+    chartType: z.enum(["line", "bar"]).describe("The type of chart to create, e.g., 'line', 'bar'."),
     data: z.array(z.record(z.string(), z.any())).describe("An array of data objects for the chart."),
     title: z.string().optional().describe("The title of the chart."),
     description: z.string().optional().describe("A brief description or caption for the chart."),
