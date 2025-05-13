@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ToolInvocation } from 'ai';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, AreaChart, Area, LabelList } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ChartContainer, ChartTooltipContent, ChartLegendContent, type ChartConfig } from './ui/chart';
 
@@ -9,20 +9,24 @@ interface CreateChartSectionProps {
 }
 
 type ChartToolResult = {
-  chartType: "line" | "bar" | "bar_horizontal";
+  chartType: "line" | "bar" | "bar_horizontal" | "area";
   data: Record<string, unknown>[];
   title?: string;
   description?: string;
   xAxisKey: string;
   yAxisKeys: string[];
   chartConfig?: ChartConfig; // This should align with the ChartConfig type from './ui/chart'
+  areaType?: "natural" | "linear" | "step";
+  stacked?: boolean;
+  showLabels?: boolean;
+  labelKey?: string;
 };
 
 export default function CreateChartSection({ toolInvocation }: CreateChartSectionProps) {
-  // The tool's 'execute' function returns its arguments, so they will be in 'toolInvocation.result'.
-  const chartDataPayload = toolInvocation.result as ChartToolResult | undefined;
+  // The tool's 'execute' function returns its arguments, so they will be in 'toolInvocation.args'.
+  const chartDataPayload = toolInvocation.args as ChartToolResult | undefined;
 
-  if (!chartDataPayload || typeof chartDataPayload !== 'object' || !["line", "bar", "bar_horizontal"].includes(chartDataPayload.chartType)) {
+  if (!chartDataPayload || typeof chartDataPayload !== 'object' || !["line", "bar", "bar_horizontal", "area"].includes(chartDataPayload.chartType)) {
     // If result is not as expected, show an error and the raw toolInvocation for debugging.
     return (
         <Card className="w-full p-4">
@@ -31,7 +35,7 @@ export default function CreateChartSection({ toolInvocation }: CreateChartSectio
             </CardHeader>
             <CardContent>
                 <p>Error: Invalid chart data or type received from the tool.</p>
-                <p className="text-xs text-muted-foreground">Expected 'result' to contain chart parameters.</p>
+                <p className="text-xs text-muted-foreground">Expected &amp;apos;args&amp;apos; to contain chart parameters.</p>
                 <pre className="mt-2 text-xs whitespace-pre-wrap bg-muted p-2 rounded-md">
                     {JSON.stringify(toolInvocation, null, 2)}
                 </pre>
@@ -44,7 +48,7 @@ export default function CreateChartSection({ toolInvocation }: CreateChartSectio
 }
 
 function RenderChart(props: ChartToolResult) {
-  const { data, title, description, xAxisKey, yAxisKeys, chartConfig = {}, chartType } = props;
+  const { data, title, description, xAxisKey, yAxisKeys, chartConfig = {}, chartType, showLabels = false, labelKey, areaType = "natural", stacked = false } = props;
 
   const finalChartConfig: ChartConfig = { ...chartConfig };
   yAxisKeys.forEach((key, index) => {
@@ -59,7 +63,7 @@ function RenderChart(props: ChartToolResult) {
   const chartContent = () => {
     if (chartType === "line") {
       return (
-        <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+        <LineChart data={data} margin={{ top: showLabels ? 20 : 5, right: 20, left: 0, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey={xAxisKey} tickLine={false} axisLine={false} tickMargin={8} />
           <YAxis tickLine={false} axisLine={false} tickMargin={8} />
@@ -71,9 +75,20 @@ function RenderChart(props: ChartToolResult) {
               dataKey={key}
               stroke={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
               strokeWidth={2}
-              dot={false}
+              dot={showLabels ? { fill: finalChartConfig[key]?.color || 'hsl(var(--foreground))' } : false}
               activeDot={{ r: 6 }}
-            />
+            >
+              {showLabels && (
+                <LabelList
+                  position="top"
+                  offset={12}
+                  className="fill-foreground"
+                  fontSize={12}
+                  dataKey={labelKey || key}
+                  formatter={labelKey ? (value: string) => finalChartConfig[value]?.label || value : undefined}
+                />
+              )}
+            </Line>
           ))}
           {yAxisKeys.length > 1 && <Legend content={<ChartLegendContent />} />}
         </LineChart>
@@ -136,6 +151,29 @@ function RenderChart(props: ChartToolResult) {
           {/* Legend might be useful if multiple yAxisKeys are used for grouped horizontal bars */}
           {yAxisKeys.length > 1 && <Legend content={<ChartLegendContent />} />}
         </BarChart>
+      );
+    } else if (chartType === "area") {
+      // areaType and stacked are now destructured from props at the top of RenderChart
+
+      return (
+        <AreaChart data={data} margin={{ top: (showLabels ? 20 : 5), right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis dataKey={xAxisKey} tickLine={false} axisLine={false} tickMargin={8} />
+          <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+          <Tooltip content={<ChartTooltipContent indicator="line" />} />
+          {yAxisKeys.map((key) => (
+            <Area
+              key={key}
+              type={areaType}
+              dataKey={key}
+              fill={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
+              stroke={finalChartConfig[key]?.color || 'hsl(var(--foreground))'}
+              fillOpacity={0.4}
+              stackId={stacked ? "a" : undefined}
+            />
+          ))}
+          {yAxisKeys.length > 1 && <Legend content={<ChartLegendContent />} />}
+        </AreaChart>
       );
     }
     return <p>Unsupported chart type: {chartType}</p>; // Fallback
