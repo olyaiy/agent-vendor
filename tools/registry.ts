@@ -3,6 +3,7 @@ import { readPageTool } from './read-page';
 import { e2bSandboxTool } from './e2b-sandbox-tool';
 import { calculatorTool } from './calculator-tool';
 import { createLogoTool } from './create-logo-tool'; // Import the new tool
+import { createChartTool } from './create_chart_tool';
 
 /**
  * A central registry for all available AI tools.
@@ -16,6 +17,7 @@ export const toolRegistry = {
   read_page: readPageTool,
   e2b_sandbox: e2bSandboxTool,
   calculator: calculatorTool,
+  create_chart: createChartTool,
   create_logo: createLogoTool, // Register the new tool
 };
 

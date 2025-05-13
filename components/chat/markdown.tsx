@@ -217,11 +217,51 @@ const components: Partial<Components> = {
       </ol>
     );
   },
-  li: ({ node, ...props }) => {
+  li: ({ node, children, ...props }) => {
+    // Check if the li contains an image
+    const childrenArray = React.Children.toArray(children);
+    
+    // Extract image nodes from HTML content if present
+    const hasImage = childrenArray.some(
+      child => React.isValidElement(child) && 
+        ((typeof child.type === 'string' && child.type === 'img') || 
+         (typeof child.type !== 'string' && child.type?.name === 'MarkdownImage')) ||
+      (typeof child === 'string' && child.includes('<img'))
+    );
+    
+    // If there are images in the HTML content, we need to process them differently
+    if (hasImage) {
+      return (
+        <li className="py-0.5 ml-4" {...props}>
+          {childrenArray.map((child, index) => {
+            // If it's an img tag in HTML, wrap it with our MarkdownImage component
+            if (typeof child === 'string' && child.includes('<img')) {
+              // Extract src and alt from img tag using regex
+              const srcMatch = child.match(/src="([^"]+)"/);
+              const altMatch = child.match(/alt="([^"]+)"/);
+              const src = srcMatch ? srcMatch[1] : '';
+              const alt = altMatch ? altMatch[1] : '';
+              
+              // Return our MarkdownImage component for each image
+              if (src) {
+                return (
+                  <React.Fragment key={index}>
+                    {child.split('<img')[0]}
+                    <MarkdownImage src={src} alt={alt} />
+                    {child.split('/>')[1] || ''}
+                  </React.Fragment>
+                );
+              }
+            }
+            return child;
+          })}
+        </li>
+      );
+    }
+    
+    // For non-image content, use the original approach
     const html = node?.children ? toHtml(node.children) : '';
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { children, ...rest } = props;
-    return <li className="py-0.5 ml-4" dangerouslySetInnerHTML={{ __html: html }} {...rest} />;
+    return <li className="py-0.5 ml-4" dangerouslySetInnerHTML={{ __html: html }} {...props} />;
   },
   ul: ({ children, ...props }) => {
     return (
@@ -342,6 +382,8 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       remarkPlugins={remarkPlugins}
       rehypePlugins={[rehypeRaw]}
       components={components}
+      // Ensure tags are allowed to pass through
+      allowedElements={['img', 'p', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'strong', 'em', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td']}
     >
       {children}
     </ReactMarkdown>
