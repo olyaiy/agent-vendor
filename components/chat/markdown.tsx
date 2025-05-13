@@ -192,22 +192,45 @@ const components: Partial<Components> = {
       );
     }
     
-    // Check if this paragraph has any block elements inside it
+    // More thorough check for any block elements or components that might render block elements
     const hasBlockElement = React.Children.toArray(children).some(
-      (child) => React.isValidElement(child) && 
-        (typeof child.type === 'string' 
-          ? ['div', 'pre', 'ul', 'ol', 'table'].includes(child.type)
-          : ['CodeBlock', 'MarkdownImage', 'ImageGrid'].includes(child.type?.name || '')
-        )
+      (child) => {
+        if (React.isValidElement(child)) {
+          // Check for explicit block elements
+          if (typeof child.type === 'string') {
+            return ['div', 'pre', 'ul', 'ol', 'table', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(child.type);
+          }
+          
+          // Check for custom components that might render block elements
+          if (typeof child.type !== 'string') {
+            const componentName = child.type?.name || '';
+            return ['CodeBlock', 'MarkdownImage', 'ImageGrid'].includes(componentName);
+          }
+        }
+        
+        // Check for HTML strings that contain block elements
+        if (typeof child === 'string') {
+          return /(<div|<pre|<ul|<ol|<table|<blockquote|<h[1-6])/i.test(child);
+        }
+        
+        return false;
+      }
     );
     
-    // If there are block elements, use a div instead of a p to avoid nesting violations
-    const Element = hasBlockElement ? 'div' : 'p';
+    // Always use a div if we detect any potential block elements to be safe
+    if (hasBlockElement) {
+      return (
+        <div className="text-base" {...props}>
+          {children}
+        </div>
+      );
+    }
     
+    // Only use paragraph when we're sure it's safe
     return (
-      <Element {...props} className="text-base">
+      <p className="text-base" {...props}>
         {children}
-      </Element>
+      </p>
     );
   },
   ol: ({ children, ...props }) => {
