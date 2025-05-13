@@ -17,7 +17,7 @@ export const CHAT_ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "text/*", "application/pdf", "text/csv"];
 
 // Interface for pending attachments
-interface PendingAttachment {
+export interface PendingAttachment {
   id: string;
   file: File;
   previewUrl: string;
@@ -53,10 +53,15 @@ interface ChatInputProps {
   placeholder?: string;
   minHeight?: number;
   maxHeight?: number;
-  // onFileSelect?: (file: File) => void; // Removed as it's unused
   className?: string;
   isMobile?: boolean;
-  isWebSearchEnabled?: boolean; // New prop
+  isWebSearchEnabled?: boolean;
+  // New props for external control of drop zone
+  showDropZoneIndicator?: boolean; // Controls when to show the drop zone overlay
+  pendingAttachments?: PendingAttachment[]; // Externally managed attachments
+  setPendingAttachments?: React.Dispatch<React.SetStateAction<PendingAttachment[]>>; // External state updater
+  processFilesForAttachment?: (filesToProcess: File[]) => Promise<void>; // External file processing
+  handleRemoveAttachment?: (attachmentId: string) => Promise<void>; // External attachment removal
 }
 
 // --- Start: Memoized Button Components ---
@@ -148,7 +153,7 @@ MemoizedSendStopButton.displayName = 'MemoizedSendStopButton'; // Add display na
 function ChatInputComponent({
   chatId,
   agentSlug,
-  userId, // Destructure userId
+  userId,
   input,
   setInput,
   status,
@@ -156,15 +161,25 @@ function ChatInputComponent({
   handleSubmit,
   id = "ai-input-with-search",
   placeholder = "Ask Anything...",
-  minHeight: minHeightProp = 48, // Renamed prop to avoid conflict
+  minHeight: minHeightProp = 48,
   maxHeight = 164,
-  // onFileSelect, // Removed
   className,
   isMobile,
-  isWebSearchEnabled // Destructure new prop
+  isWebSearchEnabled,
+  // New props with defaults for backward compatibility
+  showDropZoneIndicator = false,
+  pendingAttachments: externalPendingAttachments,
+  setPendingAttachments: externalSetPendingAttachments,
+  processFilesForAttachment: externalProcessFilesForAttachment,
+  handleRemoveAttachment: externalHandleRemoveAttachment
 }: ChatInputProps) {
-  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
-  const [isDraggingOver, setIsDraggingOver] = useState(false); // New state for drag-over
+  // Use internal state only if external state is not provided
+  const [internalPendingAttachments, setInternalPendingAttachments] = useState<PendingAttachment[]>([]);
+  
+  // Use either the external or internal state/functions
+  const pendingAttachments = externalPendingAttachments || internalPendingAttachments;
+  const setPendingAttachments = externalSetPendingAttachments || setInternalPendingAttachments;
+  
   const inputRef = React.useRef(input);
   const mobileMinHeight = 40;
   const effectiveMinHeight = isMobile ? mobileMinHeight : minHeightProp;
@@ -186,8 +201,12 @@ function ChatInputComponent({
     }
   }, [textareaRef]);
 
-  // Helper function to process files (either from input or paste)
+  // Helper function to process files (either from input or paste) - use external if provided
   const processFilesForAttachment = useCallback(async (filesToProcess: File[]) => {
+    if (externalProcessFilesForAttachment) {
+      return externalProcessFilesForAttachment(filesToProcess);
+    }
+    
     if (pendingAttachments.length + filesToProcess.length > 5) {
       toast.error("You can attach a maximum of 5 files per message.");
       return;
@@ -236,7 +255,7 @@ function ChatInputComponent({
         toast.error(`Error uploading ${att.file.name}.`);
       }
     }
-  }, [pendingAttachments, userId, setPendingAttachments]);
+  }, [pendingAttachments, userId, setPendingAttachments, externalProcessFilesForAttachment]);
 
   // Handler for paste events
   const handlePaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -274,6 +293,10 @@ function ChatInputComponent({
   }, [processFilesForAttachment]);
 
   const handleRemoveAttachment = useCallback(async (attachmentId: string) => {
+    if (externalHandleRemoveAttachment) {
+      return externalHandleRemoveAttachment(attachmentId);
+    }
+    
     const attachmentToRemove = pendingAttachments.find(att => att.id === attachmentId);
 
     // Optimistically remove from UI and revoke blob URL
@@ -314,7 +337,7 @@ function ChatInputComponent({
         }
       }
     }
-  }, [pendingAttachments, setPendingAttachments, userId]);
+  }, [pendingAttachments, setPendingAttachments, userId, externalHandleRemoveAttachment]);
 
   const handleInternalSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
@@ -380,44 +403,6 @@ function ChatInputComponent({
     };
   }, [pendingAttachments]);
 
-  // Drag and Drop Handlers
-  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(true);
-  }, [setIsDraggingOver]);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'copy'; // Show copy cursor
-    // Ensure isDraggingOver stays true if user drags over child elements and then back to parent
-    if (!isDraggingOver) {
-      setIsDraggingOver(true);
-    }
-  }, [isDraggingOver, setIsDraggingOver]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Only set to false if the leave target is outside the component or related elements
-    // This check helps prevent flickering when dragging over child elements
-    const relatedTarget = e.relatedTarget as HTMLElement;
-    if (!e.currentTarget.contains(relatedTarget)) {
-      setIsDraggingOver(false);
-    }
-  }, [setIsDraggingOver]);
-
-  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(false);
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      await processFilesForAttachment(files);
-    }
-  }, [processFilesForAttachment, setIsDraggingOver]);
-
   const isStreaming = status === 'submitted' || status === 'streaming';
   const canSubmit = status === 'ready' && (!!input.trim() || pendingAttachments.some(att => att.status === 'success'));
 
@@ -438,20 +423,16 @@ function ChatInputComponent({
       <div
         className={cn(
           "max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden transition-all",
-          isDraggingOver && "border-dashed border-sky-500 ring-2 ring-sky-500 ring-offset-1 dark:ring-offset-black bg-sky-500/10" // Added conditional styles
+          showDropZoneIndicator && "border-dashed border-sky-500 ring-2 ring-sky-500 ring-offset-1 dark:ring-offset-black bg-sky-500/10" // Use showDropZoneIndicator prop instead of isDraggingOver
         )}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
       >
-        {isDraggingOver && (
+        {showDropZoneIndicator && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-[2px] rounded-2xl pointer-events-none z-20">
             <UploadCloud className="w-12 h-12 text-sky-500 mb-2" />
             <p className="text-lg font-semibold text-sky-500">Drop files here</p>
           </div>
         )}
-        <div className={cn("flex flex-col", isDraggingOver && "opacity-50")}> {/* Optionally reduce opacity of content when dragging over */}
+        <div className={cn("flex flex-col", showDropZoneIndicator && "opacity-50")}> {/* Use showDropZoneIndicator prop instead of isDraggingOver */}
           <div className="overflow-y-auto" style={{ maxHeight: `${maxHeight}px` }}>
             <Textarea
               id={id}
@@ -558,13 +539,15 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.handleSubmit === nextProps.handleSubmit &&
     prevProps.setInput === nextProps.setInput &&
     prevProps.stop === nextProps.stop &&
-    // prevProps.onFileSelect === nextProps.onFileSelect && // Removed
     prevProps.id === nextProps.id &&
     prevProps.placeholder === nextProps.placeholder &&
     prevProps.minHeight === nextProps.minHeight &&
     prevProps.maxHeight === nextProps.maxHeight &&
     prevProps.className === nextProps.className && 
     prevProps.isMobile === nextProps.isMobile &&
-    prevProps.isWebSearchEnabled === nextProps.isWebSearchEnabled // New comparison
+    prevProps.isWebSearchEnabled === nextProps.isWebSearchEnabled && // New comparison
+    prevProps.showDropZoneIndicator === nextProps.showDropZoneIndicator // New comparison for drop zone indicator
+    // Note: We intentionally don't compare the attachment-related props because they shouldn't trigger a re-render
+    // if they're properly memoized by the parent component.
   );
 });
