@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Paperclip, Send, StopCircle, Loader2, CheckCircle2, XCircle, X } from "lucide-react";
+import { Globe, Paperclip, Send, StopCircle, Loader2, CheckCircle2, XCircle, X, UploadCloud } from "lucide-react";
 import React, { useState, useEffect, memo, useCallback } from "react"; // Import React, useCallback, memo
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -164,6 +164,7 @@ function ChatInputComponent({
   isWebSearchEnabled // Destructure new prop
 }: ChatInputProps) {
   const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([]);
+  const [isDraggingOver, setIsDraggingOver] = useState(false); // New state for drag-over
   const inputRef = React.useRef(input);
   const mobileMinHeight = 40;
   const effectiveMinHeight = isMobile ? mobileMinHeight : minHeightProp;
@@ -379,6 +380,44 @@ function ChatInputComponent({
     };
   }, [pendingAttachments]);
 
+  // Drag and Drop Handlers
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  }, [setIsDraggingOver]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy'; // Show copy cursor
+    // Ensure isDraggingOver stays true if user drags over child elements and then back to parent
+    if (!isDraggingOver) {
+      setIsDraggingOver(true);
+    }
+  }, [isDraggingOver, setIsDraggingOver]);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set to false if the leave target is outside the component or related elements
+    // This check helps prevent flickering when dragging over child elements
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!e.currentTarget.contains(relatedTarget)) {
+      setIsDraggingOver(false);
+    }
+  }, [setIsDraggingOver]);
+
+  const handleDrop = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      await processFilesForAttachment(files);
+    }
+  }, [processFilesForAttachment, setIsDraggingOver]);
+
   const isStreaming = status === 'submitted' || status === 'streaming';
   const canSubmit = status === 'ready' && (!!input.trim() || pendingAttachments.some(att => att.status === 'success'));
 
@@ -396,8 +435,23 @@ function ChatInputComponent({
 
   return (
     <div className={cn("w-full px-0 mb-4 md:pb-6 md:px-8 relative", className)}>
-      <div className="max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden">
-        <div className="flex flex-col">
+      <div
+        className={cn(
+          "max-w-3xl mx-auto relative bg-black/5 dark:bg-white/5 rounded-2xl backdrop-blur-sm border border-black/10 dark:border-white/10 shadow-sm overflow-hidden transition-all",
+          isDraggingOver && "border-dashed border-sky-500 ring-2 ring-sky-500 ring-offset-1 dark:ring-offset-black bg-sky-500/10" // Added conditional styles
+        )}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {isDraggingOver && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-[2px] rounded-2xl pointer-events-none z-20">
+            <UploadCloud className="w-12 h-12 text-sky-500 mb-2" />
+            <p className="text-lg font-semibold text-sky-500">Drop files here</p>
+          </div>
+        )}
+        <div className={cn("flex flex-col", isDraggingOver && "opacity-50")}> {/* Optionally reduce opacity of content when dragging over */}
           <div className="overflow-y-auto" style={{ maxHeight: `${maxHeight}px` }}>
             <Textarea
               id={id}
@@ -497,6 +551,7 @@ function ChatInputComponent({
 // Export memoized component with custom comparison
 export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
   // Only re-render if value, status, or function references change
+  // Note: We don't need to compare isDraggingOver here as it's internal state managed by ChatInputComponent
   return (
     prevProps.input === nextProps.input &&
     prevProps.status === nextProps.status &&
