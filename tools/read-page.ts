@@ -25,12 +25,12 @@ const jinaReaderResponseSchema = z.object({
     status: z.number(), // Assuming status is also a number like code
     data: jinaReaderResponseData,
     // Include usage if the API provides it and you want to capture it
-    // usage: z.object({ tokens: z.number() }).optional(),
+    usage: z.object({ tokens: z.number() }).optional(),
 });
 
 
 export const readPageTool = tool({
-  description: 'Reads the content of a given webpage URL using the JINA Reader API, returning the main content, title, final URL, and summaries of links and images.',
+  description: 'Reads the content of a given webpage URL using the JINA Reader API, returning only the main content, title, and final URL.',
   parameters: readPageParams,
   execute: async ({ url }) => {
     if (!JINA_API_KEY) {
@@ -44,8 +44,6 @@ export const readPageTool = tool({
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${JINA_API_KEY}`,
-          'X-With-Links-Summary': 'true', // Request unique link summaries
-          'X-With-Images-Summary': 'true', // Request unique image summaries
           'X-Return-Format': 'markdown', // Explicitly request Markdown format
           // Optional: Add other Jina headers if needed, e.g., X-Timeout
         },
@@ -80,10 +78,14 @@ export const readPageTool = tool({
           };
       }
 
-      // Return the validated data object (title, url, content, links, images)
+      // Return the validated data object (title, url, content)
       // Ensure the returned object matches what the AI expects or what you intend to use downstream.
-      // We are returning the 'data' part as defined in our schema.
-      return validatedResponse.data;
+      // We are returning the 'data' part as defined in our schema, excluding links and images.
+      // The `links` and `images` properties are optional in `jinaReaderResponseData` to handle potential API responses,
+      // but we explicitly exclude them from the tool's output.
+      // eslint-disable-next-line no-unused-vars
+      const { links: _links, images: _images, ...dataWithoutLinksAndImages } = validatedResponse.data.data;
+      return dataWithoutLinksAndImages;
 
     } catch (error) {
       console.error('Error executing JINA Reader web page read:', error);
