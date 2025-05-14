@@ -7,34 +7,17 @@ import { E2BSandboxSection } from '../e2b-sandbox-section'; // Import E2B Sandbo
 import CalculatorSection from '../calculator-section'; // Import Calculator UI
 import CreateLogoSection from '../create-logo-section'; // Import the new logo section
 import CreateChartSection from '../create-chart-section';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface ToolMessageProps {
-  // Corrected prop type
-  toolInvocation: ToolInvocation;
-}
-
-export function ToolMessage({ toolInvocation }: ToolMessageProps) {
-
+// Helper component to render the actual tool UI
+const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => {
   const { toolName, state } = toolInvocation;
-
-
-  
-  // const {
-  //   state,
-  //   step,
-  //   toolCallId,
-  //   toolName,
-  //   args,
-  // } = toolInvocation;
-
-
- 
 
   // If RESULT is available
   if (state == 'result') {
     switch (toolName) {
       case 'web_search':
-        return <WebSearchSection 
+        return <WebSearchSection
               toolInvocation={toolInvocation}
             />
       case 'read_page': // Add case for readPage tool (Result State)
@@ -57,7 +40,6 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
         </div>;
     }
   }
-
 
   // If result is not available
   if (state == 'call' ) {
@@ -99,7 +81,39 @@ export function ToolMessage({ toolInvocation }: ToolMessageProps) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <p className="text-muted-foreground">Using tool: <span className="font-semibold text-primary">{toolName || ""}...</span></p>
+            <p className="text-muted-foreground">Using tool: <span className="font-semibold text-primary">{toolInvocation.toolName || ""}...</span></p>
           </div>
   </>
+};
+
+interface ToolMessageProps {
+  // Corrected prop type
+  toolInvocation: ToolInvocation;
+}
+
+export function ToolMessage({ toolInvocation }: ToolMessageProps) {
+
+  if (process.env.NODE_ENV === 'development') {
+    return (
+      <Tabs defaultValue="view" className="w-full my-2">
+        <TabsList className="grid w-full grid-cols-2 mb-1">
+          <TabsTrigger value="view">View</TabsTrigger>
+          <TabsTrigger value="json">JSON</TabsTrigger>
+        </TabsList>
+        <TabsContent value="view">
+          <ToolDisplay toolInvocation={toolInvocation} />
+        </TabsContent>
+        <TabsContent value="json">
+          <div className="mt-1 rounded-md border bg-muted p-2">
+            <pre className="text-xs max-w-full overflow-auto whitespace-pre-wrap break-all">
+              {JSON.stringify(toolInvocation, null, 2)}
+            </pre>
+          </div>
+        </TabsContent>
+      </Tabs>
+    );
+  }
+
+  // Production mode or if NODE_ENV is not 'development'
+  return <ToolDisplay toolInvocation={toolInvocation} />;
 }
