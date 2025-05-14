@@ -38,7 +38,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '5mb',
       allowedOrigins: [
         'localhost:3000',
-        'turbo-doodle-r57wvgq7wj73wq4g-3000.app.github.dev'
+        'turbo-doodle-r57wvgq7wj73wq4g-3000.app.github.dev',
+        'agentvendor.ca'
       ],
     },
     

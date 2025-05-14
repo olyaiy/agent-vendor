@@ -76,9 +76,19 @@ export default async function Page({ params }: PageProps) {
         />
       </Suspense>
 
+      <Suspense fallback={<div>Loading agent tools...</div>}>
+        <AgentToolsForm
+          agentId={agentData.id}
+          currentAgentTools={currentAgentTools}
+          allAvailableTools={allAvailableTools}
+        />
+      </Suspense>
+
       <Suspense fallback={<div>Loading system prompt...</div>}>
         <SystemPromptForm agent={agentData} />
       </Suspense>
+
+    
 
       <Suspense fallback={<div>Loading knowledge items...</div>}>
         <AgentKnowledgeForm
@@ -87,13 +97,7 @@ export default async function Page({ params }: PageProps) {
         />
       </Suspense>
 
-      <Suspense fallback={<div>Loading agent tools...</div>}>
-        <AgentToolsForm
-          agentId={agentData.id}
-          currentAgentTools={currentAgentTools}
-          allAvailableTools={allAvailableTools}
-        />
-      </Suspense>
+    
 
       {/* Add the Delete Agent Section */}
       <Suspense fallback={<div>Loading delete section...</div>}>

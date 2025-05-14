@@ -343,7 +343,10 @@ interface OpenAIProviderOptions {
       maxSteps: 5,
       toolCallStreaming: true,
       experimental_generateMessageId: generateUUID, // This tells the program to generate UUID's for the assistant messages
-      experimental_transform: smoothStream({ delayInMs: 20 }),
+      experimental_transform: smoothStream({
+        delayInMs: 20, // optional: defaults to 10ms
+        chunking: 'line', // optional: defaults to 'word'
+      }),    
       // Spread the FINAL (potentially modified) settings into the streamText call
       ...finalSettings,
       // Pass the dynamically determined provider options
