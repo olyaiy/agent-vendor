@@ -83,7 +83,7 @@ export const readPageTool = tool({
       // We are returning the 'data' part as defined in our schema, excluding links and images.
       // The `links` and `images` properties are optional in `jinaReaderResponseData` to handle potential API responses,
       // but we explicitly exclude them from the tool's output.
-      // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { links: _links, images: _images, ...dataWithoutLinksAndImages } = validatedResponse.data.data;
       return dataWithoutLinksAndImages;
 
