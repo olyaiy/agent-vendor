@@ -38,6 +38,7 @@ export const tools = pgTable(
       onDelete: 'set null', // Preserve tool if user is deleted
     }),
     type: toolTypeEnum('type').notNull(), // Type from toolTypeEnum
+    prompt: text('prompt'), // Optional prompt for the agent about the tool
     definition: jsonb('definition'), // Tool configuration (type-specific)
     inputSchema: jsonb('input_schema'), // JSON Schema for input validation
     createdAt: timestamp('created_at', { withTimezone: true })
