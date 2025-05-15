@@ -23,6 +23,7 @@ const CreateToolSchema = z.object({
   displayName: z.string().optional(),
   description: z.string().optional(),
   type: z.enum(['basetool', 'sequence', 'api']),
+  prompt: z.string().optional(),
   definition: z.any().optional(), // Or more specific Zod schema if known
   inputSchema: z.any().optional(), // Or more specific Zod schema if known
   // creatorId will be set from session
