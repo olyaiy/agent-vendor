@@ -220,7 +220,7 @@ const components: Partial<Components> = {
     // Always use a div if we detect any potential block elements to be safe
     if (hasBlockElement) {
       return (
-        <div className="text-base" {...props}>
+        <div className="" {...props}>
           {children}
         </div>
       );
@@ -228,14 +228,14 @@ const components: Partial<Components> = {
     
     // Only use paragraph when we're sure it's safe
     return (
-      <p className="text-base" {...props}>
+      <p className="text-lg" {...props}>
         {children}
       </p>
     );
   },
   ol: ({ children, ...props }) => {
     return (
-      <ol className="list-decimal list-outside ml-4" {...props}>
+      <ol className="list-decimal list-outside ml-4 space-y-4 text-lg" {...props}>
         {children}
       </ol>
     );
@@ -255,7 +255,7 @@ const components: Partial<Components> = {
     // If there are images in the HTML content, we need to process them differently
     if (hasImage) {
       return (
-        <li className="py-0.5 ml-4" {...props}>
+        <li className="py-0.5 ml-4 " {...props}>
           {childrenArray.map((child, index) => {
             // If it's an img tag in HTML, wrap it with our MarkdownImage component
             if (typeof child === 'string' && child.includes('<img')) {
@@ -284,11 +284,11 @@ const components: Partial<Components> = {
     
     // For non-image content, use the original approach
     const html = node?.children ? toHtml(node.children) : '';
-    return <li className="py-0.5 ml-4" dangerouslySetInnerHTML={{ __html: html }} {...props} />;
+    return <li className="py-0.5 ml-4 space-y-2 text-lg" dangerouslySetInnerHTML={{ __html: html }} {...props} />;
   },
   ul: ({ children, ...props }) => {
     return (
-      <ul className="list-disc list-outside ml-4" {...props}>
+      <ul className="list-disc list-outside ml-4 space-y-4" {...props}>
         {children}
       </ul>
     );
