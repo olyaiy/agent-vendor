@@ -180,29 +180,29 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
                       </span>
                     </motion.div>
                   </div>
-                  
-                  {/* Images preview section - inline with title */}
-                  {images.length > 0 && (
-                    <motion.div variants={item} className="flex gap-1 h-16 flex-shrink-0">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative w-16 h-full rounded overflow-hidden border border-border/30">
-                          <Image 
-                            src={image.url} 
-                            alt={image.alt} 
-                            fill 
-                            className="object-cover" 
-                            unoptimized 
-                          />
-                          {images.length > 4 && index === 3 && (
-                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center text-xs font-medium">
-                              +{images.length - 4}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
                 </div>
+                
+                {/* Images preview section - new row */}
+                {images.length > 0 && (
+                  <motion.div variants={item} className="flex gap-2 mt-2">
+                    {images.map((image, index) => (
+                      <div key={index} className="relative flex-1 aspect-square max-w-24 rounded overflow-hidden border border-border/30">
+                        <Image 
+                          src={image.url} 
+                          alt={image.alt} 
+                          fill 
+                          className="object-cover" 
+                          unoptimized 
+                        />
+                        {images.length > 4 && index === 3 && (
+                          <div className="absolute inset-0 bg-background/50 flex items-center justify-center text-xs font-medium">
+                            +{images.length - 4}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
               </motion.div>
             </Link>
           </TooltipTrigger>
