@@ -63,6 +63,8 @@ export const myProvider = customProvider({
     'claude-3-5-sonnet-20241022': anthropic('claude-3-5-sonnet-20241022'),
     'claude-3-5-haiku-20241022': anthropic('claude-3-5-haiku-20241022'),
     'claude-3-7-sonnet-20250219': anthropic('claude-3-7-sonnet-20250219'),
+    'claude-4-sonnet-20250514': anthropic('claude-4-sonnet-20250514'),
+    'claude-4-opus-20250514': anthropic('claude-4-opus-20250514'),
 
     
     // Google Models
@@ -390,6 +392,84 @@ export const modelDetails: Record<string, ModelDetails> = {
     description: "Claude 3.7 Sonnet is the first hybrid reasoning model and Anthropic's most intelligent model to date. It delivers state-of-the-art performance for coding, content generation, data analysis, and planning tasks, building upon its predecessor Claude 3.5 Sonnet's capabilities in software engineering and computer use.",
     inputCostPerMillion: 3.00,
     outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'claude-4-sonnet-20250514': {
+    displayName: "Claude 4 Sonnet",
+    description: "Claude Sonnet 4 significantly improves on Sonnet 3.7's industry-leading capabilities, excelling in coding with a state-of-the-art 72.7% on SWE-bench. The model balances performance and efficiency for internal and external use cases, with enhanced steerability for greater control over implementations.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'claude-4-opus-20250514': {
+    displayName: "Claude 4 Opus",
+    description: "Claude Opus 4 is Anthropic's most powerful model yet and the best coding model in the world, leading on SWE-bench (72.5%) and Terminal-bench (43.2%). It delivers sustained performance on long-running tasks that require focused effort and thousands of steps, with the ability to work continuously for several hours.",
+    inputCostPerMillion: 15.00,
+    outputCostPerMillion: 75.00,
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
@@ -1156,6 +1236,8 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'claude-3-5-sonnet-20241022': anthropic('claude-3-5-sonnet-20241022'),
     'claude-3-5-haiku-20241022': anthropic('claude-3-5-haiku-20241022'),
     'claude-3-7-sonnet-20250219': anthropic('claude-3-7-sonnet-20250219'),
+    'claude-4-sonnet-20250514': anthropic('claude-4-sonnet-20250514'),
+    'claude-4-opus-20250514': anthropic('claude-4-opus-20250514'),
     // Google
     'gemini-2.5-pro-exp-03-25': google('gemini-2.5-pro-exp-03-25'),
     'gemini-2.0-flash-exp': google('gemini-2.0-flash-exp'),
