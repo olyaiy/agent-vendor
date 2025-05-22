@@ -235,7 +235,7 @@ const components: Partial<Components> = {
   },
   ol: ({ children, ...props }) => {
     return (
-      <ol className="list-decimal list-outside ml-4 space-y-4 text-lg" {...props}>
+      <ol className="list-decimal list-outside ml-4 space-y-2 text-lg [&_ol]:mt-2 [&_ol]:ml-8 [&_ol]:space-y-1 [&_ol]:list-[lower-alpha] [&_ol_ol]:list-[lower-roman]" {...props}>
         {children}
       </ol>
     );
@@ -250,6 +250,13 @@ const components: Partial<Components> = {
         ((typeof child.type === 'string' && child.type === 'img') || 
          (typeof child.type !== 'string' && child.type?.name === 'MarkdownImage')) ||
       (typeof child === 'string' && child.includes('<img'))
+    );
+    
+    // Check if the li contains nested lists
+    const hasNestedList = childrenArray.some(
+      child => React.isValidElement(child) && 
+        (child.type === 'ul' || child.type === 'ol') ||
+      (typeof child === 'string' && (child.includes('<ul') || child.includes('<ol')))
     );
     
     // If there are images in the HTML content, we need to process them differently
@@ -282,13 +289,22 @@ const components: Partial<Components> = {
       );
     }
     
-    // For non-image content, use the original approach
+    // If there are nested lists, render children directly to allow proper component rendering
+    if (hasNestedList) {
+      return (
+        <li className="py-1 ml-4 space-y-2 text-lg" {...props}>
+          {children}
+        </li>
+      );
+    }
+    
+    // For non-image, non-nested-list content, use the original approach
     const html = node?.children ? toHtml(node.children) : '';
     return <li className="py-0.5 ml-4 space-y-2 text-lg" dangerouslySetInnerHTML={{ __html: html }} {...props} />;
   },
   ul: ({ children, ...props }) => {
     return (
-      <ul className="list-disc list-outside ml-4 space-y-4" {...props}>
+      <ul className="list-disc list-outside ml-4 space-y-2 [&_ul]:mt-2 [&_ul]:ml-8 [&_ul]:space-y-1 [&_ul]:list-[circle] [&_ul_ul]:list-[square]" {...props}>
         {children}
       </ul>
     );
