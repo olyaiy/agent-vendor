@@ -24,18 +24,10 @@ interface ReadPageArgs {
   url: string;
 }
 
-interface ReadPageData {
-  title: string;
-  url: string;
-  content: string; // Contains HTML content
-  links: Record<string, string>;
-  images: Record<string, string>; // Assuming keys are alt text/names, values are URLs
-}
-
 interface ReadPageResult {
-  code: number;
-  status: number;
-  data?: ReadPageData; // Make data optional to handle potential errors where data might be missing
+  title?: string;
+  url: string;
+  content: string; // Contains markdown content
   error?: string; // Add an optional error field
 }
 
@@ -119,8 +111,8 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
     const result = toolInvocation.result as ReadPageResult | undefined;
 
     // Handle Errors or Missing Data
-    if (!result || result.code !== 200 || !result.data) {
-      const errorMessage = result?.error || (result?.code !== 200 ? `Request failed with status ${result?.code}` : "No data received from the tool.");
+    if (!result || result.error || !result.content) {
+      const errorMessage = result?.error || "No data received from the tool.";
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Alert variant="destructive">
@@ -135,11 +127,18 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
       );
     }
 
-    const { title, url, content, images } = result.data;
+    const { title, url, content } = result;
     const plainContentSnippet = truncateText(stripHtml(content), 300); // Show ~300 chars of text content
     const domain = new URL(url).hostname.replace("www.", "");
     const faviconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=16`;
-    const imageEntries = Object.entries(images || {});
+    
+    // Extract images from markdown content
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+    const imageMatches = [...content.matchAll(imageRegex)];
+    const images = imageMatches.slice(0, 4).map(match => ({
+      alt: match[1] || 'Image',
+      url: match[2]
+    }));
 
     return (
       <TooltipProvider delayDuration={100}>
@@ -183,20 +182,20 @@ const ReadPageSection = ({ toolInvocation }: ReadPageSectionProps) => {
                   </div>
                   
                   {/* Images preview section - inline with title */}
-                  {imageEntries.length > 0 && (
+                  {images.length > 0 && (
                     <motion.div variants={item} className="flex gap-1 h-16 flex-shrink-0">
-                      {imageEntries.slice(0, 3).map(([key, url], index) => (
+                      {images.map((image, index) => (
                         <div key={index} className="relative w-16 h-full rounded overflow-hidden border border-border/30">
                           <Image 
-                            src={url} 
-                            alt={key} 
+                            src={image.url} 
+                            alt={image.alt} 
                             fill 
                             className="object-cover" 
                             unoptimized 
                           />
-                          {imageEntries.length > 3 && index === 2 && (
+                          {images.length > 4 && index === 3 && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center text-xs font-medium">
-                              +{imageEntries.length - 3}
+                              +{images.length - 4}
                             </div>
                           )}
                         </div>

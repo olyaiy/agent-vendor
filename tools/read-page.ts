@@ -44,7 +44,8 @@ export const readPageTool = tool({
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${JINA_API_KEY}`,
-          'X-Return-Format': 'markdown', // Explicitly request Markdown format
+          'X-With-Images-Summary': 'true',
+          
           // Optional: Add other Jina headers if needed, e.g., X-Timeout
         },
         body: JSON.stringify({ url }),

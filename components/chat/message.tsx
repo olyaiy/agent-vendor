@@ -2,7 +2,7 @@
 
 import type { UIMessage } from 'ai';
 
-import { memo, useEffect, useState } from 'react';
+import { memo, useState } from 'react';
 
 // import { DocumentToolCall, DocumentToolResult } from './document';
 import { SparklesIcon } from '../utils/icons';
@@ -269,16 +269,6 @@ export const PreviewMessage = memo(
 );
 
 export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) => {
-  const [elapsedTime, setElapsedTime] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedTime(prev => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
   return (
     <motion.div
       className="w-full mx-auto max-w-3xl px-0 group/message relative"
@@ -318,7 +308,7 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
                     opacity: [0.3, 1, 0.3]
                   }}
                   transition={{
-                    duration: 0.8,
+                    duration: 1.5,
                     repeat: Infinity,
                     ease: "easeInOut",
                     delay: 0
@@ -331,10 +321,10 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
                     opacity: [0.3, 1, 0.3]
                   }}
                   transition={{
-                    duration: 0.8,
+                    duration: 1.5,
                     repeat: Infinity,
                     ease: "easeInOut",
-                    delay: 0.15
+                    delay: 0.25
                   }}
                 />
                 <motion.div
@@ -344,38 +334,25 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
                     opacity: [0.3, 1, 0.3]
                   }}
                   transition={{
-                    duration: 0.8,
+                    duration: 1.5,
                     repeat: Infinity,
                     ease: "easeInOut",
-                    delay: 0.3
+                    delay: 0.5
                   }}
                 />
               </div>
             </div>
-
-            {elapsedTime > 3 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="text-xs text-muted-foreground/70 ml-1"
-              >
-                {elapsedTime}s
-              </motion.div>
-            )}
           </div>
 
-          {elapsedTime > 1 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              transition={{ duration: 0.4 }}
-              className="text-xs text-muted-foreground/80 max-w-lg"
-            >
-              Working on a thoughtful response{elapsedTime > 8 ? ". This might take a moment for complex questions" : ""}
-            </motion.div>
-          )}
-          <span className="sr-only">AI is thinking - elapsed time: {elapsedTime} seconds</span>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            transition={{ duration: 0.4 }}
+            className="text-xs text-muted-foreground/80 max-w-lg"
+          >
+            Working on a thoughtful response
+          </motion.div>
+          <span className="sr-only">AI is thinking</span>
         </div>
       </div>
     </motion.div>
