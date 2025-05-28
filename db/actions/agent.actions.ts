@@ -206,6 +206,8 @@ export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{
     avatarUrl: string | null; // Added this line
     slug: string | null; // Slug might be null
 }>>> {
+    'use cache'
+    
     // Consider making this ID an environment variable or constant
     const baseModelTagId = "575527b1-803a-4c96-8a4a-58ca997f08bd";
     const limit = 10; // Define limit

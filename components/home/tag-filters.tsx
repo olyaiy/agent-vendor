@@ -1,28 +1,25 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-
-// Define the shape of a tag object
-type Tag = {
-  id: string;
-  name: string;
-};
+import { getTopTagsAction } from '@/db/actions/tag.actions';
 
 // Define the props for the TagFilters component
 type TagFiltersProps = {
-  topTags: Tag[];
   selectedTag?: string;
-  tagsResultSuccess: boolean;
-  tagsResultError?: string;
 };
 
 /**
- * Server component responsible for rendering the tag filter badges.
+ * Server component responsible for fetching and rendering the tag filter badges.
+ * Now handles its own data fetching for better performance.
  */
-export function TagFilters({ topTags, selectedTag, tagsResultSuccess, tagsResultError }: TagFiltersProps) {
+export async function TagFilters({ selectedTag }: TagFiltersProps) {
+  // Fetch top tags
+  const tagsResult = await getTopTagsAction(20);
+  const topTags = tagsResult.success ? tagsResult.data || [] : [];
+
   return (
     <div className="flex space-x-2 overflow-x-auto pb-4 mb-6">
-      {tagsResultSuccess ? (
+      {tagsResult.success ? (
         <>
           <Link href="/" className="flex-shrink-0">
             <Button
@@ -46,7 +43,7 @@ export function TagFilters({ topTags, selectedTag, tagsResultSuccess, tagsResult
           ))}
         </>
       ) : (
-        <p className="text-sm text-red-500">Error loading tags: {tagsResultError}</p>
+        <p className="text-sm text-red-500">Error loading tags: {tagsResult.error}</p>
       )}
     </div>
   );

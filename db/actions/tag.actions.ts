@@ -305,6 +305,8 @@ export async function updateAgentTagsAction(agentId: string, newTagIds: string[]
  * @returns Promise with success status and list of tags or error.
  */
 export async function getTopTagsAction(limit: number): Promise<ActionResult<Tag[]>> {
+    'use cache'
+    
     if (typeof limit !== 'number' || limit <= 0 || !Number.isInteger(limit)) {
         return { success: false, error: "Invalid limit provided (must be a positive integer)." };
     }
