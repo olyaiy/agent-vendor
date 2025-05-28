@@ -87,18 +87,24 @@ export default async function Page({
   const agentSlug = resolvedParams["agent-slug"];
   const chatId = resolvedParams["chat-id"];
 
-  // 2. Fetch Chat Details & Perform Auth Check
-  const chat = await getChatById(chatId);
+  // 2. Get headers once to avoid multiple awaits
+  const headersList = await headers();
+
+  // 3. Fetch Chat Details & Session in parallel (both needed for auth)
+  const [chat, session] = await Promise.all([
+    getChatById(chatId),
+    auth.api.getSession({ headers: headersList })
+  ]);
+
   if (!chat) {
     notFound(); // Chat not found
   }
 
-  const session = await auth.api.getSession({ headers: await headers() });
   if (session?.user?.id !== chat.userId) {
     notFound(); // Unauthorized or not logged in
   }
 
-  // 3. Fetch Agent Details (using slug)
+  // 4. Fetch Agent Details (using slug)
   const agent = await selectAgentBySlug(agentSlug);
   if (!agent) {
     notFound(); // Agent not found
@@ -106,15 +112,17 @@ export default async function Page({
 
   const isOwner = agent?.creatorId === session?.user?.id;
 
-  // 4. Fetch Agent Relations (Models, Knowledge, Tags, Tools) in parallel
-  let currentAgentTools: Tool[] = [];
-  const [rawAgentModels, knowledgeItems, tags, agentToolsResult] = await Promise.all([
+  // 5. Fetch Agent Relations and Messages in parallel (now that we have agent.id and chatId)
+  const [rawAgentModels, knowledgeItems, tags, agentToolsResult, messagesFromDb] = await Promise.all([
     selectAgentModelsBySlug(agentSlug),
     selectAgentKnowledgeBySlug(agentSlug),
     selectAgentTagsBySlug(agentSlug),
-    getToolsForAgentAction(agent.id) // Fetch agent's tools
+    getToolsForAgentAction(agent.id),
+    getMessagesByChatId({ id: chatId })
   ]);
 
+  // 6. Handle agent tools with existing error handling logic
+  let currentAgentTools: Tool[] = [];
   if (agentToolsResult.success) {
     currentAgentTools = agentToolsResult.data;
   } else {
@@ -122,7 +130,7 @@ export default async function Page({
     // currentAgentTools remains []
   }
 
-  // 5. Transform Agent Models for Chat Component
+  // 7. Transform Agent Models for Chat Component
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
     agentId: rawModel.agentId,
     modelId: rawModel.modelId,
@@ -132,10 +140,7 @@ export default async function Page({
     id: rawModel.modelId
   }));
 
-  // 6. Fetch Chat Messages
-  const messagesFromDb = await getMessagesByChatId({ id: chatId });
-
-  // 7. Convert DB Messages to UI Messages
+  // 8. Convert DB Messages to UI Messages
   function convertToUIMessages(dbMessages: Array<DBMessage>): Array<UIMessage> {
     return dbMessages.map((message) => ({
       id: message.id,
@@ -155,11 +160,11 @@ export default async function Page({
   }
   const initialMessages = convertToUIMessages(messagesFromDb);
 
-  // 8. Determine Mobile View
-  const ua = (await headers()).get("user-agent") ?? "";
+  // 9. Determine Mobile View (using cached headers)
+  const ua = headersList.get("user-agent") ?? "";
   const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
 
-  // 9. Render Component
+  // 10. Render Component
   const agentWithTags = { ...agent, tags };
 
   return isMobile ? (
