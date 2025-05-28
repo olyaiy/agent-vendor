@@ -1,4 +1,3 @@
-// app/agent/[agent-slug]/page.tsx
 import Chat from "@/components/chat";
 import ChatMobile from "@/components/chat-mobile";
 import { generateUUID } from "@/lib/utils";

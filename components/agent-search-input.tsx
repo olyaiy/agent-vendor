@@ -40,14 +40,14 @@ export function AgentSearchInput() {
   };
 
   return (
-    <div className="relative mb-2"> {/* Added margin-bottom */}
-      <Search className="absolute left-4 sm:left-10 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /> {/* MODIFIED */}
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         type="search"
         placeholder="Search agents by name, description, or tag..."
         value={searchQuery}
         onChange={handleInputChange}
-        className="w-full h-[60px] sm:h-[75px] rounded-full overflow-hidden bg-background pl-12 sm:pl-[4.5rem] pr-4 py-2  text-small md:text-lg" 
+        className="h-12 pl-10 pr-4 text-base focus-visible:ring-2 focus-visible:ring-primary/20" 
       />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import HeaderPadding from "@/components/header-padding";
 import { AgentSearch } from "@/components/home/agent-search";
 import { TagFilters } from "@/components/home/tag-filters";
@@ -33,13 +32,8 @@ export default async function Home({ searchParams }: PageProps) {
     <main className="container mx-auto pt-4 pb-8 px-4">
       <HeaderPadding />
 
-      {/* Base Models Section */}
-      <BaseModelsSection searchQuery={searchQuery} />
-
       {/* Search Bar */}
       <AgentSearch /> 
-
-
 
       {/* Render Tag Filters */}
       <TagFilters
@@ -48,6 +42,9 @@ export default async function Home({ searchParams }: PageProps) {
         tagsResultSuccess={tagsResult.success}
         tagsResultError={!tagsResult.success ? tagsResult.error : undefined}
       />
+
+      {/* Base Models Section */}
+      <BaseModelsSection searchQuery={searchQuery} />
 
       {/* Render the Agents Grid (handles its own data fetching and Suspense) */}
       <Suspense fallback={<AgentsLoading />}>
