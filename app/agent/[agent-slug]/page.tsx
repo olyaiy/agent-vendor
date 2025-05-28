@@ -12,6 +12,28 @@ import { auth } from "@/lib/auth"; // Import auth from better-auth
 
 type Params = { "agent-slug": string };
 
+// Cache the static agent data that doesn't change based on user
+async function getCachedAgentData(agentSlug: string) {
+  'use cache'
+  
+  const agent = await selectAgentBySlug(agentSlug);
+  if (!agent) return null;
+  
+  // Fetch static data that's the same for all users
+  const [rawAgentModels, knowledgeItems, tags] = await Promise.all([
+    selectAgentModelsBySlug(agentSlug),
+    selectAgentKnowledgeBySlug(agentSlug),
+    selectAgentTagsBySlug(agentSlug),
+  ]);
+  
+  return {
+    agent,
+    rawAgentModels,
+    knowledgeItems,
+    tags
+  };
+}
+
 export default async function Page({
   params,
 }: {
@@ -21,25 +43,18 @@ export default async function Page({
   const resolvedParams = await params;
   const agentSlug = resolvedParams["agent-slug"];
 
-  // First, fetch the agent (required for existence check and agent.id)
-  const agent = await selectAgentBySlug(agentSlug);
-  if (!agent) notFound();
+  // Get cached static data
+  const cachedData = await getCachedAgentData(agentSlug);
+  if (!cachedData) notFound();
+  
+  const { agent, rawAgentModels, knowledgeItems, tags } = cachedData;
 
   // Get headers once to avoid multiple awaits
   const headersList = await headers();
 
-  // Now parallelize all remaining queries
-  const [
-    agentToolsResult,
-    rawAgentModels,
-    knowledgeItems,
-    tags,
-    session
-  ] = await Promise.all([
+  // Fetch user-specific data that should NOT be cached
+  const [agentToolsResult, session] = await Promise.all([
     getToolsForAgentAction(agent.id),
-    selectAgentModelsBySlug(agentSlug),
-    selectAgentKnowledgeBySlug(agentSlug),
-    selectAgentTagsBySlug(agentSlug),
     auth.api.getSession({ headers: headersList })
   ]);
 
@@ -94,6 +109,21 @@ export default async function Page({
   );
 }
 
+// Cache the metadata generation as well since it's static
+async function getCachedMetadata(slug: string) {
+  'use cache'
+  
+  const agent = await selectAgentBySlug(slug);
+  if (!agent) return null;
+  
+  return {
+    name: agent.name,
+    description: agent.description,
+    avatarUrl: agent.avatarUrl,
+    thumbnailUrl: agent.thumbnailUrl
+  };
+}
+
 type GenerateMetadataProps = {
   params: Promise<Params>;
 };
@@ -102,29 +132,30 @@ export async function generateMetadata(
   { params }: GenerateMetadataProps
 ): Promise<Metadata> {
   const { "agent-slug": slug } = await params;
-  const agent = await selectAgentBySlug(slug);
-  if (!agent) {
+  
+  const cachedMeta = await getCachedMetadata(slug);
+  if (!cachedMeta) {
     return { title: "Agent Not Found" };
   }
 
-  const description = agent.description ?? undefined;
-  const imageUrl = agent.avatarUrl ?? agent.thumbnailUrl ?? undefined;
+  const { name, description, avatarUrl, thumbnailUrl } = cachedMeta;
+  const imageUrl = avatarUrl ?? thumbnailUrl ?? undefined;
 
   const meta: Metadata = {
-    title: agent.name,
+    title: name,
   };
   if (description) meta.description = description;
   if (imageUrl) {
     meta.icons = { icon:  imageUrl, apple: imageUrl };
   }
   meta.openGraph = {
-    title: agent.name,
+    title: name,
     ...(description && { description }),
     ...(imageUrl   && { images: [imageUrl] }),
   };
   meta.twitter = {
     card:  "summary_large_image",
-    title: agent.name,
+    title: name,
     ...(description && { description }),
     ...(imageUrl   && { images: [imageUrl] }),
   };
