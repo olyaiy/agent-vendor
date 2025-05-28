@@ -21,23 +21,37 @@ export default async function Page({
   const resolvedParams = await params;
   const agentSlug = resolvedParams["agent-slug"];
 
+  // First, fetch the agent (required for existence check and agent.id)
   const agent = await selectAgentBySlug(agentSlug);
   if (!agent) notFound();
 
+  // Get headers once to avoid multiple awaits
+  const headersList = await headers();
+
+  // Now parallelize all remaining queries
+  const [
+    agentToolsResult,
+    rawAgentModels,
+    knowledgeItems,
+    tags,
+    session
+  ] = await Promise.all([
+    getToolsForAgentAction(agent.id),
+    selectAgentModelsBySlug(agentSlug),
+    selectAgentKnowledgeBySlug(agentSlug),
+    selectAgentTagsBySlug(agentSlug),
+    auth.api.getSession({ headers: headersList })
+  ]);
+
+  // Handle agent tools with existing error handling logic
   let currentAgentTools: Tool[] = [];
-  const agentToolsResult = await getToolsForAgentAction(agent.id);
   if (agentToolsResult.success) {
     currentAgentTools = agentToolsResult.data;
   } else {
     console.error(`Failed to fetch agent tools for agent ${agent.id}:`, agentToolsResult.error);
   }
 
-  const rawAgentModels = await selectAgentModelsBySlug(agentSlug);
-  const knowledgeItems = await selectAgentKnowledgeBySlug(agentSlug);
-  const tags = await selectAgentTagsBySlug(agentSlug); // Tags are fetched here
-
   // Get the current user session to determine ownership
-  const session = await auth.api.getSession({ headers: await headers() });
   const isOwner = agent.creatorId === session?.user?.id;
 
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
@@ -52,7 +66,7 @@ export default async function Page({
   const agentWithTags = { ...agent, tags }; // Create agentWithTags here
 
   const chatId = generateUUID();
-  const ua = (await headers()).get("user-agent") || "";
+  const ua = headersList.get("user-agent") || "";
   const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
 
   return isMobile ? (
