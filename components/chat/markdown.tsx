@@ -1,7 +1,7 @@
 "use client"
 
 import Link from 'next/link';
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from '../ui/code-block';
@@ -10,6 +10,7 @@ import { toHtml } from 'hast-util-to-html';
 import { CopyButton } from '../ui/copy-button';
 import { DownloadIcon } from '../utils/icons';
 import { Button } from '../ui/button';
+import mermaid from 'mermaid';
 
 interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
@@ -21,6 +22,49 @@ interface MarkdownImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt?: string;
 }
+
+// Initialize Mermaid
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  securityLevel: 'loose',
+});
+
+// Mermaid diagram component
+const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [svg, setSvg] = useState<string>('');
+  
+  useEffect(() => {
+    const renderDiagram = async () => {
+      if (ref.current) {
+        try {
+          const { svg: renderedSvg } = await mermaid.render(`mermaid-${Date.now()}`, chart);
+          setSvg(renderedSvg);
+        } catch (error) {
+          console.error('Mermaid rendering error:', error);
+          // Fallback to showing the raw text
+          ref.current.innerHTML = `<pre class="bg-muted p-4 rounded text-sm overflow-auto"><code>${chart}</code></pre>`;
+        }
+      }
+    };
+    
+    renderDiagram();
+  }, [chart]);
+  
+  if (svg) {
+    return (
+      <div className="my-4 flex justify-center">
+        <div 
+          className="mermaid-diagram max-w-full overflow-auto"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </div>
+    );
+  }
+  
+  return <div ref={ref} className="my-4" />;
+};
 
 // Image component with download functionality
 const MarkdownImage: React.FC<MarkdownImageProps> = ({ src, alt, ...props }) => {
@@ -135,6 +179,11 @@ const components: Partial<Components> = {
     // Match the language from the className (e.g., "language-js")
     const match = /language-(\w+)/.exec(className || '');
     const language = match ? match[1] : ''; // Default to empty string if no language found
+
+    // Handle Mermaid diagrams
+    if (language === 'mermaid') {
+      return <MermaidDiagram chart={codeString} />;
+    }
 
     // Check if the code is a single line (no newlines)
     const isSingleLine = !codeString.includes('\n');
