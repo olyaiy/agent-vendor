@@ -1,4 +1,3 @@
-import { getTopTagsAction } from "@/db/actions/tag.actions";
 import HeaderPadding from "@/components/header-padding";
 import { TagFilters } from "@/components/home/tag-filters";
 import { AgentsGrid, AgentsLoading } from "@/components/home/agents-grid";
@@ -22,12 +21,6 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
   const searchQuery = typeof resolvedSearchParams?.search === 'string' ? resolvedSearchParams.search : undefined;
   const currentPage = Number(resolvedSearchParams?.page || '1'); // Default to page 1
 
-  // Fetch top tags (or all tags if needed for this page - using top 20 for now)
-  const tagsResult = await getTopTagsAction(20);
-  const topTags = tagsResult.success ? tagsResult.data || [] : [];
-
-
-
   return (
     <main className="container mx-auto pt-4 pb-8 px-4">
       <HeaderPadding />
@@ -37,10 +30,7 @@ export default async function AgentsPage({ searchParams }: AgentsPageProps) {
 
       {/* Render Tag Filters */}
       <TagFilters
-        topTags={topTags}
         selectedTag={selectedTag}
-        tagsResultSuccess={tagsResult.success}
-        tagsResultError={!tagsResult.success ? tagsResult.error : undefined}
       />
 
       {/* Render the Agents Grid (handles its own data fetching and Suspense) */}

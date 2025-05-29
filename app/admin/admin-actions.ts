@@ -6,6 +6,7 @@ import { headers } from 'next/headers'; // Import headers
 import { db } from '@/db'; // Import db instance
 import * as schema from '@/db/schema'; // Import schema
 import { eq } from 'drizzle-orm'; // Import eq operator
+import { requireAdmin } from '@/lib/auth-utils'; // Import the new auth utility
 // Removed BetterAuthSession import as it's not exported
 
 // Define the structure of the user data we expect from listUsers, including pagination metadata
@@ -262,23 +263,9 @@ export async function getUserChatsAction(
   error?: string;
 }> {
   // --- Authorization Check ---
-  let session;
-  try {
-    session = await auth.api.getSession({ headers: await headers() });
-  } catch (sessionError) {
-    console.error("Error fetching session in getUserChatsAction:", sessionError);
-    return { success: false, error: "Failed to verify session." };
-  }
-
-  if (!session?.user) {
-    console.error("No user found in session within getUserChatsAction.");
-    return { success: false, error: "Authentication required." };
-  }
-
-  const isAdmin = session.user.role?.includes('admin');
-  if (!isAdmin) {
-    console.warn(`Unauthorized attempt to get chats for user ID: ${userId} by user ID: ${session.user.id}`);
-    return { success: false, error: 'Unauthorized: Admin access required.' };
+  const authResult = await requireAdmin();
+  if (!authResult.success) {
+    return { success: false, error: authResult.error };
   }
   // --- End Authorization Check ---
 

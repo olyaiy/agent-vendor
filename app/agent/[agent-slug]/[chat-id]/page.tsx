@@ -10,7 +10,7 @@ import { getToolsForAgentAction } from "@/db/actions/agent-relations.actions"; /
 import { Tool } from "@/db/schema/tool"; // Import Tool type
 import { getChatById, getMessagesByChatId, getChatTitleAndUserId } from "@/db/repository/chat-repository";
 import { DBMessage } from "@/db/schema/chat";
-import { auth } from "@/lib/auth";
+import { canAccessChat } from "@/lib/auth-utils"; // Import the new auth utility
 import type { Attachment, UIMessage } from "ai";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -90,29 +90,31 @@ export default async function Page({
   // 2. Get headers once to avoid multiple awaits
   const headersList = await headers();
 
-  // 3. Fetch Chat Details & Session in parallel (both needed for auth)
-  const [chat, session] = await Promise.all([
-    getChatById(chatId),
-    auth.api.getSession({ headers: headersList })
-  ]);
-
+  // 3. Fetch Chat Details first
+  const chat = await getChatById(chatId);
+  
   if (!chat) {
     notFound(); // Chat not found
   }
 
-  if (session?.user?.id !== chat.userId) {
+  // 4. Check if user can access this chat (owners or admins)
+  const authResult = await canAccessChat(chat.userId);
+  
+  if (!authResult.canAccess) {
     notFound(); // Unauthorized or not logged in
   }
 
-  // 4. Fetch Agent Details (using slug)
+  const { session } = authResult;
+
+  // 5. Fetch Agent Details (using slug)
   const agent = await selectAgentBySlug(agentSlug);
   if (!agent) {
     notFound(); // Agent not found
   }
 
-  const isOwner = agent?.creatorId === session?.user?.id;
+  const isAgentOwner = agent?.creatorId === session?.user?.id;
 
-  // 5. Fetch Agent Relations and Messages in parallel (now that we have agent.id and chatId)
+  // 6. Fetch Agent Relations and Messages in parallel (now that we have agent.id and chatId)
   const [rawAgentModels, knowledgeItems, tags, agentToolsResult, messagesFromDb] = await Promise.all([
     selectAgentModelsBySlug(agentSlug),
     selectAgentKnowledgeBySlug(agentSlug),
@@ -121,7 +123,7 @@ export default async function Page({
     getMessagesByChatId({ id: chatId })
   ]);
 
-  // 6. Handle agent tools with existing error handling logic
+  // 7. Handle agent tools with existing error handling logic
   let currentAgentTools: Tool[] = [];
   if (agentToolsResult.success) {
     currentAgentTools = agentToolsResult.data;
@@ -130,7 +132,7 @@ export default async function Page({
     // currentAgentTools remains []
   }
 
-  // 7. Transform Agent Models for Chat Component
+  // 8. Transform Agent Models for Chat Component
   const agentModelsForChat: AgentSpecificModel[] = rawAgentModels.map(rawModel => ({
     agentId: rawModel.agentId,
     modelId: rawModel.modelId,
@@ -140,7 +142,7 @@ export default async function Page({
     id: rawModel.modelId
   }));
 
-  // 8. Convert DB Messages to UI Messages
+  // 9. Convert DB Messages to UI Messages
   function convertToUIMessages(dbMessages: Array<DBMessage>): Array<UIMessage> {
     return dbMessages.map((message) => ({
       id: message.id,
@@ -160,11 +162,11 @@ export default async function Page({
   }
   const initialMessages = convertToUIMessages(messagesFromDb);
 
-  // 9. Determine Mobile View (using cached headers)
+  // 10. Determine Mobile View (using cached headers)
   const ua = headersList.get("user-agent") ?? "";
   const isMobile = /Mobile|Android|iP(hone|od|ad)|IEMobile|Opera Mini/i.test(ua);
 
-  // 10. Render Component
+  // 11. Render Component
   const agentWithTags = { ...agent, tags };
 
   return isMobile ? (
@@ -189,7 +191,7 @@ export default async function Page({
       initialTitle={chat.title}
       agentSlug={agentSlug}
       assignedTools={currentAgentTools} // Pass assignedTools
-      isOwner={isOwner}
+      isOwner={isAgentOwner}
     />
   );
 }
