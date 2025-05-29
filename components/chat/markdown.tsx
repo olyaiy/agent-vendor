@@ -591,6 +591,9 @@ const components: Partial<Components> = {
 const remarkPlugins = [remarkGfm];
 
 const NonMemoizedMarkdown = ({ children, messageRole }: { children: string; messageRole?: string }) => {
+  // Debug log to check messageRole values
+  console.log('Markdown messageRole:', messageRole);
+  
   // Create components with access to messageRole
   const dynamicComponents: Partial<Components> = {
     ...components,
@@ -655,8 +658,12 @@ const NonMemoizedMarkdown = ({ children, messageRole }: { children: string; mess
         <p className="text-lg" {...props}>
           {React.Children.map(children, (child) => {
             if (typeof child === 'string') {
-              // Only animate text for assistant messages
-              return messageRole === 'assistant' ? <AnimatedText>{child}</AnimatedText> : child;
+              // Debug log for animation condition
+              const shouldAnimate = messageRole === 'assistant';
+              console.log('Should animate text:', shouldAnimate, 'messageRole:', messageRole, 'text snippet:', child.substring(0, 20));
+              
+              // Only animate text for assistant messages (explicitly check for 'assistant')
+              return shouldAnimate ? <AnimatedText>{child}</AnimatedText> : child;
             }
             return child;
           })}
