@@ -34,22 +34,35 @@ mermaid.initialize({
 const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
+  const [isRendering, setIsRendering] = useState(false);
   
   useEffect(() => {
-    const renderDiagram = async () => {
-      if (ref.current) {
-        try {
-          const { svg: renderedSvg } = await mermaid.render(`mermaid-${Date.now()}`, chart);
-          setSvg(renderedSvg);
-        } catch (error) {
-          console.error('Mermaid rendering error:', error);
-          // Fallback to showing the raw text
+    // Don't render if chart is empty or very short (likely still streaming)
+    if (!chart || chart.trim().length < 10) {
+      return;
+    }
+    
+    // Debounce rendering to avoid multiple renders during streaming
+    const timer = setTimeout(async () => {
+      if (!ref.current) return;
+      
+      setIsRendering(true);
+      
+      try {
+        const { svg: renderedSvg } = await mermaid.render(`mermaid-${Date.now()}`, chart.trim());
+        setSvg(renderedSvg);
+      } catch (error) {
+        console.error('Mermaid rendering error:', error);
+        // Only show fallback if we have substantial content (likely complete)
+        if (chart.trim().length > 20 && ref.current) {
           ref.current.innerHTML = `<pre class="bg-muted p-4 rounded text-sm overflow-auto"><code>${chart}</code></pre>`;
         }
+      } finally {
+        setIsRendering(false);
       }
-    };
+    }, 500); // Wait 500ms after last change before rendering
     
-    renderDiagram();
+    return () => clearTimeout(timer);
   }, [chart]);
   
   if (svg) {
@@ -59,6 +72,22 @@ const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
           className="mermaid-diagram max-w-full overflow-auto"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
+      </div>
+    );
+  }
+  
+  // Show loading state while content is being streamed or rendered
+  if (chart && chart.trim().length > 0) {
+    return (
+      <div ref={ref} className="my-4 bg-muted p-4 rounded text-sm">
+        {isRendering ? (
+          <div className="flex items-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-foreground" />
+            <span>Rendering diagram...</span>
+          </div>
+        ) : (
+          <code>Loading mermaid diagram...</code>
+        )}
       </div>
     );
   }
