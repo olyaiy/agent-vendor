@@ -43,6 +43,7 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const [viewMode, setViewMode] = useState<'formatted' | 'markdown'>('formatted');
 
   return (
     <div
@@ -160,9 +161,15 @@ const PurePreviewMessage = ({
                               message.role === 'user',
                           })}
                         >
-                          <Markdown key={`${message.id}-${index}`}>
-                            {part.text}
-                          </Markdown>
+                          {viewMode === 'markdown' ? (
+                            <div className="whitespace-pre-wrap font-mono text-sm bg-muted/30 p-3 rounded-md border">
+                              {part.text}
+                            </div>
+                          ) : (
+                            <Markdown key={`${message.id}-${index}`}>
+                              {part.text}
+                            </Markdown>
+                          )}
                         </div>
                       </div>
                     );
@@ -246,6 +253,8 @@ const PurePreviewMessage = ({
               setMessages={setMessages}
               setMode={setMode}
               isReadonly={isReadonly}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
             />
           )}
         </div>

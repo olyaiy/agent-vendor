@@ -8,8 +8,9 @@ import {
 import { memo, useState } from 'react';
 import { CopyButton } from '../ui/copy-button';
 import { Button } from '../ui/button';
-import { Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, RefreshCw, Trash2, Eye, Copy } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { deleteMessageAction } from '@/db/actions/chat-actions';
 
 import { cn } from '@/lib/utils';
@@ -25,6 +26,8 @@ export function PureMessageActions({
   setMessages,
   setMode,
   isReadonly,
+  viewMode,
+  setViewMode,
 }: {
   chatId: string;
   message: Message;
@@ -33,8 +36,11 @@ export function PureMessageActions({
   reload?: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;
   setMode?: (mode: 'view' | 'edit') => void;
   isReadonly?: boolean;
+  viewMode?: 'formatted' | 'markdown';
+  setViewMode?: (mode: 'formatted' | 'markdown') => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const isMobile = useIsMobile();
 
   // if (isLoading) return null;
@@ -42,6 +48,13 @@ export function PureMessageActions({
   const textFromParts = message.parts
     ?.filter((part) => part.type === 'text')
     .map((part) => markdownToTxt(part.text))
+    .join('\n')
+    .trim();
+
+  // Get raw markdown content
+  const markdownFromParts = message.parts
+    ?.filter((part) => part.type === 'text')
+    .map((part) => part.text)
     .join('\n')
     .trim();
 
@@ -75,6 +88,25 @@ export function PureMessageActions({
     }
     
     setIsDeleting(false);
+  };
+
+  const handleCopyMarkdown = async () => {
+    if (markdownFromParts) {
+      try {
+        await navigator.clipboard.writeText(markdownFromParts);
+        toast.success("Markdown copied to clipboard!");
+        setIsPopoverOpen(false);
+      } catch {
+        toast.error("Failed to copy markdown");
+      }
+    }
+  };
+
+  const handleToggleViewMode = () => {
+    if (setViewMode) {
+      setViewMode(viewMode === 'formatted' ? 'markdown' : 'formatted');
+      setIsPopoverOpen(false);
+    }
   };
 
   return (
@@ -129,6 +161,55 @@ export function PureMessageActions({
           </Tooltip>
         )}
         
+        {/* More options popover - only show for assistant messages with markdown content */}
+        {message.role === 'assistant' && markdownFromParts && setViewMode && (
+          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6"
+                    aria-label="More options"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>More options</TooltipContent>
+            </Tooltip>
+            
+            <PopoverContent 
+              className="w-48 p-1" 
+              align="start"
+              side="top"
+            >
+              <div className="flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start gap-2 h-8 px-2 text-sm font-normal"
+                  onClick={handleToggleViewMode}
+                >
+                  <Eye className="h-4 w-4" />
+                  {viewMode === 'formatted' ? 'View as markdown' : 'View formatted'}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="justify-start gap-2 h-8 px-2 text-sm font-normal"
+                  onClick={handleCopyMarkdown}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy markdown
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+        
         <Tooltip>
           <TooltipTrigger asChild className="cursor-pointer">
             <Button
@@ -155,6 +236,7 @@ export const MessageActions = memo(
   PureMessageActions,
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
+    if (prevProps.viewMode !== nextProps.viewMode) return false;
     return true;
   },
 );

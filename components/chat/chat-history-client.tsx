@@ -127,7 +127,7 @@ export function ChatHistoryClient({
              fetchChats(debouncedSearchQuery, targetPage);
         });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [debouncedSearchQuery, currentPage, router, searchParams, fetchChats]); // Add currentPage and searchParams
 
   // Handlers for pagination
