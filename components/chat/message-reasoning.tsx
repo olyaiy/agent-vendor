@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDownIcon } from '@/components/utils/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Markdown } from '@/components/chat/markdown';
@@ -19,6 +19,15 @@ export function MessageReasoning({
   const reasoningText = typeof reasoning === 'string' ? reasoning : JSON.stringify(reasoning);
   
   const [isExpanded, setIsExpanded] = useState(true);
+  const prevIsLoadingRef = useRef(isLoading);
+
+  // Auto-collapse when reasoning finishes (isLoading changes from true to false)
+  useEffect(() => {
+    if (prevIsLoadingRef.current === true && isLoading === false) {
+      setIsExpanded(false);
+    }
+    prevIsLoadingRef.current = isLoading;
+  }, [isLoading]);
   
   const variants = {
     collapsed: {
