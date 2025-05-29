@@ -2,7 +2,6 @@
 import { Label } from '@/components/ui/label'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import { Textarea } from '@/components/ui/textarea'
-// TooltipProvider was already imported, but ensuring it's available for new instance
 import { CheckIcon, ChevronRightIcon, EnterFullScreenIcon, ExitFullScreenIcon, InfoCircledIcon, Cross2Icon, MagicWandIcon, ReloadIcon } from '@radix-ui/react-icons'
 import React, { useEffect, useRef, useState, useTransition } from 'react'
 import { Badge } from '@/components/ui/badge'
@@ -10,8 +9,6 @@ import { Button } from '@/components/ui/button'
 import type { Agent } from '@/db/schema/agent';
 import { updateAgentSystemPromptAction } from '@/db/actions/agent.actions';
 import { FormSection } from '@/components/form-section'
-// Import for onPointerDownOutside event type if needed, though often inferred
-// import type { PointerDownOutsideEvent } from '@radix-ui/react-dismissable-layer';
 
 
 interface SystemPromptFormProps {
@@ -35,7 +32,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
     const [improvementError, setImprovementError] = useState<string | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const [customImproveInstructions, setCustomImproveInstructions] = useState("Please improve the following prompt:");
+    const [customImproveInstructions, setCustomImproveInstructions] = useState("Create a comprehensive and effective system prompt:");
     
     // Preset improvement instructions
     const improvePresets = [
@@ -52,7 +49,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
         setIsDirty(false);
         setShowImprovementActions(false);
         setImprovementError(null);
-        setCustomImproveInstructions("Please improve the following prompt:");
+        setCustomImproveInstructions("Create a comprehensive and effective system prompt:");
         adjustSystemPromptHeight();
     }, [agent.systemPrompt]);
 
@@ -110,7 +107,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
     };
 
     const handleImprovePrompt = async () => { 
-        if (!currentSystemPrompt.trim() || isImproving || isPending) return;
+        if (isImproving || isPending) return;
 
         setIsImproving(true);
         setShowImprovementActions(false);
@@ -122,11 +119,14 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
         const signal = abortControllerRef.current.signal;
 
         try {
+            // If no prompt exists, send a request to generate a new one
+            const promptToImprove = currentSystemPrompt.trim() || "Generate a comprehensive system prompt for an AI assistant.";
+            
             const response = await fetch('/api/improve-prompt', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    prompt: currentSystemPrompt,
+                    prompt: promptToImprove,
                     customInstructions: customImproveInstructions 
                 }),
                 signal,
@@ -323,18 +323,18 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                                 <Button
                                     type="button"
                                     onClick={handleImprovePrompt}
-                                    disabled={isPending || isImproving || !currentSystemPrompt.trim() || showSuccess || !customImproveInstructions.trim()}
+                                    disabled={isPending || isImproving || showSuccess || !customImproveInstructions.trim()}
                                     className="bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-950/40 dark:to-sky-950/40 border-indigo-200 dark:border-indigo-900 hover:border-indigo-300 dark:hover:border-indigo-800 text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5"
                                 >
                                     {isImproving ? (
                                         <span className="flex items-center gap-1.5">
                                             <ReloadIcon className="size-4 animate-spin" />
-                                            Enhancing...
+                                            {currentSystemPrompt.trim() ? 'Enhancing...' : 'Writing...'}
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-1.5">
                                             <MagicWandIcon className="size-4" />
-                                            Enhance Prompt
+                                            {currentSystemPrompt.trim() ? 'Enhance Prompt' : 'Write Prompt'}
                                         </span>
                                     )}
                                 </Button>
@@ -355,7 +355,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                                     <div className="flex justify-between items-center relative">
                                         <Label htmlFor="customImproveInstructions" className="text-sm font-medium text-white flex items-center gap-1.5">
                                             <MagicWandIcon className="size-3.5" />
-                                            Enhancement Options
+                                            {currentSystemPrompt.trim() ? 'Enhancement Options' : 'Prompt Writing Options'}
                                         </Label>
                                         <Button 
                                             variant="default" 
@@ -366,7 +366,7 @@ const SystemPromptForm = ({ agent }: SystemPromptFormProps) => {
                                                 e.stopPropagation();
                                                 handleImprovePrompt();
                                             }}
-                                            disabled={isImproving || !currentSystemPrompt.trim() || !customImproveInstructions.trim()}
+                                            disabled={isImproving || !customImproveInstructions.trim()}
                                         >
                                             Apply
                                         </Button>

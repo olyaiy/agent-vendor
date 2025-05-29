@@ -68,7 +68,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
   const [promptBeforeImprovement, setPromptBeforeImprovement] = useState("");
   const [improvementError, setImprovementError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const [customImproveInstructions, setCustomImproveInstructions] = useState("Please improve the following prompt:");
+  const [customImproveInstructions, setCustomImproveInstructions] = useState("Create a comprehensive and effective system prompt:");
 
   const improvePresets = [
     { label: "✂️ More concise", value: "Make this prompt more concise while maintaining all key instructions. Reduce verbosity and redundancy." },
@@ -115,7 +115,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
   }, []);
 
   const handleImprovePrompt = async () => { 
-    if (!systemPrompt.trim() || isImproving || isPending) return;
+    if (isImproving || isPending) return;
 
     setIsImproving(true);
     setShowImprovementActions(false);
@@ -127,11 +127,14 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
     const signal = abortControllerRef.current.signal;
 
     try {
+        // If no prompt exists, send a request to generate a new one
+        const promptToImprove = systemPrompt.trim() || "Generate a comprehensive system prompt for an AI assistant.";
+        
         const response = await fetch('/api/improve-prompt', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                prompt: systemPrompt,
+                prompt: promptToImprove,
                 customInstructions: customImproveInstructions 
             }),
             signal,
@@ -797,18 +800,18 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
                                   <Button
                                       type="button"
                                       onClick={handleImprovePrompt}
-                                      disabled={isPending || isImproving || !systemPrompt.trim() || !customImproveInstructions.trim()}
+                                      disabled={isPending || isImproving || !customImproveInstructions.trim()}
                                       className="bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-950/40 dark:to-sky-950/40 border-indigo-200 dark:border-indigo-900 hover:border-indigo-300 dark:hover:border-indigo-800 text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5"
                                   >
                                       {isImproving ? (
                                           <span className="flex items-center gap-1.5">
                                               <ReloadIcon className="size-4 animate-spin" />
-                                              Enhancing...
+                                              {systemPrompt.trim() ? 'Enhancing...' : 'Writing...'}
                                           </span>
                                       ) : (
                                           <span className="flex items-center gap-1.5">
                                               <MagicWandIcon className="size-4" />
-                                              Enhance Prompt
+                                              {systemPrompt.trim() ? 'Enhance Prompt' : 'Write Prompt'}
                                           </span>
                                       )}
                                   </Button>
@@ -826,7 +829,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
                                       <div className="flex justify-between items-center relative">
                                           <Label htmlFor="customImproveInstructions" className="text-sm font-medium text-white flex items-center gap-1.5">
                                               <MagicWandIcon className="size-3.5" />
-                                              Enhancement Options
+                                              {systemPrompt.trim() ? 'Enhancement Options' : 'Prompt Writing Options'}
                                           </Label>
                                           <Button 
                                               variant="default" 
@@ -837,7 +840,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
                                                   e.stopPropagation();
                                                   handleImprovePrompt();
                                               }}
-                                              disabled={isImproving || !systemPrompt.trim() || !customImproveInstructions.trim()}
+                                              disabled={isImproving || !customImproveInstructions.trim()}
                                           >
                                               Apply
                                           </Button>
