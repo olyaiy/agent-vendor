@@ -12,6 +12,9 @@ import { getAllToolsAction } from "@/db/actions/tool.actions";
 import { Suspense } from "react";
 import { ModelInfo } from "../../create/create-agent-form";
 import { Tool } from "@/db/schema/tool";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 
 type Params = { "agent-slug": string };
 
@@ -63,6 +66,16 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 py-8">
+      
+      {/* Chat with AI Button */}
+      <div className="flex justify-start mb-6">
+        <Link href={`/agent/${agentSlug}`}>
+          <Button className="flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" />
+            Chat with AI
+          </Button>
+        </Link>
+      </div>
 
       <Suspense fallback={<div>Loading agent details...</div>}>
         <AgentInfoForm agent={agentData} />
