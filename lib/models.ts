@@ -991,7 +991,7 @@ export const modelDetails: Record<string, ModelDetails> = {
   },
   'deepseek-reasoner': {
     displayName: "DeepSeek Reasoner",
-    description: "Specialized model focused on complex reasoning tasks, problem-solving, and logical deduction with enhanced accuracy.",
+    description: "R1-0528: Specialized model focused on complex reasoning tasks, problem-solving, and logical deduction with enhanced accuracy. Features improved benchmark performance, enhanced front-end capabilities, reduced hallucinations, and supports JSON output & function calling.",
     inputCostPerMillion: 0.55,
     outputCostPerMillion: 2.19,
     contextWindow: 64_000,
