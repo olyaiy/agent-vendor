@@ -304,6 +304,7 @@ export async function selectToolsForAgent(agentId: string): Promise<Tool[]> {
       description: tools.description,
       creatorId: tools.creatorId,
       type: tools.type,
+      prompt: tools.prompt,
       definition: tools.definition,
       inputSchema: tools.inputSchema,
       createdAt: tools.createdAt,
