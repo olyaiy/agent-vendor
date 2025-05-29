@@ -127,8 +127,31 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
     const signal = abortControllerRef.current.signal;
 
     try {
-        // If no prompt exists, send a request to generate a new one
-        const promptToImprove = systemPrompt.trim() || "Generate a comprehensive system prompt for an AI assistant.";
+        let promptToImprove: string;
+        
+        if (systemPrompt.trim()) {
+            // If there's existing content, just improve it
+            promptToImprove = systemPrompt.trim();
+        } else {
+            // If no prompt exists, create a more contextual request using form data
+            const agentNameElement = document.querySelector('#agentDisplayName') as HTMLInputElement;
+            const agentDescriptionElement = document.querySelector('#description') as HTMLTextAreaElement;
+            
+            const agentName = agentNameElement?.value?.trim() || '';
+            const agentDescription = agentDescriptionElement?.value?.trim() || '';
+            
+            let contextualPrompt = "Generate a comprehensive system prompt for an AI assistant";
+            
+            if (agentName && agentDescription) {
+                contextualPrompt = `Generate a comprehensive system prompt for an AI assistant called "${agentName}" with the following description: "${agentDescription}".`;
+            } else if (agentName) {
+                contextualPrompt = `Generate a comprehensive system prompt for an AI assistant called "${agentName}".`;
+            } else if (agentDescription) {
+                contextualPrompt = `Generate a comprehensive system prompt for an AI assistant with the following description: "${agentDescription}".`;
+            }
+            
+            promptToImprove = contextualPrompt;
+        }
         
         const response = await fetch('/api/improve-prompt', {
             method: 'POST',
