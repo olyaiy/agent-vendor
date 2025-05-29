@@ -166,7 +166,7 @@ const PurePreviewMessage = ({
                               {part.text}
                             </div>
                           ) : (
-                            <Markdown key={`${message.id}-${index}`}>
+                            <Markdown key={`${message.id}-${index}`} messageRole={message.role}>
                               {part.text}
                             </Markdown>
                           )}

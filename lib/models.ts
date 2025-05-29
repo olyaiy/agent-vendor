@@ -290,7 +290,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 2048,
         min: 50,
         max: 2048
       },
@@ -324,7 +324,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 2048,
         min: 50,
         max: 2048
       },
@@ -358,7 +358,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 1_047_576,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 2048,
         min: 50,
         max: 2048
       },
@@ -395,7 +395,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 4096,
         min: 50,
         max: 4096
       },
@@ -434,7 +434,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 4096,
         min: 50,
         max: 4096
       },
@@ -473,7 +473,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 4096,
         min: 50,
         max: 4096
       },
@@ -512,7 +512,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 4096,
         min: 50,
         max: 4096
       },
@@ -551,7 +551,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 4096,
         min: 50,
         max: 4096
       },

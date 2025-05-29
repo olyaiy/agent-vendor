@@ -408,74 +408,6 @@ const components: Partial<Components> = {
     if (!src) return null;
     return <MarkdownImage key={src} src={src} alt={alt} {...props} />;
   },
-  p: ({ children, ...props }) => {
-    // Check if paragraph contains only images
-    const childrenArray = React.Children.toArray(children);
-    
-    // Handle case where paragraph contains only images
-    const onlyImages = childrenArray.every(
-      child => React.isValidElement(child) && 
-        ((typeof child.type === 'string' && child.type === 'img') || 
-         (typeof child.type !== 'string' && child.type?.name === 'MarkdownImage'))
-    );
-    
-    // If paragraph contains only images, wrap in ImageGrid
-    if (onlyImages && childrenArray.length > 0) {
-      return (
-        <span className="inline-block">
-          <ImageGrid>
-            {children}
-          </ImageGrid>
-        </span>
-      );
-    }
-    
-    // More thorough check for any block elements or components that might render block elements
-    const hasBlockElement = React.Children.toArray(children).some(
-      (child) => {
-        if (React.isValidElement(child)) {
-          // Check for explicit block elements
-          if (typeof child.type === 'string') {
-            return ['div', 'pre', 'ul', 'ol', 'table', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(child.type);
-          }
-          
-          // Check for custom components that might render block elements
-          if (typeof child.type !== 'string') {
-            const componentName = child.type?.name || '';
-            return ['CodeBlock', 'MarkdownImage', 'ImageGrid'].includes(componentName);
-          }
-        }
-        
-        // Check for HTML strings that contain block elements
-        if (typeof child === 'string') {
-          return /(<div|<pre|<ul|<ol|<table|<blockquote|<h[1-6])/i.test(child);
-        }
-        
-        return false;
-      }
-    );
-    
-    // Always use a div if we detect any potential block elements to be safe
-    if (hasBlockElement) {
-      return (
-        <div className="" {...props}>
-          {children}
-        </div>
-      );
-    }
-    
-    // Only use paragraph when we're sure it's safe
-    return (
-      <p className="text-lg" {...props}>
-        {React.Children.map(children, (child) => {
-          if (typeof child === 'string') {
-            return <AnimatedText>{child}</AnimatedText>;
-          }
-          return child;
-        })}
-      </p>
-    );
-  },
   ol: ({ children, ...props }) => {
     return (
       <ol className="list-decimal list-outside ml-4 space-y-2 text-lg [&_ol]:mt-2 [&_ol]:ml-8 [&_ol]:space-y-1 [&_ol]:list-[lower-alpha] [&_ol_ol]:list-[lower-roman]" {...props}>
@@ -658,12 +590,86 @@ const components: Partial<Components> = {
 
 const remarkPlugins = [remarkGfm];
 
-const NonMemoizedMarkdown = ({ children }: { children: string }) => {
+const NonMemoizedMarkdown = ({ children, messageRole }: { children: string; messageRole?: string }) => {
+  // Create components with access to messageRole
+  const dynamicComponents: Partial<Components> = {
+    ...components,
+    p: ({ children, ...props }) => {
+      // Check if paragraph contains only images
+      const childrenArray = React.Children.toArray(children);
+      
+      // Handle case where paragraph contains only images
+      const onlyImages = childrenArray.every(
+        child => React.isValidElement(child) && 
+          ((typeof child.type === 'string' && child.type === 'img') || 
+           (typeof child.type !== 'string' && child.type?.name === 'MarkdownImage'))
+      );
+      
+      // If paragraph contains only images, wrap in ImageGrid
+      if (onlyImages && childrenArray.length > 0) {
+        return (
+          <span className="inline-block">
+            <ImageGrid>
+              {children}
+            </ImageGrid>
+          </span>
+        );
+      }
+      
+      // More thorough check for any block elements or components that might render block elements
+      const hasBlockElement = React.Children.toArray(children).some(
+        (child) => {
+          if (React.isValidElement(child)) {
+            // Check for explicit block elements
+            if (typeof child.type === 'string') {
+              return ['div', 'pre', 'ul', 'ol', 'table', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(child.type);
+            }
+            
+            // Check for custom components that might render block elements
+            if (typeof child.type !== 'string') {
+              const componentName = child.type?.name || '';
+              return ['CodeBlock', 'MarkdownImage', 'ImageGrid'].includes(componentName);
+            }
+          }
+          
+          // Check for HTML strings that contain block elements
+          if (typeof child === 'string') {
+            return /(<div|<pre|<ul|<ol|<table|<blockquote|<h[1-6])/i.test(child);
+          }
+          
+          return false;
+        }
+      );
+      
+      // Always use a div if we detect any potential block elements to be safe
+      if (hasBlockElement) {
+        return (
+          <div className="" {...props}>
+            {children}
+          </div>
+        );
+      }
+      
+      // Only use paragraph when we're sure it's safe
+      return (
+        <p className="text-lg" {...props}>
+          {React.Children.map(children, (child) => {
+            if (typeof child === 'string') {
+              // Only animate text for assistant messages
+              return messageRole === 'assistant' ? <AnimatedText>{child}</AnimatedText> : child;
+            }
+            return child;
+          })}
+        </p>
+      );
+    },
+  };
+
   return (
     <ReactMarkdown
       remarkPlugins={remarkPlugins}
       rehypePlugins={[rehypeRaw]}
-      components={components}
+      components={dynamicComponents}
       // Ensure tags are allowed to pass through
       allowedElements={['img', 'p', 'ul', 'ol', 'li', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'code', 'strong', 'em', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td']}
     >
@@ -674,5 +680,5 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
 
 export const Markdown = memo(
   NonMemoizedMarkdown,
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  (prevProps, nextProps) => prevProps.children === nextProps.children && prevProps.messageRole === nextProps.messageRole,
 );
