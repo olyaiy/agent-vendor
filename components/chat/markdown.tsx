@@ -11,6 +11,7 @@ import { CopyButton } from '../ui/copy-button';
 import { DownloadIcon } from '../utils/icons';
 import { Button } from '../ui/button';
 import mermaid from 'mermaid';
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
@@ -33,8 +34,14 @@ mermaid.initialize({
 // Mermaid diagram component
 const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [isRendering, setIsRendering] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [lastPan, setLastPan] = useState({ x: 0, y: 0 });
   
   useEffect(() => {
     // Don't render if chart is empty or very short (likely still streaming)
@@ -64,14 +71,117 @@ const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
     
     return () => clearTimeout(timer);
   }, [chart]);
+
+  // Handle mouse wheel for zooming
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(zoom * delta, 0.1), 5);
+    setZoom(newZoom);
+  };
+
+  // Handle mouse down for dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only handle left click
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setLastPan(pan);
+    e.preventDefault();
+  };
+
+  // Handle mouse move for dragging
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
+    setPan({
+      x: lastPan.x + deltaX,
+      y: lastPan.y + deltaY,
+    });
+  };
+
+  // Handle mouse up to stop dragging
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Reset zoom and pan
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
+  // Zoom in/out buttons
+  const zoomIn = () => setZoom(Math.min(zoom * 1.2, 5));
+  const zoomOut = () => setZoom(Math.max(zoom * 0.8, 0.1));
   
   if (svg) {
     return (
-      <div className="my-4 flex justify-center">
-        <div 
-          className="mermaid-diagram max-w-full overflow-auto"
-          dangerouslySetInnerHTML={{ __html: svg }}
-        />
+      <div className="my-6 w-full">
+        {/* Diagram container */}
+        <div
+          ref={containerRef}
+          className="relative border rounded-lg overflow-hidden bg-background"
+          style={{ 
+            height: '500px',
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          {/* Controls positioned in top right */}
+          <div className="absolute top-2 right-2 z-10 flex gap-1 bg-background/80 backdrop-blur-sm rounded-md p-1 shadow-sm">
+            <Button
+              onClick={zoomOut}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Zoom out"
+            >
+              <ZoomOut size={16} />
+            </Button>
+            <Button
+              onClick={resetView}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Reset view"
+            >
+              <RotateCcw size={16} />
+            </Button>
+            <Button
+              onClick={zoomIn}
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Zoom in"
+            >
+              <ZoomIn size={16} />
+            </Button>
+            <span className="text-xs text-muted-foreground flex items-center px-2 min-w-[3rem] justify-center">
+              {Math.round(zoom * 100)}%
+            </span>
+          </div>
+          
+          <div
+            className="mermaid-diagram absolute inset-0 flex items-center justify-center"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: 'center center',
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+            }}
+            dangerouslySetInnerHTML={{ __html: svg }}
+          />
+        </div>
+        
+        <div className="text-center mt-2">
+          <p className="text-sm text-muted-foreground">
+            Use mouse wheel to zoom • Click and drag to pan
+          </p>
+        </div>
       </div>
     );
   }
