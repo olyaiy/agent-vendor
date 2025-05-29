@@ -231,3 +231,90 @@ export async function fetchUsersWithDetails(
     throw new Error(`Failed to fetch users with details. ${(error as Error).message}`);
   }
 }
+
+/**
+ * Fetches a paginated list of chats for a specific user.
+ * Requires admin privileges.
+ * @param userId - The ID of the user whose chats to fetch.
+ * @param limit - Number of chats to fetch (default: 10).
+ * @param offset - Number of chats to skip (default: 0).
+ * @returns Promise with the user's chat list and total count.
+ */
+export async function getUserChatsAction(
+  userId: string,
+  limit: number = 10,
+  offset: number = 0
+): Promise<{
+  success: boolean;
+  data?: {
+    chats: Array<{
+      id: string;
+      title: string;
+      createdAt: Date;
+      agentId: string | null;
+      agentSlug: string | null;
+      agentName: string | null;
+      lastMessageParts: unknown | null;
+      lastMessageRole: string | null;
+    }>;
+    totalCount: number;
+  };
+  error?: string;
+}> {
+  // --- Authorization Check ---
+  let session;
+  try {
+    session = await auth.api.getSession({ headers: await headers() });
+  } catch (sessionError) {
+    console.error("Error fetching session in getUserChatsAction:", sessionError);
+    return { success: false, error: "Failed to verify session." };
+  }
+
+  if (!session?.user) {
+    console.error("No user found in session within getUserChatsAction.");
+    return { success: false, error: "Authentication required." };
+  }
+
+  const isAdmin = session.user.role?.includes('admin');
+  if (!isAdmin) {
+    console.warn(`Unauthorized attempt to get chats for user ID: ${userId} by user ID: ${session.user.id}`);
+    return { success: false, error: 'Unauthorized: Admin access required.' };
+  }
+  // --- End Authorization Check ---
+
+  try {
+    // Import the chat repository functions
+    const { getUserChatsPaginated } = await import('@/db/repository/chat-repository');
+    
+    const result = await getUserChatsPaginated({
+      userId: userId,
+      searchQuery: null,
+      page: Math.floor(offset / limit) + 1,
+      pageSize: limit,
+    });
+
+    // Transform the data to include agent information
+    const transformedChats = result.chats.map(chat => ({
+      id: chat.id,
+      title: chat.title,
+      createdAt: chat.createdAt,
+      agentId: chat.agentId,
+      agentSlug: chat.agentSlug,
+      agentName: chat.agentSlug ? `Agent: ${chat.agentSlug}` : null, // Simple name derivation
+      lastMessageParts: chat.lastMessageParts,
+      lastMessageRole: chat.lastMessageRole,
+    }));
+
+    return {
+      success: true,
+      data: {
+        chats: transformedChats,
+        totalCount: result.totalCount,
+      },
+    };
+
+  } catch (error) {
+    console.error(`Error fetching chats for user ${userId}:`, error);
+    return { success: false, error: `Failed to fetch user chats. ${(error as Error).message}` };
+  }
+}

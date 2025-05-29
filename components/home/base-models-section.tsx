@@ -6,11 +6,11 @@ import { getBaseModelAgentsAction } from '@/db/actions/agent.actions';
 // --- Loading Skeleton ---
 function BaseModelsLoading() {
   return (
-    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-4">
-      {Array.from({ length: 6 }).map((_, index) => (
-        <div key={index} className="flex flex-col items-center sm:flex-shrink-0 sm:w-24 animate-pulse">
-          <div className="w-full sm:w-24 h-24 bg-muted rounded-lg mb-2 border"></div>
-          <div className="h-2 bg-muted rounded w-12"></div>
+    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 overflow-x-auto pb-2">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <div key={index} className="flex flex-col items-center flex-shrink-0 animate-pulse">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 bg-muted/50 rounded-full mb-1 sm:mb-1.5"></div>
+          <div className="h-1.5 sm:h-2 bg-muted/50 rounded w-6 sm:w-8 md:w-10"></div>
         </div>
       ))}
     </div>
@@ -39,39 +39,43 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
   const result = await promise;
 
   if (!result.success) {
-    return <p className="text-sm text-muted-foreground">Error loading featured models: {result.error}</p>;
+    return <p className="text-xs text-muted-foreground/70">Unable to load featured models</p>;
   }
 
   const agents = result.data || [];
 
   if (agents.length === 0) {
-    return <p className="text-sm text-muted-foreground">No featured models found.</p>;
+    return <p className="text-xs text-muted-foreground/70">No featured models available</p>;
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4 sm:flex sm:flex-row sm:gap-4 sm:overflow-x-auto pb-4">
-      {agents.map((agent, index) => (
+    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 overflow-x-auto pb-2 scrollbar-hide">
+      {agents.map((agent) => (
         <Link 
           href={`/agent/${agent.slug || agent.id}`} 
           key={agent.id} 
-          className={`flex flex-col items-center group sm:flex-shrink-0 sm:w-24 ${index >= 6 ? 'hidden sm:block' : ''}`}
+          className="flex flex-col items-center group flex-shrink-0 pt-2"
         >
-          <div className="w-full sm:w-24 h-24 relative rounded-lg overflow-hidden border border-border bg-muted/30 shadow-sm transition-all duration-200 group-hover:border-primary/50 group-hover:shadow-md group-hover:scale-[1.02]">
+          {/* Responsive circular container */}
+          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 relative rounded-full overflow-hidden border border-border/30 bg-background shadow-sm transition-all duration-200 group-hover:border-primary/40 group-hover:shadow-md group-hover:scale-105">
             {(agent.avatarUrl || agent.thumbnailUrl) ? (
               <Image
                 src={agent.avatarUrl || agent.thumbnailUrl!}
                 alt={agent.name}
                 fill
-                sizes="(max-width: 640px) 30vw, 96px"
-                className="object-cover transition-all duration-200 group-hover:scale-105"
+                sizes="(max-width: 640px) 40px, (max-width: 768px) 48px, (max-width: 1024px) 64px, (max-width: 1280px) 72px, 80px"
+                className="object-cover transition-all duration-200 group-hover:scale-110"
               />
             ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
-                <span className="text-2xl opacity-30">🤖</span>
+              <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-muted-foreground">
+                <span className="text-sm sm:text-lg md:text-xl lg:text-2xl opacity-60">🤖</span>
               </div>
             )}
+            {/* Subtle overlay on hover */}
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </div>
-          <p className="text-xs text-center mt-2 font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate w-full px-1">
+          {/* Responsive model name */}
+          <p className="text-[9px] sm:text-[10px] md:text-xs text-center mt-1 sm:mt-1.5 font-medium text-muted-foreground/80 group-hover:text-muted-foreground transition-colors truncate max-w-[40px] sm:max-w-[48px] md:max-w-[64px] lg:max-w-[72px] xl:max-w-[80px]">
             {agent.name}
           </p>
         </Link>
@@ -100,8 +104,13 @@ export function BaseModelsSection({ searchQuery }: BaseModelsSectionProps) {
   const baseModelsResultPromise = getBaseModelAgentsAction();
 
   return (
-    <section className="mb-6">
-      <h3 className="text-lg font-medium mb-3">Featured Models</h3>
+    <section className="mb-6 sm:mb-4">
+      {/* Responsive section header */}
+      <div className="flex items-center gap-2 mb-2 sm:mb-3">
+        <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Base Models</h3>
+        <div className="flex-1 h-px bg-border/30" />
+      </div>
+      
       <Suspense fallback={<BaseModelsLoading />}>
         <BaseModelAgentsRow promise={baseModelsResultPromise} />
       </Suspense>

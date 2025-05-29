@@ -1,5 +1,5 @@
 // Import specific types returned by actions
-import { getUserDetailsAction } from '@/app/admin/admin-actions';
+import { getUserDetailsAction, getUserChatsAction } from '@/app/admin/admin-actions';
 // Removed unused UserDetailsResult import
 import { getUserCreditsAction } from '@/db/actions/transaction-actions';
 import type { UserCredits } from '@/db/schema/transactions'; // Import UserCredits type
@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Calendar, User } from 'lucide-react';
 
 // Define props type for the page component
 interface UserDetailPageProps {
@@ -43,10 +43,11 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
   const { userId } = await params;
 
   // Fetch data concurrently using the resolved userId
-  const [userDetailsResult, userCreditsResult, userAgentsResult] = await Promise.allSettled([
+  const [userDetailsResult, userCreditsResult, userAgentsResult, userChatsResult] = await Promise.allSettled([
     getUserDetailsAction(userId),
     getUserCreditsAction(userId),
-    getAgentsByCreatorIdAction(userId)
+    getAgentsByCreatorIdAction(userId),
+    getUserChatsAction(userId, 10, 0) // Fetch first 10 chats
   ]);
 
   // --- Process User Details ---
@@ -94,6 +95,31 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
   } else {
     userAgentsError = `Failed to fetch user agents: ${userAgentsResult.reason}`;
     console.error(userAgentsError);
+  }
+
+  // --- Process User Chats ---
+  let userChats: Array<{
+    id: string;
+    title: string;
+    createdAt: Date;
+    agentId: string | null;
+    agentSlug: string | null;
+    agentName: string | null;
+    lastMessageParts: unknown | null;
+    lastMessageRole: string | null;
+  }> = [];
+  let userChatsError: string | null = null;
+  let totalChats = 0;
+  if (userChatsResult.status === 'fulfilled') {
+    if (userChatsResult.value.success && userChatsResult.value.data) {
+      userChats = userChatsResult.value.data.chats;
+      totalChats = userChatsResult.value.data.totalCount;
+    } else {
+      userChatsError = userChatsResult.value.error || 'Unknown error';
+    }
+  } else {
+    userChatsError = `Failed to fetch user chats: ${userChatsResult.reason}`;
+    console.error(userChatsError);
   }
 
   // Handle case where user details failed (critical error)
@@ -183,6 +209,74 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
           </div>
         ) : (
           <p className="text-gray-500">This user has not created any agents yet.</p>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* User Conversations Section */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+          <MessageSquare className="h-6 w-6" />
+          User Conversations
+        </h2>
+        {userChatsError ? (
+          <DataFetchError resourceName="Conversations" error={userChatsError} />
+        ) : userChats.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Conversations ({totalChats} total)
+              </CardTitle>
+              <CardDescription>
+                Recent conversations by this user
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {userChats.map((chat) => (
+                  <Link 
+                    key={chat.id} 
+                    href={chat.agentSlug ? `/agent/${chat.agentSlug}/${chat.id}` : '#'}
+                    className={chat.agentSlug ? "block" : "block cursor-not-allowed opacity-50"}
+                  >
+                    <div className="border rounded-lg p-4 space-y-2 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <h4 className="font-medium">{chat.title}</h4>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(chat.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      {chat.agentSlug && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <User className="h-4 w-4" />
+                          Agent: {chat.agentSlug}
+                        </div>
+                      )}
+                      {chat.lastMessageRole && (
+                        <div className="text-sm text-muted-foreground">
+                          Last message from: {chat.lastMessageRole}
+                        </div>
+                      )}
+                      {!chat.agentSlug && (
+                        <div className="text-sm text-destructive">
+                          No agent associated - cannot view conversation
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-gray-500 text-center">This user has not participated in any conversations yet.</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
