@@ -262,6 +262,7 @@ function ChatInputComponent({
     const items = Array.from(event.clipboardData.items);
     const pastedImageFiles: File[] = [];
     let nonAllowedFilePasted = false;
+    let hasTextContent = false;
 
     for (const item of items) {
       if (item.kind === 'file') {
@@ -271,7 +272,33 @@ function ChatInputComponent({
         } else {
           nonAllowedFilePasted = true;
         }
+      } else if (item.kind === 'string' && item.type === 'text/plain') {
+        hasTextContent = true;
       }
+    }
+
+    // Handle text content first (trim trailing whitespace)
+    if (hasTextContent && pastedImageFiles.length === 0 && !nonAllowedFilePasted) {
+      event.preventDefault();
+      const pastedText = event.clipboardData.getData('text/plain');
+      const trimmedText = pastedText.replace(/\s+$/, ''); // Remove trailing whitespace and newlines
+      
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const currentValue = textarea.value;
+        const selectionStart = textarea.selectionStart;
+        const selectionEnd = textarea.selectionEnd;
+        
+        const newValue = currentValue.substring(0, selectionStart) + trimmedText + currentValue.substring(selectionEnd);
+        setInput(newValue);
+        
+        // Set cursor position after the pasted text
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = selectionStart + trimmedText.length;
+          adjustHeight();
+        }, 0);
+      }
+      return;
     }
 
     if (pastedImageFiles.length > 0) {
@@ -281,7 +308,7 @@ function ChatInputComponent({
       event.preventDefault();
       toast.error(`Pasted content includes unsupported file types. Allowed image types: ${CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(', ')}`);
     }
-  }, [processFilesForAttachment]);
+  }, [processFilesForAttachment, textareaRef, setInput, adjustHeight]);
 
   // Modified handler for file input changes
   const handleAttachmentFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {

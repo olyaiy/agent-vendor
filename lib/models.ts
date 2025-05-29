@@ -997,7 +997,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     contextWindow: 64_000,
     defaultSettings: {
       maxOutputTokens: {
-        default: 1024,
+        default: 8192,
         min: 0,
         max: 8192
       },

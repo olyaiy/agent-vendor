@@ -366,8 +366,9 @@ interface OpenAIProviderOptions {
         console.log('SETTINGS APPLIED WERE', receivedSettings);
 
         // Destructure needed properties from the inferred event type
-        const { response, usage } = event;
+        const { response, usage, finishReason } = event;
 
+        console.log('Finish reason:', finishReason);
         console.log('model is', modelInstance.modelId, 'modelId is', modelId); // Log modelId from instance
 
 
