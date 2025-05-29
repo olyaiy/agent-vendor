@@ -12,6 +12,7 @@ import { DownloadIcon } from '../utils/icons';
 import { Button } from '../ui/button';
 import mermaid from 'mermaid';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
@@ -23,6 +24,55 @@ interface MarkdownImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt?: string;
 }
+
+// Animated text component for word-by-word fade-in
+const AnimatedText: React.FC<{ children: string; className?: string }> = ({ children, className = "" }) => {
+  // Only animate if it's a string and has words
+  if (typeof children !== 'string' || !children.trim()) {
+    return <span className={className}>{children}</span>;
+  }
+
+  const words = children.split(/(\s+)/).filter(Boolean);
+  
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+      },
+    },
+  };
+
+  const wordVariants = {
+    hidden: {
+      opacity: 0,
+      y: 10,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  return (
+    <motion.span
+      className={className}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {words.map((word, index) => (
+        <motion.span key={index} variants={wordVariants}>
+          {word}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
 
 // Initialize Mermaid
 mermaid.initialize({
@@ -417,7 +467,12 @@ const components: Partial<Components> = {
     // Only use paragraph when we're sure it's safe
     return (
       <p className="text-lg" {...props}>
-        {children}
+        {React.Children.map(children, (child) => {
+          if (typeof child === 'string') {
+            return <AnimatedText>{child}</AnimatedText>;
+          }
+          return child;
+        })}
       </p>
     );
   },
