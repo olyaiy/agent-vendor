@@ -80,33 +80,37 @@ const ColorSwatch = ({ color, label, isBase = false }: ColorSwatchProps) => {
         {/* Subtle overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent" />
         
-        {/* Color values overlay - appears on hover */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-2">
-          <div className="text-center space-y-1">
-            <div className="flex items-center gap-1">
-              <code className="text-xs font-mono text-white bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
+        {/* Color values overlay - improved for mobile touch */}
+        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-2 sm:p-3">
+          <div className="text-center space-y-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1">
+              <code className="text-xs sm:text-xs font-mono text-white bg-white/25 px-2 py-1 rounded backdrop-blur-sm min-w-0 break-all">
                 {hslString}
               </code>
-              <CopyButton 
-                content={hslString} 
-                copyMessage="Copied HSL to clipboard!"
-              />
+              <div className="sm:ml-1">
+                <CopyButton 
+                  content={hslString} 
+                  copyMessage="Copied HSL to clipboard!"
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <code className="text-xs font-mono text-white bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1">
+              <code className="text-xs sm:text-xs font-mono text-white bg-white/25 px-2 py-1 rounded backdrop-blur-sm min-w-0 break-all">
                 {hexString}
               </code>
-              <CopyButton 
-                content={hexString} 
-                copyMessage="Copied HEX to clipboard!"
-              />
+              <div className="sm:ml-1">
+                <CopyButton 
+                  content={hexString} 
+                  copyMessage="Copied HEX to clipboard!"
+                />
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="mt-3 text-center">
-        <p className={`text-sm font-medium ${isBase ? 'text-primary font-semibold' : 'text-foreground'}`}>
+      <div className="mt-2 sm:mt-3 text-center px-1">
+        <p className={`text-xs sm:text-sm font-medium leading-tight ${isBase ? 'text-primary font-semibold' : 'text-foreground'}`}>
           {label}
         </p>
       </div>
@@ -125,11 +129,11 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <h3 className="text-xl font-semibold text-foreground">
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground">
             {category.name}
           </h3>
           <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
@@ -141,7 +145,7 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
         )}
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         <ColorSwatch 
           color={category.base} 
           label="Base" 
@@ -167,15 +171,15 @@ interface SimpleColorRowDisplayProps {
 }
 
 const SimpleColorRowDisplay = ({ colorRow, showHeader = true }: SimpleColorRowDisplayProps) => {
-  // Use predefined grid classes to avoid dynamic class generation issues
+  // Use predefined grid classes to avoid dynamic class generation issues - improved for mobile
   const getGridClass = () => {
     const count = colorRow.colors.length;
-    if (count === 1) return 'grid gap-6 grid-cols-1';
-    if (count === 2) return 'grid gap-6 grid-cols-2';
-    if (count === 3) return 'grid gap-6 grid-cols-3';
-    if (count === 4) return 'grid gap-6 grid-cols-4';
-    if (count === 5) return 'grid gap-6 grid-cols-5';
-    return 'grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
+    if (count === 1) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-1';
+    if (count === 2) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2';
+    if (count === 3) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3';
+    if (count === 4) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-4';
+    if (count === 5) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-5';
+    return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
   };
 
   return (
@@ -183,13 +187,13 @@ const SimpleColorRowDisplay = ({ colorRow, showHeader = true }: SimpleColorRowDi
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {showHeader && (colorRow.name || colorRow.description) && (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {colorRow.name && (
-            <div className="flex items-center gap-3">
-              <h3 className="text-xl font-semibold text-foreground">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground">
                 {colorRow.name}
               </h3>
               <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
@@ -295,14 +299,14 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
 
     return (
       <motion.div 
-        className="p-6 my-4 rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50"
+        className="p-4 sm:p-6 my-3 sm:my-4 rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50"
         variants={container}
         initial="hidden"
         animate="show"
         layoutId={layoutKey}
       >
-        <div className="flex items-center gap-3 mb-6">
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 sm:mb-6">
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 w-fit">
             <Palette className="h-4 w-4 mr-2" />
             Color Palette
           </Badge>
@@ -312,15 +316,15 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
           </div>
         </div>
 
-        <div className="space-y-6">
-          {/* Animated color swatches */}
+        <div className="space-y-4 sm:space-y-6">
+          {/* Animated color swatches - better mobile grid */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             className="space-y-3"
           >
-            <div className="grid grid-cols-6 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
               {Array.from({ length: 6 }).map((_, swatchIndex) => {
                 const colorIndex = swatchIndex % animatedColors.length;
                 const baseColor = animatedColors[colorIndex];
@@ -353,7 +357,7 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
 
         {/* Subtle progress indicator */}
         <motion.div 
-          className="mt-6 pt-4 border-t border-border/30"
+          className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border/30"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
@@ -364,7 +368,7 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               className="w-3 h-3 border border-primary/30 border-t-primary rounded-full"
             />
-            <span>Generating harmonious color combinations</span>
+            <span className="text-center">Generating harmonious color combinations</span>
           </div>
         </motion.div>
       </motion.div>
@@ -378,7 +382,7 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
     if (result?.error) {
       return (
         <motion.div 
-          className="flex items-center gap-3 p-4 my-2 rounded-lg border border-destructive/20 bg-destructive/5"
+          className="flex items-center gap-3 p-3 sm:p-4 my-2 rounded-lg border border-destructive/20 bg-destructive/5"
           variants={container}
           initial="hidden"
           animate="show"
@@ -398,7 +402,7 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
     if (!palette) {
       return (
         <motion.div 
-          className="flex items-center gap-3 p-4 my-2 rounded-lg border border-border/50 bg-muted/30"
+          className="flex items-center gap-3 p-3 sm:p-4 my-2 rounded-lg border border-border/50 bg-muted/30"
           variants={container}
           initial="hidden"
           animate="show"
@@ -415,13 +419,13 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
 
     return (
       <motion.div 
-        className="p-8 my-6 rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50 shadow-sm"
+        className="p-4 sm:p-6 md:p-8 my-4 sm:my-6 rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50 shadow-sm"
         variants={container}
         initial="hidden"
         animate="show"
         layoutId={layoutKey}
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-6 sm:mb-8">
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
               <Palette className="h-4 w-4 mr-2" />
@@ -433,22 +437,23 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
             variant="outline"
             size="sm"
             onClick={() => copyEntirePalette(palette)}
-            className="flex items-center gap-2 hover:bg-primary/5"
+            className="flex items-center gap-2 hover:bg-primary/5 w-fit"
           >
             <Copy className="h-4 w-4" />
-            Copy Palette
+            <span className="hidden sm:inline">Copy Palette</span>
+            <span className="sm:hidden">Copy</span>
           </Button>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* Optional palette header */}
           {(palette.name || palette.description) && (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {palette.name && (
-                <h2 className="text-2xl font-bold text-foreground tracking-tight">{palette.name}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{palette.name}</h2>
               )}
               {palette.description && (
-                <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-3xl">
                   {palette.description}
                 </p>
               )}
@@ -456,7 +461,7 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
           )}
 
           {/* Render based on mode */}
-          <div className="space-y-12">
+          <div className="space-y-8 sm:space-y-12">
             {palette.mode === 'structured' ? (
               // Structured mode: primary/secondary/accent
               <>
