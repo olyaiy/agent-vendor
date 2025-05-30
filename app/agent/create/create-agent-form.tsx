@@ -18,13 +18,14 @@ import {
   createAgent,
   uploadAgentImageAction,
 } from "@/db/actions/agent.actions";
-import { addToolToAgentAction } from "@/db/actions/agent-relations.actions";
+
 import { InfoCircledIcon, ChevronRightIcon, DiscIcon, MagicWandIcon, CheckIcon, Cross2Icon, ReloadIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from "@/components/visibility-selector";
 import { AgentImage } from "@/components/agent-image";
 import { AgentAvatar } from "@/components/agent-avatar";
 import { FormSection } from "@/components/form-section";
 import { updateAgentTagsAction } from "@/db/actions/tag.actions";
+import { addToolToAgentAction } from "@/db/actions/agent-relations.actions";
 
 export interface ModelInfo {
   id: string;

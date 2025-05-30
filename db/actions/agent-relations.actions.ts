@@ -2,19 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { AgentModel } from "../schema/agent";
-import { AgentTool, Tool } from "../schema/tool"; // Added Tool and AgentTool
-import { ActionResult } from "./types"; // Added ActionResult
-import { auth } from "@/lib/auth"; // Added auth
-import { headers } from "next/headers"; // Added headers
+import { AgentTool, Tool } from "../schema/tool";
+import { ActionResult } from "./types";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { selectAgentById } from "../repository/agent.repository";
 
 import { 
   updateAgentPrimaryModel, 
   addSecondaryModelsToAgent, 
   removeSecondaryModelsFromAgent,
-  addToolToAgent as addToolToAgentRepo, // Added
-  removeToolFromAgent as removeToolFromAgentRepo, // Added
-  selectToolsForAgent as selectToolsForAgentRepo, // Added
-  selectAgentToolEntries as selectAgentToolEntriesRepo // Added
+  addToolToAgent as addToolToAgentRepo,
+  removeToolFromAgent as removeToolFromAgentRepo,
+  selectToolsForAgent as selectToolsForAgentRepo,
+  selectAgentToolEntries as selectAgentToolEntriesRepo
 } from "../repository/agent-relations.repository";
 
 /**
@@ -27,7 +28,7 @@ import {
 export async function updateAgentPrimaryModelAction(
   agentId: string,
   modelId: string
-): Promise<ActionResult<AgentModel[]>> { // Updated return type
+): Promise<ActionResult<AgentModel[]>> {
   try {
     if (!agentId || !modelId) {
       return { 
@@ -39,10 +40,10 @@ export async function updateAgentPrimaryModelAction(
     const result = await updateAgentPrimaryModel(agentId, modelId);
     
     // Revalidate the agent page to reflect changes
-    // Consider revalidating a more specific path if possible, e.g., agent settings page
-    const agent = await db.select({ slug: agentSchema.slug }).from(agentSchema).where(eq(agentSchema.id, agentId)).limit(1);
-    if (agent[0]?.slug) {
-      revalidatePath(`/agent/${agent[0].slug}/settings`);
+    const agent = await selectAgentById(agentId);
+    if (agent?.slug) {
+      revalidatePath(`/agent/${agent.slug}/settings`);
+      revalidatePath(`/agent/${agent.slug}`);
     }
     revalidatePath(`/agent/${agentId}/settings`); // Fallback or general revalidation
 
@@ -69,7 +70,7 @@ export async function updateAgentPrimaryModelAction(
 export async function addSecondaryModelsToAgentAction(
   agentId: string,
   modelIds: string[]
-): Promise<ActionResult<AgentModel[]>> { // Updated return type
+): Promise<ActionResult<AgentModel[]>> {
   try {
     if (!agentId || !modelIds.length) {
       return { 
@@ -80,9 +81,9 @@ export async function addSecondaryModelsToAgentAction(
 
     const result = await addSecondaryModelsToAgent(agentId, modelIds);
     
-    const agent = await db.select({ slug: agentSchema.slug }).from(agentSchema).where(eq(agentSchema.id, agentId)).limit(1);
-    if (agent[0]?.slug) {
-      revalidatePath(`/agent/${agent[0].slug}/settings`);
+    const agent = await selectAgentById(agentId);
+    if (agent?.slug) {
+      revalidatePath(`/agent/${agent.slug}/settings`);
     }
     revalidatePath(`/agent/${agentId}/settings`); 
 
@@ -110,7 +111,7 @@ export async function addSecondaryModelsToAgentAction(
 export async function removeSecondaryModelsFromAgentAction(
   agentId: string, 
   modelIds: string[]
-): Promise<ActionResult<{ count: number }>> { // Updated return type
+): Promise<ActionResult<{ count: number }>> {
   try {
     if (!agentId || !modelIds.length) {
       return {
@@ -121,9 +122,9 @@ export async function removeSecondaryModelsFromAgentAction(
 
     const count = await removeSecondaryModelsFromAgent(agentId, modelIds);
     
-    const agent = await db.select({ slug: agentSchema.slug }).from(agentSchema).where(eq(agentSchema.id, agentId)).limit(1);
-    if (agent[0]?.slug) {
-      revalidatePath(`/agent/${agent[0].slug}/settings`);
+    const agent = await selectAgentById(agentId);
+    if (agent?.slug) {
+      revalidatePath(`/agent/${agent.slug}/settings`);
     }
     revalidatePath(`/agent/${agentId}/settings`); 
 
@@ -166,9 +167,9 @@ export async function addToolToAgentAction(
 
     const result = await addToolToAgentRepo(agentId, toolId);
     
-    const agent = await db.select({ slug: agentSchema.slug }).from(agentSchema).where(eq(agentSchema.id, agentId)).limit(1);
-    if (agent[0]?.slug) {
-      revalidatePath(`/agent/${agent[0].slug}/settings`);
+    const agent = await selectAgentById(agentId);
+    if (agent?.slug) {
+      revalidatePath(`/agent/${agent.slug}/settings`);
     }
     revalidatePath(`/agent/${agentId}/settings`);
 
@@ -206,9 +207,9 @@ export async function removeToolFromAgentAction(
 
     await removeToolFromAgentRepo(agentId, toolId);
     
-    const agent = await db.select({ slug: agentSchema.slug }).from(agentSchema).where(eq(agentSchema.id, agentId)).limit(1);
-    if (agent[0]?.slug) {
-      revalidatePath(`/agent/${agent[0].slug}/settings`);
+    const agent = await selectAgentById(agentId);
+    if (agent?.slug) {
+      revalidatePath(`/agent/${agent.slug}/settings`);
     }
     revalidatePath(`/agent/${agentId}/settings`);
 
@@ -268,9 +269,4 @@ export async function getAgentToolEntriesAction(
     console.error("Failed to fetch agent tool entries:", error);
     return { success: false, error: error instanceof Error ? error.message : "An unknown error occurred" };
   }
-}
-
-// Need to import db and agentSchema for revalidatePath logic
-import { db } from "..";
-import { agent as agentSchema } from '../schema/agent';
-import { eq } from "drizzle-orm";
+} 

@@ -26,6 +26,7 @@ import {
 import { Agent, Knowledge, Tag, Model } from "@/db/schema/agent"; // Import schema types
 import { ActionResult } from "./types"; // Import shared type
 import { NewAgent } from "../repository/agent.repository"; // Import NewAgent type from repo
+import { updateAgentPrimaryModelAction } from "@/db/actions/agent-relations.actions";
 
 // --- S3 Configuration (Keep here or move to a dedicated service) ---
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -60,7 +61,7 @@ if (R2_ENDPOINT && R2_ACCESS_KEY && R2_SECRET_KEY) {
  * @returns Promise with success status and created agent data or error.
  */
 // Use the NewAgent type imported from the repository, which already excludes slug
-export async function createAgent(data: NewAgent): Promise<ActionResult<Agent[]>> {
+export async function createAgent(data: NewAgent & { primaryModelId?: string }): Promise<ActionResult<Agent[]>> {
     // Basic validation could be added here with Zod if desired
     try {
         // Get user session to potentially validate creatorId, although it's passed in
@@ -70,14 +71,33 @@ export async function createAgent(data: NewAgent): Promise<ActionResult<Agent[]>
            // Allow creation for now if creatorId is provided correctly, but auth check is good practice
         }
 
+        // Extract primaryModelId from data since it's not part of the agent table anymore
+        const { primaryModelId, ...agentData } = data;
+
         // Pass the data directly to insertAgent; slug generation happens in the repository
-        const result = await insertAgent(data); 
+        const result = await insertAgent(agentData); 
 
         // Check if result is valid and contains the slug (it should after repo update)
         if (!result || result.length === 0 || !result[0].slug) {
             console.error("Agent creation succeeded but slug might be missing:", result);
             // Decide if this is a critical error or just needs logging
             // For now, proceed but log the potential issue.
+        }
+
+        // Create the primary model relationship if primaryModelId was provided
+        if (primaryModelId && result && result.length > 0) {
+            const newAgentId = result[0].id;
+            try {
+                const modelRelationResult = await updateAgentPrimaryModelAction(newAgentId, primaryModelId);
+                if (!modelRelationResult.success) {
+                    console.error("Failed to set primary model for agent:", modelRelationResult.error);
+                    // You might want to decide if this should be a critical error that rolls back agent creation
+                    // For now, we'll continue but log the error
+                }
+            } catch (modelError) {
+                console.error("Error setting primary model for agent:", modelError);
+                // Non-critical error, agent is created but without model relationship
+            }
         }
 
         revalidatePath('/profile/agents'); // Revalidate user's agent list
