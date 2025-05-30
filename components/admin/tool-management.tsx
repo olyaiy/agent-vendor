@@ -63,6 +63,8 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
   const [newToolDescription, setNewToolDescription] = useState('');
   const [newToolType, setNewToolType] = useState<Tool['type']>(toolTypes[0]);
   const [newToolPrompt, setNewToolPrompt] = useState('');
+  const [newToolDefinition, setNewToolDefinition] = useState('');
+  const [newToolInputSchema, setNewToolInputSchema] = useState('');
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [toolToDelete, setToolToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -74,6 +76,8 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
   const [editToolDescription, setEditToolDescription] = useState('');
   const [editToolType, setEditToolType] = useState<Tool['type']>(toolTypes[0]);
   const [editToolPrompt, setEditToolPrompt] = useState('');
+  const [editToolDefinition, setEditToolDefinition] = useState('');
+  const [editToolInputSchema, setEditToolInputSchema] = useState('');
 
   const resetCreateForm = () => {
     setNewToolName('');
@@ -81,6 +85,8 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
     setNewToolDescription('');
     setNewToolType(toolTypes[0]);
     setNewToolPrompt('');
+    setNewToolDefinition('');
+    setNewToolInputSchema('');
     setShowCreateForm(false);
     setIsDeleteDialogOpen(false);
     setToolToDelete(null);
@@ -106,6 +112,8 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
       displayName?: string;
       description?: string;
       prompt?: string;
+      definition?: object;
+      inputSchema?: object;
     } = {
       name: newToolName.trim(),
       type: newToolType,
@@ -124,6 +132,26 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
     const promptTrimmed = newToolPrompt.trim();
     if (promptTrimmed) {
       toolPayload.prompt = promptTrimmed;
+    }
+
+    const definitionTrimmed = newToolDefinition.trim();
+    if (definitionTrimmed) {
+      try {
+        toolPayload.definition = JSON.parse(definitionTrimmed);
+      } catch {
+        toast.error("Validation Error", { description: "Definition must be valid JSON." });
+        return;
+      }
+    }
+
+    const inputSchemaTrimmed = newToolInputSchema.trim();
+    if (inputSchemaTrimmed) {
+      try {
+        toolPayload.inputSchema = JSON.parse(inputSchemaTrimmed);
+      } catch {
+        toast.error("Validation Error", { description: "Input Schema must be valid JSON." });
+        return;
+      }
     }
 
     const result = await createToolAction(toolPayload);
@@ -162,6 +190,8 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
     setEditToolDescription(tool.description || '');
     setEditToolType(tool.type);
     setEditToolPrompt(tool.prompt || '');
+    setEditToolDefinition(tool.definition ? JSON.stringify(tool.definition, null, 2) : '');
+    setEditToolInputSchema(tool.inputSchema ? JSON.stringify(tool.inputSchema, null, 2) : '');
     setIsEditDialogOpen(true);
   };
 
@@ -184,6 +214,30 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
       type: editToolType,
       prompt: editToolPrompt.trim() || undefined,
     };
+
+    const definitionTrimmed = editToolDefinition.trim();
+    if (definitionTrimmed) {
+      try {
+        dataToUpdate.definition = JSON.parse(definitionTrimmed);
+      } catch {
+        toast.error("Validation Error", { description: "Definition must be valid JSON." });
+        return;
+      }
+    } else {
+      dataToUpdate.definition = undefined;
+    }
+
+    const inputSchemaTrimmed = editToolInputSchema.trim();
+    if (inputSchemaTrimmed) {
+      try {
+        dataToUpdate.inputSchema = JSON.parse(inputSchemaTrimmed);
+      } catch {
+        toast.error("Validation Error", { description: "Input Schema must be valid JSON." });
+        return;
+      }
+    } else {
+      dataToUpdate.inputSchema = undefined;
+    }
 
     const result = await updateToolAction(editingTool.id, dataToUpdate);
 
@@ -279,6 +333,26 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
                   />
                 </div>
                 <div>
+                  <label htmlFor="newToolDefinition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Definition (JSON, optional)</label>
+                  <Textarea
+                    id="newToolDefinition"
+                    value={newToolDefinition}
+                    onChange={(e) => setNewToolDefinition(e.target.value)}
+                    placeholder='{"key": "value"}'
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="newToolInputSchema" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Input Schema (JSON, optional)</label>
+                  <Textarea
+                    id="newToolInputSchema"
+                    value={newToolInputSchema}
+                    onChange={(e) => setNewToolInputSchema(e.target.value)}
+                    placeholder='{"type": "object", "properties": {...}}'
+                    rows={4}
+                  />
+                </div>
+                <div>
                   <label htmlFor="newToolType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tool Type*</label>
                   <Select value={newToolType} onValueChange={(value: Tool['type']) => setNewToolType(value)}>
                     <SelectTrigger id="newToolType">
@@ -308,6 +382,8 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
                   <TableHead>Description</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Prompt</TableHead>
+                  <TableHead>Definition</TableHead>
+                  <TableHead>Input Schema</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -319,6 +395,12 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
                     <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{tool.description || '-'}</TableCell>
                     <TableCell>{tool.type}</TableCell>
                     <TableCell className="text-sm text-muted-foreground truncate max-w-xs">{tool.prompt || '-'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground truncate max-w-xs">
+                      {tool.definition ? JSON.stringify(tool.definition).substring(0, 50) + '...' : '-'}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground truncate max-w-xs">
+                      {tool.inputSchema ? JSON.stringify(tool.inputSchema).substring(0, 50) + '...' : '-'}
+                    </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button
                         variant="outline"
@@ -449,6 +531,26 @@ export default function ToolManagement({ initialTools, codebaseToolNames }: Tool
                   onChange={(e) => setEditToolPrompt(e.target.value)}
                   placeholder={`When using ${editingTool?.name || 'this tool'}... (e.g., When using ${editingTool?.name || 'this tool'}, ensure the input format is correct.)`}
                   rows={3}
+                />
+              </div>
+              <div>
+                <label htmlFor="editToolDefinition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Definition (JSON)</label>
+                <Textarea
+                  id="editToolDefinition"
+                  value={editToolDefinition}
+                  onChange={(e) => setEditToolDefinition(e.target.value)}
+                  placeholder='{"key": "value"}'
+                  rows={4}
+                />
+              </div>
+              <div>
+                <label htmlFor="editToolInputSchema" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Input Schema (JSON)</label>
+                <Textarea
+                  id="editToolInputSchema"
+                  value={editToolInputSchema}
+                  onChange={(e) => setEditToolInputSchema(e.target.value)}
+                  placeholder='{"type": "object", "properties": {...}}'
+                  rows={4}
                 />
               </div>
               <div>
