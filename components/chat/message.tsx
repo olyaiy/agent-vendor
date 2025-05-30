@@ -17,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { UseChatHelpers } from '@ai-sdk/react';
 import { MessageReasoning } from './message-reasoning';
 import { MessageActions } from './message-actions';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { MessageEditor } from '../message-editor';
 import { Paperclip } from 'lucide-react';
@@ -279,11 +278,8 @@ export const PreviewMessage = memo(
 
 export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) => {
   return (
-    <motion.div
+    <div
       className="w-full mx-auto max-w-3xl px-0 group/message relative"
-      initial={{ y: 5, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.2 }}
       data-role="assistant"
     >
       <div className="flex flex-row gap-4 w-full">
@@ -310,60 +306,19 @@ export const ThinkingMessage = ({ agentImageUrl }: { agentImageUrl?: string }) =
             <div className="flex flex-row items-center gap-1.5">
               <span className="font-medium">Thinking</span>
               <div className="flex gap-1 items-center">
-                <motion.div
-                  className="size-1.5 rounded-full bg-primary"
-                  animate={{
-                    scale: [0.5, 1, 0.5],
-                    opacity: [0.3, 1, 0.3]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0
-                  }}
-                />
-                <motion.div
-                  className="size-1.5 rounded-full bg-primary"
-                  animate={{
-                    scale: [0.5, 1, 0.5],
-                    opacity: [0.3, 1, 0.3]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.25
-                  }}
-                />
-                <motion.div
-                  className="size-1.5 rounded-full bg-primary"
-                  animate={{
-                    scale: [0.5, 1, 0.5],
-                    opacity: [0.3, 1, 0.3]
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 0.5
-                  }}
-                />
+                <div className="size-1.5 rounded-full bg-primary animate-pulse" />
+                <div className="size-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.25s' }} />
+                <div className="size-1.5 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.5s' }} />
               </div>
             </div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            transition={{ duration: 0.4 }}
-            className="text-xs text-muted-foreground/80 max-w-lg"
-          >
+          <div className="text-xs text-muted-foreground/80 max-w-lg">
             Working on a thoughtful response
-          </motion.div>
+          </div>
           <span className="sr-only">AI is thinking</span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
