@@ -9,6 +9,7 @@ import {
   index,
 //   primaryKey,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { user } from './auth-schema';
 import { agent, models } from './agent';
 
@@ -70,4 +71,28 @@ export const message = pgTable("Message", {
   });
   
   export type DBMessage = InferSelectModel<typeof message>;
+  
+// Add relations
+export const chatRelations = relations(chat, ({ one, many }) => ({
+  user: one(user, {
+    fields: [chat.userId],
+    references: [user.id],
+  }),
+  agent: one(agent, {
+    fields: [chat.agentId],
+    references: [agent.id],
+  }),
+  messages: many(message),
+}));
+
+export const messageRelations = relations(message, ({ one }) => ({
+  chat: one(chat, {
+    fields: [message.chatId],
+    references: [chat.id],
+  }),
+  model: one(models, {
+    fields: [message.model_id],
+    references: [models.id],
+  }),
+}));
   

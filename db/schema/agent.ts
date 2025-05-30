@@ -1,5 +1,6 @@
 import { pgTable, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { user } from "./auth-schema";
 
 // --- Agent Schema --- //
@@ -106,3 +107,51 @@ export const agentTags = pgTable("agent_tags", {
 });
 
 export type AgentTag = typeof agentTags.$inferSelect;
+
+// Add relations
+export const agentRelations = relations(agent, ({ one, many }) => ({
+  creator: one(user, {
+    fields: [agent.creatorId],
+    references: [user.id],
+  }),
+  agentModels: many(agentModels),
+  knowledge: many(knowledge),
+  agentTags: many(agentTags),
+}));
+
+export const agentModelsRelations = relations(agentModels, ({ one }) => ({
+  agent: one(agent, {
+    fields: [agentModels.agentId],
+    references: [agent.id],
+  }),
+  model: one(models, {
+    fields: [agentModels.modelId],
+    references: [models.id],
+  }),
+}));
+
+export const modelsRelations = relations(models, ({ many }) => ({
+  agentModels: many(agentModels),
+}));
+
+export const knowledgeRelations = relations(knowledge, ({ one }) => ({
+  agent: one(agent, {
+    fields: [knowledge.agentId],
+    references: [agent.id],
+  }),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  agentTags: many(agentTags),
+}));
+
+export const agentTagsRelations = relations(agentTags, ({ one }) => ({
+  agent: one(agent, {
+    fields: [agentTags.agentId],
+    references: [agent.id],
+  }),
+  tag: one(tags, {
+    fields: [agentTags.tagId],
+    references: [tags.id],
+  }),
+}));

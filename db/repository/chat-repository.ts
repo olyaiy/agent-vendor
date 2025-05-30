@@ -1,5 +1,6 @@
 import { db } from '../index';
 import { chat, type Chat, message, type DBMessage } from '../schema/chat';
+import { agent } from '../schema/agent'; // Add agent import
 import { eq, asc, and, inArray, gte, desc, sql, or, ilike, count, exists, SQL } from 'drizzle-orm'; // Use base sql import
 // Removed incorrect pg-core sql import
 
@@ -173,18 +174,18 @@ export async function getUserRecentChats({
 }: {
   userId: string;
   limit?: number;
-}): Promise<Array<{ id: string; title: string; agentId: string | null; agentSlug: string | null }>> { // Update return type to match nullable agentId
+}): Promise<Array<{ id: string; title: string; agentId: string | null; agentSlug: string | null }>> {
   try {
-    // Join with agent table to get the slug
+    // Use proper join instead of raw SQL
     return await db
       .select({
         id: chat.id,
         title: chat.title,
         agentId: chat.agentId,
-        agentSlug: sql<string | null>`agent.slug`.as('agentSlug') // Select agent slug
+        agentSlug: agent.slug,
       })
       .from(chat)
-      .leftJoin(sql`agent`, eq(chat.agentId, sql`agent.id`)) // Join with agent table
+      .leftJoin(agent, eq(chat.agentId, agent.id)) // Use proper join
       .where(eq(chat.userId, userId))
       .orderBy(desc(chat.createdAt))
       .limit(limit);
@@ -218,26 +219,23 @@ export async function getUserChatsPaginated({
 }): Promise<{
   chats: Array<
     Pick<Chat, 'id' | 'title' | 'createdAt' | 'agentId'> &
-    { agentSlug: string | null; lastMessageParts: unknown | null; lastMessageRole: string | null } // Add agentSlug and last message fields
+    { agentSlug: string | null; lastMessageParts: unknown | null; lastMessageRole: string | null }
   >;
   totalCount: number;
 }> {
   try {
     const offset = (page - 1) * pageSize;
-    // Initialize conditions array with the mandatory userId filter
     const conditions: SQL[] = [eq(chat.userId, userId)];
 
     if (searchQuery && searchQuery.trim() !== '') {
       const searchPattern = `%${searchQuery}%`;
 
-      // Subquery to check if any message part contains the search query
       const messageSearchSubquery = db
-        .select({ _: sql`1` }) // Select a dummy value
+        .select({ _: sql`1` })
         .from(message)
         .where(
           and(
-            eq(message.chatId, chat.id), // Correlate with the outer chat table
-            // Use raw SQL to check within the JSON array parts
+            eq(message.chatId, chat.id),
             sql`exists (
               select 1
               from json_array_elements(${message.parts}) as p
@@ -245,68 +243,59 @@ export async function getUserChatsPaginated({
             )`
           )
         )
-        .limit(1); // We only need to know if at least one matching message exists
+        .limit(1);
 
       const searchCondition = or(
         ilike(chat.title, searchPattern),
         exists(messageSearchSubquery)
       );
-      // Push the search condition only if it's generated
       if (searchCondition) {
           conditions.push(searchCondition);
       }
     }
 
-    // Combine all conditions using 'and'. If only userId condition exists, 'and' handles single arg.
     const finalCondition = and(...conditions);
 
-    // Query to get the total count matching the criteria
     const countQuery = db
       .select({ value: count() })
       .from(chat)
-      .where(finalCondition); // Apply the combined condition directly
+      .where(finalCondition);
 
-    // Subquery (CTE) to get the latest message for each chat
     const lastMessageSubquery = db.$with('last_message').as(
       db.select({
         chatId: message.chatId,
         parts: message.parts,
         role: message.role,
-        // Use row_number() over the defined window - use sql from drizzle-orm
         rn: sql<number>`row_number() over (partition by ${message.chatId} order by ${message.createdAt} desc)`.as('rn'),
       })
       .from(message)
     );
 
-    // Query to get the paginated chat data, joining with the last message CTE
     const dataQuery = db
-      .with(lastMessageSubquery) // Include the CTE
+      .with(lastMessageSubquery)
       .select({
         id: chat.id,
         title: chat.title,
         createdAt: chat.createdAt,
         agentId: chat.agentId,
-        agentSlug: sql<string | null>`agent.slug`.as('agentSlug'), // Select agent slug
-        // Select parts and role from the filtered CTE result
+        agentSlug: agent.slug, // Use proper relation
         lastMessageParts: lastMessageSubquery.parts,
         lastMessageRole: lastMessageSubquery.role,
       })
       .from(chat)
-      .leftJoin(sql`agent`, eq(chat.agentId, sql`agent.id`)) // Join with agent table
-      // Left join with the CTE, filtering for the latest message (rn=1)
+      .leftJoin(agent, eq(chat.agentId, agent.id)) // Use proper join
       .leftJoin(
         lastMessageSubquery,
         and(
           eq(chat.id, lastMessageSubquery.chatId),
-          eq(lastMessageSubquery.rn, 1) // Filter for the latest message here
+          eq(lastMessageSubquery.rn, 1)
         )
       )
-      .where(finalCondition) // Apply the search/user conditions
+      .where(finalCondition)
       .orderBy(desc(chat.createdAt))
       .limit(pageSize)
       .offset(offset);
 
-    // Execute both queries concurrently
     const [countResult, chatsResult] = await Promise.all([
       countQuery,
       dataQuery,

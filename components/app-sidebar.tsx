@@ -22,6 +22,7 @@ import { NavSecondary } from "./nav-secondary"
 import { NewChatButton } from "./new-chat-button"
 import Link from "next/link"
 import { HistoryMenu } from "./history-menu"
+import { ErrorBoundary } from "./ui/error-boundary"
 
 
 // Agent submenu items
@@ -68,7 +69,9 @@ export function AppSidebar() {
             <SidebarMenu>
               {/* New Chat Button with Command+K/Ctrl+K shortcut */}
               <NewChatButton />
-              <HistoryMenu />
+              <ErrorBoundary>
+                <HistoryMenu />
+              </ErrorBoundary>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
