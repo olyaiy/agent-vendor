@@ -5,9 +5,10 @@ import type { ToolInvocation } from 'ai';
 import { Palette, CheckCircle2, Loader2, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CopyButton } from '@/components/ui/copy-button';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import type { HSLColor, ColorCategory } from '@/tools/color-palette-tool';
+import type { HSLColor, ColorCategory, ColorPalette } from '@/tools/color-palette-tool';
 
 interface ColorPaletteSectionProps {
   toolInvocation: ToolInvocation;
@@ -61,11 +62,6 @@ const ColorSwatch = ({ color, label, isBase = false }: ColorSwatchProps) => {
   const hslString = hslToString(color);
   const hexString = hslToHex(color);
 
-  const copyToClipboard = (value: string, format: string) => {
-    navigator.clipboard.writeText(value);
-    toast.success(`Copied ${format} to clipboard!`);
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -91,27 +87,19 @@ const ColorSwatch = ({ color, label, isBase = false }: ColorSwatchProps) => {
               <code className="text-xs font-mono text-white bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
                 {hslString}
               </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 w-5 p-0 text-white hover:bg-white/20"
-                onClick={() => copyToClipboard(hslString, 'HSL')}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
+              <CopyButton 
+                content={hslString} 
+                copyMessage="Copied HSL to clipboard!"
+              />
             </div>
             <div className="flex items-center gap-1">
               <code className="text-xs font-mono text-white bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
                 {hexString}
               </code>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 w-5 p-0 text-white hover:bg-white/20"
-                onClick={() => copyToClipboard(hexString, 'HEX')}
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
+              <CopyButton 
+                content={hexString} 
+                copyMessage="Copied HEX to clipboard!"
+              />
             </div>
           </div>
         </div>
@@ -120,9 +108,6 @@ const ColorSwatch = ({ color, label, isBase = false }: ColorSwatchProps) => {
       <div className="mt-3 text-center">
         <p className={`text-sm font-medium ${isBase ? 'text-primary font-semibold' : 'text-foreground'}`}>
           {label}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Hover to copy
         </p>
       </div>
     </motion.div>
@@ -190,6 +175,29 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
   
   // Generate a unique key for animation transitions
   const layoutKey = React.useMemo(() => `palette-${Math.random().toString(36).substring(2, 9)}`, []);
+
+  // Function to copy entire palette data
+  const copyEntirePalette = (palette: ColorPalette & { generatedAt: string }) => {
+    const formatColorCategory = (category: ColorCategory) => {
+      const baseColor = `${category.name} Base: ${hslToString(category.base)} / ${hslToHex(category.base)}`;
+      const shades = category.shades.map((shade, index) => 
+        `${category.name} Shade ${index + 1}: ${hslToString(shade)} / ${hslToHex(shade)}`
+      ).join('\n');
+      return `${category.name}:\n${category.description}\n${baseColor}\n${shades}`;
+    };
+
+    const paletteText = `${palette.name}
+${palette.description}
+
+${formatColorCategory(palette.primary)}
+
+${formatColorCategory(palette.secondary)}
+
+${formatColorCategory(palette.accent)}`;
+
+    navigator.clipboard.writeText(paletteText);
+    toast.success('Copied entire palette to clipboard!');
+  };
 
   if (state === 'call') {
     return (
@@ -271,6 +279,15 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
             </Badge>
             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => copyEntirePalette(palette)}
+            className="flex items-center gap-2 hover:bg-primary/5"
+          >
+            <Copy className="h-4 w-4" />
+            Copy Palette
+          </Button>
         </div>
 
         <div className="space-y-8">
