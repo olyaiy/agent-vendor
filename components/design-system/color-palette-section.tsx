@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/ui/copy-button';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import type { HSLColor, ColorCategory, ColorPalette } from '@/tools/color-palette-tool';
+import type { HSLColor, ColorCategory, SimpleColorRow } from '@/tools/color-palette-tool';
 
 interface ColorPaletteSectionProps {
   toolInvocation: ToolInvocation;
@@ -114,7 +114,7 @@ const ColorSwatch = ({ color, label, isBase = false }: ColorSwatchProps) => {
   );
 };
 
-// Color category component
+// Color category component for structured mode
 interface ColorCategoryDisplayProps {
   category: ColorCategory;
 }
@@ -134,9 +134,11 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
           </h3>
           <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
         </div>
-        <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-          {category.description}
-        </p>
+        {category.description && (
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+            {category.description}
+          </p>
+        )}
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
@@ -151,6 +153,62 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
             key={index}
             color={shade}
             label={`Shade ${index + 1}`}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+// Simple color row component for flexible mode
+interface SimpleColorRowDisplayProps {
+  colorRow: SimpleColorRow;
+  showHeader?: boolean;
+}
+
+const SimpleColorRowDisplay = ({ colorRow, showHeader = true }: SimpleColorRowDisplayProps) => {
+  // Use predefined grid classes to avoid dynamic class generation issues
+  const getGridClass = () => {
+    const count = colorRow.colors.length;
+    if (count === 1) return 'grid gap-6 grid-cols-1';
+    if (count === 2) return 'grid gap-6 grid-cols-2';
+    if (count === 3) return 'grid gap-6 grid-cols-3';
+    if (count === 4) return 'grid gap-6 grid-cols-4';
+    if (count === 5) return 'grid gap-6 grid-cols-5';
+    return 'grid gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
+      {showHeader && (colorRow.name || colorRow.description) && (
+        <div className="space-y-3">
+          {colorRow.name && (
+            <div className="flex items-center gap-3">
+              <h3 className="text-xl font-semibold text-foreground">
+                {colorRow.name}
+              </h3>
+              <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+            </div>
+          )}
+          {colorRow.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+              {colorRow.description}
+            </p>
+          )}
+        </div>
+      )}
+      
+      <div className={getGridClass()}>
+        {colorRow.colors.map((colorWithLabel, index) => (
+          <ColorSwatch
+            key={index}
+            color={colorWithLabel.color}
+            label={colorWithLabel.label || `Color ${index + 1}`}
           />
         ))}
       </div>
@@ -177,46 +235,138 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
   const layoutKey = React.useMemo(() => `palette-${Math.random().toString(36).substring(2, 9)}`, []);
 
   // Function to copy entire palette data
-  const copyEntirePalette = (palette: ColorPalette & { generatedAt: string }) => {
-    const formatColorCategory = (category: ColorCategory) => {
-      const baseColor = `${category.name} Base: ${hslToString(category.base)} / ${hslToHex(category.base)}`;
-      const shades = category.shades.map((shade, index) => 
-        `${category.name} Shade ${index + 1}: ${hslToString(shade)} / ${hslToHex(shade)}`
-      ).join('\n');
-      return `${category.name}:\n${category.description}\n${baseColor}\n${shades}`;
-    };
+  const copyEntirePalette = (palette: { 
+    name?: string; 
+    description?: string; 
+    mode: 'structured' | 'simple';
+    primary?: ColorCategory;
+    secondary?: ColorCategory; 
+    accent?: ColorCategory;
+    colorRows?: SimpleColorRow[];
+  }) => {
+    let paletteText = '';
+    
+    if (palette.name) {
+      paletteText += `${palette.name}\n`;
+    }
+    if (palette.description) {
+      paletteText += `${palette.description}\n\n`;
+    }
 
-    const paletteText = `${palette.name}
-${palette.description}
+    if (palette.mode === 'structured' && palette.primary && palette.secondary && palette.accent) {
+      const formatColorCategory = (category: ColorCategory) => {
+        const baseColor = `${category.name} Base: ${hslToString(category.base)} / ${hslToHex(category.base)}`;
+        const shades = category.shades.map((shade, index) => 
+          `${category.name} Shade ${index + 1}: ${hslToString(shade)} / ${hslToHex(shade)}`
+        ).join('\n');
+        const description = category.description ? `${category.description}\n` : '';
+        return `${category.name}:\n${description}${baseColor}\n${shades}`;
+      };
 
-${formatColorCategory(palette.primary)}
-
-${formatColorCategory(palette.secondary)}
-
-${formatColorCategory(palette.accent)}`;
+      paletteText += `${formatColorCategory(palette.primary)}\n\n${formatColorCategory(palette.secondary)}\n\n${formatColorCategory(palette.accent)}`;
+    } else if (palette.mode === 'simple' && palette.colorRows) {
+      palette.colorRows.forEach((row: SimpleColorRow, rowIndex: number) => {
+        if (row.name) paletteText += `${row.name}:\n`;
+        if (row.description) paletteText += `${row.description}\n`;
+        
+        row.colors.forEach((colorWithLabel, colorIndex) => {
+          const label = colorWithLabel.label || `Color ${colorIndex + 1}`;
+          paletteText += `${label}: ${hslToString(colorWithLabel.color)} / ${hslToHex(colorWithLabel.color)}\n`;
+        });
+        
+        if (rowIndex < palette.colorRows!.length - 1) paletteText += '\n';
+      });
+    }
 
     navigator.clipboard.writeText(paletteText);
     toast.success('Copied entire palette to clipboard!');
   };
 
   if (state === 'call') {
+    // Animated color swatches for loading state
+    const animatedColors = [
+      'hsl(220, 70%, 50%)', // Blue
+      'hsl(280, 60%, 55%)', // Purple  
+      'hsl(340, 75%, 55%)', // Pink
+      'hsl(25, 80%, 55%)',  // Orange
+      'hsl(160, 60%, 45%)', // Teal
+      'hsl(45, 85%, 60%)',  // Yellow
+    ];
+
     return (
       <motion.div 
-        className="flex items-center gap-3 p-4 my-2 rounded-lg border border-border/50 bg-muted/30"
+        className="p-6 my-4 rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50"
         variants={container}
         initial="hidden"
         animate="show"
         layoutId={layoutKey}
       >
-        <Badge variant="outline" className="bg-primary/5 text-primary/80">
-          <Palette className="h-3 w-3 mr-1.5" />
-          Color Palette
-        </Badge>
-
-        <div className="flex items-center gap-2 text-sm">
-          <Loader2 className="h-3.5 w-3.5 text-primary animate-spin mr-1.5" />
-          <span className="text-xs text-muted-foreground">Generating color palette...</span>
+        <div className="flex items-center gap-3 mb-6">
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+            <Palette className="h-4 w-4 mr-2" />
+            Color Palette
+          </Badge>
+          <div className="flex items-center gap-2 text-sm">
+            <Loader2 className="h-4 w-4 text-primary animate-spin" />
+            <span className="text-sm text-muted-foreground font-medium">Designing colors...</span>
+          </div>
         </div>
+
+        <div className="space-y-6">
+          {/* Animated color swatches */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="space-y-3"
+          >
+            <div className="grid grid-cols-6 gap-3">
+              {Array.from({ length: 6 }).map((_, swatchIndex) => {
+                const colorIndex = swatchIndex % animatedColors.length;
+                const baseColor = animatedColors[colorIndex];
+                
+                return (
+                  <motion.div
+                    key={swatchIndex}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ 
+                      opacity: [0.3, 0.8, 0.3], 
+                      scale: [0.8, 1, 0.8],
+                      backgroundColor: baseColor
+                    }}
+                    transition={{
+                      delay: swatchIndex * 0.1,
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="aspect-square rounded-lg border-2 border-border/30 shadow-sm"
+                    style={{ backgroundColor: baseColor }}
+                  >
+                    <div className="w-full h-full rounded-lg bg-gradient-to-br from-white/10 to-transparent" />
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Subtle progress indicator */}
+        <motion.div 
+          className="mt-6 pt-4 border-t border-border/30"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-3 h-3 border border-primary/30 border-t-primary rounded-full"
+            />
+            <span>Generating harmonious color combinations</span>
+          </div>
+        </motion.div>
       </motion.div>
     );
   }
@@ -291,17 +441,41 @@ ${formatColorCategory(palette.accent)}`;
         </div>
 
         <div className="space-y-8">
-          <div className="space-y-3">
-            <h2 className="text-2xl font-bold text-foreground tracking-tight">{palette.name}</h2>
-            <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
-              {palette.description}
-            </p>
-          </div>
+          {/* Optional palette header */}
+          {(palette.name || palette.description) && (
+            <div className="space-y-3">
+              {palette.name && (
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">{palette.name}</h2>
+              )}
+              {palette.description && (
+                <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
+                  {palette.description}
+                </p>
+              )}
+            </div>
+          )}
 
+          {/* Render based on mode */}
           <div className="space-y-12">
-            <ColorCategoryDisplay category={palette.primary} />
-            <ColorCategoryDisplay category={palette.secondary} />
-            <ColorCategoryDisplay category={palette.accent} />
+            {palette.mode === 'structured' ? (
+              // Structured mode: primary/secondary/accent
+              <>
+                <ColorCategoryDisplay category={palette.primary} />
+                <ColorCategoryDisplay category={palette.secondary} />
+                <ColorCategoryDisplay category={palette.accent} />
+              </>
+            ) : palette.mode === 'simple' ? (
+              // Simple mode: flexible color rows
+              <>
+                {palette.colorRows.map((colorRow: SimpleColorRow, index: number) => (
+                  <SimpleColorRowDisplay 
+                    key={index} 
+                    colorRow={colorRow}
+                    showHeader={palette.colorRows.length > 1 || Boolean(colorRow.name) || Boolean(colorRow.description)}
+                  />
+                ))}
+              </>
+            ) : null}
           </div>
         </div>
       </motion.div>
