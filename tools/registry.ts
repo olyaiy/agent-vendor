@@ -5,6 +5,7 @@ import { calculatorTool } from './calculator-tool';
 import { createLogoTool } from './create-logo-tool'; // Import the new tool
 import { createChartTool } from './create_chart_tool';
 import { colorPaletteTool } from './color-palette-tool';
+import { pexelsSearchTool } from './pexels-search-tool'; // Import the Pexels tool
 
 /**
  * A central registry for all available AI tools.
@@ -21,6 +22,7 @@ export const toolRegistry = {
   create_chart: createChartTool,
   create_logo: createLogoTool, // Register the new tool
   color_palette: colorPaletteTool,
+  pexels_image_search: pexelsSearchTool, // Register the Pexels tool
 };
 
 // Optional: Export the type for the registry if needed elsewhere

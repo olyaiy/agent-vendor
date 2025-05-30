@@ -8,6 +8,7 @@ import CalculatorSection from '../calculator-section'; // Import Calculator UI
 import CreateLogoSection from '../create-logo-section'; // Import the new logo section
 import CreateChartSection from '../create-chart-section';
 import ColorPaletteSection from '../design-system/color-palette-section'; // Import Color Palette UI
+import PexelsSearchSection from '../pexels-search-section'; // Import Pexels Search UI
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Helper component to render the actual tool UI
@@ -35,6 +36,8 @@ const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => 
         return <CreateChartSection toolInvocation={toolInvocation} />;
       case 'color_palette': // Add case for color_palette tool (Result State)
         return <ColorPaletteSection toolInvocation={toolInvocation} />;
+      case 'pexels_image_search': // Add case for Pexels search tool (Result State)
+        return <PexelsSearchSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
@@ -71,6 +74,8 @@ const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => 
         );
       case 'color_palette': // Add case for color_palette tool (Call State)
         return <ColorPaletteSection toolInvocation={toolInvocation} />;
+      case 'pexels_image_search': // Add case for Pexels search tool (Call State)
+        return <PexelsSearchSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-none border rounded-md p-2'>

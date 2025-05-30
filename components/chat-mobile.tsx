@@ -178,7 +178,7 @@ export default function ChatMobile({
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="w-full px-4 flex flex-col mb-4 gap-4">
-              <Greeting />
+              <Greeting agent={agent} isMobile={true} />
             </div>
           </div>
         )}

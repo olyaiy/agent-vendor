@@ -346,7 +346,7 @@ export default function Chat({
         ) : (
           <div className="flex items-center justify-center  h-full ">
             <div className="w-full flex flex-col mb-20 gap-10">
-            <Greeting />
+            <Greeting agent={agent} />
 
             <ChatInput
               userId={agent.creatorId}
