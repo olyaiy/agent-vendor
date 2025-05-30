@@ -145,7 +145,7 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
         )}
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         <ColorSwatch 
           color={category.base} 
           label="Base" 
@@ -176,10 +176,10 @@ const SimpleColorRowDisplay = ({ colorRow, showHeader = true }: SimpleColorRowDi
     const count = colorRow.colors.length;
     if (count === 1) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-1';
     if (count === 2) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2';
-    if (count === 3) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3';
-    if (count === 4) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-4';
-    if (count === 5) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-5';
-    return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
+    if (count === 3) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-3';
+    if (count === 4) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-3 sm:grid-cols-4';
+    if (count === 5) return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-3 sm:grid-cols-3 md:grid-cols-5';
+    return 'grid gap-3 sm:gap-4 md:gap-6 grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5';
   };
 
   return (
