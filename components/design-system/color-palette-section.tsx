@@ -74,46 +74,56 @@ const ColorSwatch = ({ color, label, isBase = false }: ColorSwatchProps) => {
       className="group relative"
     >
       <div
-        className={`w-full aspect-square rounded-lg border border-border/20 shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:scale-105 ${
-          isBase ? 'ring-2 ring-primary/20 ring-offset-2' : ''
+        className={`relative w-full aspect-square rounded-xl border-2 shadow-sm transition-all duration-300 group-hover:shadow-lg group-hover:scale-[1.02] overflow-hidden ${
+          isBase 
+            ? 'border-primary/30 ring-2 ring-primary/10 ring-offset-2 shadow-md' 
+            : 'border-border/30 hover:border-border/50'
         }`}
         style={{ backgroundColor: hslString }}
-      />
-      
-      <div className="mt-2 space-y-1">
-        <p className={`text-xs font-medium text-center ${isBase ? 'text-primary' : 'text-muted-foreground'}`}>
-          {label}
-        </p>
+      >
+        {/* Subtle overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-transparent" />
         
-        <div className="flex flex-col space-y-1">
-          <div className="flex items-center justify-between group/hsl">
-            <code className="text-xs font-mono bg-background/80 px-1.5 py-0.5 rounded border">
-              {hslString}
-            </code>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover/hsl:opacity-100 transition-opacity"
-              onClick={() => copyToClipboard(hslString, 'HSL')}
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-          
-          <div className="flex items-center justify-between group/hex">
-            <code className="text-xs font-mono bg-background/80 px-1.5 py-0.5 rounded border">
-              {hexString}
-            </code>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover/hex:opacity-100 transition-opacity"
-              onClick={() => copyToClipboard(hexString, 'HEX')}
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
+        {/* Color values overlay - appears on hover */}
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center p-2">
+          <div className="text-center space-y-1">
+            <div className="flex items-center gap-1">
+              <code className="text-xs font-mono text-white bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                {hslString}
+              </code>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 w-5 p-0 text-white hover:bg-white/20"
+                onClick={() => copyToClipboard(hslString, 'HSL')}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-1">
+              <code className="text-xs font-mono text-white bg-white/20 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                {hexString}
+              </code>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 w-5 p-0 text-white hover:bg-white/20"
+                onClick={() => copyToClipboard(hexString, 'HEX')}
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
         </div>
+      </div>
+      
+      <div className="mt-3 text-center">
+        <p className={`text-sm font-medium ${isBase ? 'text-primary font-semibold' : 'text-foreground'}`}>
+          {label}
+        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Hover to copy
+        </p>
       </div>
     </motion.div>
   );
@@ -130,13 +140,21 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-4"
+      className="space-y-6"
     >
-      <h3 className="text-lg font-semibold text-foreground">
-        {category.name}
-      </h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <h3 className="text-xl font-semibold text-foreground">
+            {category.name}
+          </h3>
+          <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+          {category.description}
+        </p>
+      </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
         <ColorSwatch 
           color={category.base} 
           label="Base" 
@@ -239,29 +257,31 @@ const ColorPaletteSection = ({ toolInvocation }: ColorPaletteSectionProps) => {
 
     return (
       <motion.div 
-        className="p-6 my-4 rounded-lg border border-border/50 bg-card"
+        className="p-8 my-6 rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50 shadow-sm"
         variants={container}
         initial="hidden"
         animate="show"
         layoutId={layoutKey}
       >
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Badge variant="outline" className="bg-primary/5 text-primary/80">
-              <Palette className="h-3 w-3 mr-1.5" />
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1">
+              <Palette className="h-4 w-4 mr-2" />
               Color Palette
             </Badge>
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold text-foreground">{palette.name}</h2>
-            <p className="text-sm text-muted-foreground">{palette.description}</p>
+        <div className="space-y-8">
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold text-foreground tracking-tight">{palette.name}</h2>
+            <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
+              {palette.description}
+            </p>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-12">
             <ColorCategoryDisplay category={palette.primary} />
             <ColorCategoryDisplay category={palette.secondary} />
             <ColorCategoryDisplay category={palette.accent} />
