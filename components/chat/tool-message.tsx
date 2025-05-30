@@ -7,6 +7,7 @@ import { E2BSandboxSection } from '../e2b-sandbox-section'; // Import E2B Sandbo
 import CalculatorSection from '../calculator-section'; // Import Calculator UI
 import CreateLogoSection from '../create-logo-section'; // Import the new logo section
 import CreateChartSection from '../create-chart-section';
+import ColorPaletteSection from '../design-system/color-palette-section'; // Import Color Palette UI
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Helper component to render the actual tool UI
@@ -32,6 +33,8 @@ const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => 
         return <CreateLogoSection toolInvocation={toolInvocation} />;
       case 'create_chart':
         return <CreateChartSection toolInvocation={toolInvocation} />;
+      case 'color_palette': // Add case for color_palette tool (Result State)
+        return <ColorPaletteSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-hidden border rounded-md p-2'>
@@ -66,6 +69,8 @@ const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => 
             <p className="text-muted-foreground">Using tool: <span className="font-semibold text-primary">Create Chart...</span></p>
           </div>
         );
+      case 'color_palette': // Add case for color_palette tool (Call State)
+        return <ColorPaletteSection toolInvocation={toolInvocation} />;
       default:
         return <div>
           <pre className='text-xs max-w-full overflow-none border rounded-md p-2'>
