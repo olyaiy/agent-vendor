@@ -1,23 +1,49 @@
 import React, { Suspense } from 'react';
 import { getRecentAgents } from '@/db/actions/agent.actions';
 import { AgentCard } from "@/components/agent-card";
-import { PaginationControls } from '@/components/agents/pagination-controls'; // Import pagination controls
+import { PaginationControls } from '@/components/agents/pagination-controls';
 
 // --- Loading Skeletons ---
 
 // Loading component for the overall agents data fetch
 export function AgentsLoading() {
-  // Updated loading message to reflect pagination
-  return <p className="text-gray-500">Loading agents data for the current page...</p>;
+  return (
+    <div className="space-y-6">
+      {/* Header skeleton */}
+      <div className="space-y-3">
+        <div className="h-8 bg-muted/50 rounded w-48 animate-pulse"></div>
+        <div className="h-4 bg-muted/30 rounded w-72 animate-pulse"></div>
+      </div>
+      
+      {/* Grid skeleton */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <AgentItemLoading key={i} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // Loading component for an individual agent card
 function AgentItemLoading() {
   return (
-    <div className="border rounded-md p-4 w-full max-w-sm animate-pulse">
-      <div className="aspect-square bg-gray-200 mb-4 rounded-md"></div>
-      <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
-      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+    <div className="group rounded-lg overflow-hidden bg-background border border-border/30 animate-pulse">
+      {/* Image skeleton */}
+      <div className="relative aspect-square bg-muted/50 rounded-t-lg"></div>
+      
+      {/* Content skeleton */}
+      <div className="p-3 space-y-3">
+        <div className="h-5 bg-muted/50 rounded w-3/4"></div>
+        <div className="space-y-2">
+          <div className="h-3 bg-muted/30 rounded w-full"></div>
+          <div className="h-3 bg-muted/30 rounded w-2/3"></div>
+        </div>
+        <div className="flex gap-1.5">
+          <div className="h-5 bg-muted/30 rounded-full w-12"></div>
+          <div className="h-5 bg-muted/30 rounded-full w-16"></div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -30,8 +56,8 @@ function AgentItemLoading() {
 type AgentsGridProps = {
   tag?: string;
   searchQuery?: string;
-  page: number; // Added page prop
-  pageSize: number; // Added pageSize prop
+  page: number;
+  pageSize: number;
   // We will fetch data inside this component, so we don't need to pass agents and totalCount directly
   // agents: Array<{
   //   id: string;
@@ -56,41 +82,97 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize }: AgentsGri
   const result = await getRecentAgents(tag, searchQuery, page, pageSize);
 
   if (!result.success) {
-    return <p className="text-red-500">Error loading agents: {result.error}</p>;
+    return (
+      <div className="text-center py-12">
+        <p className="text-destructive text-sm">Error loading agents: {result.error}</p>
+      </div>
+    );
   }
 
   const { agents, totalCount } = result.data;
 
   // Removed the base model filtering logic as per the requirement for the /agents page
 
-  // Use fetched agents for checks and rendering
-  // Updated "No agents found" messages
+  // Handle empty states with better messaging
   if (agents.length === 0) {
-    if (searchQuery && tag) {
-      return <p className="text-gray-500">{`No agents found matching "${searchQuery}" with the tag "${tag}".`}</p>;
-    } else if (searchQuery) {
-      return <p className="text-gray-500">{`No agents found matching "${searchQuery}".`}</p>;
-    } else if (tag) {
-      return <p className="text-gray-500">{`No agents found with the tag "${tag}".`}</p>;
-    } else {
-      // Default case: No tag, no search, no agents found
-      return <p className="text-gray-500">No agents found.</p>;
-    }
+    return (
+      <div className="text-center py-12 space-y-4">
+        <div className="text-6xl opacity-20">🤖</div>
+        {searchQuery && tag ? (
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium text-muted-foreground">No agents found</h3>
+                         <p className="text-sm text-muted-foreground/70">
+               No agents match &ldquo;{searchQuery}&rdquo; with the tag &ldquo;{tag}&rdquo;
+             </p>
+          </div>
+        ) : searchQuery ? (
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium text-muted-foreground">No search results</h3>
+                         <p className="text-sm text-muted-foreground/70">
+               No agents found matching &ldquo;{searchQuery}&rdquo;
+             </p>
+          </div>
+        ) : tag ? (
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium text-muted-foreground">No agents found</h3>
+                         <p className="text-sm text-muted-foreground/70">
+               No agents found with the tag &ldquo;{tag}&rdquo;
+             </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium text-muted-foreground">No agents available</h3>
+            <p className="text-sm text-muted-foreground/70">
+              Be the first to create an agent!
+            </p>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
-    <>
-      <h1 className="text-3xl font-bold mb-4 mt-8">Explore Agents</h1> {/* Changed heading and added margin */}
-      {/* Grid container with per-item Suspense for streaming */}
+    <section className="space-y-6">
+      {/* Section header with improved styling */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Explore Agents
+          </h1>
+          <div className="flex-1 h-px bg-border/30" />
+          <span className="text-sm text-muted-foreground/70 font-medium">
+            {totalCount} {totalCount === 1 ? 'agent' : 'agents'}
+          </span>
+        </div>
+        {(searchQuery || tag) && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                         {searchQuery && (
+               <span>Searching for &ldquo;{searchQuery}&rdquo;</span>
+             )}
+             {searchQuery && tag && <span>•</span>}
+             {tag && (
+               <span>Tagged with &ldquo;{tag}&rdquo;</span>
+             )}
+          </div>
+        )}
+      </div>
+      
+      {/* Grid container with improved spacing and responsive design */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
         {agents.map((agent) => (
           <Suspense key={agent.id} fallback={<AgentItemLoading />}>
-            <AgentCard agent={agent} />
+            <AgentCard 
+              agent={agent} 
+              className="border border-border/30 shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-md"
+            />
           </Suspense>
         ))}
       </div>
-      {/* Render pagination controls */}
-      <PaginationControls totalCount={totalCount} pageSize={pageSize} />
-    </>
+      
+      {/* Pagination controls with better spacing */}
+      <div className="pt-4">
+        <PaginationControls totalCount={totalCount} pageSize={pageSize} />
+      </div>
+    </section>
   );
 }

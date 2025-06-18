@@ -1,6 +1,5 @@
 "use client";
 
-
 import Link from "next/link";
 import type { Agent } from "@/db/schema/agent";
 import {
@@ -35,33 +34,31 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
   const hiddenTagsCount = agent.tags ? Math.max(0, agent.tags.length - MAX_VISIBLE_TAGS) : 0;
 
   return (
-    <Link href={`/agent/${agent.slug}`} className="block">
-      <div className={`group rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:border-border/80 hover:scale-105 ${className}`}>
+    <Link href={`/agent/${agent.slug}`} className="block group">
+      <div className={`rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${className}`}>
         
-   
-
-      <div className="relative aspect-square overflow-hidden rounded-lg group-hover:border-1  border-1 border-amber-500/15 group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-orange-800"> 
-  
-         {/* Agent Image */}
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/20 to-muted/40"> 
+          {/* Agent Image */}
           <AgentImage
             thumbnailUrl={agent.thumbnailUrl}
             agentId={agent.id}
           />
 
+          {/* Visibility badge */}
           {agent.visibility !== 'public' && (
             <div className="absolute bottom-2 right-2">
-              <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
+              <Badge variant="outline" className="bg-background/90 backdrop-blur-sm border-border/50 text-xs">
                 <EyeNoneIcon className="h-3 w-3 mr-1" />
                 {agent.visibility}
               </Badge>
             </div>
           )}
 
-          {/* Add dropdown menu */}
-          <div className="absolute top-2 right-2 transition-opacity duration-200 cursor-pointer"> 
+          {/* Dropdown menu with improved styling */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"> 
             <DropdownMenu>
               <DropdownMenuTrigger 
-                className="p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 transition-colors cursor-pointer"
+                className="p-1.5 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background border border-border/50 transition-all duration-200 hover:shadow-sm"
                 onClick={(e) => e.stopPropagation()}
               >
                 <DotsHorizontalIcon className="h-4 w-4 text-muted-foreground" />
@@ -89,34 +86,37 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
             </DropdownMenu>
           </div>
 
-
+          {/* Subtle overlay on hover */}
+          <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        <div className="py-2 px-1">
-          <h3 className="text-lg font-semibold line-clamp-2 mb-2 text-foreground/90 hover:text-primary transition-colors duration-200">
+        <div className="p-3 space-y-3">
+          <h3 className="text-base font-semibold line-clamp-2 text-foreground group-hover:text-primary transition-colors duration-200">
             {agent.name}
           </h3>
+          
           {agent.description && (
-            <p className="text-sm text-muted-foreground/80 line-clamp-2 mb-3 hover:text-muted-foreground/90 transition-colors duration-200">
+            <p className="text-sm text-muted-foreground/80 line-clamp-2 group-hover:text-muted-foreground transition-colors duration-200">
               {agent.description}
             </p>
           )}
-          {/* Render Tags - MODIFIED to limit visible tags */}
+          
+          {/* Tags with improved styling */}
           {agent.tags && agent.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 items-center"> {/* Added items-center */}
+            <div className="flex flex-wrap gap-1.5 items-center">
               {visibleTags.map((tag) => (
                 <Badge 
                   key={tag.id} 
                   variant="outline" 
-                  className="text-[10px] sm:text-xs font-medium  duration-200"
+                  className="text-[10px] sm:text-xs font-medium border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
                 >
                   {tag.name}
                 </Badge>
               ))}
               {hiddenTagsCount > 0 && (
                 <Badge 
-                  variant="secondary" // Use a slightly different variant for the count
-                  className="text-[10px] sm:text-xs font-medium" // Match text size
+                  variant="secondary"
+                  className="text-[10px] sm:text-xs font-medium bg-muted/50"
                 >
                   +{hiddenTagsCount}
                 </Badge>
