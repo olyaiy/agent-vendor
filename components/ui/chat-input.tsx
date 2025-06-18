@@ -201,6 +201,14 @@ function ChatInputComponent({
     }
   }, [textareaRef]);
 
+  useEffect(() => {
+    if (input === "") {
+      adjustHeight(true);
+    } else {
+      adjustHeight();
+    }
+  }, [input, adjustHeight]);
+
   // Helper function to process files (either from input or paste) - use external if provided
   const processFilesForAttachment = useCallback(async (filesToProcess: File[]) => {
     if (externalProcessFilesForAttachment) {
