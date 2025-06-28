@@ -1,6 +1,5 @@
 'use client'
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { useChat } from '@ai-sdk/react';
+import React, { useRef } from 'react'
 import { ChatInput } from './ui/chat-input';
 import { Messages } from './chat/messages';
 import { MobileAgentHeader } from './chat/MobileAgentHeader';
@@ -8,24 +7,14 @@ import type { UIMessage } from 'ai';
 import type { Agent, Knowledge } from '@/db/schema/agent';
 import type { Tool } from '@/db/schema/tool';
 import { Greeting } from './chat/greeting';
-import { generateUUID } from '@/lib/utils';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
-import { useChatTitleUpdater } from '@/hooks/use-chat-title-updater';
 import { authClient } from '@/lib/auth-client';
-import { modelDetails, type ModelSettings } from '@/lib/models';
-
-interface AgentSpecificModel {
-  agentId: string;
-  modelId: string;
-  role: 'primary' | 'secondary';
-  model: string;
-  description?: string | null;
-  id: string;
-}
+import { useChatManager, type AgentSpecificModel } from '@/hooks/use-chat-manager';
+import { useAttachmentManager } from '@/hooks/use-attachment-manager';
+import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
 
 interface ChatMobileProps {
   chatId: string;
-  agent: Agent & { tags: Array<{ id: string; name: string }> }; // Updated to expect tags
+  agent: Agent & { tags: Array<{ id: string; name: string }> };
   initialMessages?: Array<UIMessage>;
   initialTitle?: string | null;
   knowledgeItems: Knowledge[];
@@ -33,29 +22,8 @@ interface ChatMobileProps {
   assignedTools: Tool[];
 }
 
-const getInitialChatSettings = (modelId: string, agentModels: AgentSpecificModel[]): Record<string, number> => {
-  const selectedModelInfo = agentModels.find(m => m.modelId === modelId);
-  if (selectedModelInfo) {
-    const details = modelDetails[selectedModelInfo.model];
-    const defaultSettings = details?.defaultSettings;
-    if (defaultSettings) {
-      const initialSettings: Record<string, number> = {};
-      for (const key in defaultSettings) {
-        const settingKey = key as keyof ModelSettings;
-        const settingConfig = defaultSettings[settingKey];
-        if (settingConfig) {
-          initialSettings[settingKey] = settingConfig.default;
-        }
-      }
-      return initialSettings;
-    }
-  }
-  return {};
-};
-
-
 export default function ChatMobile({
-  agent, // agent prop now includes tags
+  agent,
   knowledgeItems,
   agentModels,
   chatId,
@@ -64,44 +32,9 @@ export default function ChatMobile({
   assignedTools
 }: ChatMobileProps) {
 
-  const assignedToolNames = assignedTools.map(tool => tool.name);
-
-  const primaryModel = agentModels.find(m => m.role === 'primary');
-  const initialModelId = primaryModel ? primaryModel.modelId : (agentModels.length > 0 ? agentModels[0].modelId : '');
-
-  const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId);
-  const [chatSettings, setChatSettings] = useState<Record<string, number>>(() =>
-    getInitialChatSettings(initialModelId, agentModels)
-  );
-
-  const { handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
-
   const mobileScrollContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (agent?.id) {
-      localStorage.setItem('lastVisitedAgentId', agent.id);
-    }
-  }, [agent?.id]);
-
-  useEffect(() => {
-    setChatSettings(getInitialChatSettings(selectedModelId, agentModels));
-  }, [selectedModelId, agentModels]);
-
-  const handleSettingChange = useCallback((settingName: string, value: number) => {
-    setChatSettings(prev => ({ ...prev, [settingName]: value }));
-  }, []);
-
-  const { data: session } = authClient.useSession();
-  const user = session?.user;
-  const isOwner = agent.creatorId === user?.id;
-
-  const apiSettings = { ...chatSettings };
-  if (apiSettings.maxOutputTokens !== undefined) {
-    apiSettings.maxTokens = apiSettings.maxOutputTokens;
-    delete apiSettings.maxOutputTokens;
-  }
-
+  
+  // Use the chat manager hook for all chat-related state
   const {
     messages,
     setMessages,
@@ -110,41 +43,51 @@ export default function ChatMobile({
     setInput,
     status,
     stop,
-    reload
-  } = useChat({
-    id: chatId,
-    body: {
-      chatId: chatId,
-      agentId: agent.id,
-      systemPrompt: agent.systemPrompt,
-      model: agentModels.find(m => m.modelId === selectedModelId)?.model || '',
-      ...apiSettings,
-      assignedToolNames: assignedToolNames
-    },
+    reload,
+    selectedModelId,
+    setSelectedModelId,
+    chatSettings,
+    handleSettingChange,
+    isWebSearchEnabled
+  } = useChatManager({
+    chatId,
+    agent,
+    agentModels,
+    assignedTools,
     initialMessages,
-    generateId: generateUUID,
-    sendExtraMessageFields: true,
-    onFinish: handleChatFinish,
-    onError: (error) => {
-      console.log('Error from useChat (Mobile):', error);
-      if (error && error.message && (error.message.includes('Unauthorized') || error.message.includes('401'))) {
-        // @ts-expect-error Same type mismatch as in Chat.tsx
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          {
-            id: generateUUID(),
-            role: 'assistant',
-            ui: (
-              <div className="p-4 bg-red-100 border border-red-300 rounded-md text-red-800">
-                <p className="mb-2">Please sign in to chat!</p>
-                <GoogleSignInButton className="w-full" />
-              </div>
-            )
-          }
-        ]);
-      }
+    initialTitle
+  });
+
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const isOwner = agent.creatorId === user?.id;
+
+  // Use the attachment manager hook
+  const attachmentManager = useAttachmentManager({ userId: user?.id || '' });
+
+  // Enhanced submit handler that includes attachment data
+  const handleEnhancedSubmit = React.useCallback((
+    event?: { preventDefault?: (() => void) | undefined; } | undefined, 
+    chatRequestOptions?: ChatRequestOptions | undefined
+  ) => {
+    const { regularAttachments, csvAttachments } = attachmentManager.getAttachmentPayloads();
+    
+    const enhancedOptions = { ...chatRequestOptions };
+    
+    if (regularAttachments.length > 0) {
+      enhancedOptions.experimental_attachments = regularAttachments;
     }
-  })
+    
+    if (csvAttachments.length > 0) {
+      enhancedOptions.body = {
+        ...enhancedOptions.body,
+        csv_attachment_payloads: csvAttachments
+      };
+    }
+    
+    handleSubmit(event, enhancedOptions);
+    attachmentManager.clearAttachments();
+  }, [handleSubmit, attachmentManager]);
 
   // @ts-expect-error There's a version mismatch between UIMessage types
   const messagesProp: UIMessage[] = messages;
@@ -152,7 +95,7 @@ export default function ChatMobile({
   return (
     <div className="flex flex-col h-full px-2">
       <MobileAgentHeader
-        agent={agent} // agent prop now correctly includes tags due to updated ChatMobileProps
+        agent={agent}
         isOwner={isOwner}
         knowledgeItems={knowledgeItems}
         models={agentModels}
@@ -184,19 +127,24 @@ export default function ChatMobile({
         )}
       </div>
 
-      <div className="mt-auto ">
+      <div className="mt-auto">
         <ChatInput
           userId={user?.id || ''}
           chatId={chatId}
           agentSlug={agent.slug || ''}
           input={input}
           setInput={setInput}
-          handleSubmit={handleSubmit}
+          handleSubmit={handleEnhancedSubmit}
           status={status}
           stop={stop}
-          className=" px-2 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
+          className="px-2 bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] dark:shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.5)]"
           isMobile={true}
           minHeight={12}
+          isWebSearchEnabled={isWebSearchEnabled}
+          pendingAttachments={attachmentManager.pendingAttachments}
+          setPendingAttachments={attachmentManager.setPendingAttachments}
+          processFilesForAttachment={attachmentManager.processFilesForAttachment}
+          handleRemoveAttachment={attachmentManager.handleRemoveAttachment}
         />
       </div>
     </div>

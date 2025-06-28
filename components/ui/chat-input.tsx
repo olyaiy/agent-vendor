@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Paperclip, Send, StopCircle, Loader2, CheckCircle2, XCircle, X, UploadCloud } from "lucide-react";
+import { Globe, Paperclip, Send, StopCircle, UploadCloud } from "lucide-react";
 import React, { useState, useEffect, memo, useCallback } from "react"; // Import React, useCallback, memo
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -9,30 +9,18 @@ import { UseChatHelpers } from "@ai-sdk/react"; // Import ChatRequestOptions
 import { toast } from "sonner";
 
 
-import { uploadChatAttachmentAction, deleteChatAttachmentAction } from "@/db/actions/chat-attachment.actions";
+
 import { ChatRequestOptions } from "@ai-sdk/ui-utils";
+import { AttachmentPreview } from "@/components/chat/AttachmentPreview";
+import { 
+  useAttachmentManager, 
+  CHAT_ATTACHMENT_ALLOWED_FILE_TYPES,
+  type PendingAttachment,
+  type AttachmentPayload
+} from "@/hooks/use-attachment-manager";
 
 
-export const CHAT_ATTACHMENT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const CHAT_ATTACHMENT_ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "text/*", "application/pdf", "text/csv"];
 
-// Interface for pending attachments
-export interface PendingAttachment {
-  id: string;
-  file: File;
-  previewUrl: string;
-  status: 'pending' | 'uploading' | 'success' | 'error';
-  errorMessage?: string;
-  uploadedUrl?: string;
-  uploadedName?: string;
-  uploadedContentType?: string;
-}
-
-interface AttachmentPayload { // For chatRequestOptions - REUSED for csv_attachment_payloads
-  url: string;
-  name: string;
-  contentType: string;
-}
 
 // Custom type for the known structure of our part of the request body
 interface CustomChatRequestBody {
@@ -173,12 +161,11 @@ function ChatInputComponent({
   processFilesForAttachment: externalProcessFilesForAttachment,
   handleRemoveAttachment: externalHandleRemoveAttachment
 }: ChatInputProps) {
-  // Use internal state only if external state is not provided
-  const [internalPendingAttachments, setInternalPendingAttachments] = useState<PendingAttachment[]>([]);
+  // Use internal attachment manager if external one is not provided
+  const internalAttachmentManager = useAttachmentManager({ userId });
   
-  // Use either the external or internal state/functions
-  const pendingAttachments = externalPendingAttachments || internalPendingAttachments;
-  const setPendingAttachments = externalSetPendingAttachments || setInternalPendingAttachments;
+  // Use either external or internal attachment management
+  const pendingAttachments = externalPendingAttachments || internalAttachmentManager.pendingAttachments;
   
   const inputRef = React.useRef(input);
   const mobileMinHeight = 40;
@@ -209,61 +196,14 @@ function ChatInputComponent({
     }
   }, [input, adjustHeight]);
 
-  // Helper function to process files (either from input or paste) - use external if provided
-  const processFilesForAttachment = useCallback(async (filesToProcess: File[]) => {
-    if (externalProcessFilesForAttachment) {
-      return externalProcessFilesForAttachment(filesToProcess);
-    }
-    
-    if (pendingAttachments.length + filesToProcess.length > 5) {
-      toast.error("You can attach a maximum of 5 files per message.");
-      return;
-    }
-
-    const newAttachmentsBatch: PendingAttachment[] = [];
-    for (const file of filesToProcess) {
-      if (file.size > CHAT_ATTACHMENT_MAX_FILE_SIZE) {
-        toast.error(`File "${file.name}" is too large. Max size is ${CHAT_ATTACHMENT_MAX_FILE_SIZE / 1024 / 1024}MB.`);
-        continue;
-      }
-      if (!CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.includes(file.type)) {
-        toast.error(`File type for "${file.name}" is not allowed. Allowed types: ${CHAT_ATTACHMENT_ALLOWED_FILE_TYPES.join(', ')}`);
-        continue;
-      }
-      const attachmentId = crypto.randomUUID();
-      const previewUrl = URL.createObjectURL(file);
-      newAttachmentsBatch.push({ id: attachmentId, file, previewUrl, status: 'pending' });
-    }
-
-    if (newAttachmentsBatch.length > 0) {
-      setPendingAttachments(prev => [...prev, ...newAttachmentsBatch]);
-    } else {
-      return;
-    }
-
-    for (const att of newAttachmentsBatch) {
-      setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'uploading' } : pa));
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', att.file);
-      try {
-        const result = await uploadChatAttachmentAction(uploadFormData, userId);
-        if (result.success && result.data) {
-          setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? {
-            ...pa, status: 'success', uploadedUrl: result.data.url,
-            uploadedName: result.data.name, uploadedContentType: result.data.contentType,
-          } : pa));
-        } else {
-          const errorMessage = !result.success && 'error' in result ? result.error : 'Upload failed';
-          setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'error', errorMessage } : pa));
-          toast.error(`Failed to upload ${att.file.name}: ${errorMessage}`);
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
-        setPendingAttachments(prev => prev.map(pa => pa.id === att.id ? { ...pa, status: 'error', errorMessage: 'Network or server error during upload' } : pa));
-        toast.error(`Error uploading ${att.file.name}.`);
-      }
-    }
-  }, [pendingAttachments, userId, setPendingAttachments, externalProcessFilesForAttachment]);
+  const processFilesForAttachment = externalProcessFilesForAttachment || internalAttachmentManager.processFilesForAttachment;
+  const handleRemoveAttachment = externalHandleRemoveAttachment || internalAttachmentManager.handleRemoveAttachment;
+  const clearAttachments = externalSetPendingAttachments ? 
+    () => externalSetPendingAttachments([]) : 
+    internalAttachmentManager.clearAttachments;
+  const getAttachmentPayloads = internalAttachmentManager.getAttachmentPayloads;
+  const hasSuccessfulAttachments = externalPendingAttachments?.some(att => att.status === 'success') || 
+    internalAttachmentManager.hasSuccessfulAttachments;
 
   // Handler for paste events
   const handlePaste = useCallback(async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -327,106 +267,34 @@ function ChatInputComponent({
     if (event.target) event.target.value = '';
   }, [processFilesForAttachment]);
 
-  const handleRemoveAttachment = useCallback(async (attachmentId: string) => {
-    if (externalHandleRemoveAttachment) {
-      return externalHandleRemoveAttachment(attachmentId);
-    }
-    
-    const attachmentToRemove = pendingAttachments.find(att => att.id === attachmentId);
-
-    // Optimistically remove from UI and revoke blob URL
-    setPendingAttachments(prev => prev.filter(att => att.id !== attachmentId));
-    if (attachmentToRemove && attachmentToRemove.previewUrl && attachmentToRemove.previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(attachmentToRemove.previewUrl);
-    }
-
-    // If the attachment was successfully uploaded, attempt to delete from R2
-    if (attachmentToRemove && attachmentToRemove.status === 'success' && attachmentToRemove.uploadedUrl) {
-      const maxRetries = 3;
-      let attempt = 0;
-      let deletedFromR2 = false;
-
-      while (attempt < maxRetries && !deletedFromR2) {
-        attempt++;
-        try {
-          const result = await deleteChatAttachmentAction(attachmentToRemove.uploadedUrl, userId);
-          if (result.success) {
-            deletedFromR2 = true;
-            // Optionally, show a success toast or log
-            // console.log(`Successfully deleted ${attachmentToRemove.file.name} from storage.`);
-          } else {
-            if (attempt >= maxRetries) {
-              toast.error(`Failed to delete ${attachmentToRemove.file.name} from storage: ${result.error}`);
-            } else {
-              // Wait a bit before retrying
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff could be used here
-            }
-          }
-        } catch (error) {
-          console.error("Error calling deleteChatAttachmentAction:", error);
-          if (attempt >= maxRetries) {
-            toast.error(`Error deleting ${attachmentToRemove.file.name} from storage.`);
-          } else {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
-        }
-      }
-    }
-  }, [pendingAttachments, setPendingAttachments, userId, externalHandleRemoveAttachment]);
-
   const handleInternalSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
 
-    const successfulAttachments = pendingAttachments.filter(att => att.status === 'success' && att.uploadedUrl);
+    const { regularAttachments, csvAttachments } = getAttachmentPayloads();
 
-    const attachmentsForSdk = successfulAttachments
-      .filter(att => att.uploadedContentType !== 'text/csv')
-      .map(att => ({
-        url: att.uploadedUrl!,
-        name: att.uploadedName || att.file.name,
-        contentType: att.uploadedContentType || att.file.type,
-      }));
-
-    const csvAttachmentPayloads: AttachmentPayload[] = successfulAttachments
-      .filter(att => att.uploadedContentType === 'text/csv')
-      .map(att => ({
-        url: att.uploadedUrl!,
-        name: att.uploadedName || att.file.name,
-        contentType: att.uploadedContentType || att.file.type,
-      }));
-
-    if (inputRef.current.trim() || attachmentsForSdk.length > 0 || csvAttachmentPayloads.length > 0) {
+    if (inputRef.current.trim() || regularAttachments.length > 0 || csvAttachments.length > 0) {
       window.history.replaceState({}, '', `/agent/${agentSlug}/${chatId}`);
       
       const chatRequestOptions: ChatRequestOptions = {};
 
-      if (attachmentsForSdk.length > 0) {
-        chatRequestOptions.experimental_attachments = attachmentsForSdk;
+      if (regularAttachments.length > 0) {
+        chatRequestOptions.experimental_attachments = regularAttachments;
       }
 
       const customBodyParts: CustomChatRequestBody = {};
-      if (csvAttachmentPayloads.length > 0) {
-        customBodyParts.csv_attachment_payloads = csvAttachmentPayloads;
+      if (csvAttachments.length > 0) {
+        customBodyParts.csv_attachment_payloads = csvAttachments;
       }
 
-      // If there are any custom body parts, assign them to chatRequestOptions.body.
-      // This works because CustomChatRequestBody is compatible with Record<string, any>.
       if (Object.keys(customBodyParts).length > 0) {
         chatRequestOptions.body = customBodyParts;
       }
       
       handleSubmit(e as React.FormEvent<HTMLFormElement> | undefined, chatRequestOptions);
-      setPendingAttachments(prev => {
-        prev.forEach(att => {
-          if (att.previewUrl && att.previewUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(att.previewUrl);
-          }
-        });
-        return [];
-      });
+      clearAttachments();
       setTimeout(() => { if (textareaRef.current) textareaRef.current.focus(); }, 0);
     }
-  }, [handleSubmit, textareaRef, agentSlug, chatId, pendingAttachments, inputRef, setPendingAttachments]);
+  }, [handleSubmit, textareaRef, agentSlug, chatId, inputRef, clearAttachments, getAttachmentPayloads]);
 
   useEffect(() => {
     return () => {
@@ -439,7 +307,7 @@ function ChatInputComponent({
   }, [pendingAttachments]);
 
   const isStreaming = status === 'submitted' || status === 'streaming';
-  const canSubmit = status === 'ready' && (!!input.trim() || pendingAttachments.some(att => att.status === 'success'));
+  const canSubmit = status === 'ready' && (!!input.trim() || hasSuccessfulAttachments);
 
   const handleSendStopClick = useCallback(() => {
     if (isStreaming) stop?.();
@@ -492,52 +360,10 @@ function ChatInputComponent({
             />
           </div>
           
-          {pendingAttachments.length > 0 && (
-            <div className="p-2 border-t border-black/10 dark:border-white/10">
-              <div className="flex flex-wrap gap-2">
-                {pendingAttachments.map((att) => (
-                  <div key={att.id} className="relative group w-20 h-20 border rounded-md overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    {att.previewUrl.startsWith('blob:') && (att.file.type.startsWith('image/')) ? (
-                      <img src={att.previewUrl} alt={att.file.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-1">
-                        <Paperclip className="w-6 h-6 text-gray-500 dark:text-gray-400 mb-1 flex-shrink-0" />
-                        <span className="text-xs text-center text-gray-700 dark:text-gray-300 truncate w-full px-1" title={att.file.name}>
-                          {att.file.name}
-                        </span>
-                      </div>
-                    )}
-                    <div className={cn(
-                        "absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity",
-                        att.status === 'uploading' ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                    )}>
-                      {att.status === 'uploading' && <Loader2 className="w-6 h-6 text-white animate-spin" />}
-                      {att.status === 'success' && <CheckCircle2 className="w-6 h-6 text-green-400" />}
-                      {att.status === 'error' && <XCircle className="w-6 h-6 text-red-400" />}
-                    </div>
-                    {att.status !== 'uploading' && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAttachment(att.id)}
-                        className="absolute top-0.5 right-0.5 bg-black/70 hover:bg-black/90 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity z-10 cursor-pointer border border-white/20"
-                        aria-label="Remove attachment"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    )}
-                    {att.status === 'error' && att.errorMessage && (
-                      <div
-                        className="absolute bottom-0 left-0 right-0 bg-red-600/90 text-white text-[10px] p-0.5 text-center truncate"
-                        title={att.errorMessage}
-                      >
-                        {att.errorMessage.length > 20 ? att.errorMessage.substring(0,18) + '...' : att.errorMessage}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <AttachmentPreview 
+            attachments={pendingAttachments}
+            onRemoveAttachment={handleRemoveAttachment}
+          />
 
           <div className="px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -586,3 +412,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     // if they're properly memoized by the parent component.
   );
 });
+
+// Re-export types for external use
+export type { PendingAttachment, AttachmentPayload } from '@/hooks/use-attachment-manager';
+export { CHAT_ATTACHMENT_MAX_FILE_SIZE, CHAT_ATTACHMENT_ALLOWED_FILE_TYPES } from '@/hooks/use-attachment-manager';

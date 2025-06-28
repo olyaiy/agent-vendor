@@ -15,7 +15,7 @@ import type { Attachment, UIMessage } from "ai";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from 'next';
-import type { AgentSpecificModel } from '@/components/chat'; // Import the specific model type
+import type { AgentSpecificModel } from '@/hooks/use-chat-manager';
 
 // Standardize Params type to use agent-slug
 type PageParams = {
