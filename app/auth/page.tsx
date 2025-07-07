@@ -66,7 +66,7 @@ export default function AuthPage() {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="text-white/70 text-center text-sm max-w-xs px-6"
           >
-            Join our waitlist to be notified when Agent Vendor launches
+            Due to high demand, we're onboarding users in batches. Join our waitlist and we'll invite you weekly as we scale our platform.
           </motion.p>
         </div>
 
