@@ -245,8 +245,8 @@ export async function selectRecentAgents(
     whereConditions.push(
         or(
             eq(agent.visibility, 'public'),
-            userId ? eq(agent.creatorId, userId) : sql`false` // If no userId, this part is always false
-        )
+            userId ? eq(agent.creatorId, userId) : sql`false`
+        ) as SQL
     );
     // --- End Visibility/Ownership Filter ---
 
@@ -269,10 +269,10 @@ export async function selectRecentAgents(
 
         whereConditions.push(
             or(
-                ilike(agent.name, searchPattern),
-                ilike(agent.description, searchPattern),
-                sql`${agent.id} in ${tagSearchSubQuery}` // Check if agent ID is in the result of the tag search
-            )
+                ilike(agent.name, searchPattern) as SQL,
+                ilike(agent.description, searchPattern) as SQL,
+                sql`${agent.id} in ${tagSearchSubQuery}`
+            ) as SQL
         );
     }
 
@@ -344,7 +344,7 @@ export async function selectPopularAgents(
         or(
             eq(agent.visibility, 'public'),
             userId ? eq(agent.creatorId, userId) : sql`false`
-        )
+        ) as SQL
     );
 
     if (tagName) {
@@ -364,10 +364,10 @@ export async function selectPopularAgents(
 
         whereConditions.push(
             or(
-                ilike(agent.name, searchPattern),
-                ilike(agent.description, searchPattern),
+                ilike(agent.name, searchPattern) as SQL,
+                ilike(agent.description, searchPattern) as SQL,
                 sql`${agent.id} in ${tagSearchSubQuery}`
-            )
+            ) as SQL
         );
     }
 
@@ -410,7 +410,7 @@ export async function countAgents(tagName?: string, searchQuery?: string, userId
         or(
             eq(agent.visibility, 'public'),
             userId ? eq(agent.creatorId, userId) : sql`false`
-        )
+        ) as SQL
     );
     // --- End Visibility/Ownership Filter ---
 
@@ -429,10 +429,10 @@ export async function countAgents(tagName?: string, searchQuery?: string, userId
             .where(ilike(tags.name, searchPattern));
         whereConditions.push(
             or(
-                ilike(agent.name, searchPattern),
-                ilike(agent.description, searchPattern),
+                ilike(agent.name, searchPattern) as SQL,
+                ilike(agent.description, searchPattern) as SQL,
                 sql`${agent.id} in ${tagSearchSubQuery}`
-            )
+            ) as SQL
         );
     }
 
