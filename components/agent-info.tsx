@@ -4,7 +4,7 @@
 import { memo } from 'react';
 import { Agent, Knowledge } from '@/db/schema/agent';
 import { Tool } from '@/db/schema/tool'; // Import Tool type
-import type { AgentSpecificModel } from '@/components/chat';
+import type { AgentSpecificModel } from '@/hooks/use-chat-manager';
 
 import { AgentHeader } from './agent-header';
 import { BehaviourSection } from './behaviour-section';

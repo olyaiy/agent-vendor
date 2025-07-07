@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { AgentImage } from '@/components/agent-image';
 import { Agent } from '@/db/schema/agent';
 import { ModelSelect } from '@/components/model-select'; // Import ModelSelect
-import type { AgentSpecificModel } from '@/components/chat'; // Import the correct model type
+import type { AgentSpecificModel } from '@/hooks/use-chat-manager'; // Import the correct model type
 import type { ModelInfo } from "@/app/agent/create/create-agent-form"; // Keep ModelInfo for mapping
 
 interface AgentHeaderProps {

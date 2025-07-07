@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import { selectAgentBySlug, selectAgentKnowledgeBySlug, selectAgentModelsBySlug, selectAgentTagsBySlug } from "@/db/repository";
 import { getToolsForAgentAction } from '@/db/actions/agent-relations.actions';
 import type { Tool } from '@/db/schema/tool';
-import type { AgentSpecificModel } from '@/components/chat';
+import type { AgentSpecificModel } from '@/hooks/use-chat-manager';
 import { auth } from "@/lib/auth"; // Import auth from better-auth
 
 type Params = { "agent-slug": string };

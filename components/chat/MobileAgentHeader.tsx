@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/s
 import { AgentInfo } from '@/components/agent-info';
 import { ChevronLeft, Settings, InfoIcon } from 'lucide-react'; // Changed Info to InfoIcon for clarity if needed, or use Info
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'; // Import Tooltip components
-import type { AgentSpecificModel } from '@/components/chat';
+import type { AgentSpecificModel } from '@/hooks/use-chat-manager';
 
 export interface MobileAgentHeaderProps {
   // Agent prop now expects tags to be included, consistent with AgentInfoProps
