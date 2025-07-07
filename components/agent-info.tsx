@@ -4,7 +4,7 @@
 import { memo } from 'react';
 import { Agent, Knowledge } from '@/db/schema/agent';
 import { Tool } from '@/db/schema/tool'; // Import Tool type
-import type { AgentSpecificModel } from '@/components/chat';
+
 
 import { AgentHeader } from './agent-header';
 import { BehaviourSection } from './behaviour-section';
@@ -21,6 +21,7 @@ import { BookOpen, ChevronRight } from 'lucide-react';
 
 import { KnowledgeItemDisplay } from './knowledge-item-display';
 import { modelDetails } from '@/lib/models';
+import { AgentSpecificModel } from '@/hooks/use-chat-manager';
 
 interface AgentInfoProps {
   agent: Agent & { modelName?: string; tags: Array<{ id: string; name: string }> };

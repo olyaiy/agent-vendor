@@ -60,15 +60,6 @@ const PurePreviewMessage = ({
         )}
       >
 
-        {/* Assistant Avatar */}
-        {/* {message.role === 'assistant' && (
-          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-background">
-            <div className="translate-y-px">
-              <SparklesIcon size={14} />
-            </div>
-          </div>
-        )} */}
-
         <div className="flex flex-col gap-2  w-full group-data-[role=user]/message:items-end ml-auto">
           {/* Display attachments for user messages */}
           {message.role === 'user' && message.experimental_attachments && message.experimental_attachments.length > 0 && (
@@ -149,6 +140,8 @@ const PurePreviewMessage = ({
                     />
                   );
                 }
+
+                // Text Message
                 if (type === 'text') {
                   if (mode === 'view') {
                     return (
@@ -174,6 +167,7 @@ const PurePreviewMessage = ({
                     );
                   }
 
+                  // Message Editor Mode
                   if (mode === 'edit') {
                     return (
                       <div key={key} className="flex flex-row gap-2 items-start">
@@ -190,6 +184,8 @@ const PurePreviewMessage = ({
                     );
                   }
                 }
+
+                // Tool Invocation
                 if (type === 'tool-invocation') {
                   const { toolInvocation } = part;
                   const { toolCallId } = toolInvocation;
@@ -242,6 +238,7 @@ const PurePreviewMessage = ({
             </>
           )}
 
+          {/* Message Actions */}
           {!isReadonly && (
             <MessageActions
               key={`action-${message.id}`}
