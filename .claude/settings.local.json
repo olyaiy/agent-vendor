@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(pnpm db:generate:*)",
-      "Bash(pnpm db:push:*)"
+      "Bash(pnpm db:push:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
