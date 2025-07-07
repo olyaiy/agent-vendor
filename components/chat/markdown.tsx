@@ -10,7 +10,6 @@ import { toHtml } from 'hast-util-to-html';
 import { CopyButton } from '../ui/copy-button';
 import { DownloadIcon } from '../utils/icons';
 import { Button } from '../ui/button';
-import mermaid from 'mermaid';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 interface MarkdownCodeProps extends React.HTMLAttributes<HTMLElement> {
@@ -29,14 +28,7 @@ const AnimatedText: React.FC<{ children: string; className?: string }> = ({ chil
   return <span className={className}>{children}</span>;
 };
 
-// Initialize Mermaid
-mermaid.initialize({
-  startOnLoad: true,
-  theme: 'default',
-  securityLevel: 'loose',
-});
-
-// Mermaid diagram component
+// Mermaid diagram component with dynamic import
 const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,6 +53,16 @@ const MermaidDiagram: React.FC<{ chart: string }> = ({ chart }) => {
       setIsRendering(true);
       
       try {
+        // Dynamic import of mermaid to reduce bundle size
+        const mermaid = (await import('mermaid')).default;
+        
+        // Initialize mermaid if not already done
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'default',
+          securityLevel: 'loose',
+        });
+        
         const { svg: renderedSvg } = await mermaid.render(`mermaid-${Date.now()}`, chart.trim());
         setSvg(renderedSvg);
       } catch (error) {

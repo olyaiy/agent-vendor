@@ -3,7 +3,6 @@
 import { z } from 'zod'
 import { db } from '@/db'
 import { waitlist } from '@/db/schema/waitlist'
-import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 
 const waitlistSchema = z.object({
@@ -85,15 +84,16 @@ export async function joinWaitlist(formData: FormData) {
     })
 
     return { success: true }
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const pgError = err as { code?: string; constraint?: string }
     // Handle duplicate email error
-    if (error.code === '23505' && error.constraint === 'waitlist_email_unique') {
+    if (pgError.code === '23505' && pgError.constraint === 'waitlist_email_unique') {
       return {
         error: 'This email is already on our waitlist. We\'ll be in touch soon!',
       }
     }
     
-    console.error('Waitlist signup error:', error)
+    console.error('Waitlist signup error:', err)
     return {
       error: 'Something went wrong. Please try again.',
     }

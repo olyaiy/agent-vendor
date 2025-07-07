@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { joinWaitlist } from '@/app/actions/waitlist'
 import { useFormStatus } from 'react-dom'
-import { Loader2, CheckCircle, MapPin } from 'lucide-react'
+import { Loader2, CheckCircle } from 'lucide-react'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -31,7 +31,7 @@ function SubmitButton() {
 }
 
 export default function WaitlistForm() {
-  const [result, setResult] = useState<{ success?: boolean; error?: string; fieldErrors?: any } | null>(null)
+  const [result, setResult] = useState<{ success?: boolean; error?: string; fieldErrors?: Record<string, string[]> } | null>(null)
   const [detectedLocation, setDetectedLocation] = useState<{ city: string; country: string } | null>(null)
 
   useEffect(() => {
@@ -94,9 +94,9 @@ export default function WaitlistForm() {
           <CheckCircle className="h-16 w-16 text-green-500" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-white">You're on the list!</h3>
+          <h3 className="text-xl font-semibold text-white">You&apos;re on the list!</h3>
           <p className="text-white/70 text-sm">
-            Thanks for joining our waitlist. We'll notify you when Agent Vendor is ready for you.
+            Thanks for joining our waitlist. We&apos;ll notify you when Agent Vendor is ready for you.
           </p>
         </div>
       </div>
