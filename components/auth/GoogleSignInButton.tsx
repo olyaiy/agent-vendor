@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react'; // Import useState
-import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react'; // Import a loading icon
+import { useRouter } from 'next/navigation';
 
 // SVG component for the Google Icon
 const GoogleIcon = () => (
@@ -17,15 +17,15 @@ const GoogleIcon = () => (
 
 export default function GoogleSignInButton({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const router = useRouter();
 
   const handleSignIn = async () => {
     setIsLoading(true); // Set loading true
     try {
-      // The signIn function from better-auth handles the redirect
-      await signIn();
+      // Temporarily redirect to waitlist instead of signing in
+      router.push('/auth');
     } catch (error) {
-      console.error('Sign in failed:', error);
-      // Optionally, display an error message to the user
+      console.error('Redirect failed:', error);
     } finally {
       setIsLoading(false); // Set loading false regardless of success/error
     }
@@ -48,7 +48,7 @@ export default function GoogleSignInButton({ className }: { className?: string }
           )}
         </div>
         <span className="ml-6 group-hover:text-gray-800">
-          {isLoading ? 'Signing in...' : 'Sign in with Google'} {/* Change text when loading */}
+          {isLoading ? 'Redirecting...' : 'Sign in with Google'} {/* Change text when loading */}
         </span>
       </Button>
     </div>

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm db:generate:*)",
+      "Bash(pnpm db:push:*)"
+    ],
+    "deny": []
+  }
+}

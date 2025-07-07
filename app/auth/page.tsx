@@ -1,6 +1,6 @@
 'use client'; // Required for client-side interactions like onClick
 
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton'; // Import the new button component
+import WaitlistForm from '@/components/auth/WaitlistForm';
 import { SplashCursor } from '@/components/ui/splash-cursor';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -66,42 +66,18 @@ export default function AuthPage() {
             transition={{ duration: 0.5, delay: 0.5 }}
             className="text-white/70 text-center text-sm max-w-xs px-6"
           >
-            Sign in to store your chat history and access AI agents for your tasks
+            Join our waitlist to be notified when Agent Vendor launches
           </motion.p>
         </div>
 
-        {/* Sign-in section */}
+        {/* Waitlist section */}
         <div className="p-8 pt-4">
           <motion.div
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
           >
-            <GoogleSignInButton className="w-full mb-6" />
-          </motion.div>
-          
-          {/* Divider */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="relative flex items-center justify-center my-4"
-          >
-            <div className="border-t border-white/10 w-full"></div>
-            <span className="bg-transparent px-3 text-xs text-white/40">OR</span>
-            <div className="border-t border-white/10 w-full"></div>
-          </motion.div>
-          
-          {/* Coming soon section */}
-          <motion.div 
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            className="mt-2 p-3 rounded-xl bg-white/5 border border-white/5 text-center"
-          >
-            <p className="text-white/60 text-xs">
-              More sign-in options coming soon
-            </p>
+            <WaitlistForm />
           </motion.div>
           
           {/* Terms and privacy */}
@@ -112,7 +88,7 @@ export default function AuthPage() {
             className="mt-8 text-center"
           >
             <p className="text-white/50 text-xs">
-              By signing in, you agree to our{' '}
+              By joining our waitlist, you agree to our{' '}
               <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
                 Terms of Service
               </Link>{' '}

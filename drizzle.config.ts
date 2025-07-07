@@ -12,6 +12,7 @@ export default defineConfig({
      './db/schema/user_credits.ts',
      './db/schema/transactions.ts',
      './db/schema/tool.ts',
+     './db/schema/waitlist.ts',
      ], 
   dialect: 'postgresql',
   dbCredentials: {
