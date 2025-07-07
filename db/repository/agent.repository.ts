@@ -1,6 +1,7 @@
-import { eq, desc, and, sql, or, ilike, count, getTableColumns } from 'drizzle-orm';
+import { eq, desc, and, sql, or, ilike, count, getTableColumns, type SQL } from 'drizzle-orm';
 
 import { Agent, agent, agentModels, agentTags, Knowledge, models, Tag, tags } from '../schema/agent';
+import { chat, message } from '../schema/chat';
 import { db } from '..';
 
 import { selectTagsByAgentId } from './tag.repository';
@@ -299,6 +300,98 @@ export async function selectRecentAgents(
 
     // Cast needed because select includes aggregated 'tags'
     return await finalQuery as RecentAgentResult[];
+}
+
+export type PopularAgentResult = RecentAgentResult & { messageCount: number };
+
+/**
+ * Selects agents ordered by total message count (popularity).
+ * Filtering options mirror selectRecentAgents.
+ */
+export async function selectPopularAgents(
+    tagName?: string,
+    searchQuery?: string,
+    limit: number = 20,
+    offset: number = 0,
+    userId?: string
+): Promise<PopularAgentResult[]> {
+    const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+    const messageCount = sql<number>`count(${message.id})`.as('message_count');
+
+    const queryBuilder = db
+        .select({
+            id: agent.id,
+            name: agent.name,
+            description: agent.description,
+            thumbnailUrl: agent.thumbnailUrl,
+            slug: agent.slug,
+            avatarUrl: agent.avatarUrl,
+            creatorId: agent.creatorId,
+            tags: tagsAgg,
+            createdAt: agent.createdAt,
+            visibility: agent.visibility,
+            messageCount
+        })
+        .from(agent)
+        .leftJoin(agentTags, eq(agent.id, agentTags.agentId))
+        .leftJoin(tags, eq(agentTags.tagId, tags.id))
+        .leftJoin(chat, eq(chat.agentId, agent.id))
+        .leftJoin(message, eq(message.chatId, chat.id));
+
+    const whereConditions = [] as SQL[];
+
+    whereConditions.push(
+        or(
+            eq(agent.visibility, 'public'),
+            userId ? eq(agent.creatorId, userId) : sql`false`
+        )
+    );
+
+    if (tagName) {
+        const subQuery = db.select({ agentId: agentTags.agentId })
+            .from(agentTags)
+            .innerJoin(tags, eq(agentTags.tagId, tags.id))
+            .where(eq(tags.name, tagName));
+        whereConditions.push(sql`${agent.id} in ${subQuery}`);
+    }
+
+    if (searchQuery) {
+        const searchPattern = `%${searchQuery}%`;
+        const tagSearchSubQuery = db.select({ agentId: agentTags.agentId })
+            .from(agentTags)
+            .innerJoin(tags, eq(agentTags.tagId, tags.id))
+            .where(ilike(tags.name, searchPattern));
+
+        whereConditions.push(
+            or(
+                ilike(agent.name, searchPattern),
+                ilike(agent.description, searchPattern),
+                sql`${agent.id} in ${tagSearchSubQuery}`
+            )
+        );
+    }
+
+    let finalQuery = queryBuilder.$dynamic();
+    if (whereConditions.length > 0) {
+        finalQuery = finalQuery.where(and(...whereConditions));
+    }
+
+    finalQuery = finalQuery.groupBy(
+        agent.id,
+        agent.name,
+        agent.description,
+        agent.thumbnailUrl,
+        agent.slug,
+        agent.avatarUrl,
+        agent.creatorId,
+        agent.createdAt,
+        agent.visibility
+    )
+    .orderBy(desc(messageCount))
+    .limit(limit)
+    .offset(offset);
+
+    return await finalQuery as PopularAgentResult[];
 }
 
 /**
