@@ -10,6 +10,7 @@ import { z } from "zod"; // Import Zod for validation
 import {
   insertAgent,
   selectRecentAgents,
+  selectPopularAgents,
   updateAgent as updateAgentRepo,
   countAgents,
   selectAgentsByCreatorId,
@@ -156,6 +157,7 @@ type AgentWithTagsAndDate = {
     tags: { id: string; name: string }[];
     createdAt: Date;
     visibility: string;
+    messageCount?: number;
 };
 
 /**
@@ -211,6 +213,49 @@ export async function getRecentAgents(
         return { success: true, data: { agents, totalCount } };
     } catch (error) {
         console.error("Failed to fetch agents:", error);
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+export async function getPopularAgents(
+    tagName?: string,
+    searchQuery?: string,
+    page: number = 1,
+    pageSize: number = 20
+): Promise<ActionResult<{ agents: AgentWithTagsAndDate[]; totalCount: number }>> {
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        const userId = session?.user?.id;
+
+        const offset = (page - 1) * pageSize;
+        const limit = pageSize;
+
+        if (page < 1 || pageSize < 1 || !Number.isInteger(page) || !Number.isInteger(pageSize)) {
+            return { success: false, error: "Invalid pagination parameters." };
+        }
+
+        const agents = await selectPopularAgents(tagName, searchQuery, limit, offset, userId);
+        const totalCount = await countAgents(tagName, searchQuery, userId);
+
+        if (searchQuery && agents.length > 0) {
+            const queryLower = searchQuery.toLowerCase();
+            const getRank = (agent: AgentWithTagsAndDate): number => {
+                if (agent.name.toLowerCase().includes(queryLower)) return 1;
+                if (agent.tags.some(tag => tag.name.toLowerCase().includes(queryLower))) return 2;
+                if (agent.description?.toLowerCase().includes(queryLower)) return 3;
+                return 4;
+            };
+            agents.sort((a, b) => {
+                const rankA = getRank(a);
+                const rankB = getRank(b);
+                if (rankA !== rankB) return rankA - rankB;
+                return b.messageCount - a.messageCount;
+            });
+        }
+
+        return { success: true, data: { agents, totalCount } };
+    } catch (error) {
+        console.error("Failed to fetch popular agents:", error);
         return { success: false, error: (error as Error).message };
     }
 }

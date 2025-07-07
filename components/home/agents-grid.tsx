@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { getRecentAgents } from '@/db/actions/agent.actions';
+import { getRecentAgents, getPopularAgents } from '@/db/actions/agent.actions';
 import { AgentCard } from "@/components/agent-card";
 import { PaginationControls } from '@/components/agents/pagination-controls';
 
@@ -58,6 +58,7 @@ type AgentsGridProps = {
   searchQuery?: string;
   page: number;
   pageSize: number;
+  sortBy?: 'recent' | 'popular';
   // We will fetch data inside this component, so we don't need to pass agents and totalCount directly
   // agents: Array<{
   //   id: string;
@@ -77,9 +78,9 @@ type AgentsGridProps = {
  * Server component responsible for fetching, filtering, and displaying the main grid of agents with pagination.
  * Uses Suspense for streaming.
  */
-export async function AgentsGrid({ tag, searchQuery, page, pageSize }: AgentsGridProps) {
-  // Fetch paginated data using the updated action
-  const result = await getRecentAgents(tag, searchQuery, page, pageSize);
+export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'popular' }: AgentsGridProps) {
+  const fetchFn = sortBy === 'recent' ? getRecentAgents : getPopularAgents;
+  const result = await fetchFn(tag, searchQuery, page, pageSize);
 
   if (!result.success) {
     return (
