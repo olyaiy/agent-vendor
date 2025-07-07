@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { db } from '@/db'
 import { waitlist } from '@/db/schema/waitlist'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 
 const waitlistSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -15,6 +16,34 @@ const waitlistSchema = z.object({
 })
 
 export type WaitlistFormData = z.infer<typeof waitlistSchema>
+
+async function getLocationFromIP() {
+  try {
+    const headersList = await headers()
+    const forwardedFor = headersList.get('x-forwarded-for')
+    const realIP = headersList.get('x-real-ip')
+    const ip = forwardedFor?.split(',')[0] || realIP || 'unknown'
+    
+    // Skip location detection for localhost/private IPs
+    if (ip === 'unknown' || ip.startsWith('127.') || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      return null
+    }
+
+    // Use a free IP geolocation service
+    const response = await fetch(`https://ipapi.co/${ip}/json/`)
+    const data = await response.json()
+    
+    if (data.city && data.country_name) {
+      return {
+        city: data.city,
+        country: data.country_name
+      }
+    }
+  } catch (error) {
+    console.log('IP geolocation failed:', error)
+  }
+  return null
+}
 
 export async function joinWaitlist(formData: FormData) {
   const result = waitlistSchema.safeParse({
@@ -33,14 +62,26 @@ export async function joinWaitlist(formData: FormData) {
     }
   }
 
+  // Get location from IP if not provided
+  let finalCity = result.data.city
+  let finalCountry = result.data.country
+  
+  if (!finalCity || !finalCountry) {
+    const ipLocation = await getLocationFromIP()
+    if (ipLocation) {
+      finalCity = finalCity || ipLocation.city
+      finalCountry = finalCountry || ipLocation.country
+    }
+  }
+
   try {
     await db.insert(waitlist).values({
       email: result.data.email,
       firstName: result.data.firstName,
       lastName: result.data.lastName,
       referralSource: result.data.referralSource || null,
-      city: result.data.city || null,
-      country: result.data.country || null,
+      city: finalCity || null,
+      country: finalCountry || null,
     })
 
     return { success: true }

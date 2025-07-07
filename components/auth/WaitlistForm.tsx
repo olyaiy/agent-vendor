@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { joinWaitlist } from '@/app/actions/waitlist'
 import { useFormStatus } from 'react-dom'
-import { Loader2, CheckCircle } from 'lucide-react'
+import { Loader2, CheckCircle, MapPin } from 'lucide-react'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -32,8 +32,57 @@ function SubmitButton() {
 
 export default function WaitlistForm() {
   const [result, setResult] = useState<{ success?: boolean; error?: string; fieldErrors?: any } | null>(null)
+  const [detectedLocation, setDetectedLocation] = useState<{ city: string; country: string } | null>(null)
+
+  useEffect(() => {
+    detectLocation()
+  }, [])
+
+  const detectLocation = async () => {
+    try {
+      // Silently try browser geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              // Use a free geocoding service to get city/country from coordinates
+              const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+              )
+              const data = await response.json()
+              
+              if (data.city && data.countryName) {
+                setDetectedLocation({
+                  city: data.city,
+                  country: data.countryName
+                })
+              }
+            } catch (error) {
+              console.log('Geocoding failed:', error)
+            }
+          },
+          (error) => {
+            console.log('Geolocation failed:', error)
+          },
+          { timeout: 10000 }
+        )
+      }
+    } catch (error) {
+      console.log('Location detection failed:', error)
+    }
+  }
 
   async function handleSubmit(formData: FormData) {
+    // Only add detected location if fields are empty
+    if (detectedLocation) {
+      if (!formData.get('city') && detectedLocation.city) {
+        formData.set('city', detectedLocation.city)
+      }
+      if (!formData.get('country') && detectedLocation.country) {
+        formData.set('country', detectedLocation.country)
+      }
+    }
+    
     const result = await joinWaitlist(formData)
     setResult(result)
   }
@@ -138,6 +187,7 @@ export default function WaitlistForm() {
           />
         </div>
       </div>
+
 
       {result?.error && (
         <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
