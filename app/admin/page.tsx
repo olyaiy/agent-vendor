@@ -2,6 +2,8 @@ import { fetchUsersWithDetails, type ListUsersWithDetailsResponse } from './admi
 import { getAllTagsAction } from '@/db/actions/tag.actions'; // Import tag and model actions
 import { getAllModelsAction } from '@/db/actions';
 import { getAllToolsAction } from '@/db/actions/tool.actions'; // Import tool action
+import { getAllWaitlistEntriesAction } from '@/db/actions/waitlist.actions'; // Import waitlist action
+import WaitlistManagement from '@/components/admin/waitlist-management'; // Import Waitlist component
 import UserTable from './user-table';
 import TagManagement from '@/components/admin/tag-management'; // Import Tag component
 import ModelManagement from '@/components/admin/model-management'; // Import Model component
@@ -60,18 +62,21 @@ export default async function AdminPage() {
   let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
   let initialModelsData: Awaited<ReturnType<typeof getAllModelsAction>> | null = null;
   let initialToolsData: Awaited<ReturnType<typeof getAllToolsAction>> | null = null; // Added for tools
+  let initialWaitlistData: Awaited<ReturnType<typeof getAllWaitlistEntriesAction>> | null = null; // Added for waitlist
 
   let fetchUsersError = false;
   let fetchTagsError = false;
   let fetchModelsError = false;
   let fetchToolsError = false; // Added for tools
+  let fetchWaitlistError = false; // Added for waitlist
 
   // Use Promise.allSettled for concurrent fetching and individual error handling
   const results = await Promise.allSettled([
       fetchUsersWithDetails({ limit: 25 }), // Call the new action
       getAllTagsAction(),
       getAllModelsAction(), // Fetch models concurrently
-      getAllToolsAction() // Fetch tools concurrently
+      getAllToolsAction(), // Fetch tools concurrently
+      getAllWaitlistEntriesAction(), // Fetch waitlist concurrently
   ]);
 
   // Process Users result
@@ -121,6 +126,18 @@ export default async function AdminPage() {
       fetchToolsError = true;
   }
 
+  // Process Waitlist result (index 4)
+  if (results[4].status === 'fulfilled') {
+    initialWaitlistData = results[4].value;
+    if (!initialWaitlistData.success) {
+        console.error("Failed to load waitlist:", initialWaitlistData.error);
+        fetchWaitlistError = true;
+    }
+  } else {
+      console.error("Failed to load waitlist for admin page:", results[4].reason);
+      fetchWaitlistError = true;
+  }
+
   const codebaseToolNames = Object.keys(toolRegistry);
 
    // Render LoadingError only for non-auth fetch errors
@@ -137,17 +154,21 @@ export default async function AdminPage() {
   if (fetchToolsError || !initialToolsData?.success) { // Though initialToolsData might be empty if no tools in DB, success should be true
     return <LoadingError resourceName="Tools" />;
   }
+  if (fetchWaitlistError || !initialWaitlistData?.success) {
+    return <LoadingError resourceName="Wait List" />;
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="tags">Tag Management</TabsTrigger>
           <TabsTrigger value="models">Model Management</TabsTrigger>
           <TabsTrigger value="tools">Tool Management</TabsTrigger>
+          <TabsTrigger value="waitlist">Wait List</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -197,6 +218,10 @@ export default async function AdminPage() {
             initialTools={initialToolsData.data || []}
             codebaseToolNames={codebaseToolNames}
           />
+        </TabsContent>
+
+        <TabsContent value="waitlist">
+          <WaitlistManagement initialEntries={initialWaitlistData.data || []} />
         </TabsContent>
 
       </Tabs>
