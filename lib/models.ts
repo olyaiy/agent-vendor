@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai';
+import { openai, createOpenAI } from '@ai-sdk/openai';
 import {
   customProvider,
 } from 'ai';
@@ -13,6 +13,11 @@ import { xai } from '@ai-sdk/xai';
 
 
 export const DEFAULT_CHAT_MODEL: string = 'gpt-4o';
+
+export const openrouter = createOpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  name: 'openrouter',
+});
 
 export const myProvider = customProvider({
   languageModels: {
@@ -82,6 +87,7 @@ export const myProvider = customProvider({
     // xAI Grok Models 
     'grok-2-latest': xai('grok-2-latest'),
     'grok-3': xai('grok-3'),
+    'kimi-k2': openrouter('moonshotai/kimi-k2'),
     'grok-3-mini': xai('grok-3-mini'),
   },
 
@@ -1186,6 +1192,14 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
+    'kimi-k2': {
+    displayName: "Kimi K2",
+    description: "Kimi K2 is a model with a context length of 128k, featuring powerful code and Agent capabilities based on Moe architecture. It has 1T total parameters with 32B activated parameters. In benchmark performance tests across major categories including general knowledge reasoning, programming, mathematics, and Agent capabilities, the K2 model outperforms other mainstream open-source models.",
+    inputCostPerMillion: 0.60,
+    outputCostPerMillion: 2.50,
+    contextWindow: 131_072,
+    defaultSettings: { maxOutputTokens: { default: 4096, min: 0, max: 4096 }, temperature: { default: 0.7, min: 0, max: 2 }, topP: { default: 1, min: 0, max: 1 } }
+  },
 
 
 };
@@ -1251,6 +1265,7 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     // xAI Grok
     'grok-2-latest': xai('grok-2-latest'),
     'grok-3': xai('grok-3'),
+    'kimi-k2': openrouter('moonshotai/kimi-k2'),
     'grok-3-mini': xai('grok-3-mini'),
     // Add other models from myProvider if necessary
   };
