@@ -3,7 +3,8 @@
 import { useState } from 'react'; // Import useState
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react'; // Import a loading icon
-import { useRouter } from 'next/navigation';
+// Removed next/navigation router as we redirect via auth flow
+import { signIn as googleSignIn } from "@/lib/auth-client"; // Import signIn helper
 
 // SVG component for the Google Icon
 const GoogleIcon = () => (
@@ -17,17 +18,17 @@ const GoogleIcon = () => (
 
 export default function GoogleSignInButton({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(false); // Add loading state
-  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async () => {
-    setIsLoading(true); // Set loading true
+    setIsLoading(true);
+    setError(null);
     try {
-      // Temporarily redirect to waitlist instead of signing in
-      router.push('/auth');
-    } catch (error) {
-      console.error('Redirect failed:', error);
-    } finally {
-      setIsLoading(false); // Set loading false regardless of success/error
+      await googleSignIn(); // This triggers the OAuth flow and will redirect
+    } catch (err) {
+      console.error("Google sign-in failed:", err);
+      setError((err as Error)?.message ?? "Sign in failed");
+      setIsLoading(false);
     }
   };
 
@@ -38,7 +39,7 @@ export default function GoogleSignInButton({ className }: { className?: string }
         variant="outline"
         size="lg"
         className="relative w-full h-12 font-medium bg-white hover:bg-white/90 text-gray-800 border-0 shadow-sm hover:shadow transition-all duration-200 overflow-hidden group"
-        disabled={isLoading} // Disable button when loading
+        disabled={isLoading}
       >
         <div className="absolute left-0 top-0 bottom-0 w-12 bg-white flex items-center justify-center border-r border-gray-100 group-hover:bg-white/90">
           {isLoading ? (
@@ -51,6 +52,9 @@ export default function GoogleSignInButton({ className }: { className?: string }
           {isLoading ? 'Redirecting...' : 'Sign in with Google'} {/* Change text when loading */}
         </span>
       </Button>
+      {error && (
+        <p className="mt-2 text-sm text-red-500 text-center">{error}</p>
+      )}
     </div>
   );
 }

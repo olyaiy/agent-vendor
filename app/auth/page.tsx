@@ -1,6 +1,7 @@
 'use client'; // Required for client-side interactions like onClick
 
 import WaitlistForm from '@/components/auth/WaitlistForm';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { SplashCursor } from '@/components/ui/splash-cursor';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -70,8 +71,16 @@ export default function AuthPage() {
           </motion.p>
         </div>
 
-        {/* Waitlist section */}
-        <div className="p-8 pt-4">
+        {/* Sign-in + Waitlist section */}
+        <div className="p-8 pt-4 space-y-6">
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            <GoogleSignInButton />
+          </motion.div>
+
           <motion.div
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}

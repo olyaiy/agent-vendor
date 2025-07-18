@@ -218,7 +218,7 @@ export async function selectRecentAgents(
     offset: number = 0, // Provide default offset
     userId?: string // Add userId parameter
 ): Promise<RecentAgentResult[]> {
-    const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+    const tagsAgg = sql<AgentTagInfo[]>`coalesce(jsonb_agg(distinct jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]'::jsonb)`.as('tags');
 
     const queryBuilder = db
         .select({
@@ -315,7 +315,7 @@ export async function selectPopularAgents(
     offset: number = 0,
     userId?: string
 ): Promise<PopularAgentResult[]> {
-    const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+    const tagsAgg = sql<AgentTagInfo[]>`coalesce(jsonb_agg(distinct jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]'::jsonb)`.as('tags');
     const messageCount = sql<number>`count(${message.id})`.as('message_count');
 
     const queryBuilder = db
@@ -462,7 +462,7 @@ export type AgentWithModelAndTags = Agent & {
  * @returns Combined agent + model + tags object, or undefined if not found.
  */
 export async function selectAgentWithModelBySlug(slug: string): Promise<AgentWithModelAndTags | undefined> {
-    const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+    const tagsAgg = sql<AgentTagInfo[]>`coalesce(jsonb_agg(distinct jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]'::jsonb)`.as('tags');
 
     // Prefer joining via agentModels for primary model identification consistency
     const result = await db
@@ -498,7 +498,7 @@ export async function selectAgentWithModelBySlug(slug: string): Promise<AgentWit
  * @returns Combined agent, model name, and tags data or undefined if not found.
  */
 export async function selectAgentWithModelById(agentId: string): Promise<AgentWithModelAndTags | undefined> {
-    const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+    const tagsAgg = sql<AgentTagInfo[]>`coalesce(jsonb_agg(distinct jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]'::jsonb)`.as('tags');
 
     // Prefer joining via agentModels for primary model identification consistency
     const result = await db
@@ -531,7 +531,7 @@ export async function selectAgentWithModelById(agentId: string): Promise<AgentWi
  * @returns Array of agent records with model name and associated tags.
  */
 export async function selectAgentsByCreatorId(creatorId: string): Promise<AgentWithModelAndTags[]> {
-    const tagsAgg = sql<AgentTagInfo[]>`coalesce(json_agg(json_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]')`.as('tags');
+    const tagsAgg = sql<AgentTagInfo[]>`coalesce(jsonb_agg(distinct jsonb_build_object('id', ${tags.id}, 'name', ${tags.name})) filter (where ${tags.id} is not null), '[]'::jsonb)`.as('tags');
 
     const results = await db
         .select({
