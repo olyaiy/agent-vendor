@@ -12,6 +12,7 @@ import { useChatManager, type AgentSpecificModel } from '@/hooks/use-chat-manage
 import { useAttachmentManager } from '@/hooks/use-attachment-manager';
 import { useDragDrop } from '@/hooks/use-drag-drop';
 import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
+import { CreditErrorDialog } from './credit-error-dialog';
 
 interface ChatProps {
   chatId: string;
@@ -52,7 +53,10 @@ export default function Chat({
     chatSettings,
     handleSettingChange,
     displayTitle,
-    isWebSearchEnabled
+    isWebSearchEnabled,
+    showCreditDialog,
+    setShowCreditDialog,
+    creditBalance
   } = useChatManager({
     chatId,
     agent,
@@ -178,6 +182,13 @@ export default function Chat({
           assignedTools={assignedTools}
         />
       </div>
+      
+      <CreditErrorDialog 
+        open={showCreditDialog}
+        onOpenChange={setShowCreditDialog}
+        creditBalance={creditBalance}
+        agentSlug={agentSlug}
+      />
     </div>
   )
 }

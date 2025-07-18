@@ -67,6 +67,10 @@ export function useChatManager({
   const [chatSettings, setChatSettings] = useState<Record<string, number>>(() =>
     getInitialChatSettings(initialModelId, agentModels)
   );
+  
+  // Credit dialog state
+  const [showCreditDialog, setShowCreditDialog] = useState(false);
+  const [creditBalance, setCreditBalance] = useState(0);
 
   const { displayTitle, handleChatFinish } = useChatTitleUpdater(chatId, initialTitle);
 
@@ -109,6 +113,26 @@ export function useChatManager({
     onFinish: handleChatFinish,
     onError: (error) => {
       console.log('Error from useChat:', error);
+      
+      // Handle 402 Payment Required (insufficient credits)
+      if (error && error.message && error.message.includes('402')) {
+        try {
+          // Try to parse the error response
+          const errorResponse = error.message.match(/\{.*\}/);
+          if (errorResponse) {
+            const errorData = JSON.parse(errorResponse[0]);
+            if (errorData.error === 'insufficient_credits') {
+              setCreditBalance(errorData.creditBalance);
+              setShowCreditDialog(true);
+              return; // Don't show other error messages
+            }
+          }
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
+      }
+      
+      // Handle 401 Unauthorized
       if (error && error.message && (error.message.includes('Unauthorized') || error.message.includes('401'))) {
         chatHook.setMessages((currentMessages) => [
           ...currentMessages,
@@ -145,5 +169,10 @@ export function useChatManager({
     
     // Helper functions
     handleChatFinish,
+    
+    // Credit dialog state
+    showCreditDialog,
+    setShowCreditDialog,
+    creditBalance,
   };
 } 

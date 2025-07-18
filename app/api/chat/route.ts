@@ -8,6 +8,7 @@ import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/rep
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { chargeUser } from '@/db/actions/transaction-actions';
+import { getUserCredits } from '@/db/repository/transaction-repository'; // Import getUserCredits
 import { toolRegistry, type ToolRegistry } from '@/tools/registry'; // Import ToolRegistry
 
 // Define types for attachments to avoid 'any'
@@ -68,6 +69,29 @@ export async function POST(req: Request) {
     if (!session || !session.user || !session.user.id) {
       console.log('Unauthorized!--------------------------------');
       return new Response('Unauthorized', { status: 401 });
+    }
+
+    /* ---- CREDIT CHECK ---- */
+    /**
+     * Verifies user has sufficient credits before processing request
+     * @returns 402 Payment Required if insufficient credits
+     */
+    console.time('Credit check');
+    const userCreditsData = await getUserCredits(session.user.id);
+    const creditBalance = userCreditsData ? parseFloat(userCreditsData.creditBalance) : 0;
+    console.timeEnd('Credit check');
+
+    // Check if user has sufficient credits (minimum threshold: $0.001)
+    if (creditBalance < 0.001) {
+      console.log(`[Credit Check] User ${session.user.id} has insufficient credits: ${creditBalance}`);
+      return new Response(JSON.stringify({
+        error: 'insufficient_credits',
+        creditBalance: creditBalance,
+        message: 'Insufficient credits to process this request'
+      }), { 
+        status: 402, // Payment Required
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     /* ---- REQUEST DATA HANDLING ---- */
