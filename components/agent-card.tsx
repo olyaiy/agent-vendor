@@ -34,10 +34,10 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
   const hiddenTagsCount = agent.tags ? Math.max(0, agent.tags.length - MAX_VISIBLE_TAGS) : 0;
 
   return (
-    <Link href={`/agent/${agent.slug}`} className="block group">
-      <div className={`rounded-lg overflow-hidden bg-background transition-all duration-300 hover:shadow-lg hover:scale-[1.02] ${className}`}>
+    <Link href={`/agent/${agent.slug}`} className="block group h-full">
+      <div className={`rounded-lg overflow-hidden bg-background transition-all duration-300 hover:scale-[1.02] h-full flex flex-col ${className}`}>
         
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/20 to-muted/40"> 
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/20 to-muted/40 flex-shrink-0"> 
           {/* Agent Image */}
           <AgentImage
             thumbnailUrl={agent.thumbnailUrl}
@@ -90,39 +90,41 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
           <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        <div className="p-3 space-y-3">
+        <div className="p-3 flex flex-col flex-grow space-y-3">
           <h3 className="text-base font-semibold line-clamp-2 text-foreground group-hover:text-primary transition-colors duration-200">
             {agent.name}
           </h3>
           
-          {agent.description && (
-            <p className="text-sm text-muted-foreground/80 line-clamp-2 group-hover:text-muted-foreground transition-colors duration-200">
-              {agent.description}
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground/80 line-clamp-2 group-hover:text-muted-foreground transition-colors duration-200 flex-grow">
+            {agent.description || "No description available"}
+          </p>
           
           {/* Tags with improved styling */}
-          {agent.tags && agent.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 items-center">
-              {visibleTags.map((tag) => (
-                <Badge 
-                  key={tag.id} 
-                  variant="outline" 
-                  className="text-[10px] sm:text-xs font-medium border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
-                >
-                  {tag.name}
-                </Badge>
-              ))}
-              {hiddenTagsCount > 0 && (
-                <Badge 
-                  variant="secondary"
-                  className="text-[10px] sm:text-xs font-medium bg-muted/50"
-                >
-                  +{hiddenTagsCount}
-                </Badge>
-              )}
-            </div>
-          )}
+          <div className="flex flex-wrap gap-1.5 items-center min-h-[28px]">
+            {agent.tags && agent.tags.length > 0 ? (
+              <>
+                {visibleTags.map((tag) => (
+                  <Badge 
+                    key={tag.id} 
+                    variant="outline" 
+                    className="text-[10px] sm:text-xs font-medium border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors duration-200"
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+                {hiddenTagsCount > 0 && (
+                  <Badge 
+                    variant="secondary"
+                    className="text-[10px] sm:text-xs font-medium bg-muted/50"
+                  >
+                    +{hiddenTagsCount}
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <div className="h-[20px]" />
+            )}
+          </div>
         </div>
       </div>
     </Link>

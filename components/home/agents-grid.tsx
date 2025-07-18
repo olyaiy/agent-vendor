@@ -164,7 +164,7 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'p
           <Suspense key={agent.id} fallback={<AgentItemLoading />}>
             <AgentCard 
               agent={agent} 
-              className="border border-border/30 shadow-sm transition-all duration-200 hover:border-primary/40 hover:shadow-md"
+              className=""
             />
           </Suspense>
         ))}
