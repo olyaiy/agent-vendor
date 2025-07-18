@@ -54,6 +54,7 @@ export const myProvider = customProvider({
     'qwen-2.5-32b': groq('qwen-2.5-32b'),
     'llama-4-scout-17b-16e': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
     'llama-4-maverick-17b-128e': groq('meta-llama/llama-4-maverick-17b-128e'),
+    'kimi-k2-instruct': groq('moonshotai/kimi-k2-instruct'),
 
     // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
@@ -1186,6 +1187,40 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
+  'kimi-k2-instruct': {
+    displayName: "Kimi K2 Instruct",
+    description: "Moonshot AI's Kimi K2 Instruct is a cutting-edge Mixture-of-Experts model optimized for tool use, coding, and complex reasoning.",
+    inputCostPerMillion: 1.00,
+    outputCostPerMillion: 3.00,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 16384,
+        min: 50,
+        max: 16384
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
+  },
 
 
 };
@@ -1229,6 +1264,7 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'qwen-2.5-32b': groq('qwen-2.5-32b'),
     'llama-4-scout-17b-16e': groq('llama-4-scout-17b-16e'),
     'llama-4-maverick-17b-128e': groq('llama-4-maverick-17b-128e'),
+    'kimi-k2-instruct': groq('moonshotai/kimi-k2-instruct'),
     // DeepSeek
     'deepseek-chat': deepseek('deepseek-chat'),
     'deepseek-reasoner': deepseek('deepseek-reasoner'),
