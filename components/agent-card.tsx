@@ -37,7 +37,7 @@ export function AgentCard({ agent, className = "" }: AgentCardProps) {
     <Link href={`/agent/${agent.slug}`} className="block group h-full">
       <div className={`rounded-lg overflow-hidden bg-background transition-all duration-300 hover:scale-[1.02] h-full flex flex-col ${className}`}>
         
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/20 to-muted/40 flex-shrink-0"> 
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-muted/20 to-muted/40 flex-shrink-0 rounded-lg"> 
           {/* Agent Image */}
           <AgentImage
             thumbnailUrl={agent.thumbnailUrl}
