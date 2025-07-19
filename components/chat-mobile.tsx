@@ -12,6 +12,7 @@ import { useChatManager, type AgentSpecificModel } from '@/hooks/use-chat-manage
 import { useAttachmentManager } from '@/hooks/use-attachment-manager';
 import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import { CreditErrorDialog } from './credit-error-dialog'
+import { isReasoningModel } from '@/lib/models';
 
 interface ChatMobileProps {
   chatId: string;
@@ -97,6 +98,9 @@ export default function ChatMobile({
   // @ts-expect-error There's a version mismatch between UIMessage types
   const messagesProp: UIMessage[] = messages;
 
+  const selected = agentModels.find(m => m.modelId === selectedModelId);
+  const hideReasoning = !agent.showReasoning && selected && isReasoningModel(selected.model);
+
   return (
     <div className="flex flex-col h-full px-2">
       <MobileAgentHeader
@@ -121,6 +125,7 @@ export default function ChatMobile({
             reload={reload}
             isReadonly={false}
             isArtifactVisible={false}
+            hideReasoning={hideReasoning}
             externalScrollContainerRef={mobileScrollContainerRef}
           />
         ) : (

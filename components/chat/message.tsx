@@ -2,7 +2,7 @@
 
 import type { UIMessage } from 'ai';
 
-import { memo, useState } from 'react';
+import { memo, useState, Fragment } from 'react';
 
 // import { DocumentToolCall, DocumentToolResult } from './document';
 import { SparklesIcon } from '../utils/icons';
@@ -25,6 +25,14 @@ interface UIMessageWithUI extends UIMessage {
   ui?: React.ReactNode;
 }
 
+interface MessagePart {
+  type: string;
+  text?: string;
+  reasoning?: string;
+  toolInvocation?: { toolCallId: string };
+  source?: { id: string; url: string; title?: string };
+}
+
 const PurePreviewMessage = ({
   chatId,
   message,
@@ -33,6 +41,7 @@ const PurePreviewMessage = ({
   reload,
   isReadonly,
   setMessages,
+  hideReasoning,
 }: {
   chatId: string;
   message: UIMessageWithUI;
@@ -40,6 +49,7 @@ const PurePreviewMessage = ({
   setMessages: UseChatHelpers['setMessages'];
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
+  hideReasoning?: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [viewMode, setViewMode] = useState<'formatted' | 'markdown'>('formatted');
@@ -137,69 +147,88 @@ const PurePreviewMessage = ({
             // Otherwise, render parts as usual
             <>
               {/* Non-source parts */}
-              {message.parts?.filter(part => part.type !== 'source').map((part, index) => {
-                const { type } = part;
-                const key = `message-${message.id}-part-${index}`;
-                if (type === 'reasoning') {
-                  return (
+              {(() => {
+                const parts: MessagePart[] = (message.parts as MessagePart[] | undefined)?.filter(part => part.type !== 'source') || [];
+                const hasReasoning = parts.some(p => p.type === 'reasoning');
+                const elements: React.ReactNode[] = [];
+                if (!hasReasoning && hideReasoning) {
+                  elements.push(
                     <MessageReasoning
-                      key={key}
+                      key={`placeholder-${message.id}`}
                       isLoading={isLoading}
-                      reasoning={part.reasoning}
+                      reasoning=""
+                      hideReasoning
                     />
                   );
                 }
-                if (type === 'text') {
-                  if (mode === 'view') {
-                    return (
-                      <div key={key} className="flex flex-row gap-2 items-start md:max-w-2xl sm:max-w-xl max-w-full">
-                        <div
-                          data-testid="message-content"
-                          className={cn('flex flex-col gap-4 max-w-full', {
-                            'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
-                              message.role === 'user',
-                          })}
-                        >
-                          {viewMode === 'markdown' ? (
-                            <div className="whitespace-pre-wrap font-mono text-sm bg-muted/30 p-3 rounded-md border">
-                              {part.text}
-                            </div>
-                          ) : (
-                            <Markdown key={`${message.id}-${index}`} messageRole={message.role}>
-                              {part.text}
-                            </Markdown>
-                          )}
+                parts.forEach((part: MessagePart, index) => {
+                  const { type } = part;
+                  const key = `message-${message.id}-part-${index}`;
+                  if (type === 'reasoning') {
+                    elements.push(
+                      <MessageReasoning
+                        key={key}
+                        isLoading={isLoading}
+                        reasoning={hideReasoning ? '' : part.reasoning ?? ''}
+                        hideReasoning={hideReasoning}
+                      />
+                    );
+                    return;
+                  }
+                  if (type === 'text') {
+                    if (mode === 'view') {
+                      elements.push(
+                        <div key={key} className="flex flex-row gap-2 items-start md:max-w-2xl sm:max-w-xl max-w-full">
+                          <div
+                            data-testid="message-content"
+                            className={cn('flex flex-col gap-4 max-w-full', {
+                              'bg-primary text-primary-foreground px-3 py-2 rounded-xl':
+                                message.role === 'user',
+                            })}
+                          >
+                            {viewMode === 'markdown' ? (
+                              <div className="whitespace-pre-wrap font-mono text-sm bg-muted/30 p-3 rounded-md border">
+                                {part.text}
+                              </div>
+                            ) : (
+                              <Markdown key={`${message.id}-${index}`} messageRole={message.role}>
+                                {part.text}
+                              </Markdown>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  }
+                      );
+                      return;
+                    }
 
-                  if (mode === 'edit') {
-                    return (
-                      <div key={key} className="flex flex-row gap-2 items-start">
-                        <div className="size-8" />
+                    if (mode === 'edit') {
+                      elements.push(
+                        <div key={key} className="flex flex-row gap-2 items-start">
+                          <div className="size-8" />
 
-                        <MessageEditor
-                          key={message.id}
-                          message={message}
-                          setMode={setMode}
-                          setMessages={setMessages}
-                          reload={reload}
-                        />
-                      </div>
-                    );
+                          <MessageEditor
+                            key={message.id}
+                            message={message}
+                            setMode={setMode}
+                            setMessages={setMessages}
+                            reload={reload}
+                          />
+                        </div>
+                      );
+                      return;
+                    }
                   }
-                }
-                if (type === 'tool-invocation') {
+                  if (type === 'tool-invocation') {
                   const { toolInvocation } = part;
-                  const { toolCallId } = toolInvocation;
-                  // Use the new ToolMessage component
-                  return <ToolMessage key={toolCallId} toolInvocation={toolInvocation} />;
-                }
+                  const { toolCallId } = toolInvocation ?? { toolCallId: '' };
+                    elements.push(<ToolMessage key={toolCallId} toolInvocation={toolInvocation} />);
+                    return;
+                  }
 
-                // Add a fallback return for the map function
-                return null;
-              })}
+                  // Add a fallback return for the map function
+                });
+                return elements;
+              })()}
               
               {/* Source parts in a flex container */}
               {message.parts?.some(part => part.type === 'source') && (
@@ -270,6 +299,7 @@ export const PreviewMessage = memo(
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
     // Add comparison for experimental_attachments
     if (!equal(prevProps.message.experimental_attachments, nextProps.message.experimental_attachments)) return false;
+    if (prevProps.hideReasoning !== nextProps.hideReasoning) return false;
 
 
     return true;

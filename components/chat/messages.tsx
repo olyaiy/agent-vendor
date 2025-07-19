@@ -20,6 +20,7 @@ interface MessagesProps {
   reload: UseChatHelpers['reload'];
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  hideReasoning?: boolean;
   // Allow null for the external ref prop type
   externalScrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 }
@@ -32,6 +33,7 @@ function PureMessages({
   reload,
   isReadonly,
   // Destructure the new prop
+  hideReasoning,
   externalScrollContainerRef,
 }: MessagesProps) {
 
@@ -92,6 +94,7 @@ function PureMessages({
             setMessages={setMessages}
             reload={reload}
             isReadonly={isReadonly}
+            hideReasoning={hideReasoning}
           />
         </div>
       ))}
@@ -137,6 +140,7 @@ export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (!equal(prevProps.messages, nextProps.messages)) return false;
   // Add comparison for the new prop
   if (prevProps.externalScrollContainerRef !== nextProps.externalScrollContainerRef) return false;
+  if (prevProps.hideReasoning !== nextProps.hideReasoning) return false;
 
   return true;
 });
