@@ -8,6 +8,7 @@ import {
   CreditCard,
   LogOut,
   Moon,
+  Shield,
   // Sparkles,
   Sun,
 } from "lucide-react"
@@ -145,6 +146,12 @@ export function NavUser() {
                 <CreditCard />
                 Credits and Billing
               </DropdownMenuItem>
+              {user.role?.includes('admin') && (
+                <DropdownMenuItem onClick={() => router.push('/admin')}>
+                  <Shield />
+                  Admin Dashboard
+                </DropdownMenuItem>
+              )}
               {/* <DropdownMenuItem>
                 <Bell />
                 Notifications
