@@ -8,7 +8,6 @@ import {
   CreditCard,
   LogOut,
   Moon,
-  Palette,
   // Sparkles,
   Sun,
 } from "lucide-react"
