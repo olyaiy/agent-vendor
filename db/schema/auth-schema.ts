@@ -14,10 +14,12 @@ export const user = pgTable("user", {
  // --- Admin Plugin Fields ---
  role: text('role').default('user'), // Default role is 'user'
  banned: boolean('banned').default(false),
- banReason: text('ban_reason'),
- banExpires: integer('ban_expires'), // Using integer for Unix timestamp
- // -------------------------
-				});
+  banReason: text('ban_reason'),
+  banExpires: integer('ban_expires'), // Using integer for Unix timestamp
+  messageCount: integer('message_count').default(0),
+  lastMessageSentAt: timestamp('last_message_sent_at'),
+  // -------------------------
+});
 
 export const session = pgTable("session", {
 					id: text("id").primaryKey(),

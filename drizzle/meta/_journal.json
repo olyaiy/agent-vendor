@@ -85,6 +85,13 @@
       "when": 1751919378094,
       "tag": "0011_panoramic_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1752953294406,
+      "tag": "0012_stoic_message_metrics",
+      "breakpoints": true
     }
   ]
 }
