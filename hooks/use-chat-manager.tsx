@@ -115,23 +115,57 @@ export function useChatManager({
       console.log('Error from useChat:', error);
       
       // Handle 402 Payment Required (insufficient credits)
-      if (error && error.message && error.message.includes('402')) {
+      // The exact shape of the Error object can vary between adapters:
+      // 1. Some include `status` / `response.status`.
+      // 2. Some only embed the server JSON inside `error.message`.
+      // We therefore try multiple strategies instead of relying solely on
+      // `error.message.includes('402')` (which fails in your current build).
+
+      // Avoid explicit `any` to satisfy eslint rules
+      // Cast through `unknown` to avoid structural type error
+      const errorRecord = error as unknown as Record<string, unknown>;
+      const responseRecord = errorRecord.response as Record<string, unknown> | undefined;
+      const status = (errorRecord.status as number | undefined) ?? (responseRecord?.status as number | undefined);
+      const messageString = (errorRecord.message as string | undefined) ?? '';
+
+      const maybeHandleInsufficientCredits = (raw: unknown) => {
+        if (!raw || typeof raw !== 'object') return false;
+        // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+        const data = raw as { error?: string; creditBalance?: number };
+        if (data.error === 'insufficient_credits') {
+          setCreditBalance(data.creditBalance ?? 0);
+          setShowCreditDialog(true);
+          return true;
+        }
+        return false;
+      };
+
+      // Case 1: explicit status
+      if (status === 402) {
         try {
-          // Try to parse the error response
-          const errorResponse = error.message.match(/\{.*\}/);
-          if (errorResponse) {
-            const errorData = JSON.parse(errorResponse[0]);
-            if (errorData.error === 'insufficient_credits') {
-              setCreditBalance(errorData.creditBalance);
-              setShowCreditDialog(true);
-              return; // Don't show other error messages
-            }
+          // Some libraries expose a `response` object with `.json()`
+          const json = responseRecord?.data ?? errorRecord.responseBody;
+          if (json && maybeHandleInsufficientCredits(json)) return;
+        } catch {/* ignore parse errors */}
+      }
+
+      // Case 2: JSON embedded in message string
+      if (messageString.includes('insufficient_credits')) {
+        try {
+          const parsed = JSON.parse(messageString);
+          if (maybeHandleInsufficientCredits(parsed)) return;
+        } catch {
+          // If message contains more than just JSON, try to extract
+          const match = messageString.match(/\{.*\}/);
+          if (match) {
+            try {
+              const extracted = JSON.parse(match[0]);
+              if (maybeHandleInsufficientCredits(extracted)) return;
+            } catch {/* noop */}
           }
-        } catch (parseError) {
-          console.error('Failed to parse error response:', parseError);
         }
       }
-      
+       
       // Handle 401 Unauthorized
       if (error && error.message && (error.message.includes('Unauthorized') || error.message.includes('401'))) {
         chatHook.setMessages((currentMessages) => [

@@ -1,6 +1,6 @@
 {
-  "id": "970e46b6-8400-4c12-bd21-204c6114563d",
-  "prevId": "85c98368-5b2b-43e0-85a0-3cec8a3db8b1",
+  "id": "33dc1f57-c233-452a-91af-2b8395d8f2a0",
+  "prevId": "970e46b6-8400-4c12-bd21-204c6114563d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -292,7 +292,8 @@
           "name": "message_count",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": 0
         },
         "last_message_sent_at": {
           "name": "last_message_sent_at",

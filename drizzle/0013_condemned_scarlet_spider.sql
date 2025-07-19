@@ -1,0 +1,1 @@
+ALTER TABLE "user" ALTER COLUMN "message_count" SET DEFAULT 0;
