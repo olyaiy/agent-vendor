@@ -19,23 +19,27 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   )
 }
 
-function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
+function TableHeader({ className, children, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
       className={cn("[&_tr]:border-b", className)}
       {...props}
-    />
+    >
+      {React.Children.toArray(children).filter((child) => typeof child !== 'string')}
+    </thead>
   )
 }
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+function TableBody({ className, children, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
       data-slot="table-body"
       className={cn("[&_tr:last-child]:border-0", className)}
       {...props}
-    />
+    >
+      {React.Children.toArray(children).filter((child) => typeof child !== 'string')}
+    </tbody>
   )
 }
 
@@ -52,7 +56,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   )
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+function TableRow({ className, children, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -61,7 +65,9 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
         className
       )}
       {...props}
-    />
+    >
+      {React.Children.toArray(children).filter((child) => typeof child !== "string")}
+    </tr>
   )
 }
 
