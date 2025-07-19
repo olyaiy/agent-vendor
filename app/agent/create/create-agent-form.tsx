@@ -13,6 +13,8 @@ import { Loader2  } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { isReasoningModel } from "@/lib/models";
 import MultipleSelector, { Option } from "@/components/ui/multiselect";
 import {
   createAgent,
@@ -57,6 +59,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
   const [isRemovingThumbnail, setIsRemovingThumbnail] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isRemovingAvatar, setIsRemovingAvatar] = useState(false);
+  const [showReasoning, setShowReasoning] = useState(true);
   
   const [systemPrompt, setSystemPrompt] = useState<string>(""); // New state for system prompt
   const systemPromptRef = useRef<HTMLTextAreaElement>(null);
@@ -277,6 +280,7 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
           systemPrompt: systemPrompt || null, // Use systemPrompt state
           thumbnailUrl: null,
           visibility: visibility,
+          showReasoning: showReasoning,
           primaryModelId: primaryModelId,
           creatorId: userId,
           welcomeMessage: null,
@@ -714,6 +718,21 @@ export function CreateAgentForm({ userId, models, allTags, allAvailableTools }: 
                 defaultValue={primaryModelId}
                 onValueChange={setPrimaryModelId}
               />
+              {(() => {
+                const selected = models.find(m => m.id === primaryModelId);
+                return selected && isReasoningModel(selected.model) ? (
+                  <div className="flex items-center gap-2 pt-2">
+                    <Switch
+                      id="showReasoning"
+                      checked={showReasoning}
+                      onCheckedChange={setShowReasoning}
+                    />
+                    <Label htmlFor="showReasoning" className="text-sm font-medium">
+                      Show reasoning in chat
+                    </Label>
+                  </div>
+                ) : null;
+              })()}
               <p className="text-xs text-muted-foreground">
                 {`Choose the model that best fits your agent's purpose. Different models have different capabilities.`}
               </p>
