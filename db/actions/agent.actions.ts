@@ -26,7 +26,7 @@ import {
 
 import { Agent, Knowledge, Tag, Model } from "@/db/schema/agent"; // Import schema types
 import { ActionResult } from "./types"; // Import shared type
-import { NewAgent } from "../repository/agent.repository"; // Import NewAgent type from repo
+import { NewAgent, UpdateAgentInput } from "../repository/agent.repository"; // Import types from repo
 import { updateAgentPrimaryModelAction } from "@/db/actions/agent-relations.actions";
 
 // --- S3 Configuration (Keep here or move to a dedicated service) ---
@@ -62,7 +62,9 @@ if (R2_ENDPOINT && R2_ACCESS_KEY && R2_SECRET_KEY) {
  * @returns Promise with success status and created agent data or error.
  */
 // Use the NewAgent type imported from the repository, which already excludes slug
-export async function createAgent(data: NewAgent & { primaryModelId?: string }): Promise<ActionResult<Agent[]>> {
+export async function createAgent(
+    data: NewAgent & { primaryModelId?: string; showReasoning?: boolean }
+): Promise<ActionResult<Agent[]>> {
     // Basic validation could be added here with Zod if desired
     try {
         // Get user session to potentially validate creatorId, although it's passed in
@@ -73,10 +75,12 @@ export async function createAgent(data: NewAgent & { primaryModelId?: string }):
         }
 
         // Extract primaryModelId from data since it's not part of the agent table anymore
-        const { primaryModelId, ...agentData } = data;
+        const { primaryModelId, showReasoning = true, ...agentData } = data;
+
+        const insertData = { ...agentData, showReasoning };
 
         // Pass the data directly to insertAgent; slug generation happens in the repository
-        const result = await insertAgent(agentData); 
+        const result = await insertAgent(insertData);
 
         // Check if result is valid and contains the slug (it should after repo update)
         if (!result || result.length === 0 || !result[0].slug) {
@@ -293,9 +297,12 @@ export async function getBaseModelAgentsAction(): Promise<ActionResult<Array<{
  */
 // Define UpdateAgentData excluding non-updatable fields
 // Using Partial<NewAgent> from repo is often cleaner if available
-type UpdateAgentData = Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'creatorId'>>;
+type UpdateAgentData = UpdateAgentInput;
 
-export async function updateAgentAction(agentId: string, data: UpdateAgentData): Promise<ActionResult<Agent>> {
+export async function updateAgentAction(
+    agentId: string,
+    data: UpdateAgentData
+): Promise<ActionResult<Agent>> {
      // Add authorization check: ensure the current user owns this agent
      try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -307,7 +314,12 @@ export async function updateAgentAction(agentId: string, data: UpdateAgentData):
 
         // Add Zod validation for 'data' here if needed
 
-        const result = await updateAgentRepo(agentId, data);
+        const { showReasoning, ...updateFields } = data;
+
+        const result = await updateAgentRepo(agentId, {
+            ...updateFields,
+            showReasoning,
+        });
         if (result.length === 0) {
             return { success: false, error: "Agent not found or update failed" };
         }
