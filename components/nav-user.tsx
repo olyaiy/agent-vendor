@@ -7,7 +7,10 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
+  Moon,
+  Palette,
   // Sparkles,
+  Sun,
 } from "lucide-react"
 
 import {
@@ -31,10 +34,19 @@ import {
 import { authClient } from "@/lib/auth-client" // Import authClient
 import { Skeleton } from "@/components/ui/skeleton" // Import Skeleton
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton" // Import the Google Sign In button
+import { useTheme } from "next-themes"
+import * as React from "react"
+
 export function NavUser() {
   const { isMobile } = useSidebar()
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter() // Initialize router
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Sign out handler
   const handleSignOut = async () => {
@@ -138,6 +150,24 @@ export function NavUser() {
                 <Bell />
                 Notifications
               </DropdownMenuItem> */}
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              {mounted && (
+                <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                  {theme === "dark" ? (
+                    <>
+                      <Sun className="mr-2 h-4 w-4" />
+                      Switch to Light Mode
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="mr-2 h-4 w-4" />
+                      Switch to Dark Mode
+                    </>
+                  )}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             {/* Add onSelect handler to the Log out item */}

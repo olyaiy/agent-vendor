@@ -34,27 +34,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-            <SidebarProvider>
-              <AppSidebar />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SidebarProvider>
+            <AppSidebar />
 
-
-    
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-
-          <Header />
-           <SidebarInset className="">
-            <div className=" h-full overflow-auto">  {/* Added height/overflow */}
-              {children}
-            </div>
-          </SidebarInset>
+            <Header />
+            <SidebarInset className="">
+              <div className=" h-full overflow-auto">  {/* Added height/overflow */}
+                {children}
+              </div>
+            </SidebarInset>
+          </SidebarProvider>
           <Toaster />
         </ThemeProvider>
-        </SidebarProvider>
       </body>
       
     </html>

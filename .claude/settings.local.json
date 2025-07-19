@@ -10,7 +10,8 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "Bash(npx drizzle-kit:*)"
+      "Bash(npx drizzle-kit:*)",
+      "WebFetch(domain:ui.shadcn.com)"
     ],
     "deny": []
   }
