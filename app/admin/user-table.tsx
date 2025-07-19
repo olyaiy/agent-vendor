@@ -28,6 +28,8 @@ import { fetchUsersWithDetails, type ListUsersWithDetailsResponse,  } from './ad
 // import { type User } from 'better-auth';
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
 import { UserWithDetails } from '@/db/repository/user.repository';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 
 // Helper to get initials from name
@@ -77,6 +79,11 @@ export default function UserTable({ initialData }: UserTableProps) {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [currentPage, setCurrentPage] = React.useState<number>(1);
   const pageSize = initialData.limit || 25; // Use initial limit as fixed page size for now
+
+  // Sorting state
+  type SortField = 'createdAt' | 'creditBalance' | 'messageCount' | 'lastMessageSentAt';
+  const [sortBy, setSortBy] = React.useState<SortField>('createdAt');
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('desc');
   // Removed setPageSize state as it's not currently used
 
   // TODO: Implement functions for sorting, filtering
@@ -86,7 +93,7 @@ export default function UserTable({ initialData }: UserTableProps) {
     try {
       const offset = (page - 1) * limit;
       // Call the new action
-      const data = await fetchUsersWithDetails({ limit, offset }); // Add sorting/filtering params later
+      const data = await fetchUsersWithDetails({ limit, offset, sortBy, sortDirection });
       setUsers(data.users); // Use the correct type
       setTotalUsers(data.total);
       setCurrentPage(page);
@@ -97,7 +104,13 @@ export default function UserTable({ initialData }: UserTableProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [pageSize]); // Add pageSize to dependency array
+  }, [pageSize, sortBy, sortDirection]); // Add dependencies
+
+  // Reload when sorting changes
+  React.useEffect(() => {
+    loadUsers(1, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortBy, sortDirection]);
 
   const handleNextPage = () => {
     const totalPages = Math.ceil(totalUsers / pageSize);
@@ -134,6 +147,29 @@ export default function UserTable({ initialData }: UserTableProps) {
   return (
     <div className="space-y-4">
        {/* TODO: Add Search/Filter inputs here */}
+
+      {/* Sort Controls */}
+      <div className="flex justify-end gap-2">
+        <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortField)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="createdAt">Newest</SelectItem>
+            <SelectItem value="creditBalance">Credits</SelectItem>
+            <SelectItem value="messageCount">Messages</SelectItem>
+            <SelectItem value="lastMessageSentAt">Last Message</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setSortDirection((dir) => (dir === 'asc' ? 'desc' : 'asc'))}
+        >
+          {sortDirection === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+        </Button>
+      </div>
+
       <div className="border rounded-md">
         <Table>
           <TableHeader>

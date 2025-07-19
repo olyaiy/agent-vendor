@@ -19,7 +19,7 @@ export interface ListUsersQueryOptions {
   searchField?: 'email' | 'name';
   searchOperator?: 'contains' | 'starts_with' | 'ends_with';
   searchValue?: string;
-  sortBy?: keyof User | 'agentCount' | 'creditBalance'; // Allow sorting by new fields
+  sortBy?: keyof User | 'agentCount' | 'creditBalance' | 'messageCount' | 'lastMessageSentAt'; // Allow sorting by new fields
   sortDirection?: 'asc' | 'desc';
   filterField?: keyof User;
   filterOperator?: 'eq' | 'gt' | 'lt' | 'gte' | 'lte' | 'ne' | undefined;
@@ -102,6 +102,10 @@ export async function selectUsersWithDetails(options: ListUsersQueryOptions = {}
         orderByClause = direction(agentCountCol);
     } else if (sortBy === 'creditBalance') {
         orderByClause = direction(creditBalanceCol);
+    } else if (sortBy === 'messageCount') {
+        orderByClause = direction(authUserTable.messageCount);
+    } else if (sortBy === 'lastMessageSentAt') {
+        orderByClause = direction(authUserTable.lastMessageSentAt);
     } else {
         const sortColumn = authUserTable[sortBy as keyof typeof authUserTable.$inferSelect];
         if (sortColumn) {
@@ -121,6 +125,7 @@ export async function selectUsersWithDetails(options: ListUsersQueryOptions = {}
     return results.map(row => ({
         ...row,
         agentCount: Number(row.agentCount) || 0,
+        messageCount: Number(row.messageCount) || 0,
         creditBalance: row.creditBalance // Already handled by coalesce
     }));
 }
