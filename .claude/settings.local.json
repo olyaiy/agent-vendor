@@ -11,7 +11,9 @@
       "Bash(ls:*)",
       "Bash(grep:*)",
       "Bash(npx drizzle-kit:*)",
-      "WebFetch(domain:ui.shadcn.com)"
+      "WebFetch(domain:ui.shadcn.com)",
+      "WebFetch(domain:www.better-auth.com)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

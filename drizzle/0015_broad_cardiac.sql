@@ -1,0 +1,1 @@
+ALTER TABLE "agent" ALTER COLUMN "show_reasoning" SET DEFAULT true;
