@@ -5,6 +5,7 @@ import { getModelInstanceById, getModelPricing } from '@/lib/models'; // Import 
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
 import { createChat, getChatById, saveMessages, updateChatTitle } from '@/db/repository/chat-repository'; // Import updateChatTitle
+import { selectAgentById } from '@/db/repository/agent.repository';
 import { generateTitleFromUserMessage } from '@/db/actions/chat-actions';
 import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/lib/utils';
 import { chargeUser } from '@/db/actions/transaction-actions';
@@ -124,6 +125,9 @@ export async function POST(req: Request) {
       csv_attachment_payloads,
       // Add others if defined in ModelSettings and passed from frontend
     } = await req.json() as RequestBody;
+
+    // Fetch the agent configuration if an ID was provided
+    const agent = agentId ? await selectAgentById(agentId) : undefined;
 
     /* ---- MESSAGE VALIDATION ---- */
     /**
@@ -540,7 +544,7 @@ interface OpenAIProviderOptions {
     console.timeEnd('Text streaming');
     return result.toDataStreamResponse({
       sendSources: true,
-      sendReasoning: true,
+      sendReasoning: agent?.showReasoning !== false,
     });
 
   } catch (error) { // Catch overall errors
