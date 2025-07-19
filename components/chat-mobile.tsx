@@ -11,6 +11,7 @@ import { authClient } from '@/lib/auth-client';
 import { useChatManager, type AgentSpecificModel } from '@/hooks/use-chat-manager';
 import { useAttachmentManager } from '@/hooks/use-attachment-manager';
 import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
+import { CreditErrorDialog } from './credit-error-dialog'
 
 interface ChatMobileProps {
   chatId: string;
@@ -48,14 +49,18 @@ export default function ChatMobile({
     setSelectedModelId,
     chatSettings,
     handleSettingChange,
-    isWebSearchEnabled
+    isWebSearchEnabled,
+    showCreditDialog,
+    setShowCreditDialog,
+    creditBalance
   } = useChatManager({
     chatId,
     agent,
     agentModels,
     assignedTools,
     initialMessages,
-    initialTitle
+    initialTitle,
+    agentSlug: agent.slug || ''
   });
 
   const { data: session } = authClient.useSession();
@@ -147,6 +152,13 @@ export default function ChatMobile({
           handleRemoveAttachment={attachmentManager.handleRemoveAttachment}
         />
       </div>
+
+      <CreditErrorDialog
+        open={showCreditDialog}
+        onOpenChange={setShowCreditDialog}
+        creditBalance={creditBalance}
+        agentSlug={agent.slug || ''}
+      />
     </div>
   )
 }
