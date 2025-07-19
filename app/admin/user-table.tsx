@@ -81,12 +81,30 @@ export default function UserTable({ initialData }: UserTableProps) {
   const pageSize = initialData.limit || 25; // Use initial limit as fixed page size for now
 
   // Sorting state
-  type SortField = 'createdAt' | 'creditBalance' | 'messageCount' | 'lastMessageSentAt';
+  // Include any field that the backend supports for sorting
+  type SortField =
+    | 'createdAt'
+    | 'creditBalance'
+    | 'messageCount'
+    | 'lastMessageSentAt'
+    | 'agentCount';
   const [sortBy, setSortBy] = React.useState<SortField>('createdAt');
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('desc');
   // Removed setPageSize state as it's not currently used
 
   // TODO: Implement functions for sorting, filtering
+
+  // Click handler for table header sorting
+  const handleSort = (field: SortField) => {
+    if (sortBy === field) {
+      // Toggle direction when clicking the same column
+      setSortDirection((dir) => (dir === 'asc' ? 'desc' : 'asc'));
+    } else {
+      // Switch to new field with default ascending order
+      setSortBy(field);
+      setSortDirection('asc');
+    }
+  };
 
   const loadUsers = React.useCallback(async (page: number, limit: number) => {
     setIsLoading(true);
@@ -174,7 +192,90 @@ export default function UserTable({ initialData }: UserTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Avatar</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Credits</TableHead><TableHead>Agents</TableHead><TableHead>Messages</TableHead><TableHead>Last Message</TableHead><TableHead>Created At</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[80px]">Avatar</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              {/* Credits sortable */}
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => handleSort('creditBalance')}
+              >
+                <div className="flex items-center gap-1">
+                  Credits
+                  {sortBy === 'creditBalance' && (
+                    sortDirection === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowDown size={14} />
+                    )
+                  )}
+                </div>
+              </TableHead>
+              {/* Agent count sortable */}
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => handleSort('agentCount')}
+              >
+                <div className="flex items-center gap-1">
+                  Agents
+                  {sortBy === 'agentCount' && (
+                    sortDirection === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowDown size={14} />
+                    )
+                  )}
+                </div>
+              </TableHead>
+              {/* Message count sortable */}
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => handleSort('messageCount')}
+              >
+                <div className="flex items-center gap-1">
+                  Messages
+                  {sortBy === 'messageCount' && (
+                    sortDirection === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowDown size={14} />
+                    )
+                  )}
+                </div>
+              </TableHead>
+              {/* Last message sortable */}
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => handleSort('lastMessageSentAt')}
+              >
+                <div className="flex items-center gap-1">
+                  Last Message
+                  {sortBy === 'lastMessageSentAt' && (
+                    sortDirection === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowDown size={14} />
+                    )
+                  )}
+                </div>
+              </TableHead>
+              {/* Created at sortable */}
+              <TableHead
+                className="cursor-pointer select-none"
+                onClick={() => handleSort('createdAt')}
+              >
+                <div className="flex items-center gap-1">
+                  Created At
+                  {sortBy === 'createdAt' && (
+                    sortDirection === 'asc' ? (
+                      <ArrowUp size={14} />
+                    ) : (
+                      <ArrowDown size={14} />
+                    )
+                  )}
+                </div>
+              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
