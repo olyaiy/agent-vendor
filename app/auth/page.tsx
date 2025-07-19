@@ -3,10 +3,35 @@
 import WaitlistForm from '@/components/auth/WaitlistForm';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { SplashCursor } from '@/components/ui/splash-cursor';
+import { ErrorAlert } from '@/components/ui/error-alert';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function AuthPage() {
+function AuthContent() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
+  
+  const getErrorMessage = (errorType: string | null) => {
+    switch (errorType) {
+      case 'not_on_waitlist':
+        return {
+          title: "Account Not Found",
+          message: "We couldn't find your account in our system. Please join our waitlist below and we'll invite you when space becomes available."
+        };
+      case 'unable_to_create_user':
+        return {
+          title: "Account Not Found", 
+          message: "We couldn't find your account in our system. Please join our waitlist below and we'll invite you when space becomes available."
+        };
+      default:
+        return null;
+    }
+  };
+
+  const errorInfo = getErrorMessage(error);
+
   return (
     <div className="relative flex h-full items-center justify-center overflow-hidden bg-gradient-to-b from-black to-gray-900/95">
       {/* Enhanced glow effects */}
@@ -73,6 +98,20 @@ export default function AuthPage() {
 
         {/* Sign-in + Waitlist section */}
         <div className="p-8 pt-4 space-y-6">
+          {/* Error Alert */}
+          {errorInfo && (
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <ErrorAlert
+                title={errorInfo.title}
+                message={errorInfo.message}
+              />
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -110,5 +149,13 @@ export default function AuthPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthContent />
+    </Suspense>
   );
 }

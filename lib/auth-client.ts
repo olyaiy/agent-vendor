@@ -19,7 +19,8 @@ export const authClient =  createAuthClient({
 // sign in with google
 export const signIn = async () =>{
     const data = await authClient.signIn.social({
-        provider: "google"
+        provider: "google",
+        errorCallbackURL: "/auth?error=not_on_waitlist"
     })
 
     return data
