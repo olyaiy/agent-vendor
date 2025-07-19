@@ -142,37 +142,29 @@ export async function POST(req: Request) {
     console.time('Chat creation check'); // Renamed timer
     if (!chat) {
 
-      // --- Start: Fire-and-forget chat creation ---
+      console.time('Chat creation');
+      await createChat({
+        id: chatId,
+        userId: session.user!.id,
+        title: 'New Conversation',
+        agentId: agentId // This now has null as a default value
+      });
+      console.timeEnd('Chat creation');
+
+      // --- Start: Background title generation ---
       (async () => {
         try {
-          console.time('Background chat placeholder creation');
-          // 1. Create chat with placeholder title immediately
-          await createChat({ 
-            id: chatId, 
-            userId: session.user!.id, 
-            title: "New Conversation", 
-            agentId: agentId // This now has null as a default value
-          }); 
-          console.timeEnd('Background chat placeholder creation');
-
-
           console.time('Background title generation and update');
-          // 2. Generate the actual title
           const generatedTitle = await generateTitleFromUserMessage({
             message: userMessage as Message, // Cast userMessage for this specific function
           });
-
-          // 3. Update the chat with the generated title
           await updateChatTitle(chatId, generatedTitle);
           console.timeEnd('Background title generation and update');
-
-
         } catch (error) {
-          console.error(`Error in background chat creation/update for ${chatId}:`, error);
-          // Optional: Add more robust error logging/reporting here
+          console.error(`Error generating/updating title for ${chatId}:`, error);
         }
-      })(); // Immediately invoke without await
-      // --- End: Fire-and-forget chat creation ---
+      })();
+      // --- End: Background title generation ---
     } else {
       // Existing chat: Verify ownership
       if (chat.userId !== session.user.id) {
