@@ -9,11 +9,13 @@ import { Markdown } from '@/components/chat/markdown';
 interface MessageReasoningProps {
   isLoading: boolean;
   reasoning: string;
+  hideReasoning?: boolean;
 }
 
 export function MessageReasoning({
   isLoading,
   reasoning,
+  hideReasoning = false,
 }: MessageReasoningProps) {
   // Ensure reasoning is always a string
   const reasoningText = typeof reasoning === 'string' ? reasoning : JSON.stringify(reasoning);
@@ -106,7 +108,7 @@ export function MessageReasoning({
       )}
 
       <AnimatePresence initial={false}>
-        {isExpanded && (
+        {isExpanded && !hideReasoning && (
           <motion.div
             key="content"
             initial="collapsed"

@@ -13,6 +13,7 @@ import { useAttachmentManager } from '@/hooks/use-attachment-manager';
 import { useDragDrop } from '@/hooks/use-drag-drop';
 import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
 import { CreditErrorDialog } from './credit-error-dialog';
+import { isReasoningModel } from '@/lib/models';
 
 interface ChatProps {
   chatId: string;
@@ -75,6 +76,9 @@ export default function Chat({
     onFilesDropped: attachmentManager.processFilesForAttachment
   });
 
+  const selected = agentModels.find(m => m.modelId === selectedModelId);
+  const hideReasoning = !agent.showReasoning && selected && isReasoningModel(selected.model);
+
   // Enhanced submit handler that includes attachment data
   const handleEnhancedSubmit = React.useCallback((
     event?: { preventDefault?: (() => void) | undefined; } | undefined, 
@@ -125,6 +129,7 @@ export default function Chat({
               reload={reload}
               isReadonly={false}
               isArtifactVisible={false}
+              hideReasoning={hideReasoning}
             />
             <ChatInput
               userId={agent.creatorId}
