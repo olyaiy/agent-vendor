@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, primaryKey, uniqueIndex, boolean } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import { user } from "./auth-schema";
@@ -14,6 +14,7 @@ export const agent = pgTable("agent", {
   avatarUrl: text("avatar_url"),
   systemPrompt: text("system_prompt"),
   welcomeMessage: text("welcome_message"),
+  showReasoning: boolean('show_reasoning').default(sql`true`).notNull(),
   // primaryModelId: text("primary_model_id").notNull().references(() => models.id, { onDelete: "no action" }), // Corrected onDelete
   visibility: text("visibility").default("public").notNull(),
   createdAt: timestamp("created_at", { mode: 'date' }).default(sql`now()`).notNull(),
