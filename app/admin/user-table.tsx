@@ -138,7 +138,7 @@ export default function UserTable({ initialData }: UserTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[80px]">Avatar</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Credits</TableHead><TableHead>Agents</TableHead><TableHead>Created At</TableHead><TableHead className="text-right">Actions</TableHead>
+              <TableHead className="w-[80px]">Avatar</TableHead><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Credits</TableHead><TableHead>Agents</TableHead><TableHead>Messages</TableHead><TableHead>Last Message</TableHead><TableHead>Created At</TableHead><TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -151,6 +151,8 @@ export default function UserTable({ initialData }: UserTableProps) {
                   <TableCell><Skeleton className="h-4 w-[200px]" /></TableCell>
                   <TableCell><Skeleton className="h-4 w-[80px]" /></TableCell> {/* Credits */}
                   <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell> {/* Agents */}
+                  <TableCell><Skeleton className="h-4 w-[60px]" /></TableCell> {/* Messages */}
+                  <TableCell><Skeleton className="h-4 w-[120px]" /></TableCell> {/* Last Message */}
                   <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
                   <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
                 </TableRow>
@@ -170,6 +172,10 @@ export default function UserTable({ initialData }: UserTableProps) {
                   <TableCell>{formatCredits(user.creditBalance)}</TableCell>
                   {/* Display Agent Count */}
                   <TableCell>{user.agentCount}</TableCell>
+                  {/* Display Message Count */}
+                  <TableCell>{user.messageCount ?? 0}</TableCell>
+                  {/* Display Last Message Date */}
+                  <TableCell>{formatDate(user.lastMessageSentAt)}</TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -207,7 +213,7 @@ export default function UserTable({ initialData }: UserTableProps) {
             ) : (
               <TableRow>
                 {/* Adjusted colSpan */}
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   No users found.
                 </TableCell>
               </TableRow>
