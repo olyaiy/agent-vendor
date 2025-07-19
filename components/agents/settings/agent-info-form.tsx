@@ -18,6 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { InfoCircledIcon } from '@radix-ui/react-icons';
 import { VisibilitySelector } from '@/components/visibility-selector';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { updateAgentAction, uploadAgentImageAction, removeAgentImageAction } from '@/db/actions/agent.actions';
 
 interface AgentInfoFormProps {
@@ -34,6 +35,7 @@ const AgentInfoForm = ({ agent }: AgentInfoFormProps) => {
   const [visibility, setVisibility] = useState<"public" | "private" | "link">(
     agent.visibility as "public" | "private" | "link"
   );
+  const [showReasoning, setShowReasoning] = useState<boolean>(agent.showReasoning);
   
   // Image upload states
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
@@ -59,6 +61,7 @@ const AgentInfoForm = ({ agent }: AgentInfoFormProps) => {
           thumbnailUrl,
           avatarUrl,
           visibility,
+          showReasoning,
         };
 
         // Execute update
@@ -379,10 +382,21 @@ const AgentInfoForm = ({ agent }: AgentInfoFormProps) => {
             </div>
 
             <VisibilitySelector
-              value={visibility} 
+              value={visibility}
               onValueChange={setVisibility}
             />
-            
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="showReasoning"
+                checked={showReasoning}
+                onCheckedChange={setShowReasoning}
+              />
+              <Label htmlFor="showReasoning" className="text-sm font-medium">
+                Show reasoning in chat
+              </Label>
+            </div>
+
             {/* Save Button */}
             <div className="flex justify-end">
               <Button 
