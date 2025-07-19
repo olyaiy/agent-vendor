@@ -16,7 +16,7 @@ export function CreditErrorDialog({
   open, 
   onOpenChange, 
   creditBalance, 
-  // agentSlug 
+  // agentSlug 3
 }: CreditErrorDialogProps) {
   const formatBalance = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
