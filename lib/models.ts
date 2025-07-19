@@ -114,6 +114,7 @@ export interface ModelDetails {
   outputCostPerMillion: number;
   contextWindow: number;
   defaultSettings?: Partial<ModelSettings>;
+  isReasoningModel?: boolean;
 }
 
 // Updated modelDetails object with displayName and description
@@ -924,6 +925,46 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
+  'sonar-reasoning-pro': {
+    displayName: "Sonar Reasoning Pro",
+    description: "Reasoning-enhanced model with search grounding for complex queries.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+    isReasoningModel: true,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 0,
+        max: 8000
+      },
+      temperature: {
+        default: 0.2,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 0.9,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 0,
+        min: 0,
+        max: 2048
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
   'sonar': {
     displayName: "Sonar",
     description: "Perplexity's lightweight offering with search grounding, quicker and cheaper than Sonar Pro.",
@@ -996,6 +1037,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 0.55,
     outputCostPerMillion: 2.19,
     contextWindow: 64_000,
+    isReasoningModel: true,
     defaultSettings: {
       maxOutputTokens: {
         default: 8192,
@@ -1095,6 +1137,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 0.10,
     outputCostPerMillion: 0.40,
     contextWindow: 1_048_576,
+    isReasoningModel: true,
   },
 
 
@@ -1106,6 +1149,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 2.00,
     outputCostPerMillion: 10.00,
     contextWindow: 131_072,
+    isReasoningModel: true,
     defaultSettings: {
       maxOutputTokens: {
         default: 1024,
@@ -1154,6 +1198,7 @@ export const modelDetails: Record<string, ModelDetails> = {
     inputCostPerMillion: 0.30,
     outputCostPerMillion: 0.50,
     contextWindow: 131_072,
+    isReasoningModel: true,
     defaultSettings: {
       maxOutputTokens: {
         default: 8192,
@@ -1316,6 +1361,11 @@ export function getModelPricing(modelId: string): ModelDetails {
     inputCostPerMillion: details.inputCostPerMillion,
     outputCostPerMillion: details.outputCostPerMillion,
     contextWindow: details.contextWindow,
-    defaultSettings: details.defaultSettings
+    defaultSettings: details.defaultSettings,
+    isReasoningModel: details.isReasoningModel
   };
+}
+
+export function isReasoningModel(modelId: string): boolean {
+  return modelDetails[modelId]?.isReasoningModel === true;
 }
