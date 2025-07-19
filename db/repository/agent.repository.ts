@@ -10,7 +10,10 @@ import { generateAgentSlug } from '@/lib/utils'; // Import the slug generation u
 
 // Define the type for the data needed to insert an agent
 // Note: Slug is intentionally omitted here as it's generated internally
-export type NewAgent = Omit<typeof agent.$inferInsert, 'slug'>;
+// Allow optional showReasoning when creating so the default value can be used
+export type NewAgent = Omit<typeof agent.$inferInsert, 'slug' | 'showReasoning'> & {
+    showReasoning?: boolean;
+};
 
 // Define the structure for a tag within the agent result (Keep here or move to shared types)
 export type AgentTagInfo = { id: string; name: string };
@@ -94,9 +97,11 @@ export async function selectAgentBySlug(slug: string): Promise<Agent | undefined
 
 // Define a more flexible input type for updates during/after deprecation
 // It accepts standard Agent fields (partial) but *also* allows specifying a primaryModelId separately
-export type UpdateAgentInput = Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'primaryModelId' | 'creatorId'>> & {
-    primaryModelId?: string; // Allow explicitly passing the new primary model ID
-};
+export type UpdateAgentInput =
+    Partial<Omit<Agent, 'id' | 'createdAt' | 'updatedAt' | 'primaryModelId' | 'creatorId' | 'showReasoning'>> & {
+        primaryModelId?: string;
+        showReasoning?: boolean;
+    };
 
 /**
  * Updates an existing agent (Phase 3 Version - Stops writing agent.primaryModelId).
