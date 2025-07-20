@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getDailyActiveUsersAction } from '@/db/actions/analytics.actions';
+import type { DailyActiveUsersRow } from '@/db/repository/analytics.repository';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -21,7 +22,7 @@ export default function DailyActiveUsersChart() {
       const result = await getDailyActiveUsersAction(range);
       if (result.success) {
         setData(
-          result.data.map((d) => ({
+          result.data.map((d: DailyActiveUsersRow) => ({
             day: new Date(d.day).toLocaleDateString(),
             activeUsers: d.activeUsers,
           }))
