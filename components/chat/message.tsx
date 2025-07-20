@@ -1,6 +1,6 @@
 'use client';
 
-import type { UIMessage } from 'ai';
+import type { UIMessage, ToolInvocation } from 'ai';
 
 import { memo, useState, Fragment } from 'react';
 
@@ -29,7 +29,7 @@ interface MessagePart {
   type: string;
   text?: string;
   reasoning?: string;
-  toolInvocation?: { toolCallId: string };
+  toolInvocation?: ToolInvocation;
   source?: { id: string; url: string; title?: string };
 }
 
@@ -191,9 +191,7 @@ const PurePreviewMessage = ({
                                 {part.text}
                               </div>
                             ) : (
-                              <Markdown key={`${message.id}-${index}`} messageRole={message.role}>
-                                {part.text}
-                              </Markdown>
+                              <Markdown key={`${message.id}-${index}`} messageRole={message.role}>{part.text ?? ''}</Markdown>
                             )}
                           </div>
                         </div>
@@ -220,9 +218,12 @@ const PurePreviewMessage = ({
                   }
                   if (type === 'tool-invocation') {
                   const { toolInvocation } = part;
-                  const { toolCallId } = toolInvocation ?? { toolCallId: '' };
-                    elements.push(<ToolMessage key={toolCallId} toolInvocation={toolInvocation} />);
-                    return;
+                  if (toolInvocation) {
+                    elements.push(
+                      <ToolMessage key={toolInvocation.toolCallId} toolInvocation={toolInvocation} />,
+                    );
+                  }
+                  return;
                   }
 
                   // Add a fallback return for the map function
