@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
 import { toolRegistry } from '@/tools/registry'; // Import the tool registry
+import DailyActiveUsersChart from '@/components/admin/daily-active-users-chart';
 
 // Define a simple component for unauthorized access
 function UnauthorizedAccess() { // This component might not be reached if auth check is only in action
@@ -161,6 +162,7 @@ export default async function AdminPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+      <DailyActiveUsersChart />
 
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
