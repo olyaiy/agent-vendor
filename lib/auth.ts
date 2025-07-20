@@ -7,7 +7,7 @@ import { polar } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { userCredits } from "@/db/schema/transactions"; // Import userCredits table
 import { waitlist } from "@/db/schema/waitlist";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 
 const client = new Polar({
@@ -51,7 +51,9 @@ export const auth = betterAuth({
           const approved = await db
             .select({ id: waitlist.id })
             .from(waitlist)
-            .where(eq(waitlist.email, email))
+            .where(
+              and(eq(waitlist.email, email), eq(waitlist.approved, true))
+            )
             .limit(1);
 
           if (approved.length === 0) {

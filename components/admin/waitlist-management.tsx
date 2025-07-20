@@ -24,7 +24,8 @@ import {
 import { toast } from 'sonner';
 import { LoaderIcon, TrashIcon } from '@/components/utils/icons';
 import type { WaitlistEntry } from '@/db/actions/waitlist.actions';
-import { deleteWaitlistEntryAction } from '@/db/actions/waitlist.actions';
+import { deleteWaitlistEntryAction, setWaitlistApprovalAction } from '@/db/actions/waitlist.actions';
+import { Switch } from '@/components/ui/switch';
 
 interface WaitlistManagementProps {
   initialEntries: WaitlistEntry[];
@@ -48,6 +49,18 @@ export default function WaitlistManagement({ initialEntries }: WaitlistManagemen
 
   const confirmDelete = (entry: WaitlistEntry) => setEntryToDelete(entry);
   const closeDialog = () => setEntryToDelete(null);
+
+  const handleToggleApproved = (entry: WaitlistEntry, value: boolean) => {
+    startTransition(async () => {
+      const result = await setWaitlistApprovalAction(entry.id, value);
+      if (result.success) {
+        setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, approved: value } : e));
+        toast.success(`${entry.email} ${value ? 'approved' : 'unapproved'}.`);
+      } else {
+        toast.error(result.error || 'Failed to update approval status.');
+      }
+    });
+  };
 
   const handleDelete = () => {
     if (!entryToDelete) return;
@@ -85,6 +98,7 @@ export default function WaitlistManagement({ initialEntries }: WaitlistManagemen
               <TableHead>Referral</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Joined</TableHead>
+              <TableHead>Approved</TableHead>
               <TableHead className="w-[70px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -103,6 +117,13 @@ export default function WaitlistManagement({ initialEntries }: WaitlistManagemen
                   <TableCell>{entry.referralSource ?? '-'}</TableCell>
                   <TableCell>{entry.city || entry.country ? `${entry.city ?? ''}${entry.city && entry.country ? ', ' : ''}${entry.country ?? ''}` : '-'}</TableCell>
                   <TableCell>{new Date(entry.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={entry.approved}
+                      onCheckedChange={(val) => handleToggleApproved(entry, val)}
+                      disabled={isPending}
+                    />
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"

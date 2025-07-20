@@ -81,6 +81,7 @@ export async function joinWaitlist(formData: FormData) {
       referralSource: result.data.referralSource || null,
       city: finalCity || null,
       country: finalCountry || null,
+      approved: false,
     })
 
     return { success: true }

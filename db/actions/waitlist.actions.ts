@@ -47,4 +47,27 @@ export async function deleteWaitlistEntryAction(id: string): Promise<ActionResul
     console.error(`Failed to delete wait-list entry ${id}:`, error);
     return { success: false, error: (error as Error).message };
   }
-} 
+}
+
+/**
+ * Update the approval status of a wait-list entry (admin only)
+ */
+export async function setWaitlistApprovalAction(
+  id: string,
+  approved: boolean
+): Promise<ActionResult<void>> {
+  if (!id) return { success: false, error: 'Entry ID is required.' };
+
+  const authResult = await requireAdmin();
+  if (!authResult.success) {
+    return { success: false, error: authResult.error ?? 'Admin access required' };
+  }
+
+  try {
+    await db.update(waitlist).set({ approved }).where(eq(waitlist.id, id));
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error(`Failed to update wait-list entry ${id}:`, error);
+    return { success: false, error: (error as Error).message };
+  }
+}
