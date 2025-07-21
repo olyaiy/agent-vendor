@@ -11,7 +11,7 @@ import { generateUUID, getMostRecentUserMessage, getTrailingMessageId } from '@/
 import { chargeUser } from '@/db/actions/transaction-actions';
 import { getUserCredits } from '@/db/repository/transaction-repository'; // Import getUserCredits
 import { toolRegistry, type ToolRegistry } from '@/tools/registry'; // Import ToolRegistry
-
+ 
 // Define types for attachments to avoid 'any'
 interface Attachment {
   url: string;
