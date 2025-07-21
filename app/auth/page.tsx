@@ -1,6 +1,5 @@
 'use client'; // Required for client-side interactions like onClick
 
-import WaitlistForm from '@/components/auth/WaitlistForm';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { SplashCursor } from '@/components/ui/splash-cursor';
 import { ErrorAlert } from '@/components/ui/error-alert';
@@ -15,15 +14,10 @@ function AuthContent() {
   
   const getErrorMessage = (errorType: string | null) => {
     switch (errorType) {
-      case 'not_on_waitlist':
-        return {
-          title: "Account Not Found",
-          message: "We couldn't find your account in our system. Please join our waitlist below and we'll invite you when space becomes available."
-        };
       case 'unable_to_create_user':
         return {
-          title: "Account Not Found", 
-          message: "We couldn't find your account in our system. Please join our waitlist below and we'll invite you when space becomes available."
+          title: 'Account Error',
+          message: "We couldn't create your account. Please try again."
         };
       default:
         return null;
@@ -88,13 +82,13 @@ function AuthContent() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="h-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mt-4 mb-2"
             ></motion.div>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.5 }}
               className="text-white/70 text-center text-sm max-w-xs px-6"
             >
-              Due to high demand, we&apos;re onboarding users in batches. Join our waitlist and we&apos;ll invite you weekly as we scale our platform.
+              Sign in with Google to get started.
             </motion.p>
           </div>
 
@@ -122,23 +116,15 @@ function AuthContent() {
               <GoogleSignInButton />
             </motion.div>
 
-            <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-            >
-              <WaitlistForm />
-            </motion.div>
-            
             {/* Terms and privacy */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
               className="mt-8 text-center"
             >
               <p className="text-white/50 text-xs">
-                By joining our waitlist, you agree to our{' '}
+                By signing in, you agree to our{' '}
                 <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Terms of Service
                 </Link>{' '}
@@ -182,13 +168,13 @@ function AuthContent() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="h-1 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full mb-6"
             ></motion.div>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.5 }}
               className="text-white/70 text-center text-base max-w-sm leading-relaxed"
             >
-              Due to high demand, we&apos;re onboarding users in batches. Join our waitlist and we&apos;ll invite you weekly as we scale our platform.
+              Sign in with Google to get started.
             </motion.p>
           </div>
 
@@ -216,23 +202,15 @@ function AuthContent() {
               <GoogleSignInButton />
             </motion.div>
 
-            <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-            >
-              <WaitlistForm />
-            </motion.div>
-            
             {/* Terms and privacy */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.9 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
               className="text-center"
             >
               <p className="text-white/50 text-xs">
-                By joining our waitlist, you agree to our{' '}
+                By signing in, you agree to our{' '}
                 <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
                   Terms of Service
                 </Link>{' '}
