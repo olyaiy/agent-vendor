@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Import Tabs components
 import { toolRegistry } from '@/tools/registry'; // Import the tool registry
 import DailyActiveUsersChart from '@/components/admin/daily-active-users-chart';
+import DailySignupsChart from '@/components/admin/daily-signups-chart';
 
 // Define a simple component for unauthorized access
 function UnauthorizedAccess() { // This component might not be reached if auth check is only in action
@@ -180,7 +181,18 @@ export default async function AdminPage() {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      <DailyActiveUsersChart />
+      <Tabs defaultValue="active" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="active">Active Users</TabsTrigger>
+          <TabsTrigger value="signups">Sign Ups</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active">
+          <DailyActiveUsersChart />
+        </TabsContent>
+        <TabsContent value="signups">
+          <DailySignupsChart />
+        </TabsContent>
+      </Tabs>
 
       <Tabs defaultValue="users" className="w-full">
         <TabsList className="grid w-full grid-cols-5">
