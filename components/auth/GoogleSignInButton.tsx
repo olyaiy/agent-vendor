@@ -1,18 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+
 import { Loader2 } from 'lucide-react';
 import { signIn as googleSignIn } from '@/lib/auth-client';
 
@@ -27,13 +18,10 @@ const GoogleIcon = () => (
 );
 
 export default function GoogleSignInButton({ className }: { className?: string }) {
-  const router = useRouter();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleYes = async () => {
+  const handleSignIn = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -45,55 +33,26 @@ export default function GoogleSignInButton({ className }: { className?: string }
     }
   };
 
-  const handleNo = () => {
-    setDialogOpen(false);
-    router.push('/auth'); // Redirect to auth page (waitlist / sign-up)
-  };
-
   return (
     <div className={className}>
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="lg"
-            className="relative w-full h-12 font-medium bg-white hover:bg-white/90 text-gray-800 border-0 shadow-sm hover:shadow transition-all duration-200 overflow-hidden group"
-            disabled={isLoading}
-          >
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-white flex items-center justify-center border-r border-gray-100 group-hover:bg-white/90">
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
-              ) : (
-                <GoogleIcon />
-              )}
-            </div>
-            <span className="ml-6 group-hover:text-gray-800">
-              {isLoading ? 'Redirecting...' : 'Sign in with Google'}
-            </span>
-          </Button>
-        </DialogTrigger>
-
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Do you already have an account?</DialogTitle>
-            <DialogDescription>
-              Choose “Yes” to sign in or “No” to join the waitlist.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="flex-col sm:flex-row sm:justify-end gap-2">
-            <Button onClick={handleYes} disabled={isLoading} className="w-full sm:w-auto">
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              Yes
-            </Button>
-            <Button variant="outline" onClick={handleNo} className="w-full sm:w-auto">
-              No
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Button
+        variant="outline"
+        size="lg"
+        className="relative w-full h-12 font-medium bg-white hover:bg-white/90 text-gray-800 border-0 shadow-sm hover:shadow transition-all duration-200 overflow-hidden group"
+        disabled={isLoading}
+        onClick={handleSignIn}
+      >
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-white flex items-center justify-center border-r border-gray-100 group-hover:bg-white/90">
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+          ) : (
+            <GoogleIcon />
+          )}
+        </div>
+        <span className="ml-6 group-hover:text-gray-800">
+          {isLoading ? 'Redirecting...' : 'Sign in with Google'}
+        </span>
+      </Button>
 
       {error && (
         <p className="mt-2 text-sm text-red-500 text-center">{error}</p>

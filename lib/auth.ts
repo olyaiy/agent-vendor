@@ -6,8 +6,6 @@ import { admin, anonymous, username } from "better-auth/plugins";
 import { polar } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { userCredits } from "@/db/schema/transactions"; // Import userCredits table
-import { waitlist } from "@/db/schema/waitlist";
-import { eq, and } from "drizzle-orm";
 
 
 const client = new Polar({
@@ -46,20 +44,6 @@ export const auth = betterAuth({
           const email = candidate.email?.toLowerCase?.() || "";
           if (!email) {
             throw new Error("Email is required for sign up");
-          }
-
-          const approved = await db
-            .select({ id: waitlist.id })
-            .from(waitlist)
-            .where(
-              and(eq(waitlist.email, email), eq(waitlist.approved, true))
-            )
-            .limit(1);
-
-          if (approved.length === 0) {
-            throw new Error(
-              "You’re not on the access list yet – please join the waitlist first."
-            );
           }
         },
         after: async (user) => {
