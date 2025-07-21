@@ -196,5 +196,6 @@ Same three-line integration as desktop chat.
 | 7 | Prod rollout behind flag | Lead Dev |
 
 ---
+### Other notes: Always use PNPM for commands.
 
 ### Fin.  All code edits must follow the **minimal_changes** rules and be individually reviewed via PR. 
