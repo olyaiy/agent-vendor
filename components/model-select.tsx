@@ -263,7 +263,8 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
         </PopoverTrigger>
 
         {/* Model Selector Content */}
-        <PopoverContent className="w-full p-0">
+        {/* Ensure popover is scrollable on small screens */}
+        <PopoverContent className="w-full p-0 max-h-[75vh] overflow-y-auto">
 
            {/* Search Box */}
           <Command shouldFilter={false}>
@@ -278,7 +279,8 @@ export function ModelSelect({ models, defaultValue, onValueChange }: ModelSelect
 
             {/* Wrap CommandList in a single TooltipProvider */}
             <TooltipProvider>
-              <CommandList>
+              {/* Increase max height for better scrolling on mobile */}
+              <CommandList className="max-h-[60vh]">
 
 
               {/* No models found */}
