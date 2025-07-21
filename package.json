@@ -12,7 +12,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.2.8",
+    "@ai-sdk/anthropic": "^1.2.12",
     "@ai-sdk/deepseek": "^0.2.8",
     "@ai-sdk/google": "^1.2.10",
     "@ai-sdk/groq": "^1.2.7",
