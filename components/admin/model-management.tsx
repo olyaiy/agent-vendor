@@ -43,12 +43,15 @@ import { toast } from 'sonner';
 // Removed SearchIcon import
 import { LoaderIcon, PlusIcon, PencilEditIcon, TrashIcon } from '@/components/utils/icons';
 import { ActionResult } from '@/db/actions/types';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface ModelManagementProps {
   initialModels: Model[];
+  missingInDb?: string[];
+  missingLocally?: string[];
 }
 
-export default function ModelManagement({ initialModels }: ModelManagementProps) {
+export default function ModelManagement({ initialModels, missingInDb = [], missingLocally = [] }: ModelManagementProps) {
   const [models, setModels] = useState<Model[]>(initialModels);
   const [isPending, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState(''); // State for search term
@@ -187,9 +190,41 @@ export default function ModelManagement({ initialModels }: ModelManagementProps)
          <Button onClick={() => openDialog(null)} disabled={isPending}>
            <PlusIcon size={16} className="mr-2 h-4 w-4" />
            Create Model
-         </Button>
+        </Button>
       </div>
 
+      {(missingInDb.length > 0 || missingLocally.length > 0) && (
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Model List Mismatch</CardTitle>
+            <CardDescription>
+              Discrepancies detected between local model definitions and the database.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 text-destructive">
+            {missingInDb.length > 0 && (
+              <div>
+                <p className="font-medium text-sm">Missing in Database:</p>
+                <ul className="list-disc list-inside text-sm">
+                  {missingInDb.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {missingLocally.length > 0 && (
+              <div>
+                <p className="font-medium text-sm">Missing Locally:</p>
+                <ul className="list-disc list-inside text-sm">
+                  {missingLocally.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Models Table */}
       <div className="rounded-md border">

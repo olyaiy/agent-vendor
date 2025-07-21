@@ -1,6 +1,6 @@
 import { fetchUsersWithDetails, type ListUsersWithDetailsResponse } from './admin-actions'; // Import the new action and response type
 import { getAllTagsAction } from '@/db/actions/tag.actions'; // Import tag and model actions
-import { getAllModelsAction } from '@/db/actions';
+import { getAllModelsAction, compareModelListsAction } from '@/db/actions';
 import { getAllToolsAction } from '@/db/actions/tool.actions'; // Import tool action
 import { getAllWaitlistEntriesAction } from '@/db/actions/waitlist.actions'; // Import waitlist action
 import WaitlistManagement from '@/components/admin/waitlist-management'; // Import Waitlist component
@@ -62,12 +62,14 @@ export default async function AdminPage() {
   let initialUsersData: ListUsersWithDetailsResponse | null = null; // Use the new response type
   let initialTagsData: Awaited<ReturnType<typeof getAllTagsAction>> | null = null;
   let initialModelsData: Awaited<ReturnType<typeof getAllModelsAction>> | null = null;
+  let initialModelComparisonData: Awaited<ReturnType<typeof compareModelListsAction>> | null = null;
   let initialToolsData: Awaited<ReturnType<typeof getAllToolsAction>> | null = null; // Added for tools
   let initialWaitlistData: Awaited<ReturnType<typeof getAllWaitlistEntriesAction>> | null = null; // Added for waitlist
 
   let fetchUsersError = false;
   let fetchTagsError = false;
   let fetchModelsError = false;
+  let fetchModelComparisonError = false;
   let fetchToolsError = false; // Added for tools
   let fetchWaitlistError = false; // Added for waitlist
 
@@ -76,6 +78,7 @@ export default async function AdminPage() {
       fetchUsersWithDetails({ limit: 25 }), // Call the new action
       getAllTagsAction(),
       getAllModelsAction(), // Fetch models concurrently
+      compareModelListsAction(),
       getAllToolsAction(), // Fetch tools concurrently
       getAllWaitlistEntriesAction(), // Fetch waitlist concurrently
   ]);
@@ -115,27 +118,39 @@ export default async function AdminPage() {
       fetchModelsError = true;
   }
 
-  // Process Tools result
+  // Process Model Comparison result
   if (results[3].status === 'fulfilled') {
-    initialToolsData = results[3].value;
+      initialModelComparisonData = results[3].value;
+      if (!initialModelComparisonData.success) {
+          console.error("Failed to compare model lists:", initialModelComparisonData.error);
+          fetchModelComparisonError = true;
+      }
+  } else {
+      console.error("Failed to compare model lists for admin page:", results[3].reason);
+      fetchModelComparisonError = true;
+  }
+
+  // Process Tools result
+  if (results[4].status === 'fulfilled') {
+    initialToolsData = results[4].value;
     if (!initialToolsData.success) {
         console.error("Failed to load tools:", initialToolsData.error);
         fetchToolsError = true;
     }
   } else {
-      console.error("Failed to load tools for admin page:", results[3].reason);
+      console.error("Failed to load tools for admin page:", results[4].reason);
       fetchToolsError = true;
   }
 
   // Process Waitlist result (index 4)
-  if (results[4].status === 'fulfilled') {
-    initialWaitlistData = results[4].value;
+  if (results[5].status === 'fulfilled') {
+    initialWaitlistData = results[5].value;
     if (!initialWaitlistData.success) {
         console.error("Failed to load waitlist:", initialWaitlistData.error);
         fetchWaitlistError = true;
     }
   } else {
-      console.error("Failed to load waitlist for admin page:", results[4].reason);
+      console.error("Failed to load waitlist for admin page:", results[5].reason);
       fetchWaitlistError = true;
   }
 
@@ -151,6 +166,9 @@ export default async function AdminPage() {
   }
   if (fetchModelsError || !initialModelsData?.success) {
     return <LoadingError resourceName="Models" />;
+  }
+  if (fetchModelComparisonError || !initialModelComparisonData?.success) {
+    return <LoadingError resourceName="Model Comparison" />;
   }
   if (fetchToolsError || !initialToolsData?.success) { // Though initialToolsData might be empty if no tools in DB, success should be true
     return <LoadingError resourceName="Tools" />;
@@ -210,7 +228,11 @@ export default async function AdminPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ModelManagement initialModels={initialModelsData.data || []} />
+              <ModelManagement
+                initialModels={initialModelsData.data || []}
+                missingInDb={initialModelComparisonData?.data?.missingInDb || []}
+                missingLocally={initialModelComparisonData?.data?.missingLocally || []}
+              />
             </CardContent>
           </Card>
         </TabsContent>

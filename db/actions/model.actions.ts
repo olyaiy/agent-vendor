@@ -17,6 +17,7 @@ import {
 
 import { Model } from "@/db/schema/agent"; // Import schema type
 import { ActionResult } from "./types"; // Import shared type
+import { localModelIds } from "@/lib/models";
 
 // Zod Schemas
 const NewModelSchema = z.object({
@@ -144,6 +145,25 @@ export async function deleteModelAction(modelId: string): Promise<ActionResult<v
         if (error instanceof Error && error.message.includes("Model is currently in use")) {
             return { success: false, error: error.message };
         }
+        return { success: false, error: (error as Error).message };
+    }
+}
+
+/**
+ * Compares model names defined locally with those stored in the database.
+ * Returns arrays of missing models in each location.
+ */
+export async function compareModelListsAction(): Promise<ActionResult<{ missingInDb: string[]; missingLocally: string[] }>> {
+    try {
+        const dbModels = await selectAllModels();
+        const dbModelNames = dbModels.map(m => m.model);
+
+        const missingInDb = localModelIds.filter(id => !dbModelNames.includes(id)).sort();
+        const missingLocally = dbModelNames.filter(name => !localModelIds.includes(name)).sort();
+
+        return { success: true, data: { missingInDb, missingLocally } };
+    } catch (error) {
+        console.error('Failed to compare model lists:', error);
         return { success: false, error: (error as Error).message };
     }
 }
