@@ -1369,3 +1369,6 @@ export function getModelPricing(modelId: string): ModelDetails {
 export function isReasoningModel(modelId: string): boolean {
   return modelDetails[modelId]?.isReasoningModel === true;
 }
+
+// Helper array of all model IDs defined locally
+export const localModelIds = Object.keys(modelDetails);
