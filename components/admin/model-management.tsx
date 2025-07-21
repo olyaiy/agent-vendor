@@ -12,6 +12,9 @@ import type { Model } from '@/db/schema/agent';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea'; // Added for description
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -43,7 +46,6 @@ import { toast } from 'sonner';
 // Removed SearchIcon import
 import { LoaderIcon, PlusIcon, PencilEditIcon, TrashIcon } from '@/components/utils/icons';
 import { ActionResult } from '@/db/actions/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface ModelManagementProps {
   initialModels: Model[];
@@ -55,6 +57,8 @@ export default function ModelManagement({ initialModels, missingInDb = [], missi
   const [models, setModels] = useState<Model[]>(initialModels);
   const [isPending, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState(''); // State for search term
+  const [missingInDbState, setMissingInDbState] = useState<string[]>(missingInDb);
+  const [missingLocallyState, setMissingLocallyState] = useState<string[]>(missingLocally);
 
   // State for Create/Edit Dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -156,6 +160,37 @@ export default function ModelManagement({ initialModels, missingInDb = [], missi
     setModelToDelete(model);
   };
 
+  const handleAddToDb = (name: string) => {
+    startTransition(async () => {
+      const result = await createModelAction({ model: name, description: null });
+      if (result.success) {
+        setModels(prev => [...prev, result.data].sort((a, b) => a.model.localeCompare(b.model)));
+        setMissingInDbState(prev => prev.filter(n => n !== name));
+        toast.success(`Model "${name}" added to database.`);
+      } else {
+        toast.error(result.error || 'Failed to add model.');
+      }
+    });
+  };
+
+  const handleRemoveFromDb = (name: string) => {
+    const model = models.find(m => m.model === name);
+    if (!model) {
+      toast.error(`Model "${name}" not found in database.`);
+      return;
+    }
+    startTransition(async () => {
+      const result: ActionResult<void> = await deleteModelAction(model.id);
+      if (result.success) {
+        setModels(prev => prev.filter(m => m.id !== model.id));
+        setMissingLocallyState(prev => prev.filter(n => n !== name));
+        toast.success(`Model "${name}" removed from database.`);
+      } else {
+        toast.error(result.error || 'Failed to remove model.');
+      }
+    });
+  };
+
   const handleDeleteModel = () => {
     if (!modelToDelete) return;
 
@@ -193,37 +228,56 @@ export default function ModelManagement({ initialModels, missingInDb = [], missi
         </Button>
       </div>
 
-      {(missingInDb.length > 0 || missingLocally.length > 0) && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Model List Mismatch</CardTitle>
-            <CardDescription>
-              Discrepancies detected between local model definitions and the database.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 text-destructive">
-            {missingInDb.length > 0 && (
-              <div>
+      {(missingInDbState.length > 0 || missingLocallyState.length > 0) && (
+        <Alert variant="destructive" className="space-y-2">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Model List Mismatch</AlertTitle>
+          <AlertDescription className="space-y-2">
+            {missingInDbState.length > 0 && (
+              <div className="space-y-1">
                 <p className="font-medium text-sm">Missing in Database:</p>
-                <ul className="list-disc list-inside text-sm">
-                  {missingInDb.map((name) => (
-                    <li key={name}>{name}</li>
+                <ul className="space-y-1 text-sm">
+                  {missingInDbState.map((name) => (
+                    <li key={name} className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-destructive text-destructive">
+                        {name}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleAddToDb(name)}
+                        disabled={isPending}
+                      >
+                        Add to DB
+                      </Button>
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
-            {missingLocally.length > 0 && (
-              <div>
+            {missingLocallyState.length > 0 && (
+              <div className="space-y-1">
                 <p className="font-medium text-sm">Missing Locally:</p>
-                <ul className="list-disc list-inside text-sm">
-                  {missingLocally.map((name) => (
-                    <li key={name}>{name}</li>
+                <ul className="space-y-1 text-sm">
+                  {missingLocallyState.map((name) => (
+                    <li key={name} className="flex items-center gap-2">
+                      <Badge variant="secondary">{name}</Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        onClick={() => handleRemoveFromDb(name)}
+                        disabled={isPending}
+                      >
+                        Remove from DB
+                      </Button>
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* Models Table */}
