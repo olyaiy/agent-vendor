@@ -55,6 +55,8 @@ export const myProvider = customProvider({
     'llama-4-scout-17b-16e': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
     'llama-4-maverick-17b-128e': groq('meta-llama/llama-4-maverick-17b-128e'),
     'kimi-k2-instruct': groq('moonshotai/kimi-k2-instruct'),
+    'gpt-oss-20b': groq('openai/gpt-oss-20b'),
+    'gpt-oss-120b': groq('openai/gpt-oss-120b'),
 
     // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
@@ -1266,6 +1268,74 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
+  'gpt-oss-20b': {
+    displayName: "GPT-OSS 20B",
+    description: "For lower latency, and local or specialized use cases (21B parameters with 3.6B active parameters).",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.50,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 32768
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'gpt-oss-120b': {
+    displayName: "GPT-OSS 120B",
+    description: "For production, general purpose, high reasoning use cases that fits into a single H100 GPU (117B parameters with 5.1B active parameters).",
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.75,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 32768
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
+  },
 
 
 };
@@ -1310,6 +1380,8 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'llama-4-scout-17b-16e': groq('llama-4-scout-17b-16e'),
     'llama-4-maverick-17b-128e': groq('llama-4-maverick-17b-128e'),
     'kimi-k2-instruct': groq('moonshotai/kimi-k2-instruct'),
+    'gpt-oss-20b': groq('openai/gpt-oss-20b'),
+    'gpt-oss-120b': groq('openai/gpt-oss-120b'),
     // DeepSeek
     'deepseek-chat': deepseek('deepseek-chat'),
     'deepseek-reasoner': deepseek('deepseek-reasoner'),
