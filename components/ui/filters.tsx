@@ -132,6 +132,9 @@ export enum Agent {
 export const Model = {
   GPT_4O: "gpt-4o",
   GPT_4O_MINI: "gpt-4o-mini",
+  GPT_5: "gpt-5",
+  GPT_5_MINI: "gpt-5-mini",
+  GPT_5_NANO: "gpt-5-nano",
   O1: "o1",
   O3_MINI: "o3-mini",
   CLAUDE_3_7_SONNET: "claude-3-7-sonnet-20250219",
