@@ -29,6 +29,9 @@ export const myProvider = customProvider({
     'o3-mini': openai('o3-mini'),
     'o3': openai('o3'),
     'o4-mini': openai('o4-mini'),
+    'gpt-5': openai('gpt-5'),
+    'gpt-5-mini': openai('gpt-5-mini'),
+    'gpt-5-nano': openai('gpt-5-nano'),
 
     // Perplexity Models
     'sonar-pro': perplexity('sonar-pro'),
@@ -363,6 +366,109 @@ export const modelDetails: Record<string, ModelDetails> = {
     defaultSettings: {
       maxOutputTokens: {
         default: 2048,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+
+  'gpt-5': {
+    displayName: "GPT-5",
+    description: "OpenAI's next-generation flagship model for advanced multimodal tasks.",
+    inputCostPerMillion: 1.25,
+    outputCostPerMillion: 10.00,
+    contextWindow: 1_000_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+  'gpt-5-mini': {
+    displayName: "GPT-5 Mini",
+    description: "Smaller, cost-effective GPT-5 model for general use.",
+    inputCostPerMillion: 0.25,
+    outputCostPerMillion: 2.00,
+    contextWindow: 1_000_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+  'gpt-5-nano': {
+    displayName: "GPT-5 Nano",
+    description: "Fastest, most efficient GPT-5 variant.",
+    inputCostPerMillion: 0.05,
+    outputCostPerMillion: 0.40,
+    contextWindow: 1_000_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
         min: 50,
         max: 2048
       },
@@ -1357,6 +1463,9 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'o3-mini': openai('o3-mini'),
     'o3': openai('o3'),
     'o4-mini': openai('o4-mini'),
+    'gpt-5': openai('gpt-5'),
+    'gpt-5-mini': openai('gpt-5-mini'),
+    'gpt-5-nano': openai('gpt-5-nano'),
     // Perplexity
     'sonar-pro': perplexity('sonar-pro'),
     'sonar': perplexity('sonar'),
