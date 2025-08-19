@@ -71,6 +71,8 @@ export const myProvider = customProvider({
     'claude-3-7-sonnet-20250219': anthropic('claude-3-7-sonnet-20250219'),
     'claude-4-sonnet-20250514': anthropic('claude-4-sonnet-20250514'),
     'claude-4-opus-20250514': anthropic('claude-4-opus-20250514'),
+    'claude-sonnet-4': anthropic('claude-sonnet-4'),
+    'claude-opus-4.1': anthropic('claude-opus-4.1'),
 
     
     // Google Models
@@ -658,6 +660,84 @@ export const modelDetails: Record<string, ModelDetails> = {
     description: "Fast model combining rapid response times with improved reasoning capabilities for speed-critical applications.",
     inputCostPerMillion: 0.80,
     outputCostPerMillion: 4.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'claude-sonnet-4': {
+    displayName: "Claude Sonnet 4",
+    description: "Claude Sonnet 4 significantly improves on Sonnet 3.7's industry-leading capabilities, excelling in coding with a state-of-the-art 72.7% on SWE-bench. The model balances performance and efficiency for internal and external use cases, with enhanced steerability for greater control over implementations. While not matching Opus 4 in most domains, it delivers an optimal mix of capability and practicality.",
+    inputCostPerMillion: 3.00,
+    outputCostPerMillion: 15.00,
+    contextWindow: 200_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 4096
+      },
+      temperature: {
+        default: 1,
+        min: 0.1,
+        max: 1
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      topK: {
+        default: 1,
+        min: 1,
+        max: 500
+      },
+      frequencyPenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'claude-opus-4.1': {
+    displayName: "Claude Opus 4.1",
+    description: "Claude Opus 4.1 is a drop-in replacement for Opus 4 that delivers superior performance and precision for real-world coding and agentic tasks. Opus 4.1 advances state-of-the-art coding performance to 74.5% on SWE-bench Verified, and handles complex, multi-step problems with more rigor and attention to detail.",
+    inputCostPerMillion: 15.00,
+    outputCostPerMillion: 75.00,
     contextWindow: 200_000,
     defaultSettings: {
       maxOutputTokens: {
@@ -1500,6 +1580,8 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'claude-3-7-sonnet-20250219': anthropic('claude-3-7-sonnet-20250219'),
     'claude-4-sonnet-20250514': anthropic('claude-4-sonnet-20250514'),
     'claude-4-opus-20250514': anthropic('claude-4-opus-20250514'),
+    'claude-sonnet-4': anthropic('claude-sonnet-4'),
+    'claude-opus-4.1': anthropic('claude-opus-4.1'),
     // Google
     'gemini-2.5-pro-exp-03-25': google('gemini-2.5-pro-exp-03-25'),
     'gemini-2.0-flash-exp': google('gemini-2.0-flash-exp'),
