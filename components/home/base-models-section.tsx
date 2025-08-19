@@ -3,6 +3,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getBaseModelAgentsAction } from '@/db/actions/agent.actions';
 
+// --- TEMPORARY: Strict allow-list of base models to display (order preserved) ---
+const ALLOWED_BASE_MODEL_IDS = [
+  'fe8c80f5-666a-4518-b71c-dc93527bb03a', // ChatGPT
+  '1fd4fc2e-ab0a-40af-a3e8-693bc5df82c2', // Claude
+  '798389e1-81eb-40a8-9bac-888d91e06e5f', // Deepseek
+  'fea5c4a8-6932-4fbc-bbf6-450fed86b678', // Google Gemini
+  '6886b0e3-3118-42db-98d8-992a71a6a3c2', // Meta Llama
+  'a46de4e7-c582-4c22-b96e-3675363a2e6b', // Mistral
+  'f7cdbba9-bc84-4cd0-b6c9-e5a36377be10', // Perplexity
+] as const;
+
 // --- Loading Skeleton ---
 function BaseModelsLoading() {
   return (
@@ -44,13 +55,22 @@ async function BaseModelAgentsRow({ promise }: { promise: BaseModelResult }) {
 
   const agents = result.data || [];
 
-  if (agents.length === 0) {
+  // Order & filter according to the hard-coded allow-list
+  const agentMap = new Map(agents.map(a => [a.id, a]));
+  const filteredAgents = ALLOWED_BASE_MODEL_IDS.map(id => agentMap.get(id)).filter(Boolean) as BaseModelAgent[];
+
+  // Debug log
+  if (filteredAgents.length) {
+    console.log('[BaseModelsSection] Displaying base-model agents:', filteredAgents.map(a => ({ id: a.id, name: a.name, slug: a.slug })));
+  }
+
+  if (filteredAgents.length === 0) {
     return <p className="text-xs text-muted-foreground/70">No featured models available</p>;
   }
 
   return (
     <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-5 overflow-x-auto pb-2 scrollbar-hide">
-      {agents.map((agent) => (
+      {filteredAgents.map((agent) => (
         <Link 
           href={`/agent/${agent.slug || agent.id}`} 
           key={agent.id} 

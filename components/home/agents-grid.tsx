@@ -3,6 +3,9 @@ import { getRecentAgents, getPopularAgents } from '@/db/actions/agent.actions';
 import { AgentCard } from "@/components/agent-card";
 import { PaginationControls } from '@/components/agents/pagination-controls';
 
+// Tag ID used to identify base-model agents – only needed for debugging/logging.
+const BASE_MODEL_TAG_ID = "575527b1-803a-4c96-8a4a-58ca997f08bd";
+
 // --- Loading Skeletons ---
 
 // Loading component for the overall agents data fetch
@@ -92,9 +95,15 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'p
     );
   }
 
-  const { agents } = result.data;
-  // Grab total count provided by the backend for pagination/header display
-  const { totalCount } = result.data;
+  const { agents, totalCount } = result.data;
+
+  // --- Debug logging: list every base-model agent returned from the query ---
+  const baseModelAgents = agents.filter(agent =>
+    agent.tags.some(tag => tag.id === BASE_MODEL_TAG_ID)
+  );
+  if (baseModelAgents.length) {
+    console.log('[AgentsGrid] Base-model agents present:', baseModelAgents.map(a => ({ id: a.id, name: a.name, slug: a.slug })));
+  }
 
   // Handle empty states with better messaging
   if (agents.length === 0) {
