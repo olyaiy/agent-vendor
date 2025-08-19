@@ -1,7 +1,13 @@
 import React, { Suspense } from 'react';
 import { getRecentAgents, getPopularAgents } from '@/db/actions/agent.actions';
 import { AgentCard } from "@/components/agent-card";
-import { PaginationControls } from '@/components/agents/pagination-controls';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the *client* PaginationControls component. By wrapping the
+// named export into `{ default: ... }`, we satisfy `next/dynamic`’s expectation
+// of a default export and avoid the `ssr:false` option which isn’t allowed in
+// Server Components.
+const PaginationControls = dynamic(() => import('@/components/agents/pagination-controls').then((m) => ({ default: m.PaginationControls })));
 
 // Tag ID used to identify base-model agents – only needed for debugging/logging.
 const BASE_MODEL_TAG_ID = "575527b1-803a-4c96-8a4a-58ca997f08bd";
