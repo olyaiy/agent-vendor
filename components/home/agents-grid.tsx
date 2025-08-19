@@ -50,12 +50,10 @@ function AgentItemLoading() {
 
 // --- Main Grid Component ---
 
-// Add constant for Base Model tag ID near the top of the file, right after existing imports and before component definitions.
-
-const BASE_MODEL_TAG_ID = "575527b1-803a-4c96-8a4a-58ca997f08bd";
-
-// Define the ID for the base model tag (no longer used for filtering in this component)
-// const BASE_MODEL_TAG_ID = "575527b1-803a-4c96-8a4a-58ca997f08bd";
+// Previously we filtered out agents tagged as a "Base Model" using a hard-coded tag ID.
+// That prevented legitimate results (especially when the user explicitly filters by that tag)
+// from ever showing in the main grid. We now surface all agents and rely on UI/UX to avoid
+// duplication with the separate "Base Models" row.
 
 type AgentsGridProps = {
   tag?: string;
@@ -95,16 +93,11 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'p
   }
 
   const { agents } = result.data;
-
-  // Inside the AgentsGrid component, immediately after obtaining `agents` and `totalCount` from the fetch result, add filtering logic and update variables used later in rendering.
-
-  const filteredAgents = agents.filter(agent => !agent.tags.some(tag => tag.id === BASE_MODEL_TAG_ID));
-  const filteredTotalCount = filteredAgents.length;
-
-  // Removed the base model filtering logic as per the requirement for the /agents page
+  // Grab total count provided by the backend for pagination/header display
+  const { totalCount } = result.data;
 
   // Handle empty states with better messaging
-  if (filteredAgents.length === 0) {
+  if (agents.length === 0) {
     return (
       <div className="text-center py-12 space-y-4">
         <div className="text-6xl opacity-20">🤖</div>
@@ -151,7 +144,7 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'p
           </h1>
           <div className="flex-1 h-px bg-border/30" />
           <span className="text-sm text-muted-foreground/70 font-medium">
-            {filteredTotalCount} {filteredTotalCount === 1 ? 'agent' : 'agents'}
+            {totalCount} {totalCount === 1 ? 'agent' : 'agents'}
           </span>
         </div>
         {(searchQuery || tag) && (
@@ -169,7 +162,7 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'p
       
       {/* Grid container with improved spacing and responsive design */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-        {filteredAgents.map((agent) => (
+        {agents.map((agent) => (
           <Suspense key={agent.id} fallback={<AgentItemLoading />}>
             <AgentCard 
               agent={agent} 
@@ -181,7 +174,7 @@ export async function AgentsGrid({ tag, searchQuery, page, pageSize, sortBy = 'p
       
       {/* Pagination controls with better spacing */}
       <div className="pt-4">
-        <PaginationControls totalCount={filteredTotalCount} pageSize={pageSize} />
+        <PaginationControls totalCount={totalCount} pageSize={pageSize} />
       </div>
     </section>
   );
