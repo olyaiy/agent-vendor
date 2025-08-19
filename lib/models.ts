@@ -29,6 +29,9 @@ export const myProvider = customProvider({
     'o3-mini': openai('o3-mini'),
     'o3': openai('o3'),
     'o4-mini': openai('o4-mini'),
+    'gpt-5': openai('gpt-5'),
+    'gpt-5-mini': openai('gpt-5-mini'),
+    'gpt-5-nano': openai('gpt-5-nano'),
 
     // Perplexity Models
     'sonar-pro': perplexity('sonar-pro'),
@@ -55,6 +58,8 @@ export const myProvider = customProvider({
     'llama-4-scout-17b-16e': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
     'llama-4-maverick-17b-128e': groq('meta-llama/llama-4-maverick-17b-128e'),
     'kimi-k2-instruct': groq('moonshotai/kimi-k2-instruct'),
+    'gpt-oss-20b': groq('openai/gpt-oss-20b'),
+    'gpt-oss-120b': groq('openai/gpt-oss-120b'),
 
     // DeepSeek Models
     'deepseek-chat': deepseek('deepseek-chat'),
@@ -361,6 +366,109 @@ export const modelDetails: Record<string, ModelDetails> = {
     defaultSettings: {
       maxOutputTokens: {
         default: 2048,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+
+  'gpt-5': {
+    displayName: "GPT-5",
+    description: "OpenAI's next-generation flagship model for advanced multimodal tasks.",
+    inputCostPerMillion: 1.25,
+    outputCostPerMillion: 10.00,
+    contextWindow: 1_000_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+  'gpt-5-mini': {
+    displayName: "GPT-5 Mini",
+    description: "Smaller, cost-effective GPT-5 model for general use.",
+    inputCostPerMillion: 0.25,
+    outputCostPerMillion: 2.00,
+    contextWindow: 1_000_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
+        min: 50,
+        max: 2048
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 2
+      }
+    }
+  },
+  'gpt-5-nano': {
+    displayName: "GPT-5 Nano",
+    description: "Fastest, most efficient GPT-5 variant.",
+    inputCostPerMillion: 0.05,
+    outputCostPerMillion: 0.40,
+    contextWindow: 1_000_000,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 1024,
         min: 50,
         max: 2048
       },
@@ -1266,6 +1374,74 @@ export const modelDetails: Record<string, ModelDetails> = {
       }
     }
   },
+  'gpt-oss-20b': {
+    displayName: "GPT-OSS 20B",
+    description: "For lower latency, and local or specialized use cases (21B parameters with 3.6B active parameters).",
+    inputCostPerMillion: 0.10,
+    outputCostPerMillion: 0.50,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 32768
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
+  },
+  'gpt-oss-120b': {
+    displayName: "GPT-OSS 120B",
+    description: "For production, general purpose, high reasoning use cases that fits into a single H100 GPU (117B parameters with 5.1B active parameters).",
+    inputCostPerMillion: 0.15,
+    outputCostPerMillion: 0.75,
+    contextWindow: 131_072,
+    defaultSettings: {
+      maxOutputTokens: {
+        default: 4096,
+        min: 50,
+        max: 32768
+      },
+      temperature: {
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      topP: {
+        default: 1,
+        min: 0,
+        max: 1
+      },
+      frequencyPenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      },
+      presencePenalty: {
+        default: 0,
+        min: 0,
+        max: 1
+      }
+    }
+  },
 
 
 };
@@ -1287,6 +1463,9 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'o3-mini': openai('o3-mini'),
     'o3': openai('o3'),
     'o4-mini': openai('o4-mini'),
+    'gpt-5': openai('gpt-5'),
+    'gpt-5-mini': openai('gpt-5-mini'),
+    'gpt-5-nano': openai('gpt-5-nano'),
     // Perplexity
     'sonar-pro': perplexity('sonar-pro'),
     'sonar': perplexity('sonar'),
@@ -1310,6 +1489,8 @@ export function getModelInstanceById(modelId: string): LanguageModel {
     'llama-4-scout-17b-16e': groq('llama-4-scout-17b-16e'),
     'llama-4-maverick-17b-128e': groq('llama-4-maverick-17b-128e'),
     'kimi-k2-instruct': groq('moonshotai/kimi-k2-instruct'),
+    'gpt-oss-20b': groq('openai/gpt-oss-20b'),
+    'gpt-oss-120b': groq('openai/gpt-oss-120b'),
     // DeepSeek
     'deepseek-chat': deepseek('deepseek-chat'),
     'deepseek-reasoner': deepseek('deepseek-reasoner'),

@@ -202,7 +202,7 @@ export async function POST(req: Request) {
 
     // Prepare final settings, potentially renaming maxTokens
     const finalSettings: Record<string, number | undefined> = { ...receivedSettings };
-    const modelsRequiringMaxCompletionTokens = ['gpt-4o-mini', 'o1', 'o1-mini', 'o3', 'o3-mini', 'o4-mini']; // Add other relevant models as needed
+    const modelsRequiringMaxCompletionTokens = ['gpt-4o-mini', 'o1', 'o1-mini', 'o3', 'o3-mini', 'o4-mini', 'gpt-5-mini', 'gpt-5-nano']; // Add other relevant models as needed
 
     if (modelsRequiringMaxCompletionTokens.includes(modelId) && finalSettings.maxTokens !== undefined) {
       finalSettings.maxCompletionTokens = finalSettings.maxTokens;
