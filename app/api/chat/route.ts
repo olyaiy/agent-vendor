@@ -211,7 +211,7 @@ export async function POST(req: Request) {
     }
 
     // Ensure temperature is 1 for models that require it
-    const modelsRequiringTemp1 = ['o4-mini']; // Add o1, o3 etc. if they also have this restriction
+    const modelsRequiringTemp1 = ['o4-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano']; // Add o1, o3 etc. if they also have this restriction
     if (modelsRequiringTemp1.includes(modelId)) {
         if (finalSettings.temperature !== 1) {
              console.log(`Forcing temperature to 1 for model: ${modelId}. Original value was: ${finalSettings.temperature}`); // Log the change
