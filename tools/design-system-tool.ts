@@ -67,6 +67,7 @@ const designSystemSchema = z.object({
     primary: colorCategorySchema.describe("Primary color category with base and shades"),
     secondary: colorCategorySchema.describe("Secondary color category with base and shades"),
     accent: colorCategorySchema.describe("Accent color category with base and shades"),
+    background: colorCategorySchema.describe("Background color category with base and shades for different surfaces"),
     semantic: z.object({
       success: hslColorSchema.optional().describe("Success/positive state color"),
       warning: hslColorSchema.optional().describe("Warning/caution state color"),
@@ -135,6 +136,80 @@ const generateSpacingScale = (base: number) => {
   return [base, base * 2, base * 3, base * 4, base * 6, base * 8, base * 12, base * 16];
 };
 
+// Generate background colors based on style
+const getBackgroundColors = (style: string) => {
+  const backgrounds = {
+    modern: {
+      name: "Background",
+      description: "Clean, modern background colors for contemporary interfaces",
+      base: { h: 0, s: 0, l: 98 },
+      shades: [
+        { h: 210, s: 20, l: 95 }, // Very light blue-gray
+        { h: 0, s: 0, l: 92 },    // Light gray
+        { h: 210, s: 10, l: 88 }, // Soft gray
+        { h: 210, s: 15, l: 12 }  // Dark mode alternative
+      ]
+    },
+    elegant: {
+      name: "Background",
+      description: "Sophisticated background colors with warm undertones",
+      base: { h: 45, s: 15, l: 97 },
+      shades: [
+        { h: 35, s: 20, l: 94 },  // Warm cream
+        { h: 40, s: 10, l: 90 },  // Light beige
+        { h: 30, s: 12, l: 85 },  // Soft tan
+        { h: 25, s: 25, l: 15 }   // Rich dark brown
+      ]
+    },
+    playful: {
+      name: "Background",
+      description: "Vibrant, cheerful background colors that inspire creativity",
+      base: { h: 300, s: 10, l: 96 },
+      shades: [
+        { h: 280, s: 15, l: 93 }, // Soft lavender
+        { h: 200, s: 20, l: 91 }, // Light sky blue
+        { h: 60, s: 12, l: 88 },  // Pale yellow
+        { h: 260, s: 20, l: 18 }  // Deep purple
+      ]
+    },
+    minimal: {
+      name: "Background",
+      description: "Pure, distraction-free backgrounds for minimalist designs",
+      base: { h: 0, s: 0, l: 100 },
+      shades: [
+        { h: 0, s: 0, l: 99 },    // Near white
+        { h: 0, s: 0, l: 96 },    // Very light gray
+        { h: 0, s: 0, l: 92 },    // Light gray
+        { h: 0, s: 0, l: 8 }      // Near black
+      ]
+    },
+    bold: {
+      name: "Background",
+      description: "Strong, dramatic backgrounds that make a statement",
+      base: { h: 0, s: 0, l: 12 },
+      shades: [
+        { h: 220, s: 15, l: 20 }, // Dark blue-gray
+        { h: 0, s: 0, l: 16 },    // Dark gray
+        { h: 220, s: 8, l: 24 },  // Medium dark
+        { h: 0, s: 0, l: 96 }     // Light contrast
+      ]
+    },
+    custom: {
+      name: "Background",
+      description: "Neutral background colors for custom design systems",
+      base: { h: 0, s: 0, l: 97 },
+      shades: [
+        { h: 210, s: 8, l: 94 },  // Subtle blue-gray
+        { h: 0, s: 0, l: 90 },    // Light gray
+        { h: 210, s: 5, l: 86 },  // Medium gray
+        { h: 0, s: 0, l: 14 }     // Dark gray
+      ]
+    },
+  };
+  
+  return backgrounds[style as keyof typeof backgrounds] || backgrounds.modern;
+};
+
 export const designSystemTool = tool({
   description: 'Creates comprehensive design systems including color palettes, typography with Google Fonts integration, spacing scales, and design tokens. Generates cohesive visual languages with smart font pairings based on style preferences (modern, elegant, playful, minimal, bold, or custom). Perfect for creating complete brand guidelines and development-ready design foundations.',
   parameters: designSystemSchema,
@@ -148,8 +223,15 @@ export const designSystemTool = tool({
     tokens 
   }) => {
     try {
-      // Get font pairings based on style
+      // Get font pairings and background colors based on style
       const fontPairings = getFontPairings(style);
+      const backgroundColors = getBackgroundColors(style);
+      
+      // Generate background colors if not provided in colors input
+      const finalColors = {
+        ...colors,
+        background: colors.background || backgroundColors
+      };
       
       // Merge provided typography with style-based defaults
       const finalTypography = {
@@ -194,7 +276,7 @@ export const designSystemTool = tool({
           name,
           description,
           style,
-          colors,
+          colors: finalColors,
           typography: finalTypography,
           spacing: finalSpacing,
           tokens: finalTokens,

@@ -143,20 +143,46 @@ const ColorCategoryDisplay = ({ category }: ColorCategoryDisplayProps) => {
         )}
       </div>
       
-      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-        <ColorSwatch 
-          color={category.base} 
-          label="Base" 
-          isBase={true}
-        />
+      {/* All colors in two compact rows */}
+      <div className="space-y-2">
+        {/* First row - Base + first 2 shades */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <ColorSwatch 
+              color={category.base} 
+              label="Base" 
+              isBase={true}
+            />
+          </div>
+          {category.shades.slice(0, 2).map((shade, index) => (
+            <div key={index} className="flex-1">
+              <ColorSwatch
+                color={shade}
+                label={`Shade ${index + 1}`}
+              />
+            </div>
+          ))}
+        </div>
         
-        {category.shades.map((shade, index) => (
-          <ColorSwatch
-            key={index}
-            color={shade}
-            label={`Shade ${index + 1}`}
-          />
-        ))}
+        {/* Second row - remaining shades */}
+        {category.shades.length > 2 && (
+          <div className="flex gap-2">
+            {category.shades.slice(2).map((shade, index) => (
+              <div key={index + 2} className="flex-1">
+                <ColorSwatch
+                  color={shade}
+                  label={`Shade ${index + 3}`}
+                />
+              </div>
+            ))}
+            {/* Fill empty slots to maintain alignment */}
+            {category.shades.slice(2).length < 3 && (
+              Array.from({ length: 3 - category.shades.slice(2).length }).map((_, emptyIndex) => (
+                <div key={`empty-${emptyIndex}`} className="flex-1" />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -364,47 +390,52 @@ const DesignTokensDisplay = ({ spacing, tokens }: DesignTokensDisplayProps) => {
           </div>
         )}
 
-        {/* Border Radius */}
-        {tokens?.borderRadius && (
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Border Radius
-            </h4>
-            <div className="grid grid-cols-3 gap-3">
-              {tokens.borderRadius.map((value, index) => (
-                <div key={value} className="text-center space-y-2">
-                  <div 
-                    className="w-12 h-12 bg-primary/20 border-2 border-primary/30 mx-auto"
-                    style={{ borderRadius: `${value}px` }}
-                  />
-                  <div className="text-xs text-muted-foreground font-mono">
-                    {value}px
-                  </div>
+        {/* Border Radius and Shadows in same column */}
+        {(tokens?.borderRadius || tokens?.shadows) && (
+          <div className="space-y-6">
+            {/* Border Radius */}
+            {tokens?.borderRadius && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Border Radius
+                </h4>
+                <div className="grid grid-cols-3 gap-3">
+                  {tokens.borderRadius.map((value, index) => (
+                    <div key={value} className="text-center space-y-2">
+                      <div 
+                        className="w-12 h-12 bg-primary/20 border-2 border-primary/30 mx-auto"
+                        style={{ borderRadius: `${value}px` }}
+                      />
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {value}px
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Shadows */}
-        {tokens?.shadows && (
-          <div className="space-y-4 md:col-span-2">
-            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-              Box Shadows
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {tokens.shadows.map((shadow, index) => (
-                <div key={index} className="text-center space-y-2">
-                  <div 
-                    className="w-16 h-16 bg-card border border-border/50 mx-auto rounded-lg"
-                    style={{ boxShadow: shadow }}
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    Level {index + 1}
-                  </div>
+            {/* Shadows */}
+            {tokens?.shadows && (
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Box Shadows
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  {tokens.shadows.map((shadow, index) => (
+                    <div key={index} className="text-center space-y-2">
+                      <div 
+                        className="w-16 h-16 bg-card border border-border/50 mx-auto rounded-lg"
+                        style={{ boxShadow: shadow }}
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        Level {index + 1}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -620,10 +651,11 @@ const DesignSystemSection = ({ toolInvocation }: DesignSystemSectionProps) => {
               </div>
             </div>
 
-            <div className="space-y-8 sm:space-y-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
               <ColorCategoryDisplay category={designSystem.colors.primary} />
               <ColorCategoryDisplay category={designSystem.colors.secondary} />
               <ColorCategoryDisplay category={designSystem.colors.accent} />
+              <ColorCategoryDisplay category={designSystem.colors.background} />
             </div>
           </div>
 
