@@ -8,17 +8,17 @@ import { Markdown } from '@/components/chat/markdown';
 
 interface MessageReasoningProps {
   isLoading: boolean;
-  reasoning: string;
+  reasoningText: string;
   hideReasoning?: boolean;
 }
 
 export function MessageReasoning({
   isLoading,
-  reasoning,
+  reasoningText,
   hideReasoning = false,
 }: MessageReasoningProps) {
-  // Ensure reasoning is always a string
-  const reasoningText = typeof reasoning === 'string' ? reasoning : JSON.stringify(reasoning);
+  // Ensure reasoning text is always a plain string (fallback to JSON when needed)
+  const normalizedReasoning = typeof reasoningText === 'string' ? reasoningText : JSON.stringify(reasoningText);
   
   const [isExpanded, setIsExpanded] = useState(true);
   const prevIsLoadingRef = useRef(isLoading);
@@ -119,7 +119,7 @@ export function MessageReasoning({
             style={{ overflow: 'hidden' }}
             className="pl-4 text-zinc-600 dark:text-zinc-400 border-l flex flex-col gap-4"
           >
-            <Markdown messageRole="assistant">{reasoningText}</Markdown>
+            <Markdown messageRole="assistant">{normalizedReasoning}</Markdown>
           </motion.div>
         )}
       </AnimatePresence>

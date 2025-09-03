@@ -1,6 +1,6 @@
 'use client';
 
-import { Message } from 'ai';
+import { UIMessage } from 'ai';
 import { Button } from './ui/button';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Textarea } from './ui/textarea';
@@ -9,7 +9,7 @@ import { UseChatHelpers } from '@ai-sdk/react';
 import { Loader2 } from 'lucide-react';
 
 export type MessageEditorProps = {
-  message: Message;
+  message: UIMessage;
   setMode: Dispatch<SetStateAction<'view' | 'edit'>>;
   setMessages: UseChatHelpers['setMessages'];
   reload: UseChatHelpers['reload'];

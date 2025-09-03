@@ -4,7 +4,7 @@ import { evaluate } from 'mathjs';
 
 export const calculatorTool = tool({
   description: 'A stateless calculator that evaluates mathematical expressions using math.js. Supports common arithmetic operations, functions (e.g., sin, cos, sqrt), and constants (e.g., pi, e). For example, "2 + 2 * sin(pi/2)" or "sqrt(16) / (2^3)".',
-  parameters: z.object({
+  inputSchema: z.object({
     expression: z.string().describe('The mathematical expression to evaluate.'),
   }),
   execute: async ({ expression }) => {

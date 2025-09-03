@@ -28,7 +28,7 @@ interface UIMessageWithUI extends UIMessage {
 interface MessagePart {
   type: string;
   text?: string;
-  reasoning?: string;
+  reasoningText?: string;
   toolInvocation?: ToolInvocation;
   source?: { id: string; url: string; title?: string };
 }
@@ -145,7 +145,7 @@ const PurePreviewMessage = ({
             <div data-testid="message-ui-content">{message.ui}</div>
           ) : (
             // Otherwise, render parts as usual
-            <>
+            (<>
               {/* Non-source parts */}
               {(() => {
                 const parts: MessagePart[] = (message.parts as MessagePart[] | undefined)?.filter(part => part.type !== 'source') || [];
@@ -169,7 +169,7 @@ const PurePreviewMessage = ({
                       <MessageReasoning
                         key={key}
                         isLoading={isLoading}
-                        reasoning={hideReasoning ? '' : part.reasoning ?? ''}
+                        reasoning={hideReasoning ? '' : part.reasoningText ?? ''}
                         hideReasoning={hideReasoning}
                       />
                     );
@@ -230,7 +230,6 @@ const PurePreviewMessage = ({
                 });
                 return elements;
               })()}
-              
               {/* Source parts in a flex container */}
               {message.parts?.some(part => part.type === 'source') && (
                 <div className="flex flex-row flex-wrap gap-2 mt-2">
@@ -269,7 +268,7 @@ const PurePreviewMessage = ({
                     })}
                 </div>
               )}
-            </>
+            </>)
           )}
 
           {!isReadonly && (

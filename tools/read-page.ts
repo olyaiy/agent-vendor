@@ -31,7 +31,7 @@ const jinaReaderResponseSchema = z.object({
 
 export const readPageTool = tool({
   description: 'Reads the content of a given webpage URL using the JINA Reader API, returning only the main content, title, and final URL.',
-  parameters: readPageParams,
+  inputSchema: readPageParams,
   execute: async ({ url }) => {
     if (!JINA_API_KEY) {
       throw new Error('Jina API key is not set in environment variables (JINA_API_KEY). Get your key at https://jina.ai/?sui=apikey');

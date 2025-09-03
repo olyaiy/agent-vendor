@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 
 
-import { ChatRequestOptions } from "@ai-sdk/ui-utils";
+import { ChatRequestOptions } from 'ai';
 import { AttachmentPreview } from "@/components/chat/AttachmentPreview";
 import { 
   useAttachmentManager, 
@@ -395,6 +395,10 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
   // Only re-render if value, status, or function references change
   // Note: We don't need to compare isDraggingOver here as it's internal state managed by ChatInputComponent
   return (
+    // New comparison for drop zone indicator
+    // Note: We intentionally don't compare the attachment-related props because they shouldn't trigger a re-render
+    // if they're properly memoized by the parent component.
+    (// New comparison
     prevProps.input === nextProps.input &&
     prevProps.status === nextProps.status &&
     prevProps.handleSubmit === nextProps.handleSubmit &&
@@ -406,10 +410,7 @@ export const ChatInput = memo(ChatInputComponent, (prevProps, nextProps) => {
     prevProps.maxHeight === nextProps.maxHeight &&
     prevProps.className === nextProps.className && 
     prevProps.isMobile === nextProps.isMobile &&
-    prevProps.isWebSearchEnabled === nextProps.isWebSearchEnabled && // New comparison
-    prevProps.showDropZoneIndicator === nextProps.showDropZoneIndicator // New comparison for drop zone indicator
-    // Note: We intentionally don't compare the attachment-related props because they shouldn't trigger a re-render
-    // if they're properly memoized by the parent component.
+    prevProps.isWebSearchEnabled === nextProps.isWebSearchEnabled && prevProps.showDropZoneIndicator === nextProps.showDropZoneIndicator)
   );
 });
 

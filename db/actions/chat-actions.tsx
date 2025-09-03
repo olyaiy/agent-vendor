@@ -2,7 +2,7 @@
 
 import { generateText } from "ai";
 import { myProvider } from "@/lib/models";
-import { Message } from "ai";
+import { UIMessage } from "ai";
 import { auth } from '@/lib/auth';
 import { 
   deleteMessageById, 
@@ -23,7 +23,7 @@ import { and } from 'drizzle-orm';
 export async function generateTitleFromUserMessage({
     message,
   }: {
-    message: Message;
+    message: UIMessage;
   }) {
     const { text: title } = await generateText({
       model: myProvider.languageModel('title-model'),

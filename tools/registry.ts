@@ -5,6 +5,7 @@ import { calculatorTool } from './calculator-tool';
 import { createLogoTool } from './create-logo-tool'; // Import the new tool
 import { createChartTool } from './create_chart_tool';
 import { colorPaletteTool } from './color-palette-tool';
+import { designSystemTool } from './design-system-tool'; // Import the design system tool
 import { pexelsSearchTool } from './pexels-search-tool'; // Import the Pexels tool
 
 /**
@@ -22,6 +23,7 @@ export const toolRegistry = {
   create_chart: createChartTool,
   create_logo: createLogoTool, // Register the new tool
   color_palette: colorPaletteTool,
+  design_system: designSystemTool, // Register the design system tool
   pexels_image_search: pexelsSearchTool, // Register the Pexels tool
 };
 

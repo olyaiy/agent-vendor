@@ -1,7 +1,7 @@
 'use client';
 
-import type { Message } from 'ai';
-import { ChatRequestOptions } from '@ai-sdk/ui-utils';
+import type { UIMessage } from 'ai';
+import { ChatRequestOptions } from 'ai';
 import {
   TooltipProvider,
 } from '../ui/tooltip';
@@ -30,7 +30,7 @@ export function PureMessageActions({
   setViewMode,
 }: {
   chatId: string;
-  message: Message;
+  message: UIMessage;
   isLoading: boolean;
   setMessages: UseChatHelpers['setMessages'];
   reload?: (chatRequestOptions?: ChatRequestOptions) => Promise<string | null | undefined>;

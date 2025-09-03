@@ -1,4 +1,4 @@
-import { appendResponseMessages, smoothStream, streamText, type Message, type UIMessage } from 'ai'; // Keep Message for casting input
+import { appendResponseMessages, smoothStream, streamText, type UIMessage } from 'ai'; // Keep Message for casting input
 // Remove direct openai import, we'll get the model instance via the helper
 // import { openai } from "@ai-sdk/openai";
 import { getModelInstanceById, getModelPricing } from '@/lib/models'; // Import the helper function
@@ -26,7 +26,7 @@ interface CsvAttachmentPayload {
   contentType: string;
 }
 
-interface UserMessageWithAttachments extends Message {
+interface UserMessageWithAttachments extends UIMessage {
   experimental_attachments?: Attachment[];
 }
 
@@ -34,14 +34,14 @@ interface UserMessageWithAttachments extends Message {
 interface RequestBody {
   chatId: string;
   model: string;
-  messages: Message[];
+  messages: UIMessage[];
   systemPrompt: string;
   agentId?: string;
   assignedToolNames?: string[];
   temperature?: number;
   topP?: number;
   topK?: number;
-  maxTokens?: number;
+  maxOutputTokens?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
   csv_attachment_payloads?: CsvAttachmentPayload[];
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
       temperature,
       topP,
       topK,
-      maxTokens, // Note: using maxTokens here as mapped from frontend
+      maxOutputTokens, // Note: using maxTokens here as mapped from frontend
       presencePenalty,
       frequencyPenalty,
       // Add custom field for CSV attachments
@@ -160,7 +160,7 @@ export async function POST(req: Request) {
         try {
           console.time('Background title generation and update');
           const generatedTitle = await generateTitleFromUserMessage({
-            message: userMessage as Message, // Cast userMessage for this specific function
+            message: userMessage as UIMessage, // Cast userMessage for this specific function
           });
           await updateChatTitle(chatId, generatedTitle);
           console.timeEnd('Background title generation and update');
@@ -195,7 +195,7 @@ export async function POST(req: Request) {
     if (temperature !== undefined) receivedSettings.temperature = temperature;
     if (topP !== undefined) receivedSettings.topP = topP;
     if (topK !== undefined) receivedSettings.topK = topK;
-    if (maxTokens !== undefined) receivedSettings.maxTokens = maxTokens; // Keep original key here
+    if (maxOutputTokens !== undefined) receivedSettings.maxOutputTokens = maxOutputTokens; // Keep original key here
     if (presencePenalty !== undefined) receivedSettings.presencePenalty = presencePenalty;
     if (frequencyPenalty !== undefined) receivedSettings.frequencyPenalty = frequencyPenalty;
     // Add checks for other potential settings if needed
@@ -204,9 +204,9 @@ export async function POST(req: Request) {
     const finalSettings: Record<string, number | undefined> = { ...receivedSettings };
     const modelsRequiringMaxCompletionTokens = ['gpt-4o-mini', 'o1', 'o1-mini', 'o3', 'o3-mini', 'o4-mini', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano']; // Add other relevant models as needed
 
-    if (modelsRequiringMaxCompletionTokens.includes(modelId) && finalSettings.maxTokens !== undefined) {
-      finalSettings.maxCompletionTokens = finalSettings.maxTokens;
-      delete finalSettings.maxTokens;
+    if (modelsRequiringMaxCompletionTokens.includes(modelId) && finalSettings.maxOutputTokens !== undefined) {
+      finalSettings.maxCompletionTokens = finalSettings.maxOutputTokens;
+      delete finalSettings.maxOutputTokens;
       console.log(`Mapping maxTokens to maxCompletionTokens for model: ${modelId}`); // Log the mapping
     }
 
@@ -357,7 +357,7 @@ interface OpenAIProviderOptions {
     const result = streamText({
       model: modelInstance,
       system: systemPrompt,
-      messages: messagesForAi as Message[], // Modified messages with CSV content
+      messages: messagesForAi as UIMessage[], // Modified messages with CSV content
       // Tool Call Set Up
       tools: activeToolsForThisCall, // Use the filtered tools
       maxSteps: 5,
@@ -408,18 +408,18 @@ interface OpenAIProviderOptions {
 
             // Append Assistant Message using response.messages (ResponseMessage[])
             const [, assistantMessage] = appendResponseMessages({
-              messages: [userMessage as Message], // Cast userMessage for this specific function
+              messages: [userMessage as UIMessage], // Cast userMessage for this specific function
               responseMessages: response.messages, // Pass ResponseMessage[]
             });
 
             // Save user message first in onFinish - using ORIGINAL user message, not modified with CSV
             // Combine experimental_attachments with csv_attachment_payloads (if any) for db storage
             const attachmentsForDb = [
-              ...(userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
+              ...((userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
                 url: att.url,
                 name: att.name || 'attachment', 
                 contentType: att.contentType || 'application/octet-stream',
-              })) || [],
+              })) || []),
               ...(csv_attachment_payloads?.map(att => ({
                 url: att.url,
                 name: att.name || 'attachment',
@@ -508,11 +508,11 @@ interface OpenAIProviderOptions {
           try {
             // Also save CSV attachments to the database on error
             const attachmentsForDbOnError = [
-              ...(userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
+              ...((userMessage as UserMessageWithAttachments).experimental_attachments?.map(att => ({
                 url: att.url,
                 name: att.name || 'attachment',
                 contentType: att.contentType || 'application/octet-stream',
-              })) ?? [],
+              })) ?? []),
               ...(csv_attachment_payloads?.map(att => ({
                 url: att.url,
                 name: att.name || 'csv_attachment', // Ensure name is never undefined

@@ -47,7 +47,7 @@ interface SimplifiedPhoto {
 
 export const pexelsSearchTool = tool({
   description: 'Searches for high-quality photos on Pexels.com based on a query and optional filters. Use this when users need images for their projects, presentations, or creative work.',
-  parameters: z.object({
+  inputSchema: z.object({
     query: z.string().describe('The search term for photos (e.g., "nature", "office", "cats"). This is required.'),
     count: z.number().min(1).max(10).default(6).describe('Number of photos to return. Defaults to 6 if not specified. Maximum is 10.'),
     orientation: z.enum(['landscape', 'portrait', 'square']).optional().describe('Filter by photo orientation: landscape, portrait, or square.'),

@@ -31,7 +31,7 @@ Output only the improved prompt text as plain text, without any additional expla
 
     const finalPrompt = `${userDefinedInstructions}\n\nOriginal prompt:\n---\n${currentPrompt}\n---\n\nImproved prompt:`;
 
-    const result = await streamText({
+    const result = streamText({
       model: model,
       system: systemMessage,
       prompt: finalPrompt,

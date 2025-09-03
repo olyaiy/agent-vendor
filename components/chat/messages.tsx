@@ -47,7 +47,7 @@ function PureMessages({
     // @ts-expect-error - Type 'RefObject<HTMLDivElement | null>' is not assignable to type 'RefObject<HTMLDivElement>'. We handle this inside the hook.
     externalRef: externalScrollContainerRef,
     content: messages.length > 0
-      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}-${messages[messages.length - 1].reasoning?.length ?? 0}`
+      ? `${messages[messages.length - 1].id}-${messages[messages.length - 1].content?.toString().length ?? 0}-${messages[messages.length - 1].reasoningText?.length ?? 0}`
       : null,
     offset: 32,
     smooth: true

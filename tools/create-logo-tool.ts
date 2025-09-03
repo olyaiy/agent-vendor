@@ -33,7 +33,7 @@ interface FalError extends Error {
 
 export const createLogoTool = tool({
   description: "Generates a logo or image based on a text 'prompt' using the Ideogram V3 model via fal.ai. Returns an array of generated image URLs.",
-  parameters: createLogoParams,
+  inputSchema: createLogoParams,
   execute: async (params) => {
     const { prompt } = params; // Extract validated parameters
 

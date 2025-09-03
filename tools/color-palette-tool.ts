@@ -49,7 +49,7 @@ const colorPaletteToolParams = z.object({
 
 export const colorPaletteTool = tool({
   description: 'Generates flexible color palettes in two modes: 1) Structured mode with primary/secondary/accent categories (traditional design system), or 2) Simple mode with flexible color rows that can have any theme or purpose. In simple mode, you can create single rows of colors with optional names and descriptions - perfect for showing color variations, themed collections, or quick color suggestions. All names and descriptions are optional in simple mode for maximum flexibility.',
-  parameters: colorPaletteToolParams,
+  inputSchema: colorPaletteToolParams,
   execute: async ({ name, description, mode, primary, secondary, accent, colorRows }) => {
     if (mode === 'structured') {
       // Validate structured mode requirements

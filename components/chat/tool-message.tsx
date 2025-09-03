@@ -8,6 +8,7 @@ import CalculatorSection from '../calculator-section'; // Import Calculator UI
 import CreateLogoSection from '../create-logo-section'; // Import the new logo section
 import CreateChartSection from '../create-chart-section';
 import ColorPaletteSection from '../design-system/color-palette-section'; // Import Color Palette UI
+import DesignSystemSection from '../design-system/design-system-section'; // Import Design System UI
 import PexelsSearchSection from '../pexels-search-section'; // Import Pexels Search UI
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -36,6 +37,8 @@ const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => 
         return <CreateChartSection toolInvocation={toolInvocation} />;
       case 'color_palette': // Add case for color_palette tool (Result State)
         return <ColorPaletteSection toolInvocation={toolInvocation} />;
+      case 'design_system': // Add case for design_system tool (Result State)
+        return <DesignSystemSection toolInvocation={toolInvocation} />;
       case 'pexels_image_search': // Add case for Pexels search tool (Result State)
         return <PexelsSearchSection toolInvocation={toolInvocation} />;
       default:
@@ -74,6 +77,8 @@ const ToolDisplay = ({ toolInvocation }: { toolInvocation: ToolInvocation }) => 
         );
       case 'color_palette': // Add case for color_palette tool (Call State)
         return <ColorPaletteSection toolInvocation={toolInvocation} />;
+      case 'design_system': // Add case for design_system tool (Call State)
+        return <DesignSystemSection toolInvocation={toolInvocation} />;
       case 'pexels_image_search': // Add case for Pexels search tool (Call State)
         return <PexelsSearchSection toolInvocation={toolInvocation} />;
       default:

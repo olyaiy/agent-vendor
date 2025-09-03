@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const createChartTool = tool({
   description: "Generates various types of charts and data visualizations. Key parameters include `chartType` (e.g., 'line', 'bar', 'bar_horizontal', 'area'), `data` (an array of objects), `xAxisKey` (string key for x-axis data), and `yAxisKeys` (an array of string keys for y-axis data, allowing for multiple series). Optional parameters like `title`, `description`, and `chartConfig` (for custom labels and colors per series) can be used for styling. For 'area' charts, `areaType` ('natural', 'linear', 'step') and `stacked` (boolean) options are available.",
-  parameters: z.object({
+  inputSchema: z.object({
     chartType: z.enum(["line", "bar", "bar_horizontal", "area"]).describe("The type of chart to create, e.g., 'line', 'bar', 'bar_horizontal', 'area'."),
     data: z.array(z.record(z.string(), z.any())).describe("An array of data objects for the chart."),
     title: z.string().optional().describe("The title of the chart."),

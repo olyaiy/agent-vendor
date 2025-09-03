@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
     
     ppr: 'incremental',
     useCache: true,
+    webpackMemoryOptimizations: true,
   },
 };
 

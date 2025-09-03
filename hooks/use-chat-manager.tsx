@@ -93,12 +93,13 @@ export function useChatManager({
   // Prepare API settings
   const apiSettings = { ...chatSettings };
   if (apiSettings.maxOutputTokens !== undefined) {
-    apiSettings.maxTokens = apiSettings.maxOutputTokens;
+    apiSettings.maxOutputTokens = apiSettings.maxOutputTokens;
     delete apiSettings.maxOutputTokens;
   }
 
   const chatHook = useChat({
     id: chatId,
+
     body: {
       chatId: chatId,
       agentId: agent.id,
@@ -107,10 +108,11 @@ export function useChatManager({
       ...apiSettings,
       assignedToolNames: assignedToolNames
     },
+
     initialMessages,
     generateId: generateUUID,
-    sendExtraMessageFields: true,
     onFinish: handleChatFinish,
+
     onError: (error) => {
       console.log('Error from useChat:', error);
       

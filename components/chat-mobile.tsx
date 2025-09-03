@@ -10,7 +10,7 @@ import { Greeting } from './chat/greeting';
 import { authClient } from '@/lib/auth-client';
 import { useChatManager, type AgentSpecificModel } from '@/hooks/use-chat-manager';
 import { useAttachmentManager } from '@/hooks/use-attachment-manager';
-import type { ChatRequestOptions } from '@ai-sdk/ui-utils';
+import type { ChatRequestOptions } from 'ai';
 import { CreditErrorDialog } from './credit-error-dialog'
 import { isReasoningModel } from '@/lib/models';
 
