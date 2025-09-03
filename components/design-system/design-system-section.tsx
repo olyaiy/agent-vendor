@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import type { ToolInvocation } from 'ai';
-import { Palette, Type, CheckCircle2, Loader2, Copy, Layers } from 'lucide-react';
+import { Palette, Type, CheckCircle2, Loader2, Copy, Layers, Play, Star, ArrowRight, Menu } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/ui/copy-button';
@@ -443,6 +443,280 @@ const DesignTokensDisplay = ({ spacing, tokens }: DesignTokensDisplayProps) => {
   );
 };
 
+// Mock hero showcase component
+interface MockHeroShowcaseProps {
+  designSystem: any;
+}
+
+const MockHeroShowcase = ({ designSystem }: MockHeroShowcaseProps) => {
+  const getFontStack = (family: { name: string; fallback: string[] }) => {
+    return `"${family.name}", ${family.fallback.join(', ')}`;
+  };
+
+  const primaryColor = hslToString(designSystem.colors.primary.base);
+  const secondaryColor = hslToString(designSystem.colors.secondary.base);
+  const accentColor = hslToString(designSystem.colors.accent.base);
+  const bgColor = hslToString(designSystem.colors.background.base);
+  
+  const primaryShade1 = hslToString(designSystem.colors.primary.shades[0]);
+  const secondaryShade1 = hslToString(designSystem.colors.secondary.shades[0]);
+  const accentShade1 = hslToString(designSystem.colors.accent.shades[0]);
+  const bgShade1 = hslToString(designSystem.colors.background.shades[0]);
+
+  const borderRadius = designSystem.tokens?.borderRadius?.[1] || 8;
+  const boxShadow = designSystem.tokens?.shadows?.[1] || '0 4px 6px -1px rgb(0 0 0 / 0.1)';
+  const spacing = designSystem.spacing?.scale?.[3] || 24;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      <div className="space-y-2 sm:space-y-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Play className="h-5 w-5 text-primary" />
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground">
+            Design System Preview
+          </h3>
+          <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          See how all elements work together in a real component
+        </p>
+      </div>
+
+      <div 
+        className="rounded-lg border overflow-hidden"
+        style={{ 
+          borderRadius: `${borderRadius}px`,
+          boxShadow: boxShadow,
+          borderColor: primaryColor + '20'
+        }}
+      >
+        {/* Navigation Bar */}
+        <div 
+          className="px-4 py-2 border-b flex items-center justify-between"
+          style={{ 
+            backgroundColor: primaryColor + '10',
+            borderBottomColor: primaryColor + '20'
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div 
+              className="text-sm font-bold"
+              style={{ 
+                fontFamily: getFontStack(designSystem.typography.families.heading),
+                color: primaryColor
+              }}
+            >
+              DesignApp
+            </div>
+            <nav className="hidden sm:flex items-center gap-4">
+              {['Home', 'Features', 'Pricing', 'About'].map((item) => (
+                <a
+                  key={item}
+                  href="#"
+                  className="text-xs hover:opacity-80 transition-opacity"
+                  style={{ 
+                    fontFamily: getFontStack(designSystem.typography.families.body),
+                    color: primaryColor
+                  }}
+                >
+                  {item}
+                </a>
+              ))}
+            </nav>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="px-3 py-1 text-xs font-medium rounded transition-all hover:scale-105"
+              style={{
+                backgroundColor: primaryColor,
+                color: 'white',
+                borderRadius: `${borderRadius / 2}px`,
+                fontFamily: getFontStack(designSystem.typography.families.heading)
+              }}
+            >
+              Sign Up
+            </button>
+            <Menu className="h-4 w-4 sm:hidden" style={{ color: primaryColor }} />
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div 
+          className="p-4 sm:p-6"
+          style={{ backgroundColor: bgColor }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            {/* Left Column - Content */}
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div 
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+                  style={{ 
+                    backgroundColor: accentColor + '20',
+                    color: accentColor,
+                    borderRadius: `${borderRadius / 2}px`
+                  }}
+                >
+                  <Star className="h-3 w-3" />
+                  New
+                </div>
+                
+                <h1 
+                  className="text-xl sm:text-2xl font-bold leading-tight"
+                  style={{ 
+                    fontFamily: getFontStack(designSystem.typography.families.heading),
+                    color: primaryColor
+                  }}
+                >
+                  Beautiful Design Made Simple
+                </h1>
+                
+                <p 
+                  className="text-sm leading-relaxed opacity-80"
+                  style={{ 
+                    fontFamily: getFontStack(designSystem.typography.families.body),
+                    color: primaryColor
+                  }}
+                >
+                  Create stunning interfaces with our design system. Built for modern applications.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: primaryColor,
+                    color: 'white',
+                    borderRadius: `${borderRadius / 2}px`,
+                    boxShadow: '0 2px 4px rgb(0 0 0 / 0.1)',
+                    fontFamily: getFontStack(designSystem.typography.families.heading)
+                  }}
+                >
+                  Get Started
+                  <ArrowRight className="h-3 w-3" />
+                </button>
+                
+                <button
+                  className="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold border rounded transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: secondaryColor,
+                    borderColor: secondaryColor,
+                    borderRadius: `${borderRadius / 2}px`,
+                    fontFamily: getFontStack(designSystem.typography.families.heading)
+                  }}
+                >
+                  Learn More
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <h3 
+                  className="text-sm font-semibold"
+                  style={{ 
+                    fontFamily: getFontStack(designSystem.typography.families.heading),
+                    color: secondaryColor
+                  }}
+                >
+                  Features
+                </h3>
+                <ul className="space-y-1">
+                  {['Color Palette', 'Typography', 'Components'].map((feature) => (
+                    <li 
+                      key={feature}
+                      className="flex items-center gap-2 text-xs"
+                      style={{ 
+                        fontFamily: getFontStack(designSystem.typography.families.body),
+                        color: primaryColor
+                      }}
+                    >
+                      <div 
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: secondaryColor }}
+                      />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Right Column - Visual Elements */}
+            <div className="grid grid-cols-2 gap-2">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="aspect-square rounded"
+                style={{
+                  backgroundColor: primaryColor,
+                  borderRadius: `${borderRadius / 2}px`,
+                  boxShadow: '0 2px 4px rgb(0 0 0 / 0.1)'
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="aspect-square rounded"
+                style={{
+                  backgroundColor: secondaryColor,
+                  borderRadius: `${borderRadius / 2}px`,
+                  boxShadow: '0 2px 4px rgb(0 0 0 / 0.1)'
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                className="aspect-square rounded"
+                style={{
+                  backgroundColor: primaryShade1,
+                  borderRadius: `${borderRadius / 2}px`,
+                  boxShadow: '0 2px 4px rgb(0 0 0 / 0.1)'
+                }}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                className="aspect-square rounded relative overflow-hidden"
+                style={{
+                  backgroundColor: secondaryShade1,
+                  borderRadius: `${borderRadius / 2}px`,
+                  boxShadow: '0 2px 4px rgb(0 0 0 / 0.1)'
+                }}
+              >
+                {/* Nested squares to show depth using primary colors */}
+                <div 
+                  className="absolute inset-2 rounded"
+                  style={{
+                    backgroundColor: primaryColor + '80',
+                    borderRadius: `${borderRadius / 3}px`
+                  }}
+                />
+                <div 
+                  className="absolute inset-4 rounded"
+                  style={{
+                    backgroundColor: secondaryColor + '60',
+                    borderRadius: `${borderRadius / 4}px`
+                  }}
+                />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // Animation variants
 const container = {
   hidden: { opacity: 0 },
@@ -667,6 +941,9 @@ const DesignSystemSection = ({ toolInvocation }: DesignSystemSectionProps) => {
             spacing={designSystem.spacing} 
             tokens={designSystem.tokens} 
           />
+
+          {/* Mock Hero Showcase */}
+          <MockHeroShowcase designSystem={designSystem} />
         </div>
       </motion.div>
     );
